@@ -601,6 +601,129 @@ supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let currentUser = null;
 let currentProfile = null;
+  // =====================================================
+// KORISNICI / REGISTRACIJA / PRIJAVA
+// =====================================================
+
+async function loadCurrentUser(){
+  try{
+    const { data: { user }, error } = await supabaseClient.auth.getUser();
+
+    if(error){
+      console.error("Greška pri učitavanju korisnika:", error);
+      currentUser = null;
+      currentProfile = null;
+      updateAuthUI();
+      return;
+    }
+
+    currentUser = user || null;
+    currentProfile = null;
+
+    if(currentUser){
+      const { data: profile, error: profileError } = await supabaseClient
+        .from("profiles")
+        .select("*")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+      if(profileError){
+        console.error("Greška pri učitavanju profila:", profileError);
+      }else{
+        currentProfile = profile;
+      }
+    }
+
+    updateAuthUI();
+    await loadComments();
+
+  }catch(e){
+    console.error("Auth greška:", e);
+    currentUser = null;
+    currentProfile = null;
+    updateAuthUI();
+  }
+}
+
+
+// PRIJAVA
+async function loginUser(){
+  const email = document.getElementById("login-email")?.value.trim();
+  const password = document.getElementById("login-password")?.value;
+
+  const errorEl = document.getElementById("login-error");
+
+  if(errorEl) errorEl.textContent = "";
+
+  if(!email || !password){
+    if(errorEl) errorEl.textContent = "Unesi email i lozinku.";
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    console.error(error);
+    if(errorEl) errorEl.textContent = error.message;
+    return;
+  }
+
+  currentUser = data.user;
+
+  await loadCurrentUser();
+
+  document.getElementById("login-modal")?.classList.remove("show");
+
+  if(typeof hideModal === "function"){
+    hideModal();
+  }
+}
+
+
+// ODJAVA
+async function logoutUser(){
+  const { error } = await supabaseClient.auth.signOut();
+
+  if(error){
+    console.error("Greška pri odjavi:", error);
+    return;
+  }
+
+  currentUser = null;
+  currentProfile = null;
+
+  updateAuthUI();
+  await loadComments();
+}
+
+
+// OTVARANJE LOGIN MODALA
+function openLoginModal(){
+  document.getElementById("login-modal")?.classList.add("show");
+}
+
+
+// OTVARANJE REGISTER MODALA
+function openRegisterModal(){
+  document.getElementById("register-modal")?.classList.add("show");
+}
+
+
+// PREBACIVANJE LOGIN → REGISTER
+function switchToRegister(){
+  document.getElementById("login-modal")?.classList.remove("show");
+  document.getElementById("register-modal")?.classList.add("show");
+}
+
+
+// PREBACIVANJE REGISTER → LOGIN
+function switchToLogin(){
+  document.getElementById("register-modal")?.classList.remove("show");
+  document.getElementById("login-modal")?.classList.add("show");
+}
 
 let teams = [];
 let players = [];
