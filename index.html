@@ -4,11 +4,163 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Medjaši Futsal Liga</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+    }
+
+    header {
+      background: #181818;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 2px solid #e10600;
+    }
+
+    header h1 {
+      font-size: 28px;
+    }
+
+    header p {
+      margin-top: 6px;
+      color: #aaa;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px;
+      background: #222;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 10px 14px;
+      background: #333;
+      border-radius: 6px;
+    }
+
+    nav a:hover {
+      background: #e10600;
+    }
+
+    .hero {
+      padding: 50px 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #222, #111);
+    }
+
+    .hero h2 {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .hero p {
+      color: #bbb;
+      font-size: 17px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 25px 20px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .card {
+      background: #1d1d1d;
+      padding: 25px;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid #333;
+    }
+
+    .card h3 {
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: #aaa;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding: 20px;
+      text-align: center;
+      background: #181818;
+      color: #888;
+    }
+  </style>
 </head>
+
 <body>
 
-  <h1>Medjaši Futsal Liga</h1>
-  <p>Dobrodošli na zvaničnu stranicu lige.</p>
+  <header>
+    <h1>⚽ MEDJAŠI FUTSAL LIGA</h1>
+    <p>Zvanična stranica lige</p>
+  </header>
+
+  <nav>
+    <a href="#">Početna</a>
+    <a href="#">Tabela</a>
+    <a href="#">Utakmice</a>
+    <a href="#">Ekipe</a>
+    <a href="#">Igrači</a>
+    <a href="#">Statistika</a>
+  </nav>
+
+  <section class="hero">
+    <h2>Dobrodošli na Medjaši Futsal Ligu</h2>
+    <p>Pratite rezultate, tabelu, utakmice i statistiku igrača.</p>
+  </section>
+
+  <main class="container">
+
+    <div class="cards">
+
+      <div class="card">
+        <h3>🏆 Tabela</h3>
+        <p>Pratite plasman svih ekipa.</p>
+      </div>
+
+      <div class="card">
+        <h3>⚽ Utakmice</h3>
+        <p>Rezultati i raspored utakmica.</p>
+      </div>
+
+      <div class="card">
+        <h3>👥 Ekipe</h3>
+        <p>Pogledajte ekipe i njihove igrače.</p>
+      </div>
+
+      <div class="card">
+        <h3>📊 Statistika</h3>
+        <p>Golovi, asistencije i kartoni.</p>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer>
+    © 2026 Medjaši Futsal Liga
+  </footer>
 
 </body>
 </html>
