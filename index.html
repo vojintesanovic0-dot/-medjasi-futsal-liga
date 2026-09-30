@@ -1490,6 +1490,33 @@ tbody tr:hover{
     margin-top:5px;
   }
 }
+  @media (max-width: 700px) {
+  #mainNav {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    overflow-x: visible !important;
+    height: auto !important;
+  }
+
+  #mainNav button {
+    display: block !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
+  #loginNav,
+  #logoutNav,
+  #adminNav {
+    display: block !important;
+  }
+
+  #loginNav.hidden,
+  #logoutNav.hidden,
+  #adminNav.hidden {
+    display: none !important;
+  }
+}
 </style>
 </head>
 
