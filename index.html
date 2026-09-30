@@ -2247,7 +2247,53 @@ tbody tr:hover{
     </div>
 
   </div>
+<!-- YOUTUBE MUZIKA -->
+<div class="card" style="margin-top:20px;">
+  <h3>🎵 Muzika stranice</h3>
+  <p class="muted">
+    Postavi YouTube pjesmu koju će stranica koristiti za posjetioce.
+  </p>
 
+  <input
+    id="adminYoutubeUrl"
+    type="text"
+    placeholder="https://www.youtube.com/watch?v=..."
+  >
+
+  <div class="actions" style="margin-top:12px;">
+    <button class="btn btn-green" onclick="saveMusicSettings()">
+      💾 Sačuvaj pjesmu
+    </button>
+
+    <button class="btn btn-green" onclick="adminPlayMusic()">
+      ▶️ Pokreni
+    </button>
+
+    <button class="btn btn-red" onclick="adminStopMusic()">
+      ⏹️ Zaustavi
+    </button>
+  </div>
+
+  <label style="display:flex;align-items:center;gap:8px;margin-top:14px;">
+    <input type="checkbox" id="adminMusicEnabled">
+    Muzika je uključena
+  </label>
+
+  <p id="musicAdminStatus" class="muted" style="margin-top:10px;"></p>
+</div>
+  <iframe
+  id="youtubeMusicFrame"
+  width="1"
+  height="1"
+  style="
+    position:absolute;
+    left:-9999px;
+    border:0;
+    opacity:0;
+    pointer-events:none;
+  "
+  allow="autoplay; encrypted-media">
+</iframe>
 </section>
 
 </main>
@@ -9131,6 +9177,431 @@ document.addEventListener(
 ========================================================= */
 
 init();
+  /* =========================================
+   GLOBALNA YOUTUBE MUZIKA
+========================================= */
+
+let musicSettings = {
+  youtube_music_id: "",
+  youtube_music_enabled: false
+};
+
+let currentMusicId = "";
+
+
+/* -----------------------------------------
+   PRETVARA YOUTUBE LINK U VIDEO ID
+----------------------------------------- */
+
+function getYoutubeId(url) {
+  if (!url) return null;
+
+  url = url.trim();
+
+  // Ako je direktno unesen YouTube ID
+  if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
+    return url;
+  }
+
+  const patterns = [
+    /youtube\.com\/watch\?v=([^&]+)/,
+    /youtu\.be\/([^?&]+)/,
+    /youtube\.com\/embed\/([^?&/]+)/,
+    /youtube\.com\/shorts\/([^?&/]+)/
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+
+  return null;
+}
+
+
+/* -----------------------------------------
+   UČITAJ POSTAVKE IZ SUPABASE
+----------------------------------------- */
+
+async function loadMusicSettings() {
+
+  const { data, error } = await supabaseClient
+    .from("site_settings")
+    .select("youtube_music_id, youtube_music_enabled")
+    .eq("id", 1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Greška pri učitavanju muzike:", error);
+    return;
+  }
+
+  musicSettings = data || {
+    youtube_music_id: "",
+    youtube_music_enabled: false
+  };
+
+  renderMusicAdmin();
+
+  if (
+    musicSettings.youtube_music_enabled &&
+    musicSettings.youtube_music_id
+  ) {
+    loadGlobalYoutubeMusic(true);
+  } else {
+    stopGlobalYoutubeMusic();
+  }
+}
+
+
+/* -----------------------------------------
+   PRIKAŽI POSTAVKE U ADMIN PANELU
+----------------------------------------- */
+
+function renderMusicAdmin() {
+
+  const input =
+    document.getElementById("adminYoutubeUrl");
+
+  const checkbox =
+    document.getElementById("adminMusicEnabled");
+
+  if (!input || !checkbox) return;
+
+  if (musicSettings.youtube_music_id) {
+
+    input.value =
+      "https://www.youtube.com/watch?v=" +
+      musicSettings.youtube_music_id;
+
+  } else {
+
+    input.value = "";
+
+  }
+
+  checkbox.checked =
+    !!musicSettings.youtube_music_enabled;
+}
+
+
+/* -----------------------------------------
+   SAČUVAJ PJESMU
+----------------------------------------- */
+
+async function saveMusicSettings() {
+
+  if (!isAdmin()) {
+    toast("Nemaš admin ovlaštenje.", "error");
+    return;
+  }
+
+  const input =
+    document.getElementById("adminYoutubeUrl");
+
+  const checkbox =
+    document.getElementById("adminMusicEnabled");
+
+  const status =
+    document.getElementById("musicAdminStatus");
+
+  if (!input) return;
+
+  const videoId =
+    getYoutubeId(input.value);
+
+  if (!videoId) {
+
+    if (status) {
+      status.textContent =
+        "❌ Unesi ispravan YouTube link.";
+    }
+
+    return;
+  }
+
+  const { error } =
+    await supabaseClient
+      .from("site_settings")
+      .update({
+        youtube_music_id: videoId,
+        youtube_music_enabled: checkbox.checked,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", 1);
+
+  if (error) {
+
+    console.error(error);
+
+    if (status) {
+      status.textContent =
+        "❌ Greška pri čuvanju: " +
+        error.message;
+    }
+
+    return;
+  }
+
+  musicSettings.youtube_music_id =
+    videoId;
+
+  musicSettings.youtube_music_enabled =
+    checkbox.checked;
+
+  if (status) {
+    status.textContent =
+      "✅ Pjesma je sačuvana.";
+  }
+
+  loadGlobalYoutubeMusic(true);
+
+  toast(
+    "YouTube pjesma je sačuvana.",
+    "success"
+  );
+}
+
+
+/* -----------------------------------------
+   ADMIN - POKRENI
+----------------------------------------- */
+
+async function adminPlayMusic() {
+
+  if (!isAdmin()) {
+    toast("Nemaš admin ovlaštenje.", "error");
+    return;
+  }
+
+  const input =
+    document.getElementById("adminYoutubeUrl");
+
+  const status =
+    document.getElementById("musicAdminStatus");
+
+  let videoId =
+    getYoutubeId(input?.value || "");
+
+  if (!videoId) {
+    videoId =
+      musicSettings.youtube_music_id;
+  }
+
+  if (!videoId) {
+
+    if (status) {
+      status.textContent =
+        "❌ Prvo unesi YouTube pjesmu.";
+    }
+
+    return;
+  }
+
+  const { error } =
+    await supabaseClient
+      .from("site_settings")
+      .update({
+        youtube_music_id: videoId,
+        youtube_music_enabled: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", 1);
+
+  if (error) {
+
+    console.error(error);
+
+    if (status) {
+      status.textContent =
+        "❌ Greška: " +
+        error.message;
+    }
+
+    return;
+  }
+
+  musicSettings.youtube_music_id =
+    videoId;
+
+  musicSettings.youtube_music_enabled =
+    true;
+
+  const checkbox =
+    document.getElementById(
+      "adminMusicEnabled"
+    );
+
+  if (checkbox) {
+    checkbox.checked = true;
+  }
+
+  if (status) {
+    status.textContent =
+      "▶️ Muzika je uključena.";
+  }
+
+  loadGlobalYoutubeMusic(true);
+
+  toast(
+    "Muzika je pokrenuta.",
+    "success"
+  );
+}
+
+
+/* -----------------------------------------
+   ADMIN - ZAUSTAVI
+----------------------------------------- */
+
+async function adminStopMusic() {
+
+  if (!isAdmin()) {
+    toast("Nemaš admin ovlaštenje.", "error");
+    return;
+  }
+
+  const { error } =
+    await supabaseClient
+      .from("site_settings")
+      .update({
+        youtube_music_enabled: false,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", 1);
+
+  if (error) {
+
+    console.error(error);
+
+    toast(
+      "Greška pri zaustavljanju muzike.",
+      "error"
+    );
+
+    return;
+  }
+
+  musicSettings.youtube_music_enabled =
+    false;
+
+  const checkbox =
+    document.getElementById(
+      "adminMusicEnabled"
+    );
+
+  if (checkbox) {
+    checkbox.checked = false;
+  }
+
+  stopGlobalYoutubeMusic();
+
+  const status =
+    document.getElementById(
+      "musicAdminStatus"
+    );
+
+  if (status) {
+    status.textContent =
+      "⏹️ Muzika je zaustavljena.";
+  }
+
+  toast(
+    "Muzika je zaustavljena.",
+    "success"
+  );
+}
+
+
+/* -----------------------------------------
+   POKRENI YOUTUBE PLAYER
+----------------------------------------- */
+
+function loadGlobalYoutubeMusic(force = false) {
+
+  const frame =
+    document.getElementById(
+      "youtubeMusicFrame"
+    );
+
+  if (!frame) {
+    console.warn(
+      "youtubeMusicFrame nije pronađen."
+    );
+    return;
+  }
+
+  const videoId =
+    musicSettings.youtube_music_id;
+
+  if (
+    !musicSettings.youtube_music_enabled ||
+    !videoId
+  ) {
+
+    stopGlobalYoutubeMusic();
+    return;
+  }
+
+  if (
+    !force &&
+    currentMusicId === videoId &&
+    frame.src
+  ) {
+    return;
+  }
+
+  currentMusicId =
+    videoId;
+
+  frame.src =
+    "https://www.youtube.com/embed/" +
+    encodeURIComponent(videoId) +
+    "?autoplay=1" +
+    "&loop=1" +
+    "&playlist=" +
+    encodeURIComponent(videoId) +
+    "&controls=1" +
+    "&rel=0" +
+    "&playsinline=1" +
+    "&mute=1";
+}
+
+
+/* -----------------------------------------
+   ZAUSTAVI PLAYER
+----------------------------------------- */
+
+function stopGlobalYoutubeMusic() {
+
+  const frame =
+    document.getElementById(
+      "youtubeMusicFrame"
+    );
+
+  if (frame) {
+    frame.src = "";
+  }
+
+  currentMusicId = "";
+}
+
+
+/* -----------------------------------------
+   UČITAJ MUZIKU KAD SE STRANICA OTVORI
+----------------------------------------- */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
+
+    loadMusicSettings();
+
+  }
+);
 
 </script>
 
