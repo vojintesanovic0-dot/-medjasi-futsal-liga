@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="bs">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Medjaši Futsal Liga</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     * {
@@ -15,202 +17,2062 @@
 
     body {
       font-family: Arial, sans-serif;
-      background: #111;
-      color: white;
+      background: #0b0f14;
+      color: #fff;
+      min-height: 100vh;
     }
 
     header {
-      background: #181818;
-      padding: 20px;
-      text-align: center;
-      border-bottom: 2px solid #e10600;
+      background: #111821;
+      border-bottom: 1px solid #26313d;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    header h1 {
-      font-size: 28px;
+    .header-inner {
+      max-width: 1200px;
+      margin: auto;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
     }
 
-    header p {
-      margin-top: 6px;
-      color: #aaa;
+    .logo {
+      font-size: 22px;
+      font-weight: bold;
+      color: #00d084;
     }
 
     nav {
       display: flex;
-      justify-content: center;
-      gap: 10px;
-      padding: 15px;
-      background: #222;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
-    nav a {
+    nav button,
+    .btn {
+      background: #18212c;
       color: white;
-      text-decoration: none;
-      padding: 10px 14px;
-      background: #333;
-      border-radius: 6px;
+      border: 1px solid #303d4b;
+      padding: 9px 13px;
+      border-radius: 8px;
+      cursor: pointer;
     }
 
-    nav a:hover {
-      background: #e10600;
+    nav button:hover,
+    .btn:hover {
+      background: #00a96b;
     }
 
     .hero {
-      padding: 50px 20px;
       text-align: center;
-      background: linear-gradient(135deg, #222, #111);
+      padding: 65px 20px;
+      background:
+        linear-gradient(rgba(5,10,15,.82), rgba(5,10,15,.95));
     }
 
-    .hero h2 {
-      font-size: 32px;
+    .hero h1 {
+      font-size: 42px;
       margin-bottom: 12px;
     }
 
     .hero p {
-      color: #bbb;
+      color: #aeb9c5;
       font-size: 17px;
     }
 
-    .container {
-      max-width: 900px;
+    main {
+      max-width: 1200px;
       margin: auto;
-      padding: 25px 20px;
+      padding: 25px 20px 60px;
     }
 
-    .cards {
+    section {
+      display: none;
+    }
+
+    section.active {
+      display: block;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
     }
 
     .card {
-      background: #1d1d1d;
-      padding: 25px;
-      border-radius: 10px;
-      text-align: center;
-      border: 1px solid #333;
+      background: #111821;
+      border: 1px solid #26313d;
+      border-radius: 14px;
+      padding: 20px;
     }
 
     .card h3 {
       margin-bottom: 10px;
     }
 
-    .card p {
-      color: #aaa;
+    .muted {
+      color: #8996a4;
+    }
+
+    .team,
+    .player,
+    .match,
+    .comment,
+    .message {
+      background: #111821;
+      border: 1px solid #26313d;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 10px;
+    }
+
+    .team {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .team img,
+    .player img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 50%;
+      background: #202a35;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #111821;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th,
+    td {
+      padding: 12px 8px;
+      border-bottom: 1px solid #26313d;
+      text-align: center;
+    }
+
+    th {
+      background: #18212c;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      background: #0b0f14;
+      border: 1px solid #303d4b;
+      color: white;
+      padding: 11px;
+      border-radius: 8px;
+      margin: 6px 0 12px;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form {
+      max-width: 500px;
+    }
+
+    .success {
+      color: #00d084;
+      margin-top: 10px;
+    }
+
+    .error {
+      color: #ff5d5d;
+      margin-top: 10px;
+    }
+
+    .score {
+      font-size: 22px;
+      font-weight: bold;
+      color: #00d084;
     }
 
     footer {
-      margin-top: 40px;
-      padding: 20px;
       text-align: center;
-      background: #181818;
-      color: #888;
+      color: #687584;
+      padding: 30px 20px;
+      border-top: 1px solid #26313d;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 700px) {
+      .header-inner {
+        flex-direction: column;
+      }
+
+      nav {
+        justify-content: center;
+      }
+
+      .hero h1 {
+        font-size: 31px;
+      }
+
+      th,
+      td {
+        font-size: 13px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <header>
-    <h1>⚽ MEDJAŠI FUTSAL LIGA</h1>
-    <p>Zvanična stranica lige</p>
-  </header>
+<header>
+  <div class="header-inner">
 
-  <nav>
-    <a href="#">Početna</a>
-    <a href="#">Tabela</a>
-    <a href="#">Utakmice</a>
-    <a href="#">Ekipe</a>
-    <a href="#">Igrači</a>
-    <a href="#">Statistika</a>
-  </nav>
+    <div class="logo">
+      ⚽ Medjaši Futsal Liga
+    </div>
 
-  <section class="hero">
-    <h2>Dobrodošli na Medjaši Futsal Ligu</h2>
-    <p>Pratite rezultate, tabelu, utakmice i statistiku igrača.</p>
-  </section>
+    <nav>
+      <button onclick="showSection('home')">Početna</button>
+      <button onclick="showSection('table')">Tabela</button>
+      <button onclick="showSection('matches')">Utakmice</button>
+      <button onclick="showSection('teams')">Ekipe</button>
+      <button onclick="showSection('players')">Igrači</button>
+      <button onclick="showSection('stats')">Statistika</button>
+      <button onclick="showSection('comments')">Komentari</button>
+      <button onclick="showSection('chat')">Chat</button>
+      <button id="loginNav" onclick="showSection('login')">Prijava</button>
+      <button id="logoutBtn" class="hidden" onclick="logout()">Odjava</button>
+      <button id="adminNav" class="hidden" onclick="showSection('admin')">Admin</button>
+    </nav>
 
-  <main class="container">
+  </div>
+</header>
 
-    <div class="cards">
+
+<div class="hero">
+  <h1>Medjaši Futsal Liga</h1>
+  <p>Rezultati • Tabela • Ekipe • Igrači • Statistika</p>
+</div>
+
+
+<main>
+
+  <!-- POČETNA -->
+  <section id="home" class="active">
+
+    <h2>Dobrodošli</h2>
+
+    <div class="grid">
 
       <div class="card">
         <h3>🏆 Tabela</h3>
-        <p>Pratite plasman svih ekipa.</p>
+        <p class="muted">
+          Pogledaj trenutni plasman ekipa.
+        </p>
+        <br>
+        <button class="btn" onclick="showSection('table')">
+          Otvori tabelu
+        </button>
       </div>
 
       <div class="card">
         <h3>⚽ Utakmice</h3>
-        <p>Rezultati i raspored utakmica.</p>
+        <p class="muted">
+          Rezultati i raspored utakmica.
+        </p>
+        <br>
+        <button class="btn" onclick="showSection('matches')">
+          Pogledaj utakmice
+        </button>
       </div>
 
       <div class="card">
-  <h3>👥 Ekipe</h3>
-  <div id="teams-list">Učitavanje ekipa...</div>
-</div>
+        <h3>👥 Ekipe</h3>
+        <p class="muted">
+          Sve ekipe koje učestvuju u ligi.
+        </p>
+        <br>
+        <button class="btn" onclick="showSection('teams')">
+          Pogledaj ekipe
+        </button>
+      </div>
 
       <div class="card">
         <h3>📊 Statistika</h3>
-        <p>Golovi, asistencije i kartoni.</p>
+        <p class="muted">
+          Golovi, asistencije i kartoni.
+        </p>
+        <br>
+        <button class="btn" onclick="showSection('stats')">
+          Statistika
+        </button>
       </div>
 
     </div>
 
-  </main>
+  </section>
 
-  <footer>
-    © 2026 Medjaši Futsal Liga
-  </footer>
 
-  <script>
-   const SUPABASE_URL = "https://mesryrrjnsnhadoahbux.supabase.co/rest/v1/";
-  const SUPABASE_KEY = "sb_publishable_MVCdydxN-3CMuHpp8a5Nqg_aw5ZPDjH";
+  <!-- TABELA -->
+  <section id="table">
 
-  const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+    <h2>🏆 Tabela</h2>
 
-  async function testSupabase() {
-    const { data, error } = await supabaseClient
-      .from("teams")
-      .select("*");
+    <div id="tableContent">
+      Učitavanje tabele...
+    </div>
 
-    if (error) {
-      console.error("Supabase greška:", error);
+  </section>
+
+
+  <!-- UTAKMICE -->
+  <section id="matches">
+
+    <h2>⚽ Utakmice</h2>
+
+    <div id="matchesContent">
+      Učitavanje utakmica...
+    </div>
+
+  </section>
+
+
+  <!-- EKIPE -->
+  <section id="teams">
+
+    <h2>👥 Ekipe</h2>
+
+    <div id="teamsContent">
+      Učitavanje ekipa...
+    </div>
+
+  </section>
+
+
+  <!-- IGRAČI -->
+  <section id="players">
+
+    <h2>👤 Igrači</h2>
+
+    <div id="playersContent">
+      Učitavanje igrača...
+    </div>
+
+  </section>
+
+
+  <!-- STATISTIKA -->
+  <section id="stats">
+
+    <h2>📊 Statistika</h2>
+
+    <div class="grid">
+
+      <div class="card">
+        <h3>⚽ Golovi</h3>
+        <div id="goalsStats">
+          Učitavanje...
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🎯 Asistencije</h3>
+        <div id="assistsStats">
+          Učitavanje...
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🟨 Kartoni</h3>
+        <div id="cardsStats">
+          Učitavanje...
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- KOMENTARI -->
+  <section id="comments">
+
+    <h2>💬 Komentari</h2>
+
+    <div id="commentLoginNotice" class="card">
+      Za pisanje komentara moraš biti prijavljen.
+    </div>
+
+    <div id="commentForm" class="card hidden">
+
+      <textarea
+        id="commentText"
+        placeholder="Napiši komentar..."
+      ></textarea>
+
+      <button class="btn" onclick="addComment()">
+        Objavi komentar
+      </button>
+
+      <p id="commentMessage"></p>
+
+    </div>
+
+    <br>
+
+    <div id="commentsList">
+      Učitavanje komentara...
+    </div>
+
+  </section>
+
+
+  <!-- CHAT -->
+  <section id="chat">
+
+    <h2>💬 Chat</h2>
+
+    <div id="chatLoginNotice" class="card">
+      Prijavi se da bi mogao slati poruke.
+    </div>
+
+    <div id="chatForm" class="card hidden">
+
+      <input
+        id="chatText"
+        placeholder="Napiši poruku..."
+      >
+
+      <button class="btn" onclick="sendMessage()">
+        Pošalji
+      </button>
+
+      <p id="chatMessage"></p>
+
+    </div>
+
+    <br>
+
+    <div id="messagesList">
+      Učitavanje poruka...
+    </div>
+
+  </section>
+
+
+  <!-- LOGIN -->
+  <section id="login">
+
+    <h2>🔐 Prijava / Registracija</h2>
+
+    <div class="card form">
+
+      <input
+        id="email"
+        type="email"
+        placeholder="Email"
+      >
+
+      <input
+        id="password"
+        type="password"
+        placeholder="Lozinka"
+      >
+
+      <button class="btn" onclick="login()">
+        Prijava
+      </button>
+
+      <button class="btn" onclick="register()">
+        Registracija
+      </button>
+
+      <p id="authMessage"></p>
+
+    </div>
+
+  </section>
+
+
+  <!-- ADMIN -->
+  <section id="admin">
+
+    <h2>⚙️ Admin panel</h2>
+
+    <div class="card">
+
+      <h3>➕ Dodaj ekipu</h3>
+
+      <input
+        id="teamName"
+        placeholder="Naziv ekipe"
+      >
+
+      <input
+        id="teamLogo"
+        placeholder="URL logo slike (opciono)"
+      >
+
+      <button class="btn" onclick="addTeam()">
+        Dodaj ekipu
+      </button>
+
+      <p id="teamAdminMessage"></p>
+
+    </div>
+
+
+    <br>
+
+
+    <div class="card">
+
+      <h3>➕ Dodaj igrača</h3>
+
+      <input
+        id="playerNumber"
+        type="number"
+        placeholder="Broj dresa"
+      >
+
+      <input
+        id="playerPosition"
+        placeholder="Pozicija"
+      >
+
+      <input
+        id="playerPhoto"
+        placeholder="URL slike (opciono)"
+      >
+
+      <select id="playerTeam">
+        <option value="">Izaberi ekipu</option>
+      </select>
+
+      <button class="btn" onclick="addPlayer()">
+        Dodaj igrača
+      </button>
+
+      <p id="playerAdminMessage"></p>
+
+    </div>
+
+
+    <br>
+
+
+    <div class="card">
+
+      <h3>ℹ️ Admin</h3>
+
+      <p class="muted">
+        Ovdje će se kasnije dodati kompletno upravljanje
+        utakmicama, golovima, asistencijama i kartonima.
+      </p>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<footer>
+  © 2026 Medjaši Futsal Liga
+</footer>
+
+
+<script>
+
+  /* ==========================================
+     SUPABASE
+     ========================================== */
+
+  const SUPABASE_URL =
+    "https://mesryrrjnsnhadoahbux.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_MVCdydxN-3CMuHpp8a5Nqg_aw5ZPDjH";
+
+  const supabaseClient =
+    supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+
+  let currentUser = null;
+  let isAdmin = false;
+
+
+  /* ==========================================
+     NAVIGACIJA
+     ========================================== */
+
+  function showSection(id) {
+
+    document
+      .querySelectorAll("main section")
+      .forEach(section => {
+        section.classList.remove("active");
+      });
+
+    const section =
+      document.getElementById(id);
+
+    if (section) {
+      section.classList.add("active");
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }
+
+
+  /* ==========================================
+     AUTH
+     ========================================== */
+
+  async function checkUser() {
+
+    const {
+      data,
+      error
+    } = await supabaseClient.auth.getUser();
+
+    if (error || !data.user) {
+
+      currentUser = null;
+      isAdmin = false;
+
+      updateAuthUI();
+
       return;
     }
 
-    console.log("Ekipe iz baze:", data);
+    currentUser = data.user;
+
+    await checkAdmin();
+
+    updateAuthUI();
+
   }
 
-  testSupabase();
-    async function loadTeams() {
-  const { data, error } = await supabaseClient
-    .from("teams")
-    .select("name")
-    .order("name");
 
-  const teamsList = document.getElementById("teams-list");
+  async function checkAdmin() {
 
-  if (error) {
-    teamsList.textContent = "Greška pri učitavanju ekipa.";
-    console.error(error);
-    return;
+    isAdmin = false;
+
+    if (!currentUser) {
+      return;
+    }
+
+    const {
+      data,
+      error
+    } = await supabaseClient
+      .from("profiles")
+      .select("role")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if (!error && data && data.role === "admin") {
+      isAdmin = true;
+    }
+
   }
 
-  if (!data.length) {
-    teamsList.textContent = "Nema ekipa.";
-    return;
+
+  function updateAuthUI() {
+
+    const loginNav =
+      document.getElementById("loginNav");
+
+    const logoutBtn =
+      document.getElementById("logoutBtn");
+
+    const adminNav =
+      document.getElementById("adminNav");
+
+    const commentNotice =
+      document.getElementById("commentLoginNotice");
+
+    const commentForm =
+      document.getElementById("commentForm");
+
+    const chatNotice =
+      document.getElementById("chatLoginNotice");
+
+    const chatForm =
+      document.getElementById("chatForm");
+
+
+    if (currentUser) {
+
+      loginNav.classList.add("hidden");
+      logoutBtn.classList.remove("hidden");
+
+      commentNotice.classList.add("hidden");
+      commentForm.classList.remove("hidden");
+
+      chatNotice.classList.add("hidden");
+      chatForm.classList.remove("hidden");
+
+      if (isAdmin) {
+        adminNav.classList.remove("hidden");
+      } else {
+        adminNav.classList.add("hidden");
+      }
+
+    } else {
+
+      loginNav.classList.remove("hidden");
+      logoutBtn.classList.add("hidden");
+      adminNav.classList.add("hidden");
+
+      commentNotice.classList.remove("hidden");
+      commentForm.classList.add("hidden");
+
+      chatNotice.classList.remove("hidden");
+      chatForm.classList.add("hidden");
+
+    }
+
   }
 
-  teamsList.innerHTML = data
-    .map(team => `<p>⚽ ${team.name}</p>`)
-    .join("");
-}
 
-loadTeams();
+  async function register() {
+
+    const email =
+      document.getElementById("email").value.trim();
+
+    const password =
+      document.getElementById("password").value;
+
+    const message =
+      document.getElementById("authMessage");
+
+
+    if (!email || !password) {
+
+      message.className = "error";
+      message.textContent =
+        "Unesi email i lozinku.";
+
+      return;
+    }
+
+
+    const {
+      error
+    } = await supabaseClient.auth.signUp({
+      email,
+      password
+    });
+
+
+    if (error) {
+
+      message.className = "error";
+      message.textContent =
+        error.message;
+
+      return;
+    }
+
+
+    message.className = "success";
+    message.textContent =
+      "Registracija uspješna. Provjeri email ako je potvrda uključena.";
+
+  }
+
+
+  async function login() {
+
+    const email =
+      document.getElementById("email").value.trim();
+
+    const password =
+      document.getElementById("password").value;
+
+    const message =
+      document.getElementById("authMessage");
+
+
+    if (!email || !password) {
+
+      message.className = "error";
+      message.textContent =
+        "Unesi email i lozinku.";
+
+      return;
+    }
+
+
+    const {
+      error
+    } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+
+
+    if (error) {
+
+      message.className = "error";
+      message.textContent =
+        error.message;
+
+      return;
+    }
+
+
+    message.className = "success";
+    message.textContent =
+      "Uspješna prijava!";
+
+
+    await checkUser();
+
+    setTimeout(() => {
+      showSection("home");
+    }, 500);
+
+  }
+
+
+  async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    currentUser = null;
+    isAdmin = false;
+
+    updateAuthUI();
+
+    showSection("home");
+
+  }
+
+
+  /* ==========================================
+     EKIPE
+     ========================================== */
+
+  async function loadTeams() {
+
+    const container =
+      document.getElementById("teamsContent");
+
+    const {
+      data,
+      error
+    } = await supabaseClient
+      .from("teams")
+      .select("*")
+      .order("name");
+
+
+    if (error) {
+
+      container.innerHTML =
+        `<p class="error">Greška pri učitavanju ekipa.</p>`;
+
+      console.error(error);
+
+      return;
+    }
+
+
+    if (!data || data.length === 0) {
+
+      container.innerHTML =
+        `<p class="muted">Još nema ekipa.</p>`;
+
+      return;
+    }
+
+
+    container.innerHTML =
+      data.map(team => {
+
+        const logo =
+          team.logo_url
+            ? `<img src="${escapeHtml(team.logo_url)}">`
+            : `<div style="font-size:35px">⚽</div>`;
+
+        return `
+          <div class="team">
+            ${logo}
+
+            <div>
+              <strong>
+                ${escapeHtml(team.name)}
+              </strong>
+            </div>
+          </div>
+        `;
+
+      }).join("");
+
+
+
+    const select =
+      document.getElementById("playerTeam");
+
+    if (select) {
+
+      select.innerHTML =
+        `<option value="">Izaberi ekipu</option>` +
+        data.map(team =>
+          `<option value="${team.id}">
+            ${escapeHtml(team.name)}
+          </option>`
+        ).join("");
+
+    }
+
+  }
+
+
+  async function addTeam() {
+
+    if (!isAdmin) {
+      alert("Nemaš administratorska prava.");
+      return;
+    }
+
+
+    const name =
+      document
+        .getElementById("teamName")
+        .value
+        .trim();
+
+    const logo =
+      document
+        .getElementById("teamLogo")
+        .value
+        .trim();
+
+
+    const message =
+      document.getElementById(
+        "teamAdminMessage"
+      );
+
+
+    if (!name) {
+
+      message.className = "error";
+      message.textContent =
+        "Unesi naziv ekipe.";
+
+      return;
+    }
+
+
+    const {
+      error
+    } = await supabaseClient
+      .from("teams")
+      .insert({
+        name: name,
+        logo_url: logo || null
+      });
+
+
+    if (error) {
+
+      message.className = "error";
+      message.textContent =
+        error.message;
+
+      return;
+    }
+
+
+    message.className = "success";
+    message.textContent =
+      "Ekipa je dodana.";
+
+    document.getElementById("teamName").value = "";
+    document.getElementById("teamLogo").value = "";
+
+    await loadTeams();
+
+  }
+
+
+  /* ==========================================
+     IGRAČI
+     ========================================== */
+
+  async function loadPlayers() {
+
+    const container =
+      document.getElementById("playersContent");
+
+
+    const [
+      playersResult,
+      teamsResult
+    ] = await Promise.all([
+
+      supabaseClient
+        .from("players")
+        .select("*")
+        .order("jersey_number"),
+
+      supabaseClient
+        .from("teams")
+        .select("*")
+        .order("name")
+
+    ]);
+
+
+    if (playersResult.error) {
+
+      container.innerHTML =
+        `<p class="error">Greška pri učitavanju igrača.</p>`;
+
+      return;
+    }
+
+
+    const players =
+      playersResult.data || [];
+
+    const teams =
+      teamsResult.data || [];
+
+
+    const teamMap = {};
+
+    teams.forEach(team => {
+      teamMap[team.id] = team.name;
+    });
+
+
+    if (!players.length) {
+
+      container.innerHTML =
+        `<p class="muted">Još nema igrača.</p>`;
+
+      return;
+    }
+
+
+    container.innerHTML =
+      players.map(player => {
+
+        const teamName =
+          teamMap[player.team_id] ||
+          "Nepoznata ekipa";
+
+        const photo =
+          player.photo_url
+            ? `<img src="${escapeHtml(player.photo_url)}">`
+            : `<div style="font-size:35px">👤</div>`;
+
+        return `
+          <div class="player">
+
+            ${photo}
+
+            <div>
+              <strong>
+                Igrač #${player.jersey_number ?? "-"}
+              </strong>
+
+              <div class="muted">
+                ${escapeHtml(player.position || "Pozicija nije unesena")}
+              </div>
+
+              <div>
+                ⚽ ${escapeHtml(teamName)}
+              </div>
+            </div>
+
+          </div>
+        `;
+
+      }).join("");
+
+  }
+
+
+  async function addPlayer() {
+
+    if (!isAdmin) {
+      alert("Nemaš administratorska prava.");
+      return;
+    }
+
+
+    const number =
+      document.getElementById(
+        "playerNumber"
+      ).value;
+
+    const position =
+      document.getElementById(
+        "playerPosition"
+      ).value.trim();
+
+    const photo =
+      document.getElementById(
+        "playerPhoto"
+      ).value.trim();
+
+    const teamId =
+      document.getElementById(
+        "playerTeam"
+      ).value;
+
+
+    const message =
+      document.getElementById(
+        "playerAdminMessage"
+      );
+
+
+    if (!teamId) {
+
+      message.className = "error";
+      message.textContent =
+        "Izaberi ekipu.";
+
+      return;
+    }
+
+
+    const {
+      error
+    } = await supabaseClient
+      .from("players")
+      .insert({
+
+        team_id: teamId,
+
+        jersey_number:
+          number
+            ? Number(number)
+            : null,
+
+        position:
+          position || null,
+
+        photo_url:
+          photo || null
+
+      });
+
+
+    if (error) {
+
+      message.className = "error";
+      message.textContent =
+        error.message;
+
+      return;
+    }
+
+
+    message.className = "success";
+    message.textContent =
+      "Igrač je dodan.";
+
+    document.getElementById("playerNumber").value = "";
+    document.getElementById("playerPosition").value = "";
+    document.getElementById("playerPhoto").value = "";
+    document.getElementById("playerTeam").value = "";
+
+    await loadPlayers();
+
+  }
+
+
+  /* ==========================================
+     UTAKMICE
+     ========================================== */
+
+  async function loadMatches() {
+
+    const container =
+      document.getElementById(
+        "matchesContent"
+      );
+
+
+    const [
+      matchesResult,
+      teamsResult
+    ] = await Promise.all([
+
+      supabaseClient
+        .from("matches")
+        .select("*")
+        .order("match_date", {
+          ascending: false
+        }),
+
+      supabaseClient
+        .from("teams")
+        .select("*")
+
+    ]);
+
+
+    if (matchesResult.error) {
+
+      container.innerHTML =
+        `<p class="error">Greška pri učitavanju utakmica.</p>`;
+
+      return;
+    }
+
+
+    const matches =
+      matchesResult.data || [];
+
+    const teams =
+      teamsResult.data || [];
+
+
+    const teamMap = {};
+
+    teams.forEach(team => {
+      teamMap[team.id] = team.name;
+    });
+
+
+    if (!matches.length) {
+
+      container.innerHTML =
+        `<p class="muted">Još nema utakmica.</p>`;
+
+      return;
+    }
+
+
+    container.innerHTML =
+      matches.map(match => {
+
+        const home =
+          teamMap[match.home_team_id] ||
+          "Domaćin";
+
+        const away =
+          teamMap[match.away_team_id] ||
+          "Gost";
+
+
+        const date =
+          match.match_date
+            ? new Date(
+                match.match_date
+              ).toLocaleString(
+                "bs-BA"
+              )
+            : "Datum nije određen";
+
+
+        return `
+          <div class="match">
+
+            <div>
+              🏟️ Kolo:
+              ${match.round ?? "-"}
+            </div>
+
+            <br>
+
+            <strong>
+              ${escapeHtml(home)}
+              vs
+              ${escapeHtml(away)}
+            </strong>
+
+            <div class="score">
+              ${match.home_score ?? 0}
+              :
+              ${match.away_score ?? 0}
+            </div>
+
+            <div class="muted">
+              ${date}
+            </div>
+
+          </div>
+        `;
+
+      }).join("");
+
+  }
+
+
+  /* ==========================================
+     TABELA
+     ========================================== */
+
+  async function loadTable() {
+
+    const container =
+      document.getElementById(
+        "tableContent"
+      );
+
+
+    const [
+      teamsResult,
+      matchesResult
+    ] = await Promise.all([
+
+      supabaseClient
+        .from("teams")
+        .select("*")
+        .order("name"),
+
+      supabaseClient
+        .from("matches")
+        .select("*")
+
+    ]);
+
+
+    if (teamsResult.error ||
+        matchesResult.error) {
+
+      container.innerHTML =
+        `<p class="error">Greška pri učitavanju tabele.</p>`;
+
+      return;
+    }
+
+
+    const teams =
+      teamsResult.data || [];
+
+    const matches =
+      matchesResult.data || [];
+
+
+    const table =
+      teams.map(team => ({
+
+        id: team.id,
+        name: team.name,
+
+        played: 0,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+
+        goalsFor: 0,
+        goalsAgainst: 0,
+
+        points: 0
+
+      }));
+
+
+    const map = {};
+
+    table.forEach(team => {
+      map[team.id] = team;
+    });
+
+
+    matches.forEach(match => {
+
+      const home =
+        map[match.home_team_id];
+
+      const away =
+        map[match.away_team_id];
+
+
+      if (!home || !away) return;
+
+
+      const hs =
+        Number(match.home_score || 0);
+
+      const as =
+        Number(match.away_score || 0);
+
+
+      home.played++;
+      away.played++;
+
+      home.goalsFor += hs;
+      home.goalsAgainst += as;
+
+      away.goalsFor += as;
+      away.goalsAgainst += hs;
+
+
+      if (hs > as) {
+
+        home.wins++;
+        home.points += 3;
+
+        away.losses++;
+
+      } else if (hs < as) {
+
+        away.wins++;
+        away.points += 3;
+
+        home.losses++;
+
+      } else {
+
+        home.draws++;
+        away.draws++;
+
+        home.points++;
+        away.points++;
+
+      }
+
+    });
+
+
+    table.sort((a, b) => {
+
+      if (b.points !== a.points) {
+        return b.points - a.points;
+      }
+
+      const gdA =
+        a.goalsFor -
+        a.goalsAgainst;
+
+      const gdB =
+        b.goalsFor -
+        b.goalsAgainst;
+
+      return gdB - gdA;
+
+    });
+
+
+    if (!table.length) {
+
+      container.innerHTML =
+        `<p class="muted">Još nema ekipa.</p>`;
+
+      return;
+    }
+
+
+    container.innerHTML = `
+
+      <div style="overflow-x:auto">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>#</th>
+              <th>Ekipa</th>
+              <th>U</th>
+              <th>P</th>
+              <th>N</th>
+              <th>I</th>
+              <th>DG</th>
+              <th>PG</th>
+              <th>GR</th>
+              <th>Bod</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            ${table.map((team, index) => `
+
+              <tr>
+
+                <td>
+                  ${index + 1}
+                </td>
+
+                <td>
+                  <strong>
+                    ${escapeHtml(team.name)}
+                  </strong>
+                </td>
+
+                <td>
+                  ${team.played}
+                </td>
+
+                <td>
+                  ${team.wins}
+                </td>
+
+                <td>
+                  ${team.draws}
+                </td>
+
+                <td>
+                  ${team.losses}
+                </td>
+
+                <td>
+                  ${team.goalsFor}
+                </td>
+
+                <td>
+                  ${team.goalsAgainst}
+                </td>
+
+                <td>
+                  ${team.goalsFor - team.goalsAgainst}
+                </td>
+
+                <td>
+                  <strong>
+                    ${team.points}
+                  </strong>
+                </td>
+
+              </tr>
+
+            `).join("")}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      <p class="muted" style="margin-top:10px">
+        U = utakmice, P = pobjede, N = neriješeno,
+        I = porazi, DG = dati golovi, PG = primljeni golovi.
+      </p>
+
+    `;
+
+  }
+
+
+  /* ==========================================
+     KOMENTARI
+     ========================================== */
+
+  async function loadComments() {
+
+    const container =
+      document.getElementById(
+        "commentsList"
+      );
+
+
+    const {
+      data,
+      error
+    } = await supabaseClient
+      .from("comments")
+      .select("*")
+      .order("created_at", {
+        ascending: false
+      });
+
+
+    if (error) {
+
+      container.innerHTML =
+        `<p class="error">Greška pri učitavanju komentara.</p>`;
+
+      return;
+    }
+
+
+    if (!data || data.length === 0) {
+
+      container.innerHTML =
+        `<p class="muted">Još nema komentara.</p>`;
+
+      return;
+    }
+
+
+    container.innerHTML =
+      data.map(comment => `
+
+        <div class="comment">
+
+          <div>
+            <strong>
+              Korisnik
+            </strong>
+          </div>
+
+          <p style="margin-top:8px">
+            ${escapeHtml(comment.content)}
+          </p>
+
+          <small class="muted">
+            ${new Date(
+              comment.created_at
+            ).toLocaleString("bs-BA")}
+          </small>
+
+        </div>
+
+      `).join("");
+
+  }
+
+
+  async function addComment() {
+
+    if (!currentUser) {
+
+      alert("Moraš biti prijavljen.");
+
+      return;
+    }
+
+
+    const text =
+      document
+        .getElementById(
+          "commentText"
+        )
+        .value
+        .trim();
+
+
+    if (!text) return;
+
+
+    const {
+      error
+    } = await supabaseClient
+      .from("comments")
+      .insert({
+
+        user_id:
+          currentUser.id,
+
+        content:
+          text
+
+      });
+
+
+    const message =
+      document.getElementById(
+        "commentMessage"
+      );
+
+
+    if (error) {
+
+      message.className = "error";
+      message.textContent =
+        error.message;
+
+      return;
+    }
+
+
+    document.getElementById(
+      "commentText"
+    ).value = "";
+
+
+    message.className = "success";
+    message.textContent =
+      "Komentar je objavljen.";
+
+
+    await loadComments();
+
+  }
+
+
+  /* ==========================================
+     CHAT
+     ========================================== */
+
+  async function loadMessages() {
+
+    const container =
+      document.getElementById(
+        "messagesList"
+      );
+
+
+    const {
+      data,
+      error
+    } = await supabaseClient
+      .from("messages")
+      .select("*")
+      .order("created_at", {
+        ascending: true
+      });
+
+
+    if (error) {
+
+      container.innerHTML =
+        `<p class="error">Greška pri učitavanju chata.</p>`;
+
+      return;
+    }
+
+
+    if (!data || data.length === 0) {
+
+      container.innerHTML =
+        `<p class="muted">Još nema poruka.</p>`;
+
+      return;
+    }
+
+
+    container.innerHTML =
+      data.map(message => `
+
+        <div class="message">
+
+          <strong>
+            Korisnik
+          </strong>
+
+          <p style="margin-top:6px">
+            ${escapeHtml(message.content)}
+          </p>
+
+          <small class="muted">
+            ${new Date(
+              message.created_at
+            ).toLocaleString("bs-BA")}
+          </small>
+
+        </div>
+
+      `).join("");
+
+
+    container.scrollTop =
+      container.scrollHeight;
+
+  }
+
+
+  async function sendMessage() {
+
+    if (!currentUser) {
+
+      alert("Moraš biti prijavljen.");
+
+      return;
+    }
+
+
+    const input =
+      document.getElementById(
+        "chatText"
+      );
+
+    const text =
+      input.value.trim();
+
+
+    if (!text) return;
+
+
+    const {
+      error
+    } = await supabaseClient
+      .from("messages")
+      .insert({
+
+        user_id:
+          currentUser.id,
+
+        content:
+          text
+
+      });
+
+
+    const message =
+      document.getElementById(
+        "chatMessage"
+      );
+
+
+    if (error) {
+
+      message.className = "error";
+      message.textContent =
+        error.message;
+
+      return;
+    }
+
+
+    input.value = "";
+
+    message.textContent = "";
+
+    await loadMessages();
+
+  }
+
+
+  /* ==========================================
+     STATISTIKA
+     ========================================== */
+
+  async function loadStats() {
+
+    const goalsBox =
+      document.getElementById(
+        "goalsStats"
+      );
+
+    const assistsBox =
+      document.getElementById(
+        "assistsStats"
+      );
+
+    const cardsBox =
+      document.getElementById(
+        "cardsStats"
+      );
+
+
+    const [
+      goalsResult,
+      cardsResult,
+      playersResult
+    ] = await Promise.all([
+
+      supabaseClient
+        .from("goals")
+        .select("*"),
+
+      supabaseClient
+        .from("cards")
+        .select("*"),
+
+      supabaseClient
+        .from("players")
+        .select("*")
+
+    ]);
+
+
+    if (goalsResult.error ||
+        cardsResult.error ||
+        playersResult.error) {
+
+      goalsBox.innerHTML =
+        `<span class="error">Greška.</span>`;
+
+      return;
+    }
+
+
+    const goals =
+      goalsResult.data || [];
+
+    const cards =
+      cardsResult.data || [];
+
+    const players =
+      playersResult.data || [];
+
+
+    const playerMap = {};
+
+    players.forEach(player => {
+
+      playerMap[player.id] =
+        `Igrač #${player.jersey_number ?? "-"}`;
+
+    });
+
+
+    const scorerMap = {};
+    const assistMap = {};
+    const cardMap = {};
+
+
+    goals.forEach(goal => {
+
+      const playerName =
+        playerMap[goal.player_id] ||
+        "Nepoznat igrač";
+
+
+      scorerMap[playerName] =
+        (scorerMap[playerName] || 0) + 1;
+
+
+      if (goal.assist_player_id) {
+
+        const assistName =
+          playerMap[goal.assist_player_id] ||
+          "Nepoznat igrač";
+
+
+        assistMap[assistName] =
+          (assistMap[assistName] || 0) + 1;
+
+      }
+
+    });
+
+
+    cards.forEach(card => {
+
+      const playerName =
+        playerMap[card.player_id] ||
+        "Nepoznat igrač";
+
+
+      cardMap[playerName] =
+        (cardMap[playerName] || 0) + 1;
+
+    });
+
+
+    function makeList(map) {
+
+      const entries =
+        Object.entries(map)
+          .sort((a,b) => b[1] - a[1]);
+
+
+      if (!entries.length) {
+
+        return `<p class="muted">Nema podataka.</p>`;
+
+      }
+
+
+      return entries
+        .slice(0, 10)
+        .map(
+          ([name, count], index) =>
+            `<p>
+              ${index + 1}.
+              <strong>${escapeHtml(name)}</strong>
+              — ${count}
+            </p>`
+        )
+        .join("");
+
+    }
+
+
+    goalsBox.innerHTML =
+      makeList(scorerMap);
+
+    assistsBox.innerHTML =
+      makeList(assistMap);
+
+    cardsBox.innerHTML =
+      makeList(cardMap);
+
+  }
+
+
+  /* ==========================================
+     ZAŠTITA HTML-a
+     ========================================== */
+
+  function escapeHtml(value) {
+
+    if (value === null ||
+        value === undefined) {
+
+      return "";
+
+    }
+
+
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  }
+
+
+  /* ==========================================
+     POKRETANJE
+     ========================================== */
+
+  async function initialize() {
+
+    await checkUser();
+
+    await Promise.all([
+
+      loadTeams(),
+      loadPlayers(),
+      loadMatches(),
+      loadTable(),
+      loadComments(),
+      loadMessages(),
+      loadStats()
+
+    ]);
+
+  }
+
+
+  initialize();
+
+
+  /* ==========================================
+     AUTOMATSKO OSVJEŽAVANJE KADA SE PRIJAVIŠ
+     ========================================== */
+
+  supabaseClient.auth.onAuthStateChange(
+    async () => {
+
+      await checkUser();
+
+    }
+  );
+
 </script>
+
 </body>
 </html>
