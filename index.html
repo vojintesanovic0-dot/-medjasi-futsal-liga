@@ -8,468 +8,226 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box}
 body{
-    font-family:Arial,Helvetica,sans-serif;
-    background:#0b0f14;
-    color:#f4f4f4;
-    line-height:1.5;
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#0b0f14;
+  color:#fff;
 }
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
-
 header{
-    background:linear-gradient(135deg,#101820,#162331);
-    border-bottom:1px solid #263442;
-    position:sticky;
-    top:0;
-    z-index:1000;
+  background:#111820;
+  padding:18px 14px;
+  position:sticky;
+  top:0;
+  z-index:10;
+  border-bottom:1px solid #26313d;
 }
-.header-inner{
-    max-width:1200px;
-    margin:auto;
-    padding:15px 20px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:20px;
+header h1{
+  margin:0 0 14px;
+  font-size:22px;
 }
-.logo-title{
-    font-size:22px;
-    font-weight:800;
-    color:#fff;
-}
-.logo-title span{color:#21d17b}
-
 nav{
-    display:flex;
-    gap:7px;
-    flex-wrap:wrap;
-    justify-content:flex-end;
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
 }
 nav button{
-    background:transparent;
-    color:#cbd5df;
-    border:1px solid transparent;
-    padding:8px 11px;
-    border-radius:8px;
+  border:0;
+  background:#1b2530;
+  color:#fff;
+  padding:9px 12px;
+  border-radius:8px;
+  white-space:nowrap;
 }
-nav button:hover,
-nav button.active{
-    background:#1d2a36;
-    color:#21d17b;
-    border-color:#294050;
-}
+nav button:hover{background:#263544}
 
-.container{
-    max-width:1200px;
-    margin:auto;
-    padding:25px 18px 60px;
+main{
+  max-width:1100px;
+  margin:auto;
+  padding:20px 14px 60px;
 }
-
-.page{display:none}
-.page.active{display:block}
-
-.hero{
-    padding:45px 25px;
-    border-radius:18px;
-    background:
-      radial-gradient(circle at top right,#173d2d,transparent 40%),
-      linear-gradient(135deg,#101820,#10161d);
-    border:1px solid #24313c;
-    margin-bottom:25px;
-}
-.hero h1{
-    font-size:42px;
-    margin-bottom:8px;
-}
-.hero p{color:#aebbc6}
-
-.stats-grid{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:14px;
-    margin-bottom:25px;
-}
-.stat-card{
-    background:#111820;
-    border:1px solid #24313c;
-    border-radius:14px;
-    padding:18px;
-}
-.stat-card small{color:#84929e}
-.stat-card strong{
-    display:block;
-    font-size:28px;
-    margin-top:5px;
-    color:#21d17b;
-}
-
-.section-title{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    margin:28px 0 14px;
-}
-.section-title h2{font-size:23px}
-
-.grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:15px;
-}
+section{display:none}
+section.active{display:block}
 
 .card{
-    background:#111820;
-    border:1px solid #24313c;
-    border-radius:14px;
-    padding:17px;
+  background:#121922;
+  border:1px solid #26313d;
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:16px;
 }
-.card:hover{
-    border-color:#355366;
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
 }
-
-.match-card{
-    background:#111820;
-    border:1px solid #24313c;
-    border-radius:14px;
-    padding:16px;
-    margin-bottom:12px;
-    cursor:pointer;
+.stat{
+  background:#151f29;
+  border-radius:12px;
+  padding:18px;
+  text-align:center;
 }
-.match-card:hover{border-color:#21d17b}
-
-.match-top{
-    display:flex;
-    justify-content:space-between;
-    color:#82909b;
-    font-size:13px;
-    margin-bottom:12px;
-}
-.match-teams{
-    display:grid;
-    grid-template-columns:1fr auto 1fr;
-    align-items:center;
-    gap:12px;
-}
-.team-side{text-align:center}
-.team-name{font-weight:700}
-.score{
-    font-size:28px;
-    font-weight:800;
-    white-space:nowrap;
-}
-.match-status{
-    display:inline-block;
-    padding:4px 8px;
-    border-radius:20px;
-    font-size:11px;
-    font-weight:700;
-    text-transform:uppercase;
-}
-.status-live{background:#5d1717;color:#ff7070}
-.status-finished{background:#163a29;color:#62e89d}
-.status-scheduled{background:#24313c;color:#cbd5df}
-
-.team-card{text-align:center}
-.team-logo{
-    width:72px;
-    height:72px;
-    object-fit:contain;
-    border-radius:50%;
-    background:#18222b;
-    padding:6px;
-    margin:auto auto 10px;
-}
-.team-logo.small{
-    width:48px;
-    height:48px;
-}
-.team-card h3{margin-bottom:4px}
-.team-card p{color:#8f9ca7;font-size:13px}
-
-.player-card{
-    display:flex;
-    align-items:center;
-    gap:13px;
-    cursor:pointer;
-}
-.player-photo{
-    width:58px;
-    height:58px;
-    border-radius:50%;
-    object-fit:cover;
-    background:#202b34;
-}
-.player-info h3{font-size:17px}
-.player-info p{font-size:13px;color:#87949f}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-    background:#111820;
-    border-radius:12px;
-    overflow:hidden;
-}
-th,td{
-    padding:12px 9px;
-    border-bottom:1px solid #25313b;
-    text-align:center;
-}
-th{
-    background:#18222b;
-    color:#9caab5;
-    font-size:12px;
-}
-td:first-child,th:first-child{text-align:left}
-tr:hover td{background:#141d25}
-
-.team-table-name{
-    display:flex;
-    align-items:center;
-    gap:8px;
-}
-.table-logo{
-    width:30px;
-    height:30px;
-    object-fit:contain;
+.stat b{
+  display:block;
+  font-size:28px;
+  margin-top:7px;
 }
 
-.form{
-    display:flex;
-    gap:3px;
-    justify-content:center;
-}
-.form span{
-    width:20px;
-    height:20px;
-    border-radius:4px;
-    font-size:11px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:bold;
-}
-.form-w{background:#1d8b55}
-.form-d{background:#7d6a24}
-.form-l{background:#873636}
+h2,h3{margin-top:0}
 
-.controls{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-bottom:18px;
+button,.btn{
+  cursor:pointer;
 }
+.primary{
+  background:#19a463;
+  color:#fff;
+  border:0;
+  border-radius:8px;
+  padding:10px 14px;
+}
+.danger{
+  background:#c0392b;
+  color:#fff;
+  border:0;
+  border-radius:8px;
+  padding:8px 12px;
+}
+.small{
+  font-size:13px;
+  color:#aeb8c3;
+}
+
 input,select,textarea{
-    width:100%;
-    background:#0c1218;
-    color:#fff;
-    border:1px solid #2a3945;
-    border-radius:8px;
-    padding:11px;
-    outline:none;
+  width:100%;
+  padding:11px;
+  margin:5px 0 10px;
+  border-radius:8px;
+  border:1px solid #354454;
+  background:#0d141b;
+  color:#fff;
 }
-input:focus,select:focus,textarea:focus{
-    border-color:#21d17b;
-}
-.controls select{max-width:250px}
-
-.btn{
-    border:0;
-    border-radius:8px;
-    padding:10px 14px;
-    background:#21d17b;
-    color:#06130c;
-    font-weight:700;
-}
-.btn:hover{filter:brightness(1.1)}
-.btn.secondary{
-    background:#25333f;
-    color:#fff;
-}
-.btn.danger{
-    background:#8f3030;
-    color:#fff;
-}
-.btn.warning{
-    background:#9a7a21;
-    color:#fff;
-}
+textarea{min-height:90px}
 
 .form-grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:12px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:10px;
 }
 .form-group label{
-    display:block;
-    color:#9aa7b2;
-    font-size:13px;
-    margin-bottom:5px;
+  display:block;
+  font-size:13px;
+  color:#b9c4cf;
+  margin-top:5px;
 }
 
-.admin-section{
-    margin-bottom:22px;
+table{
+  width:100%;
+  border-collapse:collapse;
 }
-.admin-section h3{
-    margin-bottom:12px;
-    color:#21d17b;
+th,td{
+  padding:10px 7px;
+  border-bottom:1px solid #26313d;
+  text-align:left;
 }
-.admin-box{
-    background:#111820;
-    border:1px solid #24313c;
-    border-radius:14px;
-    padding:18px;
+th{color:#9eabb8}
+
+.team-row,.player-row,.match-row{
+  background:#151f29;
+  padding:13px;
+  border-radius:11px;
+  margin-bottom:9px;
+}
+.team-row,.player-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.logo{
+  width:48px;
+  height:48px;
+  object-fit:cover;
+  border-radius:50%;
+  background:#26313d;
+}
+.player-photo{
+  width:50px;
+  height:50px;
+  object-fit:cover;
+  border-radius:50%;
+  background:#26313d;
 }
 
-.live-box{
-    border:1px solid #742929;
-    background:linear-gradient(135deg,#1b1111,#151820);
-    border-radius:15px;
-    padding:18px;
+.badge{
+  display:inline-block;
+  padding:4px 7px;
+  border-radius:6px;
+  font-size:12px;
 }
-.live-label{
-    color:#ff6262;
-    font-weight:800;
-    margin-bottom:10px;
-}
-.live-minute{
-    color:#ff7070;
-    font-weight:bold;
-}
-
-.empty{
-    color:#7f8c97;
-    padding:25px;
-    text-align:center;
-}
-
-.alert{
-    padding:12px;
-    border-radius:8px;
-    margin-bottom:12px;
-    display:none;
-}
-.alert.show{display:block}
-.alert.success{background:#143a29;color:#6fe8a2}
-.alert.error{background:#421d1d;color:#ff8585}
+.live{background:#c0392b}
+.finished{background:#26313d}
+.scheduled{background:#245f9c}
 
 .modal{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.78);
-    z-index:2000;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:15px;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+  padding:15px;
 }
-.modal.show{display:flex}
-.modal-content{
-    width:min(700px,100%);
-    max-height:90vh;
-    overflow:auto;
-    background:#101820;
-    border:1px solid #2a3945;
-    border-radius:16px;
-    padding:22px;
-}
-.modal-head{
-    display:flex;
-    justify-content:space-between;
-    gap:10px;
-    align-items:center;
-    margin-bottom:18px;
+.modal-box{
+  width:100%;
+  max-width:600px;
+  max-height:90vh;
+  overflow:auto;
+  background:#121922;
+  border:1px solid #354454;
+  border-radius:14px;
+  padding:20px;
 }
 .close{
-    background:#26333d;
-    color:#fff;
-    border:0;
-    border-radius:7px;
-    width:35px;
-    height:35px;
-}
-.detail-header{
-    text-align:center;
-    margin-bottom:20px;
-}
-.detail-score{
-    font-size:45px;
-    font-weight:800;
-    margin:10px 0;
-}
-.detail-teams{
-    display:grid;
-    grid-template-columns:1fr auto 1fr;
-    align-items:center;
-    gap:20px;
-}
-.detail-team{text-align:center}
-.detail-team img{
-    width:75px;
-    height:75px;
-    object-fit:contain;
-}
-.event{
-    display:flex;
-    gap:10px;
-    padding:10px;
-    border-bottom:1px solid #24313c;
-}
-.event-minute{
-    color:#21d17b;
-    font-weight:bold;
-    width:45px;
-}
-.event-card{
-    display:inline-block;
-    width:12px;
-    height:17px;
-    border-radius:2px;
-}
-.yellow{background:#e4c42d}
-.red{background:#d73838}
-
-.round-title{
-    background:#18232c;
-    padding:10px 14px;
-    border-radius:8px;
-    margin:20px 0 10px;
-    color:#21d17b;
-    font-weight:bold;
+  float:right;
+  background:#26313d;
+  color:#fff;
+  border:0;
+  border-radius:7px;
+  padding:7px 10px;
 }
 
-.auth-box{
-    max-width:450px;
-    margin:auto;
+.comment{
+  border-bottom:1px solid #26313d;
+  padding:10px 0;
+}
+.chat-message{
+  padding:10px;
+  background:#151f29;
+  border-radius:9px;
+  margin-bottom:7px;
 }
 
 .hidden{display:none!important}
 
-footer{
-    text-align:center;
-    color:#687580;
-    padding:25px;
-    border-top:1px solid #1e2932;
-    margin-top:30px;
+.preview{
+  max-width:100px;
+  max-height:100px;
+  border-radius:10px;
+  display:none;
+  margin:5px 0 10px;
 }
 
-@media(max-width:850px){
-    .stats-grid{grid-template-columns:repeat(2,1fr)}
-    .grid{grid-template-columns:repeat(2,1fr)}
-    .header-inner{align-items:flex-start;flex-direction:column}
-    nav{justify-content:flex-start}
+.notice{
+  padding:10px;
+  border-radius:8px;
+  background:#17232e;
+  margin-bottom:10px;
 }
+
 @media(max-width:600px){
-    .hero h1{font-size:30px}
-    .stats-grid,.grid{grid-template-columns:1fr}
-    .container{padding:18px 12px 40px}
-    table{font-size:12px}
-    th,td{padding:8px 4px}
-    .form{display:none}
-    .form-grid{grid-template-columns:1fr}
-    nav button{padding:7px 8px;font-size:12px}
+  header h1{font-size:19px}
+  th,td{font-size:13px}
 }
 </style>
 </head>
@@ -477,404 +235,290 @@ footer{
 <body>
 
 <header>
-<div class="header-inner">
-    <div class="logo-title">Medjaši <span>Futsal Liga</span></div>
+  <h1>⚽ Medjaši Futsal Liga</h1>
 
-    <nav id="nav">
-        <button onclick="showPage('home')" class="active">Početna</button>
-        <button onclick="showPage('table')">Tabela</button>
-        <button onclick="showPage('matches')">Utakmice</button>
-        <button onclick="showPage('teams')">Ekipe</button>
-        <button onclick="showPage('players')">Igrači</button>
-        <button onclick="showPage('stats')">Statistika</button>
-        <button onclick="showPage('comments')">Komentari</button>
-        <button onclick="showPage('chat')">Chat</button>
-        <button onclick="showPage('auth')" id="loginNav">Prijava</button>
-        <button onclick="logout()" id="logoutNav" class="hidden">Odjava</button>
-        <button onclick="showPage('admin')" id="adminNav" class="hidden">Admin</button>
-    </nav>
-</div>
+  <nav>
+    <button onclick="showSection('home')">Početna</button>
+    <button onclick="showSection('table')">Tabela</button>
+    <button onclick="showSection('matches')">Utakmice</button>
+    <button onclick="showSection('teams')">Ekipe</button>
+    <button onclick="showSection('players')">Igrači</button>
+    <button onclick="showSection('stats')">Statistika</button>
+    <button onclick="showSection('comments')">Komentari</button>
+    <button onclick="showSection('chat')">Chat</button>
+    <button id="loginNav" onclick="showSection('login')">Prijava</button>
+    <button id="logoutNav" onclick="logout()" class="hidden">Odjava</button>
+    <button id="adminNav" onclick="showSection('admin')" class="hidden">Admin</button>
+  </nav>
 </header>
 
-<main class="container">
+<main>
 
-<!-- HOME -->
-<section id="home" class="page active">
-    <div class="hero">
-        <h1>Medjaši Futsal Liga ⚽</h1>
-        <p>Rezultati, tabela, ekipe, igrači i statistika lige na jednom mjestu.</p>
+<section id="home" class="active">
+  <div class="card">
+    <h2>Dobro došli na Medjaši Futsal Ligu ⚽</h2>
+    <p class="small">
+      Rezultati, tabela, ekipe, igrači i statistika lige na jednom mjestu.
+    </p>
+  </div>
+
+  <div class="grid">
+    <div class="stat">
+      Ekipe
+      <b id="homeTeams">0</b>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <small>Ekipe</small>
-            <strong id="homeTeams">0</strong>
-        </div>
-        <div class="stat-card">
-            <small>Igrači</small>
-            <strong id="homePlayers">0</strong>
-        </div>
-        <div class="stat-card">
-            <small>Utakmice</small>
-            <strong id="homeMatches">0</strong>
-        </div>
-        <div class="stat-card">
-            <small>Golovi</small>
-            <strong id="homeGoals">0</strong>
-        </div>
+    <div class="stat">
+      Igrači
+      <b id="homePlayers">0</b>
     </div>
 
-    <div id="liveHome"></div>
-
-    <div class="section-title">
-        <h2>Sljedeća utakmica</h2>
+    <div class="stat">
+      Utakmice
+      <b id="homeMatches">0</b>
     </div>
-    <div id="nextMatch"></div>
 
-    <div class="section-title">
-        <h2>Posljednje utakmice</h2>
+    <div class="stat">
+      Golovi
+      <b id="homeGoals">0</b>
     </div>
-    <div id="lastMatches"></div>
+  </div>
+
+  <div class="card">
+    <h3>🔴 Uživo</h3>
+    <div id="homeLive">Nema utakmica uživo.</div>
+  </div>
+
+  <div class="card">
+    <h3>📅 Sljedeće utakmice</h3>
+    <div id="homeNext">Učitavanje...</div>
+  </div>
 </section>
 
-<!-- TABLE -->
-<section id="table" class="page">
-    <div class="section-title">
-        <h2>🏆 Tabela</h2>
-    </div>
-    <div id="tableContainer"></div>
+
+<section id="table">
+  <div class="card">
+    <h2>🏆 Tabela</h2>
+    <div id="tableContent">Učitavanje...</div>
+  </div>
 </section>
 
-<!-- MATCHES -->
-<section id="matches" class="page">
-    <div class="section-title">
-        <h2>📅 Raspored utakmica</h2>
+
+<section id="matches">
+  <div class="card">
+    <h2>⚽ Utakmice</h2>
+    <div id="matchesContent">Učitavanje...</div>
+  </div>
+</section>
+
+
+<section id="teams">
+  <div class="card">
+    <h2>🛡️ Ekipe</h2>
+    <div id="teamsContent">Učitavanje...</div>
+  </div>
+</section>
+
+
+<section id="players">
+  <div class="card">
+    <h2>👤 Igrači</h2>
+    <div id="playersContent">Učitavanje...</div>
+  </div>
+</section>
+
+
+<section id="stats">
+  <div class="card">
+    <h2>📊 Statistika</h2>
+    <div id="statsContent">Učitavanje...</div>
+  </div>
+</section>
+
+
+<section id="comments">
+  <div class="card">
+    <h2>💬 Komentari</h2>
+
+    <div id="commentLoginNotice" class="notice hidden">
+      Moraš biti prijavljen da bi ostavio komentar.
     </div>
 
-    <div class="controls">
-        <select id="roundFilter" onchange="renderMatches()">
-            <option value="all">Sva kola</option>
+    <div id="commentForm" class="hidden">
+      <textarea id="commentText" placeholder="Napiši komentar..."></textarea>
+      <button class="primary" onclick="addComment()">Objavi komentar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="commentsContent">Učitavanje...</div>
+  </div>
+</section>
+
+
+<section id="chat">
+  <div class="card">
+    <h2>💬 Chat</h2>
+
+    <div id="chatLoginNotice" class="notice hidden">
+      Prijavi se da bi mogao slati poruke.
+    </div>
+
+    <div id="chatForm" class="hidden">
+      <textarea id="chatText" placeholder="Napiši poruku..."></textarea>
+      <button class="primary" onclick="sendMessage()">Pošalji</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="chatContent">Učitavanje...</div>
+  </div>
+</section>
+
+
+<section id="login">
+  <div class="card">
+    <h2>🔐 Prijava / Registracija</h2>
+
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Lozinka">
+
+    <button class="primary" onclick="login()">Prijavi se</button>
+    <button onclick="register()">Registruj se</button>
+
+    <p id="authMessage" class="small"></p>
+  </div>
+</section>
+
+
+<section id="admin">
+  <div class="card">
+    <h2>⚙️ Admin panel</h2>
+    <p class="small">Ovdje možeš upravljati ligom.</p>
+  </div>
+
+  <div class="card">
+    <h3>➕ Dodaj ekipu</h3>
+
+    <div class="form-group">
+      <label>Naziv ekipe</label>
+      <input id="teamName" placeholder="Naziv ekipe">
+    </div>
+
+    <div class="form-group">
+      <label>Logo ekipe</label>
+      <input
+        id="teamLogoFile"
+        type="file"
+        accept="image/*"
+        onchange="previewImage(this,'teamPreview')"
+      >
+      <img id="teamPreview" class="preview">
+    </div>
+
+    <button class="primary" onclick="addTeam()">Dodaj ekipu</button>
+  </div>
+
+
+  <div class="card">
+    <h3>➕ Dodaj igrača</h3>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label>Ime i prezime</label>
+        <input id="playerName" placeholder="Ime i prezime">
+      </div>
+
+      <div class="form-group">
+        <label>Ekipa</label>
+        <select id="playerTeam"></select>
+      </div>
+
+      <div class="form-group">
+        <label>Broj dresa</label>
+        <input id="playerNumber" type="number" placeholder="10">
+      </div>
+
+      <div class="form-group">
+        <label>Pozicija</label>
+        <select id="playerPosition">
+          <option value="">Izaberi poziciju</option>
+          <option>Golman</option>
+          <option>Odbrana</option>
+          <option>Bek</option>
+          <option>Krilo</option>
+          <option>Pivot</option>
         </select>
+      </div>
+
     </div>
 
-    <div id="matchesContainer"></div>
-</section>
-
-<!-- TEAMS -->
-<section id="teams" class="page">
-    <div class="section-title">
-        <h2>👥 Ekipe</h2>
-    </div>
-    <div id="teamsContainer" class="grid"></div>
-</section>
-
-<!-- PLAYERS -->
-<section id="players" class="page">
-    <div class="section-title">
-        <h2>👤 Igrači</h2>
-    </div>
-    <div id="playersContainer" class="grid"></div>
-</section>
-
-<!-- STATS -->
-<section id="stats" class="page">
-    <div class="section-title">
-        <h2>📊 Statistika</h2>
+    <div class="form-group">
+      <label>Slika igrača</label>
+      <input
+        id="playerPhotoFile"
+        type="file"
+        accept="image/*"
+        onchange="previewImage(this,'playerPreview')"
+      >
+      <img id="playerPreview" class="preview">
     </div>
 
-    <div class="section-title">
-        <h2>Najbolji strijelci</h2>
-    </div>
-    <div id="scorersContainer" class="grid"></div>
+    <button class="primary" onclick="addPlayer()">Dodaj igrača</button>
+  </div>
 
-    <div class="section-title">
-        <h2>Najbolji asistenti</h2>
-    </div>
-    <div id="assistsContainer" class="grid"></div>
 
-    <div class="section-title">
-        <h2>Kartoni</h2>
-    </div>
-    <div id="cardsContainer" class="grid"></div>
-</section>
+  <div class="card">
+    <h3>➕ Dodaj utakmicu</h3>
 
-<!-- COMMENTS -->
-<section id="comments" class="page">
-    <div class="section-title">
-        <h2>💬 Komentari</h2>
-    </div>
+    <div class="form-grid">
 
-    <div id="commentLoginNotice" class="card">
-        Prijavi se da bi mogao ostaviti komentar.
-    </div>
+      <div class="form-group">
+        <label>Domaćin</label>
+        <select id="homeTeam"></select>
+      </div>
 
-    <div id="commentForm" class="card hidden">
-        <textarea id="commentText" rows="4" placeholder="Napiši komentar..."></textarea>
-        <br><br>
-        <button class="btn" onclick="addComment()">Objavi komentar</button>
-    </div>
+      <div class="form-group">
+        <label>Gost</label>
+        <select id="awayTeam"></select>
+      </div>
 
-    <br>
-    <div id="commentsContainer"></div>
-</section>
+      <div class="form-group">
+        <label>Datum i vrijeme</label>
+        <input id="matchDate" type="datetime-local">
+      </div>
 
-<!-- CHAT -->
-<section id="chat" class="page">
-    <div class="section-title">
-        <h2>💬 Chat</h2>
+      <div class="form-group">
+        <label>Kolo</label>
+        <input id="matchRound" type="number" placeholder="1">
+      </div>
+
     </div>
 
-    <div id="chatLoginNotice" class="card">
-        Prijavi se da bi mogao pisati u chatu.
-    </div>
+    <button class="primary" onclick="addMatch()">Dodaj utakmicu</button>
+  </div>
 
-    <div id="chatForm" class="card hidden">
-        <textarea id="chatText" rows="3" placeholder="Napiši poruku..."></textarea>
-        <br><br>
-        <button class="btn" onclick="sendMessage()">Pošalji</button>
-    </div>
 
-    <br>
-    <div id="chatContainer"></div>
-</section>
+  <div class="card">
+    <h3>🎮 Kontrola utakmica</h3>
+    <div id="adminMatches">Učitavanje...</div>
+  </div>
 
-<!-- AUTH -->
-<section id="auth" class="page">
-    <div class="auth-box">
-        <div class="section-title">
-            <h2>🔐 Prijava / Registracija</h2>
-        </div>
-
-        <div id="authAlert" class="alert"></div>
-
-        <div class="card">
-            <div class="form-group">
-                <label>Email</label>
-                <input id="authEmail" type="email" placeholder="Email">
-            </div>
-
-            <br>
-
-            <div class="form-group">
-                <label>Lozinka</label>
-                <input id="authPassword" type="password" placeholder="Lozinka">
-            </div>
-
-            <br>
-
-            <button class="btn" onclick="login()">Prijavi se</button>
-            <button class="btn secondary" onclick="registerUser()">Registruj se</button>
-        </div>
-    </div>
-</section>
-
-<!-- ADMIN -->
-<section id="admin" class="page">
-    <div class="section-title">
-        <h2>👑 Admin panel</h2>
-    </div>
-
-    <div id="adminAlert" class="alert"></div>
-
-    <div class="admin-section">
-        <div class="admin-box">
-            <h3>Dodaj ekipu</h3>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Naziv ekipe</label>
-                    <input id="teamName" placeholder="Naziv ekipe">
-                </div>
-
-                <div class="form-group">
-                    <label>URL logotipa</label>
-                    <input id="teamLogo" placeholder="https://...">
-                </div>
-            </div>
-
-            <br>
-            <button class="btn" onclick="addTeam()">Dodaj ekipu</button>
-        </div>
-    </div>
-
-    <div class="admin-section">
-        <div class="admin-box">
-            <h3>Dodaj igrača</h3>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Ime i prezime</label>
-                    <input id="playerName" placeholder="Ime igrača">
-                </div>
-
-                <div class="form-group">
-                    <label>Ekipa</label>
-                    <select id="playerTeam"></select>
-                </div>
-
-                <div class="form-group">
-                    <label>Broj dresa</label>
-                    <input id="playerNumber" type="number" placeholder="10">
-                </div>
-
-                <div class="form-group">
-                    <label>Pozicija</label>
-                    <input id="playerPosition" placeholder="Pivot">
-                </div>
-
-                <div class="form-group">
-                    <label>URL slike</label>
-                    <input id="playerPhoto" placeholder="https://...">
-                </div>
-            </div>
-
-            <br>
-            <button class="btn" onclick="addPlayer()">Dodaj igrača</button>
-        </div>
-    </div>
-
-    <div class="admin-section">
-        <div class="admin-box">
-            <h3>Dodaj utakmicu</h3>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Domaćin</label>
-                    <select id="matchHome"></select>
-                </div>
-
-                <div class="form-group">
-                    <label>Gost</label>
-                    <select id="matchAway"></select>
-                </div>
-
-                <div class="form-group">
-                    <label>Datum i vrijeme</label>
-                    <input id="matchDate" type="datetime-local">
-                </div>
-
-                <div class="form-group">
-                    <label>Kolo</label>
-                    <input id="matchRound" type="number" placeholder="1">
-                </div>
-            </div>
-
-            <br>
-            <button class="btn" onclick="addMatch()">Dodaj utakmicu</button>
-        </div>
-    </div>
-
-    <div class="admin-section">
-        <div class="admin-box">
-            <h3>⚽ Kontrola utakmice</h3>
-
-            <div class="form-group">
-                <label>Utakmica</label>
-                <select id="controlMatch" onchange="loadControlMatch()"></select>
-            </div>
-
-            <br>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="controlStatus">
-                        <option value="scheduled">Zakazana</option>
-                        <option value="live">LIVE</option>
-                        <option value="finished">Završena</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Trenutni minut</label>
-                    <input id="controlMinute" type="number" min="0" value="0">
-                </div>
-            </div>
-
-            <br>
-
-            <button class="btn" onclick="updateMatchControl()">Sačuvaj stanje</button>
-
-            <hr style="border:0;border-top:1px solid #283640;margin:22px 0">
-
-            <h3>Dodaj gol</h3>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Strijelac</label>
-                    <select id="goalPlayer"></select>
-                </div>
-
-                <div class="form-group">
-                    <label>Asistent</label>
-                    <select id="goalAssist"></select>
-                </div>
-
-                <div class="form-group">
-                    <label>Minut</label>
-                    <input id="goalMinute" type="number" min="0">
-                </div>
-            </div>
-
-            <br>
-            <button class="btn" onclick="addGoal()">Dodaj gol</button>
-
-            <br><br>
-
-            <h3>Dodaj karton</h3>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Igrač</label>
-                    <select id="cardPlayer"></select>
-                </div>
-
-                <div class="form-group">
-                    <label>Tip</label>
-                    <select id="cardType">
-                        <option value="yellow">Žuti karton</option>
-                        <option value="red">Crveni karton</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Minut</label>
-                    <input id="cardMinute" type="number" min="0">
-                </div>
-            </div>
-
-            <br>
-            <button class="btn warning" onclick="addCard()">Dodaj karton</button>
-
-            <br><br>
-
-            <h3>Trenutni događaji</h3>
-            <div id="controlEvents"></div>
-        </div>
-    </div>
 </section>
 
 </main>
 
-<footer>
-Medjaši Futsal Liga © 2026
-</footer>
 
-<!-- MODAL -->
-<div id="detailModal" class="modal" onclick="closeModalOutside(event)">
-    <div class="modal-content">
-        <div class="modal-head">
-            <h2 id="modalTitle">Detalji</h2>
-            <button class="close" onclick="closeModal()">×</button>
-        </div>
-        <div id="modalBody"></div>
-    </div>
+<div id="modal" class="modal" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <button class="close" onclick="hideModal()">✕</button>
+    <div id="modalContent"></div>
+  </div>
 </div>
 
+
 <script>
-/* =========================
-   SUPABASE
-========================= */
 
 const SUPABASE_URL =
 "https://mesryrrjnsnhadoahbux.supabase.co";
@@ -883,1203 +527,2113 @@ const SUPABASE_KEY =
 "sb_publishable_MVCdydxN-3CMuHpp8a5Nqg_aw5ZPDjH";
 
 const supabaseClient =
-supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 
-/* =========================
-   GLOBAL DATA
-========================= */
+let currentUser = null;
+let currentProfile = null;
 
 let teams = [];
 let players = [];
 let matches = [];
 let goals = [];
 let cards = [];
-let comments = [];
-let messages = [];
-
-let currentUser = null;
-let currentProfile = null;
 
 
 /* =========================
-   HELPERS
+   POMOĆNE FUNKCIJE
 ========================= */
 
-function escapeHtml(value){
-    if(value === null || value === undefined) return "";
-    return String(value)
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;")
-        .replace(/'/g,"&#039;");
+function escapeHTML(value){
+  if(value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
 }
 
-function formatDate(date){
-    if(!date) return "Nije određeno";
 
-    const d = new Date(date);
+function showSection(id){
 
-    if(isNaN(d.getTime())) return escapeHtml(date);
+  document.querySelectorAll("section").forEach(s=>{
+    s.classList.remove("active");
+  });
 
-    return d.toLocaleString("bs-BA",{
-        day:"2-digit",
-        month:"2-digit",
-        year:"numeric",
-        hour:"2-digit",
-        minute:"2-digit"
-    });
+  const section = document.getElementById(id);
+
+  if(section){
+    section.classList.add("active");
+  }
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
 }
 
-function getTeam(id){
-    return teams.find(t => String(t.id) === String(id));
+
+function previewImage(input,id){
+
+  const img = document.getElementById(id);
+
+  if(!input.files || !input.files[0]){
+    img.style.display="none";
+    return;
+  }
+
+  const url = URL.createObjectURL(input.files[0]);
+
+  img.src = url;
+  img.style.display="block";
 }
 
-function getPlayer(id){
-    return players.find(p => String(p.id) === String(id));
-}
 
-function getMatch(id){
-    return matches.find(m => String(m.id) === String(id));
-}
-
-function teamName(id){
-    return getTeam(id)?.name || "Nepoznata ekipa";
-}
-
-function playerName(id){
-    return getPlayer(id)?.name || "Nepoznat igrač";
-}
-
-function teamLogo(team){
-    return team?.logo_url ||
-        "https://via.placeholder.com/100?text=⚽";
-}
-
-function playerPhoto(player){
-    return player?.photo_url ||
-        "https://via.placeholder.com/100?text=👤";
-}
-
-function statusLabel(status){
-    if(status === "live") return "LIVE";
-    if(status === "finished") return "Završeno";
-    return "Zakazano";
-}
-
-function statusClass(status){
-    if(status === "live") return "status-live";
-    if(status === "finished") return "status-finished";
-    return "status-scheduled";
-}
-
-function showAlert(id,message,type="success"){
-    const el = document.getElementById(id);
-    if(!el) return;
-
-    el.textContent = message;
-    el.className = "alert show " + type;
-
-    setTimeout(()=>{
-        el.className = "alert";
-    },4000);
+function isAdmin(){
+  return currentProfile &&
+         currentProfile.role === "admin";
 }
 
 
 /* =========================
-   NAVIGATION
+   UPLOAD SLIKE
 ========================= */
 
-function showPage(page){
-    document.querySelectorAll(".page").forEach(p=>{
-        p.classList.remove("active");
-    });
+async function uploadImage(file,folder){
 
-    const target = document.getElementById(page);
+  if(!file) return null;
 
-    if(target) target.classList.add("active");
+  if(!file.type.startsWith("image/")){
+    throw new Error("Izabrani fajl nije slika.");
+  }
 
-    document.querySelectorAll("nav button").forEach(btn=>{
-        btn.classList.remove("active");
-    });
+  const ext =
+    file.name.split(".").pop().toLowerCase() || "jpg";
 
-    const buttons = [...document.querySelectorAll("nav button")];
+  const allowed =
+    ["jpg","jpeg","png","webp","gif","avif"];
 
-    buttons.forEach(btn=>{
-        if(btn.getAttribute("onclick") === `showPage('${page}')`){
-            btn.classList.add("active");
+  const safeExt =
+    allowed.includes(ext) ? ext : "jpg";
+
+  const unique =
+    Date.now() +
+    "-" +
+    Math.random().toString(36).slice(2);
+
+  const fileName =
+    `${folder}/${unique}.${safeExt}`;
+
+
+  const {error} =
+    await supabaseClient
+      .storage
+      .from("liga-images")
+      .upload(
+        fileName,
+        file,
+        {
+          cacheControl:"3600",
+          upsert:false
         }
-    });
+      );
 
-    window.scrollTo({top:0,behavior:"smooth"});
+  if(error) throw error;
+
+
+  const {data} =
+    supabaseClient
+      .storage
+      .from("liga-images")
+      .getPublicUrl(fileName);
+
+  return data.publicUrl;
 }
 
 
 /* =========================
-   LOAD ALL DATA
+   UČITAVANJE PODATAKA
 ========================= */
 
 async function loadAll(){
 
-    const [
-        teamsRes,
-        playersRes,
-        matchesRes,
-        goalsRes,
-        cardsRes,
-        commentsRes,
-        messagesRes
-    ] = await Promise.all([
+  const [
+    teamsRes,
+    playersRes,
+    matchesRes,
+    goalsRes,
+    cardsRes
+  ] = await Promise.all([
 
-        supabaseClient
-            .from("teams")
-            .select("*")
-            .order("name"),
+    supabaseClient
+      .from("teams")
+      .select("*")
+      .order("name"),
 
-        supabaseClient
-            .from("players")
-            .select("*")
-            .order("name"),
+    supabaseClient
+      .from("players")
+      .select("*")
+      .order("name"),
 
-        supabaseClient
-            .from("matches")
-            .select("*")
-            .order("match_date"),
+    supabaseClient
+      .from("matches")
+      .select("*")
+      .order("match_date"),
 
-        supabaseClient
-            .from("goals")
-            .select("*")
-            .order("minute"),
+    supabaseClient
+      .from("goals")
+      .select("*")
+      .order("minute"),
 
-        supabaseClient
-            .from("cards")
-            .select("*")
-            .order("minute"),
+    supabaseClient
+      .from("cards")
+      .select("*")
+      .order("minute")
+  ]);
 
-        supabaseClient
-            .from("comments")
-            .select("*")
-            .order("created_at",{ascending:false}),
 
-        supabaseClient
-            .from("messages")
-            .select("*")
-            .order("created_at",{ascending:true})
-    ]);
+  if(teamsRes.error)
+    console.error(teamsRes.error);
 
-    if(teamsRes.error) console.error(teamsRes.error);
-    if(playersRes.error) console.error(playersRes.error);
-    if(matchesRes.error) console.error(matchesRes.error);
-    if(goalsRes.error) console.error(goalsRes.error);
-    if(cardsRes.error) console.error(cardsRes.error);
-    if(commentsRes.error) console.error(commentsRes.error);
-    if(messagesRes.error) console.error(messagesRes.error);
+  if(playersRes.error)
+    console.error(playersRes.error);
 
-    teams = teamsRes.data || [];
-    players = playersRes.data || [];
-    matches = matchesRes.data || [];
-    goals = goalsRes.data || [];
-    cards = cardsRes.data || [];
-    comments = commentsRes.data || [];
-    messages = messagesRes.data || [];
+  if(matchesRes.error)
+    console.error(matchesRes.error);
 
-    renderEverything();
+  if(goalsRes.error)
+    console.error(goalsRes.error);
+
+  if(cardsRes.error)
+    console.error(cardsRes.error);
+
+
+  teams = teamsRes.data || [];
+  players = playersRes.data || [];
+  matches = matchesRes.data || [];
+  goals = goalsRes.data || [];
+  cards = cardsRes.data || [];
+
+
+  renderAll();
+}
+
+
+function teamName(id){
+
+  const team =
+    teams.find(t=>t.id===id);
+
+  return team ? team.name : "Nepoznata ekipa";
+}
+
+
+function playerName(id){
+
+  const player =
+    players.find(p=>p.id===id);
+
+  return player
+    ? (player.name || "Bez imena")
+    : "Nepoznat igrač";
+}
+
+
+function formatDate(date){
+
+  if(!date) return "";
+
+  return new Date(date).toLocaleString(
+    "bs-BA",
+    {
+      day:"2-digit",
+      month:"2-digit",
+      year:"numeric",
+      hour:"2-digit",
+      minute:"2-digit"
+    }
+  );
 }
 
 
 /* =========================
-   RENDER EVERYTHING
+   RENDER SVE
 ========================= */
 
-function renderEverything(){
-    renderHome();
-    renderTable();
-    renderMatches();
-    renderTeams();
-    renderPlayers();
-    renderStats();
-    renderComments();
-    renderChat();
-    populateAdminSelects();
+function renderAll(){
+
+  renderHome();
+  renderTable();
+  renderMatches();
+  renderTeams();
+  renderPlayers();
+  renderStats();
+  renderComments();
+  renderChat();
+  renderAdminMatches();
+
+  fillTeamSelects();
+
+  document.getElementById("homeTeams").textContent =
+    teams.length;
+
+  document.getElementById("homePlayers").textContent =
+    players.length;
+
+  document.getElementById("homeMatches").textContent =
+    matches.length;
+
+  document.getElementById("homeGoals").textContent =
+    goals.length;
 }
 
 
 /* =========================
-   HOME
+   POČETNA
 ========================= */
 
 function renderHome(){
 
-    document.getElementById("homeTeams").textContent = teams.length;
-    document.getElementById("homePlayers").textContent = players.length;
-    document.getElementById("homeMatches").textContent = matches.length;
-    document.getElementById("homeGoals").textContent = goals.length;
+  const live =
+    matches.filter(m=>m.status==="live");
 
-    const live = matches.filter(m=>m.status === "live");
+  const liveEl =
+    document.getElementById("homeLive");
 
-    const liveBox = document.getElementById("liveHome");
+  if(!live.length){
 
-    if(live.length){
-        liveBox.innerHTML = `
-            <div class="section-title">
-                <h2>🔴 Uživo</h2>
-            </div>
+    liveEl.innerHTML =
+      `<span class="small">Nema utakmica uživo.</span>`;
 
-            ${live.map(m=>matchCardHTML(m)).join("")}
-        `;
-    }else{
-        liveBox.innerHTML = "";
-    }
+  }else{
 
-    const scheduled = matches
-        .filter(m=>m.status === "scheduled")
-        .filter(m=>m.match_date)
-        .sort((a,b)=>new Date(a.match_date)-new Date(b.match_date));
+    liveEl.innerHTML =
+      live.map(m=>matchHTML(m,true)).join("");
+  }
 
-    document.getElementById("nextMatch").innerHTML =
-        scheduled.length
-        ? matchCardHTML(scheduled[0])
-        : `<div class="empty">Nema zakazanih utakmica.</div>`;
 
-    const finished = matches
-        .filter(m=>m.status === "finished")
-        .sort((a,b)=>new Date(b.match_date)-new Date(a.match_date))
-        .slice(0,5);
+  const upcoming =
+    matches
+      .filter(m=>m.status!=="finished")
+      .sort((a,b)=>
+        new Date(a.match_date)-new Date(b.match_date)
+      )
+      .slice(0,3);
 
-    document.getElementById("lastMatches").innerHTML =
-        finished.length
-        ? finished.map(m=>matchCardHTML(m)).join("")
-        : `<div class="empty">Još nema završenih utakmica.</div>`;
+  const nextEl =
+    document.getElementById("homeNext");
+
+  if(!upcoming.length){
+
+    nextEl.innerHTML =
+      `<span class="small">Nema zakazanih utakmica.</span>`;
+
+  }else{
+
+    nextEl.innerHTML =
+      upcoming.map(m=>matchHTML(m)).join("");
+  }
 }
 
 
 /* =========================
-   MATCH CARD
+   UTAKMICA HTML
 ========================= */
 
-function matchCardHTML(match){
+function matchHTML(match,live=false){
 
-    const home = getTeam(match.home_team_id);
-    const away = getTeam(match.away_team_id);
+  let statusText =
+    match.status==="live"
+      ? `🔴 LIVE ${match.current_minute || 0}'`
+      : match.status==="finished"
+        ? "ZAVRŠENO"
+        : formatDate(match.match_date);
 
-    return `
-        <div class="match-card"
-             onclick="showMatchDetail('${match.id}')">
 
-            <div class="match-top">
-                <span>${match.round ? "Kolo " + escapeHtml(match.round) : ""}</span>
+  return `
+    <div class="match-row"
+         onclick="openMatch('${match.id}')">
 
-                <span class="match-status ${statusClass(match.status)}">
-                    ${statusLabel(match.status)}
-                </span>
-            </div>
+      <div>
+        <b>${escapeHTML(teamName(match.home_team_id))}</b>
+        vs
+        <b>${escapeHTML(teamName(match.away_team_id))}</b>
+      </div>
 
-            <div class="match-teams">
+      <div style="margin-top:8px">
 
-                <div class="team-side">
-                    <img class="team-logo small"
-                         src="${escapeHtml(teamLogo(home))}">
-                    <div class="team-name">
-                        ${escapeHtml(home?.name || "Domaćin")}
-                    </div>
-                </div>
+        ${
+          match.status==="scheduled"
+          ? `<span class="badge scheduled">${escapeHTML(statusText)}</span>`
+          : ""
+        }
 
-                <div>
-                    <div class="score">
-                        ${match.home_score ?? 0} : ${match.away_score ?? 0}
-                    </div>
+        ${
+          match.status==="live"
+          ? `<span class="badge live">${escapeHTML(statusText)}</span>`
+          : ""
+        }
 
-                    ${
-                        match.status === "live"
-                        ? `<div class="live-minute">
-                            ${match.current_minute ?? 0}'
-                           </div>`
-                        : ""
-                    }
-                </div>
+        ${
+          match.status==="finished"
+          ? `<span class="badge finished">${escapeHTML(statusText)}</span>`
+          : ""
+        }
 
-                <div class="team-side">
-                    <img class="team-logo small"
-                         src="${escapeHtml(teamLogo(away))}">
-                    <div class="team-name">
-                        ${escapeHtml(away?.name || "Gost")}
-                    </div>
-                </div>
+        <b style="margin-left:10px">
+          ${match.home_score ?? 0} : ${match.away_score ?? 0}
+        </b>
 
-            </div>
+      </div>
 
-            <div style="text-align:center;color:#788691;font-size:12px;margin-top:10px">
-                ${formatDate(match.match_date)}
-            </div>
-        </div>
-    `;
+    </div>
+  `;
 }
 
 
 /* =========================
-   TABLE
+   TABELA
 ========================= */
-
-function calculateTable(){
-
-    return teams.map(team=>{
-
-        let p=0;
-        let w=0;
-        let d=0;
-        let l=0;
-        let gf=0;
-        let ga=0;
-        let points=0;
-        let form=[];
-
-        matches
-        .filter(m=>m.status === "finished")
-        .sort((a,b)=>new Date(b.match_date)-new Date(a.match_date))
-        .forEach(match=>{
-
-            let isHome =
-                String(match.home_team_id) === String(team.id);
-
-            let isAway =
-                String(match.away_team_id) === String(team.id);
-
-            if(!isHome && !isAway) return;
-
-            p++;
-
-            const hs = Number(match.home_score || 0);
-            const as = Number(match.away_score || 0);
-
-            if(isHome){
-                gf += hs;
-                ga += as;
-
-                if(hs > as){
-                    w++;
-                    points += 3;
-                    form.push("W");
-                }else if(hs === as){
-                    d++;
-                    points += 1;
-                    form.push("D");
-                }else{
-                    l++;
-                    form.push("L");
-                }
-            }
-
-            if(isAway){
-                gf += as;
-                ga += hs;
-
-                if(as > hs){
-                    w++;
-                    points += 3;
-                    form.push("W");
-                }else if(as === hs){
-                    d++;
-                    points += 1;
-                    form.push("D");
-                }else{
-                    l++;
-                    form.push("L");
-                }
-            }
-        });
-
-        return {
-            team,
-            p,w,d,l,
-            gf,ga,
-            gd:gf-ga,
-            points,
-            form:form.slice(0,5)
-        };
-    }).sort((a,b)=>
-        b.points-a.points ||
-        b.gd-a.gd ||
-        b.gf-a.gf
-    );
-}
 
 function renderTable(){
 
-    const table = calculateTable();
+  const stats = {};
 
-    if(!table.length){
-        document.getElementById("tableContainer").innerHTML =
-            `<div class="empty">Nema ekipa.</div>`;
-        return;
-    }
+  teams.forEach(t=>{
+    stats[t.id]={
+      team:t,
+      played:0,
+      win:0,
+      draw:0,
+      loss:0,
+      gf:0,
+      ga:0,
+      points:0
+    };
+  });
 
-    document.getElementById("tableContainer").innerHTML = `
-        <div style="overflow-x:auto">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Ekipa</th>
-                    <th>P</th>
-                    <th>W</th>
-                    <th>D</th>
-                    <th>L</th>
-                    <th>DG</th>
-                    <th>GR</th>
-                    <th>BOD</th>
-                    <th>Forma</th>
-                </tr>
-            </thead>
 
-            <tbody>
+  matches
+    .filter(m=>m.status==="finished")
+    .forEach(m=>{
 
-            ${table.map((row,index)=>`
+      if(!stats[m.home_team_id] ||
+         !stats[m.away_team_id]) return;
 
-                <tr onclick="showTeamDetail('${row.team.id}')"
-                    style="cursor:pointer">
+      const h =
+        Number(m.home_score || 0);
 
-                    <td>${index+1}</td>
+      const a =
+        Number(m.away_score || 0);
 
-                    <td>
-                        <div class="team-table-name">
 
-                            <img class="table-logo"
-                                 src="${escapeHtml(teamLogo(row.team))}">
+      stats[m.home_team_id].played++;
+      stats[m.away_team_id].played++;
 
-                            ${escapeHtml(row.team.name)}
+      stats[m.home_team_id].gf += h;
+      stats[m.home_team_id].ga += a;
 
-                        </div>
-                    </td>
+      stats[m.away_team_id].gf += a;
+      stats[m.away_team_id].ga += h;
 
-                    <td>${row.p}</td>
-                    <td>${row.w}</td>
-                    <td>${row.d}</td>
-                    <td>${row.l}</td>
-                    <td>${row.gf}:${row.ga}</td>
-                    <td>${row.gd}</td>
-                    <td><strong>${row.points}</strong></td>
 
-                    <td>
-                        <div class="form">
-                        ${row.form.map(x=>`
-                            <span class="${
-                                x==="W"
-                                ?"form-w"
-                                :x==="D"
-                                ?"form-d"
-                                :"form-l"
-                            }">${x}</span>
-                        `).join("")}
-                        </div>
-                    </td>
+      if(h>a){
 
-                </tr>
+        stats[m.home_team_id].win++;
+        stats[m.home_team_id].points+=3;
 
-            `).join("")}
+        stats[m.away_team_id].loss++;
 
-            </tbody>
-        </table>
-        </div>
+      }else if(a>h){
+
+        stats[m.away_team_id].win++;
+        stats[m.away_team_id].points+=3;
+
+        stats[m.home_team_id].loss++;
+
+      }else{
+
+        stats[m.home_team_id].draw++;
+        stats[m.away_team_id].draw++;
+
+        stats[m.home_team_id].points++;
+        stats[m.away_team_id].points++;
+      }
+
+    });
+
+
+  const rows =
+    Object.values(stats)
+      .sort((a,b)=>
+        b.points-a.points ||
+        (b.gf-b.ga)-(a.gf-a.ga) ||
+        b.gf-a.gf
+      );
+
+
+  let html = `
+    <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ekipa</th>
+          <th>U</th>
+          <th>P</th>
+          <th>N</th>
+          <th>I</th>
+          <th>Golovi</th>
+          <th>Bod</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+
+  rows.forEach((s,i)=>{
+
+    html += `
+      <tr>
+        <td>${i+1}</td>
+        <td>
+          <b>${escapeHTML(s.team.name)}</b>
+        </td>
+        <td>${s.played}</td>
+        <td>${s.win}</td>
+        <td>${s.draw}</td>
+        <td>${s.loss}</td>
+        <td>${s.gf}:${s.ga}</td>
+        <td><b>${s.points}</b></td>
+      </tr>
     `;
+  });
+
+
+  html += `
+      </tbody>
+    </table>
+    </div>
+  `;
+
+  document.getElementById("tableContent").innerHTML =
+    rows.length ? html : "Nema ekipa.";
 }
 
 
 /* =========================
-   MATCHES / ROUNDS
+   UTAKMICE
 ========================= */
 
 function renderMatches(){
 
-    const filter =
-        document.getElementById("roundFilter")?.value || "all";
+  const el =
+    document.getElementById("matchesContent");
 
-    const rounds = [
-        ...new Set(
-            matches
-            .map(m=>m.round)
-            .filter(r=>r !== null && r !== undefined)
+  if(!matches.length){
+
+    el.innerHTML="Nema utakmica.";
+    return;
+  }
+
+
+  const rounds = {};
+
+  matches.forEach(m=>{
+
+    const r =
+      m.round || "Ostalo";
+
+    if(!rounds[r]) rounds[r]=[];
+
+    rounds[r].push(m);
+  });
+
+
+  let html="";
+
+
+  Object.keys(rounds)
+    .sort((a,b)=>Number(a)-Number(b))
+    .forEach(round=>{
+
+      html += `
+        <h3>${round==="Ostalo" ? round : "Kolo "+escapeHTML(round)}</h3>
+      `;
+
+      rounds[round]
+        .sort((a,b)=>
+          new Date(a.match_date)-new Date(b.match_date)
         )
-    ].sort((a,b)=>Number(a)-Number(b));
+        .forEach(m=>{
+          html += matchHTML(m);
+        });
 
-    const select = document.getElementById("roundFilter");
-
-    if(select){
-        const old = select.value;
-
-        select.innerHTML =
-            `<option value="all">Sva kola</option>` +
-            rounds.map(r=>
-                `<option value="${escapeHtml(r)}">Kolo ${escapeHtml(r)}</option>`
-            ).join("");
-
-        if([...select.options].some(o=>o.value===old)){
-            select.value = old;
-        }
-    }
-
-    let filtered = [...matches];
-
-    if(filter !== "all"){
-        filtered =
-            filtered.filter(m=>String(m.round) === String(filter));
-    }
-
-    filtered.sort((a,b)=>{
-        if(a.round !== b.round)
-            return Number(a.round||0)-Number(b.round||0);
-
-        return new Date(a.match_date)-new Date(b.match_date);
     });
 
-    if(!filtered.length){
-        document.getElementById("matchesContainer").innerHTML =
-            `<div class="empty">Nema utakmica.</div>`;
-        return;
-    }
 
-    const groups = {};
-
-    filtered.forEach(m=>{
-        const r = m.round ?? "Ostalo";
-
-        if(!groups[r]) groups[r]=[];
-
-        groups[r].push(m);
-    });
-
-    document.getElementById("matchesContainer").innerHTML =
-        Object.keys(groups)
-        .sort((a,b)=>Number(a)-Number(b))
-        .map(round=>`
-
-            <div class="round-title">
-                ${round === "Ostalo" ? "Ostale utakmice" : "Kolo " + escapeHtml(round)}
-            </div>
-
-            ${groups[round].map(m=>matchCardHTML(m)).join("")}
-
-        `).join("");
+  el.innerHTML=html;
 }
 
 
 /* =========================
-   TEAMS
+   EKIPE
 ========================= */
 
 function renderTeams(){
 
-    const container =
-        document.getElementById("teamsContainer");
+  const el =
+    document.getElementById("teamsContent");
 
-    if(!teams.length){
-        container.innerHTML =
-            `<div class="empty">Nema ekipa.</div>`;
-        return;
-    }
+  if(!teams.length){
 
-    container.innerHTML =
-        teams.map(team=>{
+    el.innerHTML="Nema ekipa.";
+    return;
+  }
 
-            const tableRow =
-                calculateTable().find(x=>
-                    String(x.team.id) === String(team.id)
-                );
 
-            return `
-                <div class="card team-card"
-                     onclick="showTeamDetail('${team.id}')"
-                     style="cursor:pointer">
+  el.innerHTML =
+    teams.map(t=>{
 
-                    <img class="team-logo"
-                         src="${escapeHtml(teamLogo(team))}">
+      const logo =
+        t.logo_url ||
+        "https://via.placeholder.com/100?text=⚽";
 
-                    <h3>${escapeHtml(team.name)}</h3>
+      const count =
+        players.filter(p=>p.team_id===t.id).length;
 
-                    <p>
-                        ${tableRow?.p || 0} utakmica ·
-                        ${tableRow?.points || 0} bodova
-                    </p>
+      return `
+        <div class="team-row"
+             onclick="openTeam('${t.id}')">
 
-                </div>
-            `;
-        }).join("");
+          <img class="logo"
+               src="${escapeHTML(logo)}">
+
+          <div>
+            <b>${escapeHTML(t.name)}</b>
+            <div class="small">
+              ${count} igrača
+            </div>
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
 }
 
 
 /* =========================
-   PLAYERS
+   IGRAČI
 ========================= */
 
 function renderPlayers(){
 
-    const container =
-        document.getElementById("playersContainer");
+  const el =
+    document.getElementById("playersContent");
 
-    if(!players.length){
-        container.innerHTML =
-            `<div class="empty">Nema igrača.</div>`;
-        return;
-    }
+  if(!players.length){
 
-    container.innerHTML =
-        players.map(player=>`
+    el.innerHTML="Nema igrača.";
+    return;
+  }
 
-            <div class="card player-card"
-                 onclick="showPlayerDetail('${player.id}')">
 
-                <img class="player-photo"
-                     src="${escapeHtml(playerPhoto(player))}">
+  el.innerHTML =
+    players.map(p=>{
 
-                <div class="player-info">
+      const photo =
+        p.photo_url ||
+        "https://via.placeholder.com/100?text=👤";
 
-                    <h3>
-                        ${escapeHtml(player.name || "Bez imena")}
-                    </h3>
+      return `
+        <div class="player-row"
+             onclick="openPlayer('${p.id}')">
 
-                    <p>
-                        ${escapeHtml(teamName(player.team_id))}
-                    </p>
+          <img class="player-photo"
+               src="${escapeHTML(photo)}">
 
-                    <p>
-                        ${player.jersey_number
-                            ? "#" + escapeHtml(player.jersey_number)
-                            : ""}
-                        ${player.position
-                            ? " · " + escapeHtml(player.position)
-                            : ""}
-                    </p>
+          <div>
+            <b>${escapeHTML(p.name || "Bez imena")}</b>
 
-                </div>
+            <div class="small">
+              ${escapeHTML(teamName(p.team_id))}
+              ${p.jersey_number ?
+                " • #"+escapeHTML(p.jersey_number)
+                : ""}
+              ${p.position ?
+                " • "+escapeHTML(p.position)
+                : ""}
             </div>
+          </div>
 
-        `).join("");
+        </div>
+      `;
+
+    }).join("");
 }
 
 
 /* =========================
-   STATISTICS
+   STATISTIKA
 ========================= */
-
-function playerStats(){
-
-    return players.map(player=>{
-
-        const playerGoals =
-            goals.filter(g=>
-                String(g.player_id) === String(player.id)
-            ).length;
-
-        const playerAssists =
-            goals.filter(g=>
-                String(g.assist_player_id) === String(player.id)
-            ).length;
-
-        const yellows =
-            cards.filter(c=>
-                String(c.player_id) === String(player.id) &&
-                c.card_type === "yellow"
-            ).length;
-
-        const reds =
-            cards.filter(c=>
-                String(c.player_id) === String(player.id) &&
-                c.card_type === "red"
-            ).length;
-
-        return {
-            player,
-            goals:playerGoals,
-            assists:playerAssists,
-            yellows,
-            reds
-        };
-    });
-}
 
 function renderStats(){
 
-    const stats = playerStats();
+  const scorer = {};
 
-    const scorers =
-        [...stats]
-        .filter(x=>x.goals>0)
-        .sort((a,b)=>b.goals-a.goals)
-        .slice(0,10);
+  goals.forEach(g=>{
 
-    const assists =
-        [...stats]
-        .filter(x=>x.assists>0)
-        .sort((a,b)=>b.assists-a.assists)
-        .slice(0,10);
+    if(!scorer[g.player_id])
+      scorer[g.player_id]=0;
 
-    const cardsStats =
-        [...stats]
-        .filter(x=>x.yellows+x.reds>0)
-        .sort((a,b)=>
-            (b.yellows+b.reds)-(a.yellows+a.reds)
-        )
-        .slice(0,10);
+    scorer[g.player_id]++;
+  });
 
-    document.getElementById("scorersContainer").innerHTML =
-        statsListHTML(scorers,"goals","gol");
 
-    document.getElementById("assistsContainer").innerHTML =
-        statsListHTML(assists,"assists","asist");
+  const assists = {};
 
-    document.getElementById("cardsContainer").innerHTML =
-        cardsStats.map(x=>`
+  goals.forEach(g=>{
 
-            <div class="card player-card"
-                 onclick="showPlayerDetail('${x.player.id}')">
+    if(g.assist_player_id){
 
-                <img class="player-photo"
-                     src="${escapeHtml(playerPhoto(x.player))}">
+      if(!assists[g.assist_player_id])
+        assists[g.assist_player_id]=0;
 
-                <div class="player-info">
-                    <h3>${escapeHtml(x.player.name)}</h3>
-                    <p>${escapeHtml(teamName(x.player.team_id))}</p>
-                    <p>
-                        🟨 ${x.yellows}
-                        · 🟥 ${x.reds}
-                    </p>
-                </div>
+      assists[g.assist_player_id]++;
+    }
+  });
 
+
+  const scorerRows =
+    Object.entries(scorer)
+      .sort((a,b)=>b[1]-a[1]);
+
+
+  const assistRows =
+    Object.entries(assists)
+      .sort((a,b)=>b[1]-a[1]);
+
+
+  let html="<h3>⚽ Strijelci</h3>";
+
+  if(!scorerRows.length){
+
+    html+="<p class='small'>Nema golova.</p>";
+
+  }else{
+
+    html+="<ol>";
+
+    scorerRows.forEach(([id,count])=>{
+
+      html += `
+        <li style="padding:7px">
+          ${escapeHTML(playerName(id))}
+          — <b>${count}</b>
+        </li>
+      `;
+
+    });
+
+    html+="</ol>";
+  }
+
+
+  html+="<h3>🎯 Asistencije</h3>";
+
+  if(!assistRows.length){
+
+    html+="<p class='small'>Nema asistencija.</p>";
+
+  }else{
+
+    html+="<ol>";
+
+    assistRows.forEach(([id,count])=>{
+
+      html += `
+        <li style="padding:7px">
+          ${escapeHTML(playerName(id))}
+          — <b>${count}</b>
+        </li>
+      `;
+
+    });
+
+    html+="</ol>";
+  }
+
+
+  html+="<h3>🟨🟥 Kartoni</h3>";
+
+  players.forEach(p=>{
+
+    const yellow =
+      cards.filter(c=>
+        c.player_id===p.id &&
+        c.card_type==="yellow"
+      ).length;
+
+    const red =
+      cards.filter(c=>
+        c.player_id===p.id &&
+        c.card_type==="red"
+      ).length;
+
+    if(yellow || red){
+
+      html += `
+        <div class="team-row">
+          <div>
+            <b>${escapeHTML(p.name)}</b>
+            <div class="small">
+              🟨 ${yellow} &nbsp; 🟥 ${red}
             </div>
+          </div>
+        </div>
+      `;
+    }
 
-        `).join("") ||
-        `<div class="empty">Nema kartona.</div>`;
+  });
+
+
+  document.getElementById("statsContent").innerHTML =
+    html;
 }
 
-function statsListHTML(list,key,label){
 
-    if(!list.length)
-        return `<div class="empty">Nema podataka.</div>`;
+/* =========================
+   SELECTI
+========================= */
 
-    return list.map((x,index)=>`
+function fillTeamSelects(){
 
-        <div class="card player-card"
-             onclick="showPlayerDetail('${x.player.id}')">
+  const ids=[
+    "playerTeam",
+    "homeTeam",
+    "awayTeam"
+  ];
 
-            <div style="
-                width:38px;
-                height:38px;
-                border-radius:50%;
-                background:#1d2b35;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-weight:bold;
-                color:#21d17b;
-            ">
-                ${index+1}
-            </div>
 
-            <img class="player-photo"
-                 src="${escapeHtml(playerPhoto(x.player))}">
+  ids.forEach(id=>{
 
-            <div class="player-info">
-                <h3>${escapeHtml(x.player.name)}</h3>
-                <p>${escapeHtml(teamName(x.player.team_id))}</p>
-                <p><strong>${x[key]}</strong> ${label}${x[key]!==1?"a":""}</p>
-            </div>
+    const select =
+      document.getElementById(id);
+
+    if(!select) return;
+
+
+    const old =
+      select.value;
+
+
+    select.innerHTML =
+      `<option value="">Izaberi ekipu</option>` +
+      teams.map(t=>
+        `<option value="${t.id}">
+          ${escapeHTML(t.name)}
+        </option>`
+      ).join("");
+
+
+    if(old)
+      select.value=old;
+  });
+}
+
+
+/* =========================
+   ADMIN - EKIPA
+========================= */
+
+async function addTeam(){
+
+  if(!isAdmin()){
+    alert("Nemaš admin ovlaštenje.");
+    return;
+  }
+
+
+  const name =
+    document.getElementById("teamName")
+      .value.trim();
+
+  const file =
+    document.getElementById("teamLogoFile")
+      .files[0];
+
+
+  if(!name){
+
+    alert("Unesi naziv ekipe.");
+    return;
+  }
+
+
+  try{
+
+    const logoUrl =
+      file
+        ? await uploadImage(file,"teams")
+        : null;
+
+
+    const {error} =
+      await supabaseClient
+        .from("teams")
+        .insert({
+          name:name,
+          logo_url:logoUrl
+        });
+
+
+    if(error) throw error;
+
+
+    alert("Ekipa je dodana.");
+
+    document.getElementById("teamName").value="";
+    document.getElementById("teamLogoFile").value="";
+    document.getElementById("teamPreview").style.display="none";
+
+
+    await loadAll();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Greška: " +
+      (error.message || "nije moguće dodati ekipu.")
+    );
+  }
+}
+
+
+/* =========================
+   ADMIN - IGRAČ
+========================= */
+
+async function addPlayer(){
+
+  if(!isAdmin()){
+    alert("Nemaš admin ovlaštenje.");
+    return;
+  }
+
+
+  const name =
+    document.getElementById("playerName")
+      .value.trim();
+
+  const teamId =
+    document.getElementById("playerTeam")
+      .value;
+
+  const number =
+    document.getElementById("playerNumber")
+      .value;
+
+  const position =
+    document.getElementById("playerPosition")
+      .value;
+
+  const file =
+    document.getElementById("playerPhotoFile")
+      .files[0];
+
+
+  if(!name || !teamId){
+
+    alert("Unesi ime igrača i izaberi ekipu.");
+    return;
+  }
+
+
+  try{
+
+    const photoUrl =
+      file
+        ? await uploadImage(file,"players")
+        : null;
+
+
+    const {error} =
+      await supabaseClient
+        .from("players")
+        .insert({
+
+          name:name,
+          team_id:teamId,
+
+          jersey_number:
+            number ? Number(number) : null,
+
+          position:
+            position || null,
+
+          photo_url:
+            photoUrl
+
+        });
+
+
+    if(error) throw error;
+
+
+    alert("Igrač je dodan.");
+
+
+    document.getElementById("playerName").value="";
+    document.getElementById("playerNumber").value="";
+    document.getElementById("playerPosition").value="";
+    document.getElementById("playerPhotoFile").value="";
+    document.getElementById("playerPreview").style.display="none";
+
+
+    await loadAll();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Greška: " +
+      (error.message || "nije moguće dodati igrača.")
+    );
+  }
+}
+
+
+/* =========================
+   ADMIN - UTAKMICA
+========================= */
+
+async function addMatch(){
+
+  if(!isAdmin()){
+    alert("Nemaš admin ovlaštenje.");
+    return;
+  }
+
+
+  const home =
+    document.getElementById("homeTeam").value;
+
+  const away =
+    document.getElementById("awayTeam").value;
+
+  const date =
+    document.getElementById("matchDate").value;
+
+  const round =
+    document.getElementById("matchRound").value;
+
+
+  if(!home || !away || !date){
+
+    alert("Popuni domaćina, gosta i datum.");
+    return;
+  }
+
+
+  if(home===away){
+
+    alert("Domaćin i gost ne mogu biti ista ekipa.");
+    return;
+  }
+
+
+  const {error} =
+    await supabaseClient
+      .from("matches")
+      .insert({
+
+        home_team_id:home,
+        away_team_id:away,
+
+        home_score:0,
+        away_score:0,
+
+        match_date:
+          new Date(date).toISOString(),
+
+        round:
+          round ? Number(round) : null,
+
+        status:"scheduled",
+
+        current_minute:0
+      });
+
+
+  if(error){
+
+    console.error(error);
+
+    alert(
+      "Greška: " +
+      error.message
+    );
+
+    return;
+  }
+
+
+  alert("Utakmica je dodana.");
+
+  document.getElementById("matchDate").value="";
+  document.getElementById("matchRound").value="";
+
+  await loadAll();
+}
+
+
+/* =========================
+   ADMIN - KONTROLA
+========================= */
+
+function renderAdminMatches(){
+
+  const el =
+    document.getElementById("adminMatches");
+
+  if(!el) return;
+
+  if(!isAdmin()){
+
+    el.innerHTML =
+      "<p class='small'>Admin pristup nije aktivan.</p>";
+
+    return;
+  }
+
+
+  if(!matches.length){
+
+    el.innerHTML="Nema utakmica.";
+    return;
+  }
+
+
+  el.innerHTML =
+    matches.map(m=>{
+
+      return `
+        <div class="team-row"
+             style="display:block">
+
+          <b>
+            ${escapeHTML(teamName(m.home_team_id))}
+            ${m.home_score ?? 0}
+            :
+            ${m.away_score ?? 0}
+            ${escapeHTML(teamName(m.away_team_id))}
+          </b>
+
+          <div class="small" style="margin:7px 0">
+            ${formatDate(m.match_date)}
+          </div>
+
+          <select
+            onchange="changeMatchStatus('${m.id}',this.value)"
+          >
+
+            <option value="scheduled"
+              ${m.status==="scheduled"?"selected":""}>
+              Zakazana
+            </option>
+
+            <option value="live"
+              ${m.status==="live"?"selected":""}>
+              Uživo
+            </option>
+
+            <option value="finished"
+              ${m.status==="finished"?"selected":""}>
+              Završena
+            </option>
+
+          </select>
+
+          <input
+            type="number"
+            min="0"
+            placeholder="Trenutna minuta"
+            value="${m.current_minute || 0}"
+            onchange="changeMinute('${m.id}',this.value)"
+          >
+
+          <div class="form-grid">
+
+            <button class="primary"
+              onclick="openGoalControl('${m.id}')">
+              ⚽ Gol
+            </button>
+
+            <button
+              onclick="openCardControl('${m.id}')">
+              🟨🟥 Karton
+            </button>
+
+          </div>
 
         </div>
+      `;
+
+    }).join("");
+}
+
+
+/* =========================
+   STATUS UTAKMICE
+========================= */
+
+async function changeMatchStatus(id,status){
+
+  if(!isAdmin()) return;
+
+
+  const {error} =
+    await supabaseClient
+      .from("matches")
+      .update({status})
+      .eq("id",id);
+
+
+  if(error){
+
+    alert(error.message);
+    return;
+  }
+
+
+  await loadAll();
+}
+
+
+async function changeMinute(id,value){
+
+  if(!isAdmin()) return;
+
+
+  const minute =
+    Math.max(0,Number(value)||0);
+
+
+  const {error} =
+    await supabaseClient
+      .from("matches")
+      .update({
+        current_minute:minute
+      })
+      .eq("id",id);
+
+
+  if(error){
+
+    alert(error.message);
+    return;
+  }
+
+
+  await loadAll();
+}
+
+
+/* =========================
+   GOAL CONTROL
+========================= */
+
+function openGoalControl(matchId){
+
+  const match =
+    matches.find(m=>m.id===matchId);
+
+  if(!match) return;
+
+
+  const matchPlayers =
+    players.filter(p=>
+      p.team_id===match.home_team_id ||
+      p.team_id===match.away_team_id
+    );
+
+
+  document.getElementById("modalContent").innerHTML = `
+
+    <h2>⚽ Dodaj gol</h2>
+
+    <p>
+      ${escapeHTML(teamName(match.home_team_id))}
+      ${match.home_score || 0}
+      :
+      ${match.away_score || 0}
+      ${escapeHTML(teamName(match.away_team_id))}
+    </p>
+
+    <label>Strijelac</label>
+
+    <select id="goalPlayer">
+
+      <option value="">
+        Izaberi strijelca
+      </option>
+
+      ${matchPlayers.map(p=>`
+
+        <option value="${p.id}">
+          ${escapeHTML(p.name)}
+          ${p.team_id===match.home_team_id
+            ? " — "+escapeHTML(teamName(match.home_team_id))
+            : " — "+escapeHTML(teamName(match.away_team_id))
+          }
+        </option>
+
+      `).join("")}
+
+    </select>
+
+
+    <label>Asistent</label>
+
+    <select id="goalAssist">
+
+      <option value="">
+        Bez asistencije
+      </option>
+
+      ${matchPlayers.map(p=>`
+
+        <option value="${p.id}">
+          ${escapeHTML(p.name)}
+        </option>
+
+      `).join("")}
+
+    </select>
+
+
+    <label>Minut</label>
+
+    <input
+      id="goalMinute"
+      type="number"
+      min="0"
+      placeholder="npr. 12"
+      value="${match.current_minute || 0}"
+    >
+
+
+    <button class="primary"
+      onclick="addGoal('${matchId}')">
+      Dodaj gol
+    </button>
+
+  `;
+
+  showModal();
+}
+
+
+async function addGoal(matchId){
+
+  if(!isAdmin()) return;
+
+
+  const playerId =
+    document.getElementById("goalPlayer").value;
+
+  const assistId =
+    document.getElementById("goalAssist").value ||
+    null;
+
+  const minute =
+    Number(
+      document.getElementById("goalMinute").value
+    ) || 0;
+
+
+  if(!playerId){
+
+    alert("Izaberi strijelca.");
+    return;
+  }
+
+
+  const {error:goalError} =
+    await supabaseClient
+      .from("goals")
+      .insert({
+
+        match_id:matchId,
+        player_id:playerId,
+        assist_player_id:assistId,
+        minute:minute
+      });
+
+
+  if(goalError){
+
+    alert(goalError.message);
+    return;
+  }
+
+
+  const match =
+    matches.find(m=>m.id===matchId);
+
+
+  if(!match) return;
+
+
+  const player =
+    players.find(p=>p.id===playerId);
+
+
+  const homeGoal =
+    player &&
+    player.team_id===match.home_team_id;
+
+
+  const newHome =
+    Number(match.home_score || 0) +
+    (homeGoal ? 1 : 0);
+
+  const newAway =
+    Number(match.away_score || 0) +
+    (!homeGoal ? 1 : 0);
+
+
+  const {error:updateError} =
+    await supabaseClient
+      .from("matches")
+      .update({
+
+        home_score:newHome,
+        away_score:newAway
+
+      })
+      .eq("id",matchId);
+
+
+  if(updateError){
+
+    alert(updateError.message);
+    return;
+  }
+
+
+  hideModal();
+
+  await loadAll();
+}
+
+
+/* =========================
+   KARTON CONTROL
+========================= */
+
+function openCardControl(matchId){
+
+  const match =
+    matches.find(m=>m.id===matchId);
+
+  if(!match) return;
+
+
+  const matchPlayers =
+    players.filter(p=>
+      p.team_id===match.home_team_id ||
+      p.team_id===match.away_team_id
+    );
+
+
+  document.getElementById("modalContent").innerHTML = `
+
+    <h2>🟨🟥 Dodaj karton</h2>
+
+    <label>Igrač</label>
+
+    <select id="cardPlayer">
+
+      <option value="">
+        Izaberi igrača
+      </option>
+
+      ${matchPlayers.map(p=>`
+
+        <option value="${p.id}">
+          ${escapeHTML(p.name)}
+        </option>
+
+      `).join("")}
+
+    </select>
+
+
+    <label>Karton</label>
+
+    <select id="cardType">
+
+      <option value="yellow">
+        🟨 Žuti
+      </option>
+
+      <option value="red">
+        🟥 Crveni
+      </option>
+
+    </select>
+
+
+    <label>Minut</label>
+
+    <input
+      id="cardMinute"
+      type="number"
+      min="0"
+      value="${match.current_minute || 0}"
+    >
+
+
+    <button class="primary"
+      onclick="addCard('${matchId}')">
+      Dodaj karton
+    </button>
+
+  `;
+
+  showModal();
+}
+
+
+async function addCard(matchId){
+
+  if(!isAdmin()) return;
+
+
+  const playerId =
+    document.getElementById("cardPlayer").value;
+
+  const type =
+    document.getElementById("cardType").value;
+
+  const minute =
+    Number(
+      document.getElementById("cardMinute").value
+    ) || 0;
+
+
+  if(!playerId){
+
+    alert("Izaberi igrača.");
+    return;
+  }
+
+
+  const {error} =
+    await supabaseClient
+      .from("cards")
+      .insert({
+
+        match_id:matchId,
+        player_id:playerId,
+        card_type:type,
+        minute:minute
+
+      });
+
+
+  if(error){
+
+    alert(error.message);
+    return;
+  }
+
+
+  hideModal();
+
+  await loadAll();
+}
+
+
+/* =========================
+   DETALJI EKIPE
+========================= */
+
+function openTeam(id){
+
+  const team =
+    teams.find(t=>t.id===id);
+
+  if(!team) return;
+
+
+  const teamPlayers =
+    players.filter(p=>p.team_id===id);
+
+
+  const logo =
+    team.logo_url ||
+    "https://via.placeholder.com/150?text=⚽";
+
+
+  document.getElementById("modalContent").innerHTML = `
+
+    <div style="text-align:center">
+
+      <img
+        src="${escapeHTML(logo)}"
+        style="
+          width:100px;
+          height:100px;
+          object-fit:cover;
+          border-radius:50%;
+        "
+      >
+
+      <h2>${escapeHTML(team.name)}</h2>
+
+      <p class="small">
+        ${teamPlayers.length} igrača
+      </p>
+
+    </div>
+
+    <h3>👥 Igrači</h3>
+
+    ${
+      teamPlayers.length
+      ?
+      teamPlayers.map(p=>`
+
+        <div class="player-row">
+
+          <img
+            class="player-photo"
+            src="${escapeHTML(
+              p.photo_url ||
+              "https://via.placeholder.com/100?text=👤"
+            )}"
+          >
+
+          <div>
+            <b>${escapeHTML(p.name)}</b>
+
+            <div class="small">
+              ${p.jersey_number
+                ? "#"+escapeHTML(p.jersey_number)
+                : ""}
+              ${p.position
+                ? " • "+escapeHTML(p.position)
+                : ""}
+            </div>
+          </div>
+
+        </div>
+
+      `).join("")
+      :
+      "<p class='small'>Nema igrača.</p>"
+    }
+
+  `;
+
+  showModal();
+}
+
+
+/* =========================
+   DETALJI IGRAČA
+========================= */
+
+function openPlayer(id){
+
+  const p =
+    players.find(x=>x.id===id);
+
+  if(!p) return;
+
+
+  const photo =
+    p.photo_url ||
+    "https://via.placeholder.com/150?text=👤";
+
+
+  const playerGoals =
+    goals.filter(g=>g.player_id===id).length;
+
+
+  const playerAssists =
+    goals.filter(g=>
+      g.assist_player_id===id
+    ).length;
+
+
+  const yellow =
+    cards.filter(c=>
+      c.player_id===id &&
+      c.card_type==="yellow"
+    ).length;
+
+
+  const red =
+    cards.filter(c=>
+      c.player_id===id &&
+      c.card_type==="red"
+    ).length;
+
+
+  document.getElementById("modalContent").innerHTML = `
+
+    <div style="text-align:center">
+
+      <img
+        src="${escapeHTML(photo)}"
+        style="
+          width:120px;
+          height:120px;
+          object-fit:cover;
+          border-radius:50%;
+        "
+      >
+
+      <h2>${escapeHTML(p.name)}</h2>
+
+      <p class="small">
+        ${escapeHTML(teamName(p.team_id))}
+      </p>
+
+    </div>
+
+    <div class="grid">
+
+      <div class="stat">
+        Golovi
+        <b>${playerGoals}</b>
+      </div>
+
+      <div class="stat">
+        Asistencije
+        <b>${playerAssists}</b>
+      </div>
+
+      <div class="stat">
+        🟨
+        <b>${yellow}</b>
+      </div>
+
+      <div class="stat">
+        🟥
+        <b>${red}</b>
+      </div>
+
+    </div>
+
+  `;
+
+  showModal();
+}
+
+
+/* =========================
+   DETALJI UTAKMICE
+========================= */
+
+function openMatch(id){
+
+  const m =
+    matches.find(x=>x.id===id);
+
+  if(!m) return;
+
+
+  const matchGoals =
+    goals
+      .filter(g=>g.match_id===id)
+      .sort((a,b)=>
+        Number(a.minute||0)-
+        Number(b.minute||0)
+      );
+
+
+  const matchCards =
+    cards
+      .filter(c=>c.match_id===id)
+      .sort((a,b)=>
+        Number(a.minute||0)-
+        Number(b.minute||0)
+      );
+
+
+  let html = `
+
+    <h2>
+      ${escapeHTML(teamName(m.home_team_id))}
+      ${m.home_score || 0}
+      :
+      ${m.away_score || 0}
+      ${escapeHTML(teamName(m.away_team_id))}
+    </h2>
+
+    <p class="small">
+      ${formatDate(m.match_date)}
+    </p>
+
+  `;
+
+
+  if(m.status==="live"){
+
+    html += `
+      <div class="notice">
+        🔴 UŽIVO — ${m.current_minute || 0}'
+      </div>
+    `;
+  }
+
+
+  html += `<h3>⚽ Golovi</h3>`;
+
+
+  if(!matchGoals.length){
+
+    html +=
+      `<p class="small">Nema golova.</p>`;
+
+  }else{
+
+    matchGoals.forEach(g=>{
+
+      html += `
+        <div class="team-row">
+
+          <div>
+            <b>${g.minute || 0}'</b>
+            —
+            ${escapeHTML(playerName(g.player_id))}
+
+            ${
+              g.assist_player_id
+              ? `<div class="small">
+                   🎯 Asist:
+                   ${escapeHTML(
+                     playerName(g.assist_player_id)
+                   )}
+                 </div>`
+              : ""
+            }
+          </div>
+
+        </div>
+      `;
+
+    });
+  }
+
+
+  html += `<h3>🟨🟥 Kartoni</h3>`;
+
+
+  if(!matchCards.length){
+
+    html +=
+      `<p class="small">Nema kartona.</p>`;
+
+  }else{
+
+    matchCards.forEach(c=>{
+
+      html += `
+        <div class="team-row">
+
+          <div>
+            <b>
+              ${c.card_type==="yellow" ? "🟨" : "🟥"}
+              ${c.minute || 0}'
+            </b>
+            —
+            ${escapeHTML(playerName(c.player_id))}
+          </div>
+
+        </div>
+      `;
+
+    });
+  }
+
+
+  document.getElementById("modalContent").innerHTML =
+    html;
+
+  showModal();
+}
+
+
+/* =========================
+   KOMENTARI
+========================= */
+
+async function renderComments(){
+
+  const el =
+    document.getElementById("commentsContent");
+
+  const {data,error} =
+    await supabaseClient
+      .from("comments")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+
+  if(error){
+
+    el.innerHTML =
+      `<p>Greška pri učitavanju komentara.</p>`;
+
+    return;
+  }
+
+
+  if(!data || !data.length){
+
+    el.innerHTML =
+      `<p class="small">Još nema komentara.</p>`;
+
+    return;
+  }
+
+
+  el.innerHTML =
+    data.map(c=>`
+
+      <div class="comment">
+
+        <div class="small">
+          ${formatDate(c.created_at)}
+        </div>
+
+        <div>
+          ${escapeHTML(c.content)}
+        </div>
+
+        ${
+          currentUser &&
+          currentUser.id===c.user_id
+          ?
+          `<button class="danger"
+             style="margin-top:7px"
+             onclick="deleteComment('${c.id}')">
+             Obriši
+           </button>`
+          :
+          ""
+        }
+
+      </div>
 
     `).join("");
 }
 
 
+async function addComment(){
+
+  if(!currentUser){
+
+    alert("Moraš biti prijavljen.");
+    return;
+  }
+
+
+  const content =
+    document.getElementById("commentText")
+      .value.trim();
+
+
+  if(!content){
+
+    alert("Napiši komentar.");
+    return;
+  }
+
+
+  const {error} =
+    await supabaseClient
+      .from("comments")
+      .insert({
+
+        user_id:currentUser.id,
+        content:content
+
+      });
+
+
+  if(error){
+
+    alert(error.message);
+    return;
+  }
+
+
+  document.getElementById("commentText").value="";
+
+  await renderComments();
+}
+
+
+async function deleteComment(id){
+
+  const {error} =
+    await supabaseClient
+      .from("comments")
+      .delete()
+      .eq("id",id);
+
+
+  if(error){
+
+    alert(error.message);
+    return;
+  }
+
+
+  await renderComments();
+}
+
+
 /* =========================
-   MATCH DETAIL
+   CHAT
 ========================= */
 
-async function showMatchDetail(matchId){
+async function renderChat(){
 
-    const match = getMatch(matchId);
+  const el =
+    document.getElementById("chatContent");
 
-    if(!match) return;
 
-    const home = getTeam(match.home_team_id);
-    const away = getTeam(match.away_team_id);
+  const {data,error} =
+    await supabaseClient
+      .from("messages")
+      .select("*")
+      .order("created_at",{ascending:true});
 
-    const matchGoals =
-        goals
-        .filter(g=>String(g.match_id)===String(match.id))
-        .sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
 
-    const matchCards =
-        cards
-        .filter(c=>String(c.match_id)===String(match.id))
-        .sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
+  if(error){
 
-    document.getElementById("modalTitle").textContent =
-        "Detalji utakmice";
+    el.innerHTML =
+      "<p>Greška pri učitavanju chata.</p>";
 
-    document.getElementById("modalBody").innerHTML = `
+    return;
+  }
 
-        <div class="detail-header">
 
-            <div class="detail-teams">
+  if(!data || !data.length){
 
-                <div class="detail-team">
-                    <img src="${escapeHtml(teamLogo(home))}">
-                    <h3>${escapeHtml(home?.name || "Domaćin")}</h3>
-                </div>
+    el.innerHTML =
+      "<p class='small'>Još nema poruka.</p>";
 
-                <div>
-                    <div class="detail-score">
-                        ${match.home_score ?? 0}
-                        :
-                        ${match.away_score ?? 0}
-                    </div>
+    return;
+  }
 
-                    <span class="match-status ${statusClass(match.status)}">
-                        ${statusLabel(match.status)}
-                    </span>
 
-                    ${
-                        match.status==="live"
-                        ? `<div class="live-minute">
-                            ${match.current_minute ?? 0}'
-                           </div>`
-                        :""
-                    }
-                </div>
+  el.innerHTML =
+    data.map(m=>`
 
-                <div class="detail-team">
-                    <img src="${escapeHtml(teamLogo(away))}">
-                    <h3>${escapeHtml(away?.name || "Gost")}</h3>
-                </div>
+      <div class="chat-message">
 
-            </div>
-
-            <p style="color:#8996a0;margin-top:15px">
-                ${match.round ? "Kolo " + escapeHtml(match.round) + " · " : ""}
-                ${formatDate(match.match_date)}
-            </p>
-
+        <div class="small">
+          ${formatDate(m.created_at)}
         </div>
-
-        <h3>⚽ Golovi</h3>
 
         <div>
-        ${
-            matchGoals.length
-            ? matchGoals.map(g=>`
-
-                <div class="event">
-
-                    <div class="event-minute">
-                        ${g.minute ?? ""}'
-                    </div>
-
-                    <div>
-                        <strong>
-                            ${escapeHtml(playerName(g.player_id))}
-                        </strong>
-
-                        ${
-                            g.assist_player_id
-                            ? `<div style="color:#87949e;font-size:13px">
-                                Asistencija:
-                                ${escapeHtml(playerName(g.assist_player_id))}
-                               </div>`
-                            :""
-                        }
-                    </div>
-
-                </div>
-
-            `).join("")
-            : `<div class="empty">Nema zabilježenih golova.</div>`
-        }
+          ${escapeHTML(m.content)}
         </div>
-
-        <br>
-
-        <h3>🟨🟥 Kartoni</h3>
-
-        <div>
-        ${
-            matchCards.length
-            ? matchCards.map(c=>`
-
-                <div class="event">
-
-                    <div class="event-minute">
-                        ${c.minute ?? ""}'
-                    </div>
-
-                    <div>
-                        <span class="event-card ${
-                            c.card_type==="red"
-                            ?"red"
-                            :"yellow"
-                        }"></span>
-
-                        &nbsp;
-
-                        ${escapeHtml(playerName(c.player_id))}
-
-                    </div>
-
-                </div>
-
-            `).join("")
-            : `<div class="empty">Nema kartona.</div>`
-        }
-        </div>
-    `;
-
-    openModal();
-}
-
-
-/* =========================
-   TEAM DETAIL
-========================= */
-
-function showTeamDetail(teamId){
-
-    const team = getTeam(teamId);
-
-    if(!team) return;
-
-    const row =
-        calculateTable().find(x=>
-            String(x.team.id)===String(team.id)
-        );
-
-    const roster =
-        players.filter(p=>
-            String(p.team_id)===String(team.id)
-        );
-
-    const teamMatches =
-        matches
-        .filter(m=>
-            String(m.home_team_id)===String(team.id) ||
-            String(m.away_team_id)===String(team.id)
-        )
-        .sort((a,b)=>new Date(a.match_date)-new Date(b.match_date));
-
-    document.getElementById("modalTitle").textContent =
-        team.name;
-
-    document.getElementById("modalBody").innerHTML = `
-
-        <div style="text-align:center">
-
-            <img class="team-logo"
-                 src="${escapeHtml(teamLogo(team))}">
-
-            <h2>${escapeHtml(team.name)}</h2>
-
-            <p style="color:#84919c">
-                ${row?.points || 0} bodova
-            </p>
-
-        </div>
-
-        <br>
-
-        <div class="stats-grid">
-
-            <div class="stat-card">
-                <small>Utakmice</small>
-                <strong>${row?.p || 0}</strong>
-            </div>
-
-            <div class="stat-card">
-                <small>Pobjede</small>
-                <strong>${row?.w || 0}</strong>
-            </div>
-
-            <div class="stat-card">
-                <small>Neriješeno</small>
-                <strong>${row?.d || 0}</strong>
-            </div>
-
-            <div class="stat-card">
-                <small>Porazi</small>
-                <strong>${row?.l || 0}</strong>
-            </div>
-
-        </div>
-
-        <h3>👥 Igrači</h3>
-
-        <br>
 
         ${
-            roster.length
-            ? roster.map(p=>`
-
-                <div class="card player-card"
-                     onclick="showPlayerDetail('${p.id}')"
-                     style="margin-bottom:8px">
-
-                    <img class="player-photo"
-                         src="${escapeHtml(playerPhoto(p))}">
-
-                    <div class="player-info">
-                        <h3>${escapeHtml(p.name)}</h3>
-                        <p>
-                            ${p.jersey_number
-                                ? "#" + escapeHtml(p.jersey_number)
-                                :""
-                            }
-                            ${p.position
-                                ? " · " + escapeHtml(p.position)
-                                :""
-                            }
-                        </p>
-                    </div>
-
-                </div>
-
-            `).join("")
-            : `<div class="empty">Nema igrača.</div>`
+          currentUser &&
+          currentUser.id===m.user_id
+          ?
+          `<button class="danger"
+             style="margin-top:7px"
+             onclick="deleteMessage('${m.id}')">
+             Obriši
+           </button>`
+          :
+          ""
         }
 
-        <br>
+      </div>
 
-        <h3>📅 Utakmice</h3>
-
-        <br>
-
-        ${
-            teamMatches.length
-            ? teamMatches.map(m=>matchCardHTML(m)).join("")
-            : `<div class="empty">Nema utakmica.</div>`
-        }
-    `;
-
-    openModal();
+    `).join("");
 }
 
 
-/* =========================
-   PLAYER DETAIL
-========================= */
+async function sendMessage(){
 
-function showPlayerDetail(playerId){
+  if(!currentUser){
 
-    const player = getPlayer(playerId);
+    alert("Moraš biti prijavljen.");
+    return;
+  }
 
-    if(!player) return;
 
-    const playerGoals =
-        goals.filter(g=>
-            String(g.player_id)===String(player.id)
-        ).length;
+  const content =
+    document.getElementById("chatText")
+      .value.trim();
 
-    const playerAssists =
-        goals.filter(g=>
-            String(g.assist_player_id)===String(player.id)
-        ).length;
 
-    const yellows =
-        cards.filter(c=>
-            String(c.player_id)===String(player.id) &&
-            c.card_type==="yellow"
-        ).length;
+  if(!content){
 
-    const reds =
-        cards.filter(c=>
-            String(c.player_id)===String(player.id) &&
-            c.card_type==="red"
-        ).length;
+    alert("Napiši poruku.");
+    return;
+  }
 
-    document.getElementById("modalTitle").textContent =
-        player.name || "Igrač";
 
-    document.getElementById("modalBody").innerHTML = `
+  const {error} =
+    await supabaseClient
+      .from("messages")
+      .insert({
 
-        <div style="text-align:center">
+        user_id:currentUser.id,
+        content:content
 
-            <img
-                src="${escapeHtml(playerPhoto(player))}"
-                style="
-                    width:120px;
-                    height:120px;
-                    border-radius:50%;
-                    object-fit:cover;
-                    background:#202b34;
-                "
-            >
+      });
 
-            <h2 style="margin-top:12px">
-                ${escapeHtml(player.name || "Bez imena")}
-            </h2>
 
-            <p style="color:#8996a0">
-                ${escapeHtml(teamName(player.team_id))}
-            </p>
+  if(error){
 
-            <p style="color:#8996a0">
-                ${player.jersey_number
-                    ? "Broj " + escapeHtml(player.jersey_number)
-                    :""
-                }
-                ${player.position
-                    ? " · " + escapeHtml(player.position)
-                    :""
-                }
-            </p>
+    alert(error.message);
+    return;
+  }
 
-        </div>
 
-        <br>
+  document.getElementById("chatText").value="";
 
-        <div class="stats-grid">
-
-            <div class="stat-card">
-                <small>Golovi</small>
-                <strong>${playerGoals}</strong>
-            </div>
-
-            <div class="stat-card">
-                <small>Asistencije</small>
-                <strong>${playerAssists}</strong>
-            </div>
-
-            <div class="stat-card">
-                <small>Žuti</small>
-                <strong>${yellows}</strong>
-            </div>
-
-            <div class="stat-card">
-                <small>Crveni</small>
-                <strong>${reds}</strong>
-            </div>
-
-        </div>
-    `;
-
-    openModal();
+  await renderChat();
 }
 
 
-/* =========================
-   MODAL
-========================= */
+async function deleteMessage(id){
 
-function openModal(){
-    document.getElementById("detailModal")
-        .classList.add("show");
-}
+  const {error} =
+    await supabaseClient
+      .from("messages")
+      .delete()
+      .eq("id",id);
 
-function closeModal(){
-    document.getElementById("detailModal")
-        .classList.remove("show");
-}
 
-function closeModalOutside(event){
-    if(event.target.id==="detailModal"){
-        closeModal();
-    }
+  if(error){
+
+    alert(error.message);
+    return;
+  }
+
+
+  await renderChat();
 }
 
 
@@ -2089,1118 +2643,96 @@ function closeModalOutside(event){
 
 async function login(){
 
-    const email =
-        document.getElementById("authEmail").value.trim();
+  const email =
+    document.getElementById("email")
+      .value.trim();
 
-    const password =
-        document.getElementById("authPassword").value;
+  const password =
+    document.getElementById("password")
+      .value;
 
-    if(!email || !password){
-        showAlert(
-            "authAlert",
-            "Unesi email i lozinku.",
-            "error"
-        );
-        return;
-    }
 
-    const {error} =
-        await supabaseClient.auth.signInWithPassword({
-            email,
-            password
-        });
+  const {error} =
+    await supabaseClient.auth
+      .signInWithPassword({
+        email,
+        password
+      });
 
-    if(error){
-        showAlert(
-            "authAlert",
-            error.message,
-            "error"
-        );
-        return;
-    }
 
-    showAlert(
-        "authAlert",
-        "Uspješna prijava.",
-        "success"
-    );
+  const msg =
+    document.getElementById("authMessage");
 
-    await checkUser();
 
-    showPage("home");
+  if(error){
+
+    msg.textContent =
+      "Greška: " + error.message;
+
+    return;
+  }
+
+
+  msg.textContent =
+    "Uspješna prijava.";
+
+  await updateAuth();
 }
 
-async function registerUser(){
 
-    const email =
-        document.getElementById("authEmail").value.trim();
+async function register(){
 
-    const password =
-        document.getElementById("authPassword").value;
+  const email =
+    document.getElementById("email")
+      .value.trim();
 
-    if(!email || !password){
-        showAlert(
-            "authAlert",
-            "Unesi email i lozinku.",
-            "error"
-        );
-        return;
-    }
+  const password =
+    document.getElementById("password")
+      .value;
 
-    if(password.length < 6){
-        showAlert(
-            "authAlert",
-            "Lozinka mora imati najmanje 6 karaktera.",
-            "error"
-        );
-        return;
-    }
 
-    const {error} =
-        await supabaseClient.auth.signUp({
-            email,
-            password
-        });
+  if(password.length < 6){
 
-    if(error){
-        showAlert(
-            "authAlert",
-            error.message,
-            "error"
-        );
-        return;
-    }
+    alert("Lozinka mora imati najmanje 6 znakova.");
+    return;
+  }
 
-    showAlert(
-        "authAlert",
-        "Registracija je uspješna. Ako je uključena potvrda emaila, provjeri email.",
-        "success"
-    );
+
+  const {error} =
+    await supabaseClient.auth
+      .signUp({
+        email,
+        password
+      });
+
+
+  const msg =
+    document.getElementById("authMessage");
+
+
+  if(error){
+
+    msg.textContent =
+      "Greška: " + error.message;
+
+    return;
+  }
+
+
+  msg.textContent =
+    "Registracija uspješna. Provjeri email ako je potvrda uključena.";
 }
+
 
 async function logout(){
 
-    await supabaseClient.auth.signOut();
+  await supabaseClient.auth.signOut();
 
-    currentUser = null;
-    currentProfile = null;
+  currentUser=null;
+  currentProfile=null;
 
-    updateAuthUI();
-
-    showPage("home");
-}
-
-async function checkUser(){
-
-    const {data} =
-        await supabaseClient.auth.getUser();
-
-    currentUser = data?.user || null;
-
-    currentProfile = null;
-
-    if(currentUser){
-
-        const {data:profile} =
-            await supabaseClient
-            .from("profiles")
-            .select("*")
-            .eq("id",currentUser.id)
-            .maybeSingle();
-
-        currentProfile = profile || null;
-    }
-
-    updateAuthUI();
-}
-
-function updateAuthUI(){
-
-    const logged =
-        !!currentUser;
-
-    document.getElementById("loginNav")
-        .classList.toggle("hidden",logged);
-
-    document.getElementById("logoutNav")
-        .classList.toggle("hidden",!logged);
-
-    const isAdmin =
-        currentProfile?.role === "admin";
-
-    document.getElementById("adminNav")
-        .classList.toggle("hidden",!isAdmin);
-
-    document.getElementById("commentLoginNotice")
-        .classList.toggle("hidden",logged);
-
-    document.getElementById("commentForm")
-        .classList.toggle("hidden",!logged);
-
-    document.getElementById("chatLoginNotice")
-        .classList.toggle("hidden",logged);
-
-    document.getElementById("chatForm")
-        .classList.toggle("hidden",!logged);
-}
-
-
-/* =========================
-   COMMENTS
-========================= */
-
-function renderComments(){
-
-    const container =
-        document.getElementById("commentsContainer");
-
-    if(!comments.length){
-        container.innerHTML =
-            `<div class="empty">Još nema komentara.</div>`;
-        return;
-    }
-
-    container.innerHTML =
-        comments.map(comment=>`
-
-            <div class="card" style="margin-bottom:10px">
-
-                <div style="color:#75838e;font-size:12px">
-                    ${formatDate(comment.created_at)}
-                </div>
-
-                <div style="margin-top:7px">
-                    ${escapeHtml(comment.content)}
-                </div>
-
-                ${
-                    currentUser &&
-                    String(comment.user_id)===String(currentUser.id)
-                    ? `
-                    <br>
-                    <button class="btn danger"
-                            onclick="deleteComment('${comment.id}')">
-                        Obriši
-                    </button>
-                    `
-                    :""
-                }
-
-            </div>
-
-        `).join("");
-}
-
-async function addComment(){
-
-    if(!currentUser){
-        showPage("auth");
-        return;
-    }
-
-    const text =
-        document.getElementById("commentText")
-        .value.trim();
-
-    if(!text) return;
-
-    const {error} =
-        await supabaseClient
-        .from("comments")
-        .insert({
-            user_id:currentUser.id,
-            content:text
-        });
-
-    if(error){
-        alert(error.message);
-        return;
-    }
-
-    document.getElementById("commentText").value = "";
-
-    await loadAll();
-}
-
-async function deleteComment(id){
-
-    if(!confirm("Obrisati komentar?")) return;
-
-    const {error} =
-        await supabaseClient
-        .from("comments")
-        .delete()
-        .eq("id",id);
-
-    if(error){
-        alert(error.message);
-        return;
-    }
-
-    await loadAll();
-}
-
-
-/* =========================
-   CHAT
-========================= */
-
-function renderChat(){
-
-    const container =
-        document.getElementById("chatContainer");
-
-    if(!messages.length){
-        container.innerHTML =
-            `<div class="empty">Chat je prazan.</div>`;
-        return;
-    }
-
-    container.innerHTML =
-        messages.map(message=>`
-
-            <div class="card" style="margin-bottom:8px">
-
-                <div style="color:#71808c;font-size:12px">
-                    ${formatDate(message.created_at)}
-                </div>
-
-                <div style="margin-top:5px">
-                    ${escapeHtml(message.content)}
-                </div>
-
-                ${
-                    currentUser &&
-                    String(message.user_id)===String(currentUser.id)
-                    ? `
-                    <br>
-                    <button class="btn danger"
-                            onclick="deleteMessage('${message.id}')">
-                        Obriši
-                    </button>
-                    `
-                    :""
-                }
-
-            </div>
-
-        `).join("");
-
-    container.scrollTop = container.scrollHeight;
-}
-
-async function sendMessage(){
-
-    if(!currentUser){
-        showPage("auth");
-        return;
-    }
-
-    const text =
-        document.getElementById("chatText")
-        .value.trim();
-
-    if(!text) return;
-
-    const {error} =
-        await supabaseClient
-        .from("messages")
-        .insert({
-            user_id:currentUser.id,
-            content:text
-        });
-
-    if(error){
-        alert(error.message);
-        return;
-    }
-
-    document.getElementById("chatText").value = "";
-
-    await loadAll();
-}
-
-async function deleteMessage(id){
-
-    if(!confirm("Obrisati poruku?")) return;
-
-    const {error} =
-        await supabaseClient
-        .from("messages")
-        .delete()
-        .eq("id",id);
-
-    if(error){
-        alert(error.message);
-        return;
-    }
-
-    await loadAll();
-}
-
-
-/* =========================
-   ADMIN SELECTS
-========================= */
-
-function populateAdminSelects(){
-
-    const teamOptions =
-        `<option value="">Izaberi ekipu</option>` +
-        teams.map(t=>
-            `<option value="${t.id}">
-                ${escapeHtml(t.name)}
-            </option>`
-        ).join("");
-
-    ["playerTeam","matchHome","matchAway"]
-        .forEach(id=>{
-            const el=document.getElementById(id);
-            if(el) el.innerHTML=teamOptions;
-        });
-
-    const matchOptions =
-        `<option value="">Izaberi utakmicu</option>` +
-        matches
-        .sort((a,b)=>new Date(b.match_date)-new Date(a.match_date))
-        .map(m=>`
-            <option value="${m.id}">
-                ${escapeHtml(teamName(m.home_team_id))}
-                -
-                ${escapeHtml(teamName(m.away_team_id))}
-                (${formatDate(m.match_date)})
-            </option>
-        `).join("");
-
-    const control =
-        document.getElementById("controlMatch");
-
-    if(control){
-
-        const old = control.value;
-
-        control.innerHTML = matchOptions;
-
-        if(matches.some(m=>String(m.id)===String(old))){
-            control.value=old;
-        }
-    }
-
-    populatePlayerControls();
-}
-
-function populatePlayerControls(){
-
-    const matchId =
-        document.getElementById("controlMatch")?.value;
-
-    let availablePlayers = players;
-
-    if(matchId){
-
-        const match=getMatch(matchId);
-
-        if(match){
-
-            availablePlayers =
-                players.filter(p=>
-                    String(p.team_id)===String(match.home_team_id) ||
-                    String(p.team_id)===String(match.away_team_id)
-                );
-        }
-    }
-
-    const options =
-        `<option value="">Izaberi igrača</option>` +
-        availablePlayers.map(p=>
-            `<option value="${p.id}">
-                ${escapeHtml(p.name)}
-                -
-                ${escapeHtml(teamName(p.team_id))}
-            </option>`
-        ).join("");
-
-    ["goalPlayer","goalAssist","cardPlayer"]
-        .forEach(id=>{
-            const el=document.getElementById(id);
-            if(el) el.innerHTML=options;
-        });
-}
-
-
-/* =========================
-   ADD TEAM
-========================= */
-
-async function addTeam(){
-
-    if(!currentProfile || currentProfile.role!=="admin"){
-        alert("Nemaš admin ovlaštenje.");
-        return;
-    }
-
-    const name =
-        document.getElementById("teamName").value.trim();
-
-    const logo =
-        document.getElementById("teamLogo").value.trim();
-
-    if(!name){
-        showAlert(
-            "adminAlert",
-            "Unesi naziv ekipe.",
-            "error"
-        );
-        return;
-    }
-
-    const {error} =
-        await supabaseClient
-        .from("teams")
-        .insert({
-            name,
-            logo_url:logo || null
-        });
-
-    if(error){
-        showAlert(
-            "adminAlert",
-            error.message,
-            "error"
-        );
-        return;
-    }
-
-    document.getElementById("teamName").value="";
-    document.getElementById("teamLogo").value="";
-
-    showAlert(
-        "adminAlert",
-        "Ekipa je dodana.",
-        "success"
-    );
-
-    await loadAll();
-}
-
-
-/* =========================
-   ADD PLAYER
-========================= */
-
-async function addPlayer(){
-
-    if(!currentProfile || currentProfile.role!=="admin"){
-        alert("Nemaš admin ovlaštenje.");
-        return;
-    }
-
-    const name =
-        document.getElementById("playerName").value.trim();
-
-    const team_id =
-        document.getElementById("playerTeam").value;
-
-    const jersey =
-        document.getElementById("playerNumber").value;
-
-    const position =
-        document.getElementById("playerPosition").value.trim();
-
-    const photo =
-        document.getElementById("playerPhoto").value.trim();
-
-    if(!name || !team_id){
-        showAlert(
-            "adminAlert",
-            "Ime i ekipa su obavezni.",
-            "error"
-        );
-        return;
-    }
-
-    const {error} =
-        await supabaseClient
-        .from("players")
-        .insert({
-            name,
-            team_id,
-            jersey_number:jersey
-                ? Number(jersey)
-                : null,
-            position:position || null,
-            photo_url:photo || null
-        });
-
-    if(error){
-        showAlert(
-            "adminAlert",
-            error.message,
-            "error"
-        );
-        return;
-    }
-
-    document.getElementById("playerName").value="";
-    document.getElementById("playerNumber").value="";
-    document.getElementById("playerPosition").value="";
-    document.getElementById("playerPhoto").value="";
-
-    showAlert(
-        "adminAlert",
-        "Igrač je dodan.",
-        "success"
-    );
-
-    await loadAll();
-}
-
-
-/* =========================
-   ADD MATCH
-========================= */
-
-async function addMatch(){
-
-    if(!currentProfile || currentProfile.role!=="admin"){
-        alert("Nemaš admin ovlaštenje.");
-        return;
-    }
-
-    const home =
-        document.getElementById("matchHome").value;
-
-    const away =
-        document.getElementById("matchAway").value;
-
-    const date =
-        document.getElementById("matchDate").value;
-
-    const round =
-        document.getElementById("matchRound").value;
-
-    if(!home || !away || !date){
-        showAlert(
-            "adminAlert",
-            "Popuni domaćina, gosta i datum.",
-            "error"
-        );
-        return;
-    }
-
-    if(home===away){
-        showAlert(
-            "adminAlert",
-            "Domaćin i gost ne mogu biti ista ekipa.",
-            "error"
-        );
-        return;
-    }
-
-    const {error} =
-        await supabaseClient
-        .from("matches")
-        .insert({
-            home_team_id:home,
-            away_team_id:away,
-            home_score:0,
-            away_score:0,
-            match_date:new Date(date).toISOString(),
-            round:round ? Number(round) : null,
-            status:"scheduled",
-            current_minute:0
-        });
-
-    if(error){
-        showAlert(
-            "adminAlert",
-            error.message,
-            "error"
-        );
-        return;
-    }
-
-    document.getElementById("matchDate").value="";
-    document.getElementById("matchRound").value="";
-
-    showAlert(
-        "adminAlert",
-        "Utakmica je dodana.",
-        "success"
-    );
-
-    await loadAll();
-}
-
-
-/* =========================
-   CONTROL MATCH
-========================= */
-
-function loadControlMatch(){
-
-    const matchId =
-        document.getElementById("controlMatch").value;
-
-    const match =
-        getMatch(matchId);
-
-    populatePlayerControls();
-
-    if(!match) return;
-
-    document.getElementById("controlStatus").value =
-        match.status || "scheduled";
-
-    document.getElementById("controlMinute").value =
-        match.current_minute || 0;
-
-    renderControlEvents();
-}
-
-async function updateMatchControl(){
-
-    if(!currentProfile || currentProfile.role!=="admin"){
-        alert("Nemaš admin ovlaštenje.");
-        return;
-    }
-
-    const id =
-        document.getElementById("controlMatch").value;
-
-    if(!id){
-        showAlert(
-            "adminAlert",
-            "Izaberi utakmicu.",
-            "error"
-        );
-        return;
-    }
-
-    const status =
-        document.getElementById("controlStatus").value;
-
-    const minute =
-        Number(
-            document.getElementById("controlMinute").value || 0
-        );
-
-    const {error} =
-        await supabaseClient
-        .from("matches")
-        .update({
-            status,
-            current_minute:minute
-        })
-        .eq("id",id);
-
-    if(error){
-        showAlert(
-            "adminAlert",
-            error.message,
-            "error"
-        );
-        return;
-    }
-
-    showAlert(
-        "adminAlert",
-        "Stanje utakmice je sačuvano.",
-        "success"
-    );
-
-    await loadAll();
-
-    document.getElementById("controlMatch").value=id;
-
-    loadControlMatch();
-}
-
-
-/* =========================
-   ADD GOAL
-========================= */
-
-async function addGoal(){
-
-    if(!currentProfile || currentProfile.role!=="admin"){
-        alert("Nemaš admin ovlaštenje.");
-        return;
-    }
-
-    const matchId =
-        document.getElementById("controlMatch").value;
-
-    const playerId =
-        document.getElementById("goalPlayer").value;
-
-    const assistId =
-        document.getElementById("goalAssist").value;
-
-    const minute =
-        Number(
-            document.getElementById("goalMinute").value || 0
-        );
-
-    if(!matchId || !playerId){
-        showAlert(
-            "adminAlert",
-            "Izaberi utakmicu i strijelca.",
-            "error"
-        );
-        return;
-    }
-
-    const match=getMatch(matchId);
-    const player=getPlayer(playerId);
-
-    if(!match || !player) return;
-
-    const {error:goalError} =
-        await supabaseClient
-        .from("goals")
-        .insert({
-            match_id:matchId,
-            player_id:playerId,
-            assist_player_id:assistId || null,
-            minute
-        });
-
-    if(goalError){
-        showAlert(
-            "adminAlert",
-            goalError.message,
-            "error"
-        );
-        return;
-    }
-
-    let homeScore =
-        Number(match.home_score || 0);
-
-    let awayScore =
-        Number(match.away_score || 0);
-
-    if(String(player.team_id)===String(match.home_team_id)){
-        homeScore++;
-    }else if(String(player.team_id)===String(match.away_team_id)){
-        awayScore++;
-    }else{
-        showAlert(
-            "adminAlert",
-            "Igrač nije iz jedne od ekipa u ovoj utakmici.",
-            "error"
-        );
-        return;
-    }
-
-    const {error:updateError} =
-        await supabaseClient
-        .from("matches")
-        .update({
-            home_score:homeScore,
-            away_score:awayScore
-        })
-        .eq("id",matchId);
-
-    if(updateError){
-        showAlert(
-            "adminAlert",
-            updateError.message,
-            "error"
-        );
-        return;
-    }
-
-    document.getElementById("goalMinute").value="";
-
-    showAlert(
-        "adminAlert",
-        "Gol je dodan.",
-        "success"
-    );
-
-    await loadAll();
-
-    document.getElementById("controlMatch").value=matchId;
-    loadControlMatch();
-}
-
-
-/* =========================
-   ADD CARD
-========================= */
-
-async function addCard(){
-
-    if(!currentProfile || currentProfile.role!=="admin"){
-        alert("Nemaš admin ovlaštenje.");
-        return;
-    }
-
-    const matchId =
-        document.getElementById("controlMatch").value;
-
-    const playerId =
-        document.getElementById("cardPlayer").value;
-
-    const type =
-        document.getElementById("cardType").value;
-
-    const minute =
-        Number(
-            document.getElementById("cardMinute").value || 0
-        );
-
-    if(!matchId || !playerId){
-        showAlert(
-            "adminAlert",
-            "Izaberi utakmicu i igrača.",
-            "error"
-        );
-        return;
-    }
-
-    const {error} =
-        await supabaseClient
-        .from("cards")
-        .insert({
-            match_id:matchId,
-            player_id:playerId,
-            card_type:type,
-            minute
-        });
-
-    if(error){
-        showAlert(
-            "adminAlert",
-            error.message,
-            "error"
-        );
-        return;
-    }
-
-    document.getElementById("cardMinute").value="";
-
-    showAlert(
-        "adminAlert",
-        "Karton je dodan.",
-        "success"
-    );
-
-    await loadAll();
-
-    document.getElementById("controlMatch").value=matchId;
-    loadControlMatch();
-}
-
-
-/* =========================
-   CONTROL EVENTS
-========================= */
-
-function renderControlEvents(){
-
-    const matchId =
-        document.getElementById("controlMatch")?.value;
-
-    const container =
-        document.getElementById("controlEvents");
-
-    if(!container || !matchId){
-        if(container)
-            container.innerHTML="";
-        return;
-    }
-
-    const matchGoals =
-        goals.filter(g=>
-            String(g.match_id)===String(matchId)
-        );
-
-    const matchCards =
-        cards.filter(c=>
-            String(c.match_id)===String(matchId)
-        );
-
-    container.innerHTML = `
-
-        ${
-            matchGoals.length
-            ? `
-            <h4>Golovi</h4>
-
-            ${matchGoals.map(g=>`
-
-                <div class="event">
-
-                    <div class="event-minute">
-                        ${g.minute ?? ""}'
-                    </div>
-
-                    <div style="flex:1">
-                        ⚽ ${escapeHtml(playerName(g.player_id))}
-                        ${
-                            g.assist_player_id
-                            ? `<small style="color:#82909b">
-                                · asistencija ${escapeHtml(playerName(g.assist_player_id))}
-                               </small>`
-                            :""
-                        }
-                    </div>
-
-                    <button
-                        class="btn danger"
-                        onclick="deleteGoal('${g.id}')">
-                        Obriši
-                    </button>
-
-                </div>
-
-            `).join("")}
-            `
-            : ""
-        }
-
-        ${
-            matchCards.length
-            ? `
-            <h4 style="margin-top:15px">Kartoni</h4>
-
-            ${matchCards.map(c=>`
-
-                <div class="event">
-
-                    <div class="event-minute">
-                        ${c.minute ?? ""}'
-                    </div>
-
-                    <div style="flex:1">
-                        <span class="event-card ${
-                            c.card_type==="red"
-                            ?"red"
-                            :"yellow"
-                        }"></span>
-
-                        ${escapeHtml(playerName(c.player_id))}
-                    </div>
-
-                    <button
-                        class="btn danger"
-                        onclick="deleteCard('${c.id}')">
-                        Obriši
-                    </button>
-
-                </div>
-
-            `).join("")}
-            `
-            : ""
-        }
-
-        ${
-            !matchGoals.length && !matchCards.length
-            ? `<div class="empty">Nema događaja.</div>`
-            :""
-        }
-    `;
-}
-
-
-/* =========================
-   DELETE GOAL
-========================= */
-
-async function deleteGoal(goalId){
-
-    if(!currentProfile || currentProfile.role!=="admin"){
-        alert("Nemaš admin ovlaštenje.");
-        return;
-    }
-
-    if(!confirm("Obrisati ovaj gol?")) return;
-
-    const goal =
-        goals.find(g=>String(g.id)===String(goalId));
-
-    if(!goal) return;
-
-    const match =
-        getMatch(goal.match_id);
-
-    const player =
-        getPlayer(goal.player_id);
-
-    if(!match || !player) return;
-
-    const {error} =
-        await supabaseClient
-        .from("goals")
-        .delete()
-        .eq("id",goalId);
-
-    if(error){
-        alert(error.message);
-        return;
-    }
-
-    let homeScore =
-        Number(match.home_score || 0);
-
-    let awayScore =
-        Number(match.away_score || 0);
-
-    if(String(player.team_id)===String(match.home_team_id)){
-        homeScore=Math.max(0,homeScore-1);
-    }
-
-    if(String(player.team_id)===String(match.away_team_id)){
-        awayScore=Math.max(0,awayScore-1);
-    }
-
-    await supabaseClient
-        .from("matches")
-        .update({
-            home_score:homeScore,
-            away_score:awayScore
-        })
-        .eq("id",match.id);
-
-    await loadAll();
-
-    document.getElementById("controlMatch").value=match.id;
-
-    loadControlMatch();
-}
-
-
-/* =========================
-   DELETE CARD
-========================= */
-
-async function deleteCard(cardId){
-
-    if(!currentProfile || currentProfile.role!=="admin"){
-        alert("Nemaš admin ovlaštenje.");
-        return;
-    }
-
-    if(!confirm("Obrisati ovaj karton?")) return;
-
-    const {error} =
-        await supabaseClient
-        .from("cards")
-        .delete()
-        .eq("id",cardId);
-
-    if(error){
-        alert(error.message);
-        return;
-    }
-
-    await loadAll();
-
-    renderControlEvents();
+  updateUI();
+  showSection("home");
 }
 
 
@@ -3208,59 +2740,168 @@ async function deleteCard(cardId){
    AUTH STATE
 ========================= */
 
-supabaseClient.auth.onAuthStateChange(
-    async (event,session)=>{
+async function updateAuth(){
 
-        currentUser =
-            session?.user || null;
+  const {data} =
+    await supabaseClient.auth.getUser();
 
-        if(currentUser){
+  currentUser =
+    data.user || null;
 
-            const {data:profile} =
-                await supabaseClient
-                .from("profiles")
-                .select("*")
-                .eq("id",currentUser.id)
-                .maybeSingle();
 
-            currentProfile =
-                profile || null;
-        }else{
-            currentProfile=null;
-        }
+  currentProfile=null;
 
-        updateAuthUI();
-        renderComments();
-        renderChat();
-    }
-);
+
+  if(currentUser){
+
+    const {data:profile} =
+      await supabaseClient
+        .from("profiles")
+        .select("id,role")
+        .eq("id",currentUser.id)
+        .maybeSingle();
+
+
+    currentProfile =
+      profile || null;
+  }
+
+
+  updateUI();
+  await loadAll();
+}
+
+
+function updateUI(){
+
+  const loggedIn =
+    !!currentUser;
+
+  document
+    .getElementById("loginNav")
+    .classList.toggle("hidden",loggedIn);
+
+  document
+    .getElementById("logoutNav")
+    .classList.toggle("hidden",!loggedIn);
+
+  document
+    .getElementById("adminNav")
+    .classList.toggle(
+      "hidden",
+      !isAdmin()
+    );
+
+
+  document
+    .getElementById("commentForm")
+    .classList.toggle(
+      "hidden",
+      !loggedIn
+    );
+
+  document
+    .getElementById("commentLoginNotice")
+    .classList.toggle(
+      "hidden",
+      loggedIn
+    );
+
+
+  document
+    .getElementById("chatForm")
+    .classList.toggle(
+      "hidden",
+      !loggedIn
+    );
+
+  document
+    .getElementById("chatLoginNotice")
+    .classList.toggle(
+      "hidden",
+      loggedIn
+    );
+
+
+  renderAdminMatches();
+}
 
 
 /* =========================
-   AUTO REFRESH
+   MODAL
 ========================= */
 
-setInterval(async()=>{
+function showModal(){
 
-    try{
-        await loadAll();
-    }catch(error){
-        console.error(error);
-    }
+  document.getElementById("modal")
+    .style.display="flex";
+}
 
-},30000);
+
+function hideModal(){
+
+  document.getElementById("modal")
+    .style.display="none";
+}
+
+
+function closeModal(event){
+
+  if(event.target.id==="modal"){
+    hideModal();
+  }
+}
 
 
 /* =========================
-   START
+   POKRETANJE
 ========================= */
+
+supabaseClient.auth
+  .onAuthStateChange(
+    async ()=>{
+      await updateAuth();
+    }
+  );
+
 
 (async function(){
 
-    await checkUser();
-    await loadAll();
+  const {data} =
+    await supabaseClient.auth.getUser();
+
+  currentUser =
+    data.user || null;
+
+
+  if(currentUser){
+
+    const {data:profile} =
+      await supabaseClient
+        .from("profiles")
+        .select("id,role")
+        .eq("id",currentUser.id)
+        .maybeSingle();
+
+    currentProfile =
+      profile || null;
+  }
+
+
+  updateUI();
+  await loadAll();
 
 })();
+
+
+/* Automatsko osvježavanje */
+
+setInterval(
+  async()=>{
+    await loadAll();
+  },
+  30000
+);
 
 </script>
 
