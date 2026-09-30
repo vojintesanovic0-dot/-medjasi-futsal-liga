@@ -186,6 +186,31 @@
   }
 
   testSupabase();
+    async function loadTeams() {
+  const { data, error } = await supabaseClient
+    .from("teams")
+    .select("name")
+    .order("name");
+
+  const teamsList = document.getElementById("teams-list");
+
+  if (error) {
+    teamsList.textContent = "Greška pri učitavanju ekipa.";
+    console.error(error);
+    return;
+  }
+
+  if (!data.length) {
+    teamsList.textContent = "Nema ekipa.";
+    return;
+  }
+
+  teamsList.innerHTML = data
+    .map(team => `<p>⚽ ${team.name}</p>`)
+    .join("");
+}
+
+loadTeams();
 </script>
 </body>
 </html>
