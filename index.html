@@ -163,5 +163,29 @@
     © 2026 Medjaši Futsal Liga
   </footer>
 
+  <script>
+   const SUPABASE_URL = "https://mesryrrjnsnhadoahbux.supabase.co/rest/v1/";
+  const SUPABASE_KEY = "sb_publishable_MVCdydxN-3CMuHpp8a5Nqg_aw5ZPDjH";
+
+  const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  async function testSupabase() {
+    const { data, error } = await supabaseClient
+      .from("teams")
+      .select("*");
+
+    if (error) {
+      console.error("Supabase greška:", error);
+      return;
+    }
+
+    console.log("Ekipe iz baze:", data);
+  }
+
+  testSupabase();
+</script>
 </body>
 </html>
