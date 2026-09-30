@@ -2902,7 +2902,121 @@ setInterval(
   },
   30000
 );
+/* =========================
+   BRISANJE EKIPE
+========================= */
 
+function renderTeams(){
+
+  const el =
+    document.getElementById("teamsContent");
+
+  if(!teams.length){
+
+    el.innerHTML="Nema ekipa.";
+    return;
+  }
+
+  el.innerHTML =
+    teams.map(t=>{
+
+      const logo =
+        t.logo_url ||
+        "https://via.placeholder.com/100?text=⚽";
+
+      const count =
+        players.filter(p=>p.team_id===t.id).length;
+
+      return `
+        <div class="team-row">
+
+          <img
+            class="logo"
+            src="${escapeHTML(logo)}"
+            onclick="openTeam('${t.id}')"
+          >
+
+          <div
+            style="flex:1"
+            onclick="openTeam('${t.id}')"
+          >
+            <b>${escapeHTML(t.name)}</b>
+
+            <div class="small">
+              ${count} igrača
+            </div>
+          </div>
+
+          ${
+            isAdmin()
+            ?
+            `
+            <button
+              class="danger"
+              onclick="event.stopPropagation(); deleteTeam('${t.id}')"
+            >
+              🗑️
+            </button>
+            `
+            :
+            ""
+          }
+
+        </div>
+      `;
+
+    }).join("");
+}
+
+
+async function deleteTeam(id){
+
+  if(!isAdmin()){
+
+    alert("Nemaš admin ovlaštenje.");
+    return;
+  }
+
+  const team =
+    teams.find(t => t.id === id);
+
+  if(!team) return;
+
+
+  const potvrda =
+    confirm(
+      `Da li stvarno želiš obrisati ekipu "${team.name}"?\n\n` +
+      `Biće obrisani i njeni igrači, utakmice, golovi i kartoni.`
+    );
+
+
+  if(!potvrda) return;
+
+
+  const {error} =
+    await supabaseClient
+      .rpc("delete_team_admin", {
+        team_uuid:id
+      });
+
+
+  if(error){
+
+    console.error(error);
+
+    alert(
+      "Greška pri brisanju:\n" +
+      error.message
+    );
+
+    return;
+  }
+
+
+  alert("Ekipa je obrisana.");
+
+  await loadAll();
+}
 </script>
 
 </body>
