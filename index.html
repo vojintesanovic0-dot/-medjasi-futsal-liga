@@ -3205,4 +3205,223 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")hideModal()});
 
 init();
 
-</script></body></html>
+</script><section id="user-section" class="user-comments-section">
+
+  <div class="user-bar">
+
+    <div id="logged-out-area">
+
+      <button class="user-btn" onclick="openLoginModal()">
+        🔐 Prijava
+      </button>
+
+      <button class="user-btn secondary" onclick="openRegisterModal()">
+        👤 Registracija
+      </button>
+
+    </div>
+
+
+    <div id="logged-in-area" style="display:none;">
+
+      <span id="welcome-user"></span>
+
+      <button class="user-btn logout-btn" onclick="logoutUser()">
+        Odjava
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <div class="comments-container">
+
+    <div class="comments-header">
+
+      <h2>💬 Komentari</h2>
+
+      <span id="comments-count">0</span>
+
+    </div>
+
+
+    <div id="comment-login-message" class="comment-login-message">
+
+      🔒 Moraš biti prijavljen da bi napisao komentar.
+
+      <br><br>
+
+      <button class="user-btn" onclick="openLoginModal()">
+        Prijavi se
+      </button>
+
+      <button class="user-btn secondary" onclick="openRegisterModal()">
+        Registruj se
+      </button>
+
+    </div>
+
+
+    <div id="comment-form" style="display:none;">
+
+      <textarea
+        id="comment-input"
+        maxlength="1000"
+        placeholder="Napiši komentar..."
+      ></textarea>
+
+      <div class="comment-form-bottom">
+
+        <span id="comment-counter">
+          0 / 1000
+        </span>
+
+        <button
+          class="user-btn comment-submit"
+          onclick="submitComment()"
+        >
+          💬 Objavi komentar
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div id="comments-list">
+
+      <div class="comments-loading">
+        Učitavanje komentara...
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- LOGIN -->
+
+<div id="login-modal" class="user-modal">
+
+  <div class="user-modal-content">
+
+    <button
+      class="modal-close"
+      onclick="closeUserModals()"
+    >
+      ×
+    </button>
+
+    <h2>🔐 Prijava</h2>
+
+    <p class="modal-description">
+      Prijavi se da bi mogao pisati komentare.
+    </p>
+
+    <input
+      type="email"
+      id="login-email"
+      placeholder="Email"
+    >
+
+    <input
+      type="password"
+      id="login-password"
+      placeholder="Lozinka"
+    >
+
+    <button
+      class="user-btn modal-submit"
+      onclick="loginUser()"
+    >
+      Prijavi se
+    </button>
+
+    <p id="login-error" class="form-error"></p>
+
+    <p class="switch-form">
+
+      Nemaš nalog?
+
+      <button onclick="switchToRegister()">
+        Registruj se
+      </button>
+
+    </p>
+
+  </div>
+
+</div>
+
+
+<!-- REGISTRACIJA -->
+
+<div id="register-modal" class="user-modal">
+
+  <div class="user-modal-content">
+
+    <button
+      class="modal-close"
+      onclick="closeUserModals()"
+    >
+      ×
+    </button>
+
+    <h2>👤 Registracija</h2>
+
+    <p class="modal-description">
+      Napravi nalog i pridruži se razgovoru.
+    </p>
+
+    <input
+      type="text"
+      id="register-username"
+      placeholder="Korisničko ime"
+      maxlength="30"
+    >
+
+    <input
+      type="email"
+      id="register-email"
+      placeholder="Email"
+    >
+
+    <input
+      type="password"
+      id="register-password"
+      placeholder="Lozinka"
+    >
+
+    <input
+      type="password"
+      id="register-password-confirm"
+      placeholder="Ponovi lozinku"
+    >
+
+    <button
+      class="user-btn modal-submit"
+      onclick="registerUser()"
+    >
+      Registruj se
+    </button>
+
+    <p id="register-error" class="form-error"></p>
+
+    <p id="register-success" class="form-success"></p>
+
+    <p class="switch-form">
+
+      Već imaš nalog?
+
+      <button onclick="switchToLogin()">
+        Prijavi se
+      </button>
+
+    </p>
+
+  </div>
+
+</div></body></html>
