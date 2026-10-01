@@ -1517,6 +1517,38 @@ tbody tr:hover{
     display: none !important;
   }
 }
+
+/* ===== MOBILE V2 ===== */
+.mobile-menu-btn{display:none;border:1px solid var(--border);background:rgba(255,255,255,.06);color:#fff;width:42px;height:42px;border-radius:12px;font-size:20px;align-items:center;justify-content:center}
+.moderator-management{margin-bottom:20px}
+.moderator-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:15px}
+.moderator-users{display:grid;gap:8px}
+.moderator-user{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--border);background:rgba(255,255,255,.025);border-radius:12px}
+.moderator-user-main{flex:1;min-width:0}.moderator-user-main strong,.moderator-user-main small{display:block}.moderator-user-main small{color:var(--muted);margin-top:3px}.moderator-user select{width:auto;min-width:130px}
+.comment-image-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.comment-image-preview{margin-top:10px;max-width:320px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#07111c}
+.comment-image-preview img{display:block;width:100%;max-height:240px;object-fit:cover}
+.comment-media{margin-top:10px;max-width:460px;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:#07111c}
+.comment-media img{display:block;width:100%;max-height:420px;object-fit:cover}
+@media(max-width:700px){
+ body{padding-bottom:70px}
+ .mobile-menu-btn{display:flex}
+ #mainNav{display:none!important;position:absolute;top:64px;left:10px;right:10px;padding:8px;border:1px solid var(--border);border-radius:15px;background:rgba(7,18,29,.98);box-shadow:0 18px 45px rgba(0,0,0,.35);flex-direction:column!important;align-items:stretch!important;z-index:120}
+ #mainNav.mobile-open{display:flex!important}
+ #mainNav button{width:100%;text-align:left;min-height:44px;padding:11px 13px}
+ .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+ .filters{grid-template-columns:1fr}
+ .match-row{grid-template-columns:1fr;gap:10px}
+ .team-side,.team-side.away{justify-content:center;text-align:center}
+ .team-side.away .team-name{text-align:center}
+ .match-center{order:-1}
+ .modal{padding:0;align-items:flex-end}
+ .modal-box{width:100%;max-height:94vh;border-radius:20px 20px 0 0}
+ .moderator-head,.moderator-user{align-items:flex-start;flex-direction:column}
+ .moderator-user select{width:100%}
+ input,textarea,select{font-size:16px;min-height:44px}
+}
+
 </style>
 </head>
 
@@ -1532,6 +1564,8 @@ tbody tr:hover{
         <small>Official league hub</small>
       </div>
     </div>
+
+    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Otvori meni">☰</button>
 
     <nav id="mainNav">
       <button onclick="showSection('home')" class="active">Početna</button>
@@ -2361,9 +2395,9 @@ tbody tr:hover{
     Ekipe
   </button>
 
-  <button onclick="showSection('stats')">
-    <span>📊</span>
-    Statistika
+  <button onclick="toggleMobileMenu()">
+    <span>☰</span>
+    Više
   </button>
 
 </div>
@@ -2441,6 +2475,8 @@ let currentMatchId = null;
 let liveRefreshInterval = null;
 let realtimeChannel = null;
 let musicInitialized = false;
+let selectedCommentImage = null;
+let mobileMenuOpen = false;
 
 
 /* =========================================================
@@ -2504,6 +2540,15 @@ function formatDate(date){
 function isAdmin(){
   return currentProfile?.role === "admin";
 }
+
+function isModerator(){
+  return currentProfile?.role === "moderator";
+}
+
+function canManageMatch(){
+  return isAdmin() || isModerator();
+}
+
 
 
 function teamLogo(team){
@@ -4951,6 +4996,18 @@ function renderComments(){
                   ${esc(c.content)}
                 </div>
 
+                ${
+                  c.image_url
+                    ? `
+                      <div class="comment-media">
+                        <a href="${esc(c.image_url)}" target="_blank" rel="noopener noreferrer">
+                          <img src="${esc(c.image_url)}" alt="Slika uz komentar" loading="lazy">
+                        </a>
+                      </div>
+                    `
+                    : ""
+                }
+
 
                 ${
                   currentUser &&
@@ -4985,6 +5042,8 @@ function renderComments(){
       `;
 
 
+  setupCommentImageUI();
+
   const counter =
     document.getElementById(
       "commentCounter"
@@ -5012,88 +5071,71 @@ function renderComments(){
 async function addComment(){
 
   if(!currentUser){
-
-    alert(
-      "Moraš biti prijavljen."
-    );
-
+    alert("Moraš biti prijavljen.");
     return;
   }
 
+  const input=document.getElementById("commentText");
+  const fileInput=document.getElementById("commentImageFile");
+  const content=input?.value.trim() || "";
+  const file=fileInput?.files?.[0] || null;
 
-  const input =
-    document.getElementById(
-      "commentText"
-    );
-
-
-  const content =
-    input.value.trim();
-
-
-  if(!content){
-
-    alert(
-      "Komentar ne može biti prazan."
-    );
-
+  if(!content && !file){
+    alert("Napiši komentar ili dodaj sliku.");
     return;
   }
 
-
-  if(content.length > 1000){
-
-    alert(
-      "Komentar može imati najviše 1000 znakova."
-    );
-
+  if(content.length>1000){
+    alert("Komentar može imati najviše 1000 znakova.");
     return;
   }
 
+  if(file){
+    if(!file.type.startsWith("image/")){
+      alert("Dozvoljene su samo slike.");
+      return;
+    }
+    if(file.size>5*1024*1024){
+      alert("Slika može imati najviše 5 MB.");
+      return;
+    }
+  }
 
-  /*
-    comments.username je NOT NULL,
-    zato ga sada obavezno šaljemo.
-  */
-
-  const username =
-    currentProfile?.username ||
+  const username=currentProfile?.username ||
     currentUser.user_metadata?.username ||
     currentUser.email?.split("@")[0] ||
     "Korisnik";
 
+  let image_url=null;
 
-  const {
-    error
-  } =
-    await supabaseClient
+  try{
+    if(file){
+      image_url=await uploadFile(file,"comments");
+    }
+
+    const {error}=await supabaseClient
       .from("comments")
       .insert({
         user_id:currentUser.id,
         username:String(username).slice(0,30),
-        content
+        content,
+        image_url
       });
 
+    if(error) throw error;
 
-  if(error){
+    input.value="";
+    if(fileInput) fileInput.value="";
+    removeCommentImage();
 
-    alert(error.message);
+    toast("Komentar je objavljen.");
+    await loadAll();
 
-    return;
+  }catch(error){
+    console.error(error);
+    alert(error.message || "Greška pri objavljivanju komentara.");
   }
-
-
-  input.value = "";
-
-
-  toast(
-    "Komentar je objavljen."
-  );
-
-
-  await loadAll();
 }
-
 
 /* =========================================================
    DELETE COMMENT
@@ -5966,7 +6008,7 @@ async function changeMatchStatus(
   status
 ){
 
-  if(!isAdmin()) return;
+  if(!canManageMatch()) return;
 
 
   const {
@@ -6001,7 +6043,7 @@ async function changeMinute(
   minute
 ){
 
-  if(!isAdmin()) return;
+  if(!canManageMatch()) return;
 
 
   const {
@@ -6036,7 +6078,7 @@ async function openLineupControl(
   matchId
 ){
 
-  if(!isAdmin()){
+  if(!canManageMatch()){
 
     alert(
       "Nemaš admin ovlaštenje."
@@ -6271,7 +6313,7 @@ async function saveLineup(
   matchId
 ){
 
-  if(!isAdmin()) return;
+  if(!canManageMatch()) return;
 
 
   const match =
@@ -6503,7 +6545,7 @@ async function openSubstitutionControl(
   matchId
 ){
 
-  if(!isAdmin()) return;
+  if(!canManageMatch()) return;
 
 
   const match =
@@ -6732,7 +6774,7 @@ async function makeSubstitution(
   side
 ){
 
-  if(!isAdmin()) return;
+  if(!canManageMatch()) return;
 
 
   const outEl =
@@ -8091,7 +8133,7 @@ function openGoalControl(
   matchId
 ){
 
-  if(!isAdmin()) return;
+  if(!canManageMatch()) return;
 
 
   const match =
@@ -8220,7 +8262,7 @@ async function addGoal(
   matchId
 ){
 
-  if(!isAdmin()) return;
+  if(!canManageMatch()) return;
 
 
   const match =
@@ -8357,7 +8399,7 @@ function openCardControl(
   matchId
 ){
 
-  if(!isAdmin()) return;
+  if(!canManageMatch()) return;
 
 
   const match =
@@ -8507,7 +8549,7 @@ async function addCard(
   matchId
 ){
 
-  if(!isAdmin()) return;
+  if(!canManageMatch()) return;
 
 
   const player_id =
@@ -9629,6 +9671,262 @@ document.addEventListener(
 
   }
 );
+
+
+/* =========================================================
+   MODERATOR + COMMENT IMAGES + MOBILE V2
+========================================================= */
+
+function toggleMobileMenu(){
+  mobileMenuOpen=!mobileMenuOpen;
+  const nav=document.getElementById("mainNav");
+  const btn=document.getElementById("mobileMenuBtn");
+  nav?.classList.toggle("mobile-open",mobileMenuOpen);
+  if(btn) btn.textContent=mobileMenuOpen ? "✕" : "☰";
+}
+
+function setupCommentImageUI(){
+  const textarea=document.getElementById("commentText");
+  if(!textarea || textarea.dataset.imageUi==="1") return;
+
+  textarea.dataset.imageUi="1";
+
+  const row=document.createElement("div");
+  row.className="comment-image-row";
+  row.innerHTML=`
+    <label class="btn btn-small comment-image-btn">
+      🖼️ Dodaj sliku
+      <input id="commentImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+    </label>
+    <span id="commentImageName" class="muted">Nije odabrana slika</span>
+    <button type="button" id="commentImageRemove" class="btn btn-red btn-small hidden">Ukloni</button>
+    <div id="commentImagePreview" class="comment-image-preview hidden"></div>
+  `;
+
+  textarea.parentElement.appendChild(row);
+
+  const input=row.querySelector("#commentImageFile");
+  const remove=row.querySelector("#commentImageRemove");
+
+  input.addEventListener("change",()=>{
+    const file=input.files?.[0];
+    if(!file){
+      removeCommentImage();
+      return;
+    }
+    if(!file.type.startsWith("image/") || file.size>5*1024*1024){
+      alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB.");
+      input.value="";
+      removeCommentImage();
+      return;
+    }
+
+    row.querySelector("#commentImageName").textContent=file.name;
+    remove.classList.remove("hidden");
+
+    const preview=row.querySelector("#commentImagePreview");
+    const url=URL.createObjectURL(file);
+    preview.innerHTML=`<img src="${url}" alt="Pregled slike">`;
+    preview.classList.remove("hidden");
+    selectedCommentImage=file;
+  });
+
+  remove.addEventListener("click",removeCommentImage);
+}
+
+function removeCommentImage(){
+  const input=document.getElementById("commentImageFile");
+  const name=document.getElementById("commentImageName");
+  const preview=document.getElementById("commentImagePreview");
+  const remove=document.getElementById("commentImageRemove");
+
+  selectedCommentImage=null;
+  if(input) input.value="";
+  if(name) name.textContent="Nije odabrana slika";
+  if(preview){
+    preview.innerHTML="";
+    preview.classList.add("hidden");
+  }
+  remove?.classList.add("hidden");
+}
+
+async function loadModeratorUsers(){
+  if(!isAdmin()) return;
+
+  const wrap=document.getElementById("moderatorUsers");
+  if(!wrap) return;
+
+  const {data,error}=await supabaseClient
+    .from("profiles")
+    .select("id,username,role")
+    .order("username");
+
+  if(error){
+    wrap.innerHTML=`<div class="empty">Greška: ${esc(error.message)}</div>`;
+    return;
+  }
+
+  wrap.innerHTML=(data||[])
+    .filter(u=>u.id!==currentUser?.id)
+    .map(u=>`
+      <div class="moderator-user">
+        <div class="moderator-user-main">
+          <strong>${esc(u.username || "Korisnik")}</strong>
+          <small>${esc(u.id)}</small>
+        </div>
+        <select onchange="changeUserRole('${u.id}',this.value)">
+          <option value="user" ${u.role==="user"?"selected":""}>Korisnik</option>
+          <option value="moderator" ${u.role==="moderator"?"selected":""}>Moderator</option>
+          <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
+        </select>
+      </div>
+    `).join("") || `<div class="empty">Nema drugih korisnika.</div>`;
+}
+
+async function changeUserRole(userId,role){
+  if(!isAdmin()){
+    alert("Samo administrator može mijenjati uloge.");
+    return;
+  }
+
+  if(!["user","moderator","admin"].includes(role)) return;
+
+  const {error}=await supabaseClient
+    .from("profiles")
+    .update({role})
+    .eq("id",userId);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  toast("Uloga je promijenjena.");
+  loadModeratorUsers();
+}
+
+function injectModeratorPanel(){
+  if(!isAdmin()) return;
+  if(document.getElementById("moderatorManagement")) return;
+
+  const adminContent=document.getElementById("adminContent");
+  if(!adminContent) return;
+
+  const card=document.createElement("div");
+  card.id="moderatorManagement";
+  card.className="card moderator-management";
+  card.innerHTML=`
+    <div class="moderator-head">
+      <div>
+        <h3>🛡️ Moderatori</h3>
+        <p class="muted">Moderator može upravljati dešavanjima na utakmici, ali ne može mijenjati ekipe, igrače ili korisnike.</p>
+      </div>
+      <button class="btn btn-small" onclick="loadModeratorUsers()">↻ Osvježi</button>
+    </div>
+    <div id="moderatorUsers" class="moderator-users"></div>
+  `;
+  adminContent.prepend(card);
+  loadModeratorUsers();
+}
+
+const _baseUpdateAuthUI = updateAuthUI;
+updateAuthUI=function(){
+  _baseUpdateAuthUI();
+  const adminNav=document.getElementById("adminNav");
+  if(adminNav) adminNav.classList.toggle("hidden",!(isAdmin()||isModerator()));
+  if(isAdmin()) injectModeratorPanel();
+  setupCommentImageUI();
+};
+
+const _baseShowSection=showSection;
+showSection=function(id){
+  _baseShowSection(id);
+  mobileMenuOpen=false;
+  document.getElementById("mainNav")?.classList.remove("mobile-open");
+  const btn=document.getElementById("mobileMenuBtn");
+  if(btn) btn.textContent="☰";
+};
+
+document.addEventListener("DOMContentLoaded",()=>{
+  setupCommentImageUI();
+});
+
+
+/* =========================================================
+   YOUTUBE V2
+   Mobilni browseri ne dozvoljavaju pouzdan autoplay zvuka.
+   Zato je player vidljiv i korisnik može pritisnuti Play.
+========================================================= */
+
+function ensureMusicPlayerUI(){
+  const frame=document.getElementById("youtubeMusicFrame");
+  if(!frame) return null;
+
+  let box=document.getElementById("siteMusicPlayer");
+  if(!box){
+    box=document.createElement("div");
+    box.id="siteMusicPlayer";
+    box.className="site-music-player";
+    box.innerHTML=`
+      <div class="site-music-info">
+        <span class="site-music-icon">🎵</span>
+        <div>
+          <strong>Zvanična muzika lige</strong>
+          <small id="siteMusicStatus">Pritisni Play za pokretanje</small>
+        </div>
+      </div>
+    `;
+    frame.parentNode.insertBefore(box,frame);
+    box.appendChild(frame);
+  }
+
+  frame.style.position="static";
+  frame.style.left="auto";
+  frame.style.width="100%";
+  frame.style.height="90px";
+  frame.style.opacity="1";
+  frame.style.pointerEvents="auto";
+  frame.style.display="block";
+
+  return box;
+}
+
+loadGlobalYoutubeMusic=function(force=false){
+  const frame=document.getElementById("youtubeMusicFrame");
+  if(!frame) return;
+
+  const videoId=musicSettings.youtube_music_id;
+
+  if(!musicSettings.youtube_music_enabled || !videoId){
+    stopGlobalYoutubeMusic();
+    return;
+  }
+
+  const box=ensureMusicPlayerUI();
+  if(box) box.classList.remove("hidden");
+
+  if(!force && currentMusicId===videoId && frame.src) return;
+
+  currentMusicId=videoId;
+
+  frame.src=
+    "https://www.youtube-nocookie.com/embed/"+
+    encodeURIComponent(videoId)+
+    "?controls=1"+
+    "&rel=0"+
+    "&playsinline=1"+
+    "&modestbranding=1";
+};
+
+stopGlobalYoutubeMusic=function(){
+  const frame=document.getElementById("youtubeMusicFrame");
+  const box=document.getElementById("siteMusicPlayer");
+
+  if(frame) frame.src="";
+  if(box) box.classList.add("hidden");
+
+  currentMusicId="";
+};
 
 </script>
 
