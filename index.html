@@ -3158,6 +3158,9 @@ function showSection(id){
     section.classList.add("active");
   }
 
+
+  /* DESKTOP / SIDEBAR NAV */
+
   document.querySelectorAll("#mainNav button")
     .forEach(button =>
       button.classList.remove("active")
@@ -3172,6 +3175,32 @@ function showSection(id){
       );
 
   navButton?.classList.add("active");
+
+
+  /* MOBILE BOTTOM NAV */
+
+  document.querySelectorAll(".mobile-bottom button")
+    .forEach(button =>
+      button.classList.remove("active")
+    );
+
+  const mobileButton =
+    [...document.querySelectorAll(".mobile-bottom button")]
+      .find(button =>
+        button.getAttribute("onclick")?.includes(
+          `showSection('${id}')`
+        )
+      );
+
+  mobileButton?.classList.add("active");
+
+
+  /* Ako je otvoren "Više", zatvori ga */
+
+  if(typeof closeMobileMore === "function"){
+    closeMobileMore();
+  }
+
 
   window.scrollTo({
     top:0,
@@ -11397,7 +11426,7 @@ if ("serviceWorker" in navigator) {
   position: fixed;
   left: 14px;
   right: 14px;
-  bottom: 18px;
+  bottom: 88px;
   z-index: 99999;
 
   display: flex;
