@@ -1632,6 +1632,167 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
 .btn{box-shadow:0 5px 15px rgba(0,0,0,.10)}.btn-green{box-shadow:0 8px 22px rgba(32,212,123,.16)}
 .mobile-bottom{backdrop-filter:blur(16px);background:rgba(5,13,22,.92)!important;border-top-color:rgba(255,255,255,.08)!important}
 @media(max-width:700px){main{padding-left:12px;padding-right:12px}.hero{margin-top:8px;padding:34px 18px;border-radius:24px}.hero::after{font-size:190px;right:-35px;bottom:-55px}.hero-kicker{font-size:9px}.hero-content p{font-size:14px}.hero-buttons .btn{flex:1;min-width:145px}.stat-grid{gap:9px}.stat{padding:15px 8px}.stat-number{font-size:27px}.section{padding-top:20px}.section-title{font-size:21px}}
+
+/* ===== SEPARATE DESKTOP SIDEBAR / TOOLBAR ===== */
+@media(min-width:701px){
+  header{
+    margin-left:252px;
+    position:sticky;
+    top:0;
+    z-index:100;
+  }
+  .header-inner{
+    max-width:none;
+    min-height:78px;
+    padding:0 30px;
+  }
+  #mainNav{
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    width:252px;
+    z-index:500;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    justify-content:flex-start;
+    gap:5px;
+    padding:22px 14px 18px;
+    overflow-y:auto;
+    background:
+      radial-gradient(circle at 20% 0%,rgba(32,212,123,.10),transparent 32%),
+      linear-gradient(180deg,rgba(7,19,31,.99),rgba(4,12,21,.99));
+    border-right:1px solid rgba(255,255,255,.08);
+    box-shadow:14px 0 45px rgba(0,0,0,.18);
+  }
+  #mainNav::before{
+    content:"MEDJAŠI • FUTSAL";
+    display:block;
+    padding:2px 12px 17px;
+    color:#6e8295;
+    font-size:9px;
+    font-weight:950;
+    letter-spacing:1.5px;
+  }
+  .sidebar-label{
+    margin:15px 9px 5px;
+    color:#5f7487;
+    font-size:9px;
+    font-weight:950;
+    letter-spacing:1.3px;
+  }
+  #mainNav button{
+    width:100%;
+    min-height:43px;
+    display:flex;
+    align-items:center;
+    gap:11px;
+    text-align:left;
+    padding:10px 12px;
+    border:1px solid transparent;
+    border-radius:12px;
+    background:transparent;
+    color:#8fa3b5;
+    font-size:12px;
+    font-weight:800;
+    transition:.18s ease;
+  }
+  #mainNav button:hover{
+    background:rgba(255,255,255,.055);
+    color:#fff;
+    transform:translateX(2px);
+  }
+  #mainNav button.active{
+    color:#fff;
+    background:linear-gradient(90deg,rgba(32,212,123,.15),rgba(32,212,123,.035));
+    border-color:rgba(32,212,123,.16);
+    box-shadow:inset 3px 0 0 var(--green);
+  }
+  #mainNav .nav-icon{
+    width:25px;
+    text-align:center;
+    font-size:16px;
+    flex:none;
+  }
+  #mainNav .sidebar-spacer{flex:1;min-height:12px}
+  .sidebar-status{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin:7px 4px 8px;
+    padding:10px 11px;
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:12px;
+    background:rgba(255,255,255,.025);
+  }
+  .sidebar-status strong,.sidebar-status small{display:block}
+  .sidebar-status strong{font-size:10px;color:#d9e5ee}
+  .sidebar-status small{font-size:8px;color:#60778a;margin-top:2px}
+  .status-dot{
+    display:inline-block;
+    width:7px;
+    height:7px;
+    flex:none;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 0 4px rgba(32,212,123,.09),0 0 12px rgba(32,212,123,.55);
+  }
+  #mainNav .nav-account-btn{
+    border-top:1px solid rgba(255,255,255,.06);
+    margin-top:3px;
+    padding-top:13px;
+    border-radius:10px;
+  }
+  .mobile-nav-account{display:none!important}
+  main{
+    max-width:none;
+    margin-left:252px;
+    padding-left:34px;
+    padding-right:34px;
+  }
+  .footer{margin-left:252px;max-width:none}
+  .header-status{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    color:#8fa3b5;
+    font-size:11px;
+    font-weight:800;
+  }
+}
+.header-status{margin-left:auto}
+@media(max-width:700px){
+  .header-status{display:none}
+}
+
+/* ===== MORE PREMIUM TOOLBAR DETAILS ===== */
+.sidebar-status .status-dot{animation:sidebarOnline 2s ease-in-out infinite}
+@keyframes sidebarOnline{
+  0%,100%{opacity:.65;transform:scale(.9)}
+  50%{opacity:1;transform:scale(1.08)}
+}
+.section{
+  animation:sectionIn .28s ease both;
+}
+@keyframes sectionIn{
+  from{opacity:.65;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.card{
+  position:relative;
+}
+.card::selection{background:rgba(32,212,123,.25)}
+@media(max-width:700px){
+  #mainNav.mobile-open{
+    top:62px;
+    max-height:calc(100vh - 82px);
+    overflow-y:auto;
+  }
+  .sidebar-label{margin:10px 9px 4px;color:#60778a;font-size:9px;font-weight:900;letter-spacing:1px}
+  #mainNav .nav-icon{width:25px;text-align:center;font-size:16px}
+}
+
 </style>
 </head>
 
@@ -1649,33 +1810,49 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
     </div>
 
     <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Otvori meni" aria-expanded="false">☰</button>
+    <div class="header-status">
+      <span class="status-dot"></span>
+      <span>Medjaši Liga</span>
+    </div>
 
-    <nav id="mainNav">
-      <div class="mobile-nav-account" id="mobileNavAccount"><strong>👤 Gost</strong><small>Prijavi se za komentare i chat</small></div>
-      <button onclick="showSection('home')" class="active">Početna</button>
-      <button onclick="showSection('table')">Tabela</button>
-      <button onclick="showSection('matches')">Utakmice</button>
-      <button onclick="showSection('teams')">Ekipe</button>
-      <button onclick="showSection('players')">Igrači</button>
-      <button onclick="showSection('stats')">Statistika</button>
-      <button onclick="showSection('comments')">Komentari</button>
-      <button onclick="showSection('chat')">Chat</button>
-      <button onclick="showSection('gallery')">Galerija</button>
+    <nav id="mainNav" aria-label="Glavna navigacija">
+      <div class="mobile-nav-account" id="mobileNavAccount">
+        <strong>👤 Gost</strong>
+        <small>Prijavi se za komentare i chat</small>
+      </div>
 
-      <button id="loginNav" onclick="showSection('login')">
-        Prijava
+      <div class="sidebar-label">GLAVNO</div>
+      <button onclick="showSection('home')" class="active"><span class="nav-icon">⌂</span><span>Početna</span></button>
+      <button onclick="showSection('table')"><span class="nav-icon">🏆</span><span>Tabela</span></button>
+      <button onclick="showSection('matches')"><span class="nav-icon">⚽</span><span>Utakmice</span></button>
+
+      <div class="sidebar-label">LIGA</div>
+      <button onclick="showSection('teams')"><span class="nav-icon">🛡️</span><span>Ekipe</span></button>
+      <button onclick="showSection('players')"><span class="nav-icon">👤</span><span>Igrači</span></button>
+      <button onclick="showSection('stats')"><span class="nav-icon">📊</span><span>Statistika</span></button>
+
+      <div class="sidebar-label">ZAJEDNICA</div>
+      <button onclick="showSection('gallery')"><span class="nav-icon">📸</span><span>Galerija</span></button>
+      <button onclick="showSection('chat')"><span class="nav-icon">💬</span><span>Chat</span></button>
+      <button onclick="showSection('comments')"><span class="nav-icon">💭</span><span>Komentari</span></button>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="sidebar-status">
+        <span class="status-dot"></span>
+        <div><strong>Liga online</strong><small>Podaci se osvježavaju</small></div>
+      </div>
+
+      <button id="loginNav" class="nav-account-btn" onclick="showSection('login')">
+        <span class="nav-icon">🔐</span><span>Prijava</span>
       </button>
 
-      <button id="logoutNav"
-              class="hidden"
-              onclick="logout()">
-        Odjava
+      <button id="logoutNav" class="nav-account-btn hidden" onclick="logout()">
+        <span class="nav-icon">↪</span><span>Odjava</span>
       </button>
 
-      <button id="adminNav"
-              class="hidden"
-              onclick="showSection('admin')">
-        Admin
+      <button id="adminNav" class="nav-account-btn hidden" onclick="showSection('admin')">
+        <span class="nav-icon">⚙️</span><span>Admin panel</span>
       </button>
     </nav>
 
@@ -2532,14 +2709,14 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
     Tabela
   </button>
 
-  <button onclick="showSection('teams')">
-    <span>🛡️</span>
-    Ekipe
+  <button onclick="showSection('gallery')">
+    <span>📸</span>
+    Galerija
   </button>
 
-  <button onclick="toggleMobileMenu()">
-    <span>☰</span>
-    Više
+  <button onclick="showSection('chat')">
+    <span>💬</span>
+    Chat
   </button>
 
 </div>
@@ -9916,6 +10093,12 @@ updateAuthUI=function(){
 const _baseShowSection=showSection;
 showSection=function(id){
   _baseShowSection(id);
+  document.querySelectorAll('#mainNav button[onclick*="showSection"]')
+    .forEach(btn=>btn.classList.remove("active"));
+  const activeBtn=document.querySelector(
+    `#mainNav button[onclick*="showSection('${id}')"]`
+  );
+  if(activeBtn) activeBtn.classList.add("active");
   mobileMenuOpen=false;
   document.getElementById("mainNav")?.classList.remove("mobile-open");
   const btn=document.getElementById("mobileMenuBtn");
