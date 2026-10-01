@@ -11315,5 +11315,560 @@ if ("serviceWorker" in navigator) {
   });
 }
 </script>
+<!-- PWA INSTALL -->
+<div id="pwaInstallBanner" class="pwa-install-banner">
+  <div class="pwa-install-icon">
+    ⚽
+  </div>
+
+  <div class="pwa-install-content">
+    <strong>Međasi Futsal Liga</strong>
+    <span>Dodaj aplikaciju na početni ekran</span>
+  </div>
+
+  <button id="pwaInstallButton" class="pwa-install-btn">
+    Instaliraj
+  </button>
+
+  <button id="pwaInstallClose" class="pwa-install-close" aria-label="Zatvori">
+    ×
+  </button>
+</div>
+
+<div id="pwaInstallModal" class="pwa-modal">
+  <div class="pwa-modal-box">
+
+    <button id="pwaModalClose" class="pwa-modal-close">
+      ×
+    </button>
+
+    <div class="pwa-modal-logo">
+      ⚽
+    </div>
+
+    <h2>Instaliraj Međasi</h2>
+
+    <p class="pwa-modal-subtitle">
+      Dodaj Međasi Futsal Ligu na početni ekran telefona
+      i koristi je kao aplikaciju.
+    </p>
+
+    <div class="pwa-ios-steps">
+
+      <div class="pwa-step">
+        <div class="pwa-step-number">1</div>
+        <div>
+          <strong>Otvori Safari</strong>
+          <span>Otvori Međasi stranicu u Safari browseru.</span>
+        </div>
+      </div>
+
+      <div class="pwa-step">
+        <div class="pwa-step-number">2</div>
+        <div>
+          <strong>Pritisni Share</strong>
+          <span>Na dnu ekrana pritisni dugme za dijeljenje.</span>
+        </div>
+      </div>
+
+      <div class="pwa-step">
+        <div class="pwa-step-number">3</div>
+        <div>
+          <strong>Dodaj na početni ekran</strong>
+          <span>Izaberi „Add to Home Screen“ / „Dodaj na početni ekran“.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <button id="pwaModalDone" class="pwa-modal-done">
+      Razumijem
+    </button>
+
+  </div>
+</div>
+
+<style>
+/* =========================
+   MEĐASI PWA INSTALL
+   ========================= */
+
+.pwa-install-banner {
+  position: fixed;
+  left: 14px;
+  right: 14px;
+  bottom: 18px;
+  z-index: 99999;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 13px 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(7,17,31,.98),
+      rgba(10,31,45,.98)
+    );
+
+  border: 1px solid rgba(46,204,113,.35);
+  border-radius: 18px;
+
+  box-shadow:
+    0 15px 45px rgba(0,0,0,.45),
+    0 0 25px rgba(46,204,113,.08);
+
+  backdrop-filter: blur(14px);
+
+  transform: translateY(130%);
+  opacity: 0;
+  pointer-events: none;
+
+  transition:
+    transform .35s ease,
+    opacity .35s ease;
+}
+
+.pwa-install-banner.show {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pwa-install-icon {
+  width: 45px;
+  height: 45px;
+  min-width: 45px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 13px;
+
+  background: linear-gradient(135deg,#0c8f5b,#1769aa);
+
+  font-size: 22px;
+
+  box-shadow: 0 5px 18px rgba(0,0,0,.3);
+}
+
+.pwa-install-content {
+  flex: 1;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pwa-install-content strong {
+  color: #fff;
+  font-size: 14px;
+}
+
+.pwa-install-content span {
+  color: rgba(255,255,255,.68);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.pwa-install-btn {
+  border: none;
+  border-radius: 11px;
+
+  padding: 10px 13px;
+
+  background: #20c77a;
+  color: #06131f;
+
+  font-weight: 800;
+  font-size: 12px;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+}
+
+.pwa-install-btn:active {
+  transform: scale(.96);
+}
+
+.pwa-install-close {
+  width: 28px;
+  height: 28px;
+
+  border: none;
+  background: rgba(255,255,255,.07);
+
+  color: rgba(255,255,255,.7);
+
+  border-radius: 50%;
+
+  font-size: 20px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+/* MODAL */
+
+.pwa-modal {
+  position: fixed;
+  inset: 0;
+
+  z-index: 100000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(0,0,0,.72);
+
+  backdrop-filter: blur(8px);
+
+  opacity: 0;
+  visibility: hidden;
+
+  transition: .25s ease;
+}
+
+.pwa-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.pwa-modal-box {
+  width: min(440px,100%);
+
+  position: relative;
+
+  padding: 28px 22px 22px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #07111f,
+      #0b1e2c
+    );
+
+  border: 1px solid rgba(46,204,113,.25);
+  border-radius: 24px;
+
+  box-shadow: 0 25px 80px rgba(0,0,0,.65);
+
+  text-align: center;
+}
+
+.pwa-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  width: 34px;
+  height: 34px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255,255,255,.07);
+  color: #fff;
+
+  font-size: 22px;
+
+  cursor: pointer;
+}
+
+.pwa-modal-logo {
+  width: 65px;
+  height: 65px;
+
+  margin: 0 auto 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 18px;
+
+  background: linear-gradient(135deg,#0c8f5b,#1769aa);
+
+  font-size: 30px;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+.pwa-modal-box h2 {
+  margin: 0 0 8px;
+
+  color: #fff;
+  font-size: 24px;
+}
+
+.pwa-modal-subtitle {
+  margin: 0 auto 22px;
+
+  max-width: 340px;
+
+  color: rgba(255,255,255,.65);
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.pwa-ios-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  text-align: left;
+}
+
+.pwa-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 13px;
+
+  border-radius: 14px;
+
+  background: rgba(255,255,255,.045);
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+.pwa-step-number {
+  width: 31px;
+  height: 31px;
+  min-width: 31px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #20c77a;
+  color: #06131f;
+
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.pwa-step div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pwa-step strong {
+  color: #fff;
+  font-size: 13px;
+}
+
+.pwa-step span {
+  color: rgba(255,255,255,.58);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.pwa-modal-done {
+  width: 100%;
+
+  margin-top: 18px;
+
+  padding: 13px;
+
+  border: none;
+  border-radius: 13px;
+
+  background: #20c77a;
+  color: #06131f;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+@media (min-width: 700px) {
+  .pwa-install-banner {
+    left: auto;
+    right: 25px;
+    bottom: 25px;
+    width: 390px;
+  }
+}
+</style>
+
+<script>
+(function () {
+
+  const banner = document.getElementById("pwaInstallBanner");
+  const installButton = document.getElementById("pwaInstallButton");
+  const closeButton = document.getElementById("pwaInstallClose");
+
+  const modal = document.getElementById("pwaInstallModal");
+  const modalClose = document.getElementById("pwaModalClose");
+  const modalDone = document.getElementById("pwaModalDone");
+
+  let deferredPrompt = null;
+
+  function isStandalone() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  function showBanner() {
+    if (!banner || isStandalone()) return;
+
+    setTimeout(() => {
+      banner.classList.add("show");
+    }, 1800);
+  }
+
+  function hideBanner() {
+    if (banner) {
+      banner.classList.remove("show");
+    }
+  }
+
+  function showModal() {
+    if (modal) {
+      modal.classList.add("show");
+    }
+  }
+
+  function hideModal() {
+    if (modal) {
+      modal.classList.remove("show");
+    }
+  }
+
+  /*
+   * Android / Chrome
+   */
+  window.addEventListener("beforeinstallprompt", event => {
+
+    event.preventDefault();
+
+    deferredPrompt = event;
+
+    showBanner();
+  });
+
+  if (installButton) {
+
+    installButton.addEventListener("click", async () => {
+
+      /*
+       * Android has a native installation prompt.
+       */
+      if (deferredPrompt) {
+
+        deferredPrompt.prompt();
+
+        const result = await deferredPrompt.userChoice;
+
+        console.log(
+          "PWA install rezultat:",
+          result.outcome
+        );
+
+        deferredPrompt = null;
+
+        hideBanner();
+
+        return;
+      }
+
+      /*
+       * iPhone / Safari
+       */
+      showModal();
+    });
+
+  }
+
+  if (closeButton) {
+    closeButton.addEventListener("click", () => {
+
+      hideBanner();
+
+      try {
+        localStorage.setItem(
+          "medjasi_pwa_banner_closed",
+          Date.now().toString()
+        );
+      } catch (e) {}
+
+    });
+  }
+
+  if (modalClose) {
+    modalClose.addEventListener("click", hideModal);
+  }
+
+  if (modalDone) {
+    modalDone.addEventListener("click", hideModal);
+  }
+
+  if (modal) {
+    modal.addEventListener("click", event => {
+
+      if (event.target === modal) {
+        hideModal();
+      }
+
+    });
+  }
+
+  /*
+   * iPhone / Safari doesn't fire beforeinstallprompt,
+   * so we show the banner manually.
+   */
+  const isIOS =
+    /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+
+  if (isIOS && !isStandalone()) {
+
+    let closedRecently = false;
+
+    try {
+
+      const closed =
+        localStorage.getItem(
+          "medjasi_pwa_banner_closed"
+        );
+
+      if (closed) {
+
+        const age =
+          Date.now() - Number(closed);
+
+        /*
+         * Ponovo prikaži nakon 7 dana.
+         */
+        if (age < 7 * 24 * 60 * 60 * 1000) {
+          closedRecently = true;
+        }
+
+      }
+
+    } catch (e) {}
+
+    if (!closedRecently) {
+      showBanner();
+    }
+
+  }
+
+})();
+</script>
 </body>
 </html>
