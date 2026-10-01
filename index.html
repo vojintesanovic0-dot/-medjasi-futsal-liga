@@ -1471,9 +1471,14 @@ tbody tr:hover{
     border:0;
     background:transparent;
     color:var(--muted);
-    padding:9px 2px 8px;
-    font-size:10px;
+    padding:8px 2px 7px;
+    font-size:9px;
+    font-weight:800;
+    min-width:0;
+    white-space:nowrap;
   }
+  .mobile-bottom button.active{color:#fff}
+  .mobile-bottom button.active span{color:var(--green)}
 
   .mobile-bottom span{
     display:block;
@@ -1494,7 +1499,7 @@ tbody tr:hover{
 /* ===== MOBILE V2 ===== */
 .mobile-menu-btn{display:none;border:1px solid var(--border);background:rgba(255,255,255,.06);color:#fff;width:42px;height:42px;border-radius:12px;font-size:20px;align-items:center;justify-content:center}
 .mobile-nav-account{display:none;padding:10px 12px 9px;margin:0 0 4px;border-bottom:1px solid var(--border)}
-.mobile-nav-account strong,.mobile-nav-account small{display:block}.mobile-nav-account strong{font-size:13px;color:#fff}.mobile-nav-account small{font-size:10px;color:var(--muted);margin-top:3px}
+.mobile-nav-account strong,.mobile-nav-account small{display:block}.mobile-nav-account strong{font-size:13px;color:#fff}.mobile-nav-account small{font-size:10px;color:var(--muted);margin-top:3px}.mobile-nav-account .btn{margin-top:9px;width:100%;justify-content:center}
 .moderator-management{margin-bottom:20px}
 .moderator-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:15px}
 .moderator-users{display:grid;gap:8px}
@@ -1793,69 +1798,44 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
   #mainNav .nav-icon{width:25px;text-align:center;font-size:16px}
 }
 
+
+/* MEDJASI V2 */
+:root{--accent:#25e487;--accent2:#1598ff}
+body{background:radial-gradient(900px 500px at 12% -5%,rgba(37,228,135,.11),transparent 60%),radial-gradient(800px 500px at 92% 8%,rgba(21,152,255,.10),transparent 58%),#050c14}
+.site-header{background:rgba(5,12,20,.78);border-bottom:1px solid rgba(255,255,255,.07);box-shadow:0 10px 40px rgba(0,0,0,.18)}
+.site-header .header-inner{max-width:1480px;min-height:82px;padding:0 28px}.logo{min-width:270px}.logo-ball{border-radius:16px;background:linear-gradient(135deg,#27e889,#1178ff);box-shadow:0 10px 35px rgba(37,228,135,.2)}.logo span{font-size:18px}.logo small{letter-spacing:.6px}
+#mainNav{display:flex;gap:5px;align-items:center;justify-content:center;flex:1}#mainNav .nav-group-title{display:none}#mainNav button{position:relative;padding:10px 12px;border-radius:11px;color:#8fa4b7;font-weight:750}#mainNav button span:first-child{margin-right:6px}#mainNav button:hover{background:rgba(255,255,255,.055);color:#fff}#mainNav button.active{background:linear-gradient(135deg,rgba(37,228,135,.15),rgba(21,152,255,.10));color:#fff;box-shadow:inset 0 0 0 1px rgba(37,228,135,.12)}#mainNav button.active:after{content:"";position:absolute;left:16px;right:16px;bottom:4px;height:2px;border-radius:9px;background:var(--accent)}
+.header-actions{display:flex;align-items:center;gap:12px}.header-live{font-size:11px;color:#8fa4b7;white-space:nowrap}.header-live i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(37,228,135,.09);margin-right:6px}.header-account{display:flex;align-items:center;gap:7px}.account-btn{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.045);color:#fff;border-radius:12px;padding:9px 12px;font-weight:800}.account-btn:hover{background:rgba(255,255,255,.08)}.account-name{color:#dbe8f2;font-size:12px;margin-right:4px}.account-admin{color:var(--accent);font-size:10px}
+main{max-width:1480px;padding:0 28px 90px}.section{padding-top:36px}.hero{min-height:500px;grid-template-columns:minmax(0,1.15fr) minmax(330px,.85fr);gap:55px;position:relative;overflow:hidden}.hero:before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;right:-140px;top:-100px;background:radial-gradient(circle,rgba(37,228,135,.12),transparent 65%);pointer-events:none}.hero-content{position:relative;z-index:1}.hero-content h1{font-size:clamp(48px,7vw,92px);letter-spacing:-5px;line-height:.9}.hero-content h1 span{background:linear-gradient(90deg,#25e487,#4eb4ff);-webkit-background-clip:text;background-clip:text;color:transparent}.hero-content p{font-size:18px;max-width:720px}
+.hero-card-premium{min-height:380px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(37,228,135,.10),rgba(21,152,255,.08)),rgba(10,24,38,.82);border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.3)}.hero-card-premium:after{content:"";position:absolute;inset:1px;border-radius:31px;border:1px solid rgba(255,255,255,.055);pointer-events:none}.hero-card-top{display:flex;justify-content:space-between;color:#9db0c0;font-size:10px;font-weight:900;letter-spacing:1.2px}.hero-card-top b{color:var(--accent)}.hero-card-top i{display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin-right:5px}.hero-score-orb{font-size:120px;text-align:center;filter:drop-shadow(0 20px 35px rgba(37,228,135,.14));padding:25px 0}.hero-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.hero-mini-grid div{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:14px;text-align:center;padding:12px}.hero-mini-grid strong{display:block;font-size:23px}.hero-mini-grid small{font-size:9px;color:#8298aa;letter-spacing:.8px}
+.card{border-color:rgba(255,255,255,.075);background:linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,.012)),rgba(9,22,35,.82);box-shadow:0 14px 45px rgba(0,0,0,.12)}.section-title{font-size:32px;letter-spacing:-1px}.announcement,.music-card{border-radius:22px}.btn{border-radius:12px;padding:11px 16px}.btn-green{box-shadow:0 8px 22px rgba(37,228,135,.12)}
+.playlist-add-grid{display:grid;grid-template-columns:1.4fr 1fr auto;gap:9px;margin-top:15px}.admin-playlist{display:grid;gap:8px;margin-top:15px}.playlist-row{display:grid;grid-template-columns:38px 1fr auto auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);border-radius:13px}.playlist-num{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:rgba(37,228,135,.1);color:var(--accent);font-weight:900}.playlist-row small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.playlist-actions{display:flex;gap:5px}.music-player iframe{height:130px}
+@media(max-width:1050px){#mainNav button{padding:9px 8px;font-size:12px}.logo{min-width:230px}.header-live{display:none}.hero{gap:28px}}
+@media(max-width:780px){.site-header .header-inner{min-height:68px;padding:0 15px}.logo{min-width:0}.logo-ball{width:40px;height:40px;border-radius:12px;font-size:21px}.logo span{font-size:14px}.logo small{font-size:9px}.header-account{display:flex}.header-account .account-name{display:none}#mainNav{position:absolute;display:none;top:68px;left:10px;right:10px;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:10px;background:rgba(6,16,27,.98);border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 25px 60px rgba(0,0,0,.45);z-index:120;max-height:calc(100vh - 90px);overflow:auto}#mainNav.mobile-open{display:flex!important}#mainNav .nav-group-title{display:block;color:#607689;font-size:9px;font-weight:900;letter-spacing:1.3px;padding:8px 12px 3px}#mainNav button{width:100%;text-align:left;min-height:44px;font-size:13px}.mobile-menu-btn{display:block}.hero{grid-template-columns:1fr;min-height:auto;padding:35px 0;gap:22px}.hero-card-premium{min-height:300px}.hero-score-orb{font-size:85px;padding:10px 0}main{padding:0 14px 80px}.playlist-add-grid{grid-template-columns:1fr}}
+@media(min-width:781px){.mobile-menu-btn{display:none!important}}
+.auth-shell{max-width:980px;margin:20px auto}.playlist-add-grid{display:grid;grid-template-columns:1.4fr 1fr auto;gap:9px;margin-top:15px}.admin-playlist{display:grid;gap:8px;margin-top:15px}.playlist-row{display:grid;grid-template-columns:38px 1fr auto auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);border-radius:13px}.playlist-num{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:rgba(37,228,135,.1);color:var(--accent);font-weight:900}.playlist-row small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.playlist-actions{display:flex;gap:5px}@media(max-width:780px){.playlist-add-grid{grid-template-columns:1fr}}
 </style>
 </head>
 
 <body>
 
-<header>
+<header class="site-header">
   <div class="header-inner">
-
-    <div class="logo">
-      <div class="logo-ball">⚽</div>
-      <div>
-        <span>Medjaši Futsal Liga</span>
-        <small>Zvanična stranica lige</small>
-      </div>
-    </div>
-
-    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Otvori meni" aria-expanded="false">☰</button>
-    <div class="header-status">
-      <span class="status-dot"></span>
-      <span>Medjaši Liga</span>
-    </div>
-
+    <div class="logo"><div class="logo-ball">⚽</div><div><span>Medjaši Futsal Liga</span><small>Zvanična stranica lige</small></div></div>
     <nav id="mainNav" aria-label="Glavna navigacija">
-      <div class="mobile-nav-account" id="mobileNavAccount">
-        <strong>👤 Gost</strong>
-        <small>Prijavi se za komentare i chat</small>
-      </div>
-
-      <div class="sidebar-label">GLAVNO</div>
-      <button onclick="showSection('home')" class="active"><span class="nav-icon">⌂</span><span>Početna</span></button>
-      <button onclick="showSection('table')"><span class="nav-icon">🏆</span><span>Tabela</span></button>
-      <button onclick="showSection('matches')"><span class="nav-icon">⚽</span><span>Utakmice</span></button>
-
-      <div class="sidebar-label">LIGA</div>
-      <button onclick="showSection('teams')"><span class="nav-icon">🛡️</span><span>Ekipe</span></button>
-      <button onclick="showSection('players')"><span class="nav-icon">👤</span><span>Igrači</span></button>
-      <button onclick="showSection('stats')"><span class="nav-icon">📊</span><span>Statistika</span></button>
-
-      <div class="sidebar-label">ZAJEDNICA</div>
-      <button onclick="showSection('gallery')"><span class="nav-icon">📸</span><span>Galerija</span></button>
-      <button onclick="showSection('chat')"><span class="nav-icon">💬</span><span>Chat</span></button>
-      <button onclick="showSection('comments')"><span class="nav-icon">💭</span><span>Komentari</span></button>
-
-      <div class="sidebar-spacer"></div>
-
-      <div class="sidebar-status">
-        <span class="status-dot"></span>
-        <div><strong>Liga online</strong><small>Podaci se osvježavaju</small></div>
-      </div>
-
-      <button id="loginNav" class="nav-account-btn" onclick="showSection('login')">
-        <span class="nav-icon">🔐</span><span>Prijava</span>
-      </button>
-
-      <button id="logoutNav" class="nav-account-btn hidden" onclick="logout()">
-        <span class="nav-icon">↪</span><span>Odjava</span>
-      </button>
-
-      <button id="adminNav" class="nav-account-btn hidden" onclick="showSection('admin')">
-        <span class="nav-icon">⚙️</span><span>Admin panel</span>
-      </button>
+      <div class="nav-group-title">LIGA</div>
+      <button onclick="showSection('home')" class="active"><span>⌂</span><span>Početna</span></button>
+      <button onclick="showSection('matches')"><span>⚽</span><span>Utakmice</span></button>
+      <button onclick="showSection('table')"><span>🏆</span><span>Tabela</span></button>
+      <button onclick="showSection('teams')"><span>🛡️</span><span>Ekipe</span></button>
+      <button onclick="showSection('players')"><span>👤</span><span>Igrači</span></button>
+      <button onclick="showSection('stats')"><span>📊</span><span>Statistika</span></button>
+      <div class="nav-group-title">ZAJEDNICA</div>
+      <button onclick="showSection('gallery')"><span>📸</span><span>Galerija</span></button>
+      <button onclick="showSection('chat')"><span>💬</span><span>Chat</span></button>
+      <button onclick="showSection('comments')"><span>💭</span><span>Komentari</span></button>
     </nav>
-
+    <div class="header-actions"><span class="header-live"><i></i> Liga online</span><div id="headerAccount" class="header-account"></div><button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Otvori meni" aria-expanded="false">☰</button></div>
   </div>
 </header>
 
@@ -1892,21 +1872,16 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
                 onclick="showSection('table')">
           🏆 Pogledaj tabelu
         </button>
+
+        <button class="btn btn-blue" onclick="showSection('gallery')">📸 Pogledaj galeriju</button>
       </div>
 
     </div>
 
-    <div class="hero-card">
-      <div class="hero-ball">⚽</div>
-      <div style="text-align:center">
-        <strong style="font-size:20px;letter-spacing:.4px">MEDJAŠI FUTSAL</strong>
-        <p class="muted" style="margin-top:7px">Rezultati • Liga • Futsal</p>
-        <div style="margin-top:15px;display:flex;justify-content:center;gap:7px;flex-wrap:wrap">
-          <span class="badge">LIVE</span>
-          <span class="badge">TABELA</span>
-          <span class="badge">STATISTIKA</span>
-        </div>
-      </div>
+    <div class="hero-card hero-card-premium">
+      <div class="hero-card-top"><span>SEZONA UŽIVO</span><b><i></i> ONLINE</b></div>
+      <div class="hero-score-orb">⚽</div>
+      <div class="hero-mini-grid"><div><strong id="heroTeamsMini">0</strong><small>EKIPA</small></div><div><strong id="heroMatchesMini">0</strong><small>UTAKMICA</small></div><div><strong id="heroPlayersMini">0</strong><small>IGRAČA</small></div></div>
     </div>
 
   </div>
@@ -1932,7 +1907,7 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
     <h3>🎵 Liga muzika</h3>
 
     <p class="muted" style="margin:5px 0 12px">
-      Admin bira trenutnu muziku lige. Na telefonu browser može tražiti da posjetilac pritisne Play.
+      Muzika lige svira u pozadini dok pregledavaš stranicu. Početak je bez zvuka zbog pravila browsera — zvuk možeš uključiti jednim klikom.
     </p>
 
     <div id="musicPlayerWrap" class="music-player"></div>
@@ -2333,7 +2308,7 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
       </h2>
 
       <p class="muted" style="margin-bottom:18px">
-        Prijavi se na svoj nalog.
+        Prijavi se za komentare, chat i sadržaj namijenjen članovima zajednice.
       </p>
 
       <div class="form">
@@ -2355,7 +2330,11 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
 
         <button class="btn btn-green"
                 onclick="login()">
-          Prijavi se
+          🔐 Prijavi se
+        </button>
+
+        <button type="button" class="btn" onclick="resetPassword()">
+          🔑 Zaboravljena lozinka?
         </button>
 
         <p id="loginMessage" class="muted"></p>
@@ -2638,42 +2617,13 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
 </div>
 
 
-<!-- YOUTUBE MUZIKA -->
-<div class="card" style="margin-top:20px;">
-  <h3>🎵 Muzika stranice</h3>
-  <p class="muted">
-    Admin bira muziku lige. Kada je uključiš, ista pjesma postaje aktivna na stranici za sve posjetioce.
-  </p>
-
-  <input
-    id="adminYoutubeUrl"
-    type="text"
-    placeholder="https://www.youtube.com/watch?v=..."
-  >
-
-  <div class="actions" style="margin-top:12px;">
-    <button class="btn btn-green" onclick="saveMusicSettings()">
-      💾 Sačuvaj pjesmu
-    </button>
-
-    <button class="btn btn-green" onclick="adminPlayMusic()">
-      ▶️ Pusti na stranici
-    </button>
-
-    <button class="btn btn-red" onclick="adminStopMusic()">
-      ⏹️ Zaustavi na stranici
-    </button>
-  </div>
-
-  <label style="display:flex;align-items:center;gap:8px;margin-top:14px;">
-    <input type="checkbox" id="adminMusicEnabled">
-    Muzika je uključena
-  </label>
-
-  <p id="musicAdminStatus" class="muted" style="margin-top:10px;"></p>
-  <div class="music-live-badge" style="margin-top:10px">🎵 Admin upravlja trenutnom muzikom lige</div>
+<!-- PLAYLIST MUZIKA -->
+<div class="card admin-music-card" style="margin-top:20px;">
+  <div class="admin-card-head"><div><span class="hero-kicker">SOUNDTRACK LIGE</span><h3>🎵 Playlist muzika</h3><p class="muted">Dodaj više YouTube pjesama. Redaju se automatski jedna za drugom i ostaju aktivne dok je posjetilac na stranici.</p></div><span class="admin-pill">SAMO ADMIN</span></div>
+  <div class="playlist-add-grid"><input id="adminYoutubeUrl" type="text" placeholder="YouTube link pjesme"><input id="adminYoutubeTitle" type="text" maxlength="100" placeholder="Naziv pjesme (opcionalno)"><button class="btn btn-green" onclick="addMusicTrack()">＋ Dodaj pjesmu</button></div>
+  <div class="actions" style="margin-top:12px"><button class="btn btn-blue" onclick="toggleMusicPlaylist(true)">▶️ Uključi playlistu</button><button class="btn btn-red" onclick="toggleMusicPlaylist(false)">⏹️ Zaustavi muziku</button></div>
+  <div id="musicAdminStatus" class="muted" style="margin-top:10px"></div><div id="adminMusicPlaylist" class="admin-playlist"></div>
 </div>
-
 </section>
 
 </main>
@@ -2714,9 +2664,9 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
     Galerija
   </button>
 
-  <button onclick="showSection('chat')">
-    <span>💬</span>
-    Chat
+  <button onclick="toggleMobileMenu()">
+    <span>☰</span>
+    Više
   </button>
 
 </div>
@@ -2788,8 +2738,9 @@ let musicInitialized = false;
 let selectedCommentImage = null;
 let mobileMenuOpen = false;
 
-let musicSettings={youtube_music_id:"",youtube_music_enabled:false};
-let currentMusicId="";
+let musicSettings={youtube_music_enabled:false};
+let musicTracks=[];
+let currentMusicSignature="";
 let musicUserStarted=false;
 
 
@@ -3233,6 +3184,35 @@ async function login(){
 
 
 /* =========================================================
+   RESET PASSWORD
+========================================================= */
+
+async function resetPassword(){
+  const email=document.getElementById("loginEmail")?.value.trim() || "";
+  const message=document.getElementById("loginMessage");
+
+  if(!email){
+    if(message) message.textContent="Prvo upiši email adresu za koju želiš reset lozinke.";
+    return;
+  }
+
+  if(message) message.textContent="Šaljem link za promjenu lozinke...";
+
+  const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{
+    redirectTo:window.location.origin + window.location.pathname
+  });
+
+  if(error){
+    if(message) message.textContent=error.message;
+    return;
+  }
+
+  if(message) message.textContent="Ako nalog postoji, link za promjenu lozinke je poslat na email.";
+  toast("Provjeri email za promjenu lozinke.");
+}
+
+
+/* =========================================================
    REGISTER
 ========================================================= */
 
@@ -3425,75 +3405,7 @@ async function logout(){
    AUTH UI
 ========================================================= */
 
-function updateAuthUI(){
-
-  const logged =
-    !!currentUser;
-
-
-  document
-    .getElementById("loginNav")
-    ?.classList
-    .toggle("hidden",logged);
-
-
-  document
-    .getElementById("logoutNav")
-    ?.classList
-    .toggle("hidden",!logged);
-
-
-  document
-    .getElementById("adminNav")
-    ?.classList
-    .toggle("hidden",!isAdmin());
-
-  const mobileAccount=document.getElementById("mobileNavAccount");
-  if(mobileAccount){
-    const username=currentProfile?.username || currentUser?.user_metadata?.username || "Korisnik";
-    mobileAccount.innerHTML=logged
-      ? `<strong>👤 ${esc(username)}</strong><small>Prijavljen nalog</small>`
-      : `<strong>👤 Gost</strong><small>Prijavi se za komentare i chat</small>`;
-  }
-
-
-  document
-    .getElementById("commentForm")
-    ?.classList
-    .toggle("hidden",!logged);
-
-
-  document
-    .getElementById("commentLoginText")
-    ?.classList
-    .toggle("hidden",logged);
-
-
-  document
-    .getElementById("chatForm")
-    ?.classList
-    .toggle("hidden",!logged);
-
-
-  document
-    .getElementById("chatLoginText")
-    ?.classList
-    .toggle("hidden",logged);
-
-
-  /*
-    Ponovo crtamo dijelove gdje admin dugmad
-    zavise od prijave.
-  */
-
-  renderTeams();
-  renderComments();
-  renderChat();
-  renderGallery();
-  renderAdminGallery();
-  renderAdminMatches();
-}
-
+function updateAuthUI(){const logged=!!currentUser;const username=currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik";const account=document.getElementById("headerAccount");if(account)account.innerHTML=logged?`<button class="account-btn" onclick="${isAdmin()?"showSection('admin')":"showSection('comments')"}"><span class="account-name">👤 ${esc(username)}</span>${isAdmin()?'<span class="account-admin">ADMIN</span>':''}</button><button class="account-btn" onclick="logout()">↪</button>`:`<button class="account-btn" onclick="showSection('login')">🔐 Prijava</button>`;document.getElementById("commentForm")?.classList.toggle("hidden",!logged);renderHome();renderTable();renderMatches();renderTeams();renderPlayers();renderStats();renderComments();renderChat();renderAdminMatches();fillTeamSelects();}
 
 /* =========================================================
    LOAD ALL DATA
@@ -3678,46 +3590,14 @@ function renderAll(){
 ========================================================= */
 
 function initMusic(){
-  const wrap=document.getElementById("musicPlayerWrap");
-  const hint=document.getElementById("musicHint");
-  const btn=document.getElementById("musicUnmute");
-  if(!wrap) return;
-
-  const videoId=musicSettings?.youtube_music_id || "";
-  const enabled=!!musicSettings?.youtube_music_enabled;
-
-  if(!enabled || !videoId){
-    wrap.innerHTML=`<div class="music-placeholder"><div><span style="font-size:28px">🎵</span><br>Trenutno nema aktivne muzike lige.</div></div>`;
-    currentMusicId="";
-    musicUserStarted=false;
-    if(hint) hint.textContent="Admin može uključiti pjesmu iz Admin panela.";
-    if(btn) btn.style.display="none";
-    return;
-  }
-
-  const base=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`;
-  const params=`?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&modestbranding=1`;
-  let frame=document.getElementById("ytMusic");
-
-  if(!frame || currentMusicId!==videoId){
-    wrap.innerHTML=`<iframe id="ytMusic" src="${base}${params}" title="Zvanična muzika lige" loading="lazy" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-    currentMusicId=videoId;
-    musicUserStarted=false;
-  }
-
-  if(hint) hint.innerHTML='<span class="music-live-badge">AKTIVNA MUZIKA LIGE</span> &nbsp; Ako nema zvuka, pritisni dugme.';
-  if(btn){btn.style.display="inline-flex";btn.textContent=musicUserStarted ? "🔊 Zvuk uključen" : "🔊 Uključi zvuk";}
+  const wrap=document.getElementById("musicPlayerWrap"); const hint=document.getElementById("musicHint"); const btn=document.getElementById("musicUnmute"); if(!wrap)return;
+  const enabled=!!musicSettings?.youtube_music_enabled; const ids=musicTracks.map(t=>t.youtube_music_id).filter(Boolean); const signature=ids.join(",")+"|"+enabled;
+  if(!enabled||!ids.length){wrap.innerHTML=`<div class="music-placeholder"><div><span style="font-size:28px">🎵</span><br>Trenutno nema aktivne muzike lige.</div></div>`;currentMusicSignature="";musicUserStarted=false;if(hint)hint.textContent="Admin može uključiti playlistu iz Admin panela.";if(btn)btn.style.display="none";return;}
+  if(currentMusicSignature!==signature){const first=encodeURIComponent(ids[0]);const playlist=encodeURIComponent(ids.join(","));const src=`https://www.youtube-nocookie.com/embed/${first}?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&modestbranding=1&loop=1&playlist=${playlist}`;wrap.innerHTML=`<iframe id="ytMusic" src="${src}" title="Medjaši Liga playlist" loading="eager" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;currentMusicSignature=signature;musicUserStarted=false;}
+  if(hint)hint.innerHTML='<span class="music-live-badge">● MUZIKA LIGE</span> <span class="music-volume-note">Playlist svira redom. Klikni „Uključi zvuk“ ako želiš zvuk.</span>';if(btn){btn.style.display="inline-flex";btn.textContent=musicUserStarted?"🔊 Zvuk uključen":"🔊 Uključi zvuk";}
 }
 
-function unmuteMusic(){
-  const videoId=musicSettings?.youtube_music_id;
-  const frame=document.getElementById("ytMusic");
-  if(!frame || !videoId) return;
-  frame.src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&modestbranding=1`;
-  musicUserStarted=true;
-  const btn=document.getElementById("musicUnmute");
-  if(btn) btn.textContent="🔊 Zvuk uključen";
-}
+function unmuteMusic(){const frame=document.getElementById("ytMusic");if(!frame||!musicTracks.length)return;const ids=musicTracks.map(t=>t.youtube_music_id).filter(Boolean);const first=encodeURIComponent(ids[0]);const playlist=encodeURIComponent(ids.join(","));frame.src=`https://www.youtube-nocookie.com/embed/${first}?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&modestbranding=1&loop=1&playlist=${playlist}`;musicUserStarted=true;const btn=document.getElementById("musicUnmute");if(btn)btn.textContent="🔊 Zvuk uključen";}
 
 
 function renderAnnouncement(){
@@ -3884,6 +3764,7 @@ async function postNextMatchAnnouncement(){
 ========================================================= */
 
 function renderHome(){
+  const a=document.getElementById("heroTeamsMini");if(a)a.textContent=teams.length;const b=document.getElementById("heroMatchesMini");if(b)b.textContent=matches.length;const c=document.getElementById("heroPlayersMini");if(c)c.textContent=players.length;
 
   const live =
     matches
@@ -9515,7 +9396,7 @@ function subscribeRealtime(){
 
         .on(
           "postgres_changes",
-          {event:"*",schema:"public",table:"site_settings"},
+          {event:"*",schema:"public",table:"site_settings"},{event:"*",schema:"public",table:"music_tracks"},
           () => loadMusicSettings()
         )
 
@@ -9643,284 +9524,35 @@ function getYoutubeId(url) {
    UČITAJ POSTAVKE IZ SUPABASE
 ----------------------------------------- */
 
-async function loadMusicSettings() {
-
-  const { data, error } = await supabaseClient
-    .from("site_settings")
-    .select("youtube_music_id, youtube_music_enabled")
-    .eq("id", 1)
-    .maybeSingle();
-
-  if (error) {
-    console.error("Greška pri učitavanju muzike:", error);
-    return;
-  }
-
-  musicSettings = data || {
-    youtube_music_id: "",
-    youtube_music_enabled: false
-  };
-
-  renderMusicAdmin();
-
-  initMusic();
-}
+async function loadMusicSettings(){const {data:settings,error:se}=await supabaseClient.from("site_settings").select("youtube_music_enabled").eq("id",1).maybeSingle();if(se)console.error(se);musicSettings=settings||{youtube_music_enabled:false};const {data:tracks,error:te}=await supabaseClient.from("music_tracks").select("id,title,youtube_music_id,sort_order,is_active,created_at").eq("is_active",true).order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(te){console.error(te);musicTracks=[];}else musicTracks=tracks||[];renderMusicAdmin();initMusic();}
 
 
 /* -----------------------------------------
    PRIKAŽI POSTAVKE U ADMIN PANELU
 ----------------------------------------- */
 
-function renderMusicAdmin() {
-
-  const input =
-    document.getElementById("adminYoutubeUrl");
-
-  const checkbox =
-    document.getElementById("adminMusicEnabled");
-
-  if (!input || !checkbox) return;
-
-  if (musicSettings.youtube_music_id) {
-
-    input.value =
-      "https://www.youtube.com/watch?v=" +
-      musicSettings.youtube_music_id;
-
-  } else {
-
-    input.value = "";
-
-  }
-
-  checkbox.checked =
-    !!musicSettings.youtube_music_enabled;
-}
+function renderMusicAdmin(){const box=document.getElementById("adminMusicPlaylist"),status=document.getElementById("musicAdminStatus");if(!box)return;if(!isAdmin()){box.innerHTML="";return;}if(!musicTracks.length)box.innerHTML='<div class="empty compact">Playlist je prazna. Dodaj prvu YouTube pjesmu.</div>';else box.innerHTML=musicTracks.map((t,i)=>`<div class="playlist-row"><div class="playlist-num">${i+1}</div><div><strong>${esc(t.title||"YouTube pjesma")}</strong><small>${esc(t.youtube_music_id)}</small></div><div class="playlist-actions"><button class="btn btn-small" onclick="moveMusicTrack(${t.id},-1)">↑</button><button class="btn btn-small" onclick="moveMusicTrack(${t.id},1)">↓</button></div><button class="btn btn-red btn-small" onclick="deleteMusicTrack(${t.id})">Obriši</button></div>`).join("");if(status)status.textContent=musicSettings.youtube_music_enabled?`▶️ Playlist aktivna • ${musicTracks.length} pjesama`:`⏸️ Playlist zaustavljena • ${musicTracks.length} pjesama`;}
 
 
 /* -----------------------------------------
    SAČUVAJ PJESMU
 ----------------------------------------- */
 
-async function saveMusicSettings() {
 
-  if (!isAdmin()) {
-    toast("Nemaš admin ovlaštenje.", "error");
-    return;
-  }
-
-  const input =
-    document.getElementById("adminYoutubeUrl");
-
-  const checkbox =
-    document.getElementById("adminMusicEnabled");
-
-  const status =
-    document.getElementById("musicAdminStatus");
-
-  if (!input) return;
-
-  const videoId =
-    getYoutubeId(input.value);
-
-  if (!videoId) {
-
-    if (status) {
-      status.textContent =
-        "❌ Unesi ispravan YouTube link.";
-    }
-
-    return;
-  }
-
-  const { error } =
-    await supabaseClient
-      .from("site_settings")
-      .update({
-        youtube_music_id: videoId,
-        youtube_music_enabled: checkbox.checked
-      })
-      .eq("id", 1);
-
-  if (error) {
-
-    console.error(error);
-
-    if (status) {
-      status.textContent =
-        "❌ Greška pri čuvanju: " +
-        error.message;
-    }
-
-    return;
-  }
-
-  musicSettings.youtube_music_id =
-    videoId;
-
-  musicSettings.youtube_music_enabled =
-    checkbox.checked;
-
-  if (status) {
-    status.textContent =
-      "✅ Pjesma je sačuvana.";
-  }
-
-  initMusic();
-
-  toast(
-    "YouTube pjesma je sačuvana.",
-    "success"
-  );
-}
 
 
 /* -----------------------------------------
    ADMIN - POKRENI
 ----------------------------------------- */
 
-async function adminPlayMusic() {
 
-  if (!isAdmin()) {
-    toast("Nemaš admin ovlaštenje.", "error");
-    return;
-  }
-
-  const input =
-    document.getElementById("adminYoutubeUrl");
-
-  const status =
-    document.getElementById("musicAdminStatus");
-
-  let videoId =
-    getYoutubeId(input?.value || "");
-
-  if (!videoId) {
-    videoId =
-      musicSettings.youtube_music_id;
-  }
-
-  if (!videoId) {
-
-    if (status) {
-      status.textContent =
-        "❌ Prvo unesi YouTube pjesmu.";
-    }
-
-    return;
-  }
-
-  const { error } =
-    await supabaseClient
-      .from("site_settings")
-      .update({
-        youtube_music_id: videoId,
-        youtube_music_enabled: true
-      })
-      .eq("id", 1);
-
-  if (error) {
-
-    console.error(error);
-
-    if (status) {
-      status.textContent =
-        "❌ Greška: " +
-        error.message;
-    }
-
-    return;
-  }
-
-  musicSettings.youtube_music_id =
-    videoId;
-
-  musicSettings.youtube_music_enabled =
-    true;
-
-  const checkbox =
-    document.getElementById(
-      "adminMusicEnabled"
-    );
-
-  if (checkbox) {
-    checkbox.checked = true;
-  }
-
-  if (status) {
-    status.textContent =
-      "▶️ Muzika je uključena.";
-  }
-
-  initMusic();
-
-  toast(
-    "Muzika je aktivna na stranici.",
-    "success"
-  );
-}
 
 
 /* -----------------------------------------
    ADMIN - ZAUSTAVI
 ----------------------------------------- */
 
-async function adminStopMusic() {
 
-  if (!isAdmin()) {
-    toast("Nemaš admin ovlaštenje.", "error");
-    return;
-  }
-
-  const { error } =
-    await supabaseClient
-      .from("site_settings")
-      .update({
-        youtube_music_enabled: false
-      })
-      .eq("id", 1);
-
-  if (error) {
-
-    console.error(error);
-
-    toast(
-      "Greška pri zaustavljanju muzike.",
-      "error"
-    );
-
-    return;
-  }
-
-  musicSettings.youtube_music_enabled =
-    false;
-
-  const checkbox =
-    document.getElementById(
-      "adminMusicEnabled"
-    );
-
-  if (checkbox) {
-    checkbox.checked = false;
-  }
-
-  initMusic();
-
-  const status =
-    document.getElementById(
-      "musicAdminStatus"
-    );
-
-  if (status) {
-    status.textContent =
-      "⏹️ Muzika je zaustavljena.";
-  }
-
-  toast(
-    "Muzika je zaustavljena.",
-    "success"
-  );
-}
 
 
 /* =========================================================
@@ -10000,6 +9632,11 @@ function removeCommentImage(){
   remove?.classList.add("hidden");
 }
 
+async function addMusicTrack(){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}const input=document.getElementById("adminYoutubeUrl"),title=document.getElementById("adminYoutubeTitle"),id=getYoutubeId(input?.value||"");if(!id){toast("Unesi ispravan YouTube link.","error");return;}if(musicTracks.some(t=>t.youtube_music_id===id)){toast("Ta pjesma je već u playlisti.","error");return;}const next=Math.max(0,...musicTracks.map(t=>Number(t.sort_order)||0))+1;const {error}=await supabaseClient.from("music_tracks").insert({youtube_music_id:id,title:(title?.value||"").trim()||"YouTube pjesma",sort_order:next,is_active:true});if(error){toast(error.message,"error");return;}if(input)input.value="";if(title)title.value="";await loadMusicSettings();toast("Pjesma je dodata u playlistu.","success");}
+async function deleteMusicTrack(id){if(!isAdmin())return;if(!confirm("Obrisati ovu pjesmu iz playliste?"))return;const {error}=await supabaseClient.from("music_tracks").delete().eq("id",id);if(error){toast(error.message,"error");return;}await loadMusicSettings();toast("Pjesma je obrisana.","success");}
+async function moveMusicTrack(id,direction){if(!isAdmin())return;const list=[...musicTracks],idx=list.findIndex(t=>t.id===id),target=idx+direction;if(idx<0||target<0||target>=list.length)return;[list[idx],list[target]]=[list[target],list[idx]];for(let i=0;i<list.length;i++){const {error}=await supabaseClient.from("music_tracks").update({sort_order:i+1}).eq("id",list[i].id);if(error){toast(error.message,"error");return;}}await loadMusicSettings();}
+async function toggleMusicPlaylist(enabled){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}if(enabled&&!musicTracks.length){toast("Prvo dodaj barem jednu pjesmu.","error");return;}const {error}=await supabaseClient.from("site_settings").update({youtube_music_enabled:enabled}).eq("id",1);if(error){toast(error.message,"error");return;}musicSettings.youtube_music_enabled=enabled;currentMusicSignature="";initMusic();renderMusicAdmin();toast(enabled?"Playlist je uključena.":"Muzika je zaustavljena.","success");}
+
 async function loadModeratorUsers(){
   if(!isAdmin()) return;
 
@@ -10069,8 +9706,8 @@ function injectModeratorPanel(){
   card.innerHTML=`
     <div class="moderator-head">
       <div>
-        <h3>🛡️ Moderatori</h3>
-        <p class="muted">Moderator može upravljati dešavanjima na utakmici, ali ne može mijenjati ekipe, igrače ili korisnike.</p>
+        <h3>🛡️ Korisnici i uloge</h3>
+        <p class="muted">Administrator može dodijeliti ulogu korisniku. Admin panel i administrativne akcije ostaju zaštićeni.</p>
       </div>
       <button class="btn btn-small" onclick="loadModeratorUsers()">↻ Osvježi</button>
     </div>
@@ -10083,8 +9720,6 @@ function injectModeratorPanel(){
 const _baseUpdateAuthUI = updateAuthUI;
 updateAuthUI=function(){
   _baseUpdateAuthUI();
-  const adminNav=document.getElementById("adminNav");
-  if(adminNav) adminNav.classList.toggle("hidden",!(isAdmin()||isModerator()));
   if(isAdmin()) injectModeratorPanel();
   setupCommentImageUI();
   setupChatImageUI();
@@ -10092,17 +9727,21 @@ updateAuthUI=function(){
 
 const _baseShowSection=showSection;
 showSection=function(id){
+  if(id==="admin" && !isAdmin()){
+    toast(currentUser ? "Admin panel je dostupan samo administratoru." : "Prijavi se da pristupiš admin panelu.","error");
+    id=currentUser ? "home" : "login";
+  }
   _baseShowSection(id);
-  document.querySelectorAll('#mainNav button[onclick*="showSection"]')
-    .forEach(btn=>btn.classList.remove("active"));
-  const activeBtn=document.querySelector(
-    `#mainNav button[onclick*="showSection('${id}')"]`
-  );
+  document.querySelectorAll('#mainNav button[onclick*="showSection"]').forEach(btn=>btn.classList.remove("active"));
+  const activeBtn=document.querySelector(`#mainNav button[onclick*="showSection('${id}')"]`);
   if(activeBtn) activeBtn.classList.add("active");
   mobileMenuOpen=false;
   document.getElementById("mainNav")?.classList.remove("mobile-open");
   const btn=document.getElementById("mobileMenuBtn");
   if(btn){btn.textContent="☰";btn.setAttribute("aria-expanded","false");}
+  document.querySelectorAll('.mobile-bottom button').forEach(b=>b.classList.remove('active'));
+  const bottomBtn=document.querySelector(`.mobile-bottom button[onclick*="showSection('${id}')"]`);
+  if(bottomBtn) bottomBtn.classList.add('active');
 };
 
 document.addEventListener("DOMContentLoaded",()=>{
