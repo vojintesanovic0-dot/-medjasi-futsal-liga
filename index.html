@@ -1526,6 +1526,22 @@ tbody tr:hover{
 }
 
 
+/* ===== CHAT + GALLERY PREMIUM ===== */
+.chat-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border)}
+.chat-header strong,.chat-header span{display:block}.chat-header .muted{font-size:11px;margin-top:3px}.chat-online-dot{font-size:10px;font-weight:900;color:var(--green);white-space:nowrap}
+.chat-composer{padding:10px;border:1px solid var(--border);background:rgba(255,255,255,.025);border-radius:16px}.chat-input-row{display:flex;align-items:center;gap:8px}.chat-input-row input{flex:1;min-width:0}
+.chat-image-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.06);cursor:pointer;font-size:18px;flex:none}
+.chat-image-preview{position:relative;display:flex;align-items:center;gap:8px;margin-top:9px;max-width:330px}.chat-image-preview img{width:82px;height:58px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}.chat-image-meta{font-size:10px;margin-top:7px}
+.chat-avatar{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:rgba(44,156,255,.1);border:1px solid var(--border);flex:none}.chat-message{align-items:flex-start}.chat-message-body{flex:1;min-width:0}.chat-message-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.chat-message-text{margin-top:5px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}.chat-photo{display:block;border:0;padding:0;margin-top:9px;background:none;cursor:pointer;max-width:min(420px,100%)}.chat-photo img{display:block;width:auto;max-width:100%;max-height:300px;object-fit:cover;border-radius:14px;border:1px solid var(--border)}.chat-delete{margin-top:8px}
+.gallery-hero{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:18px}.gallery-count,.admin-pill{padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.04);font-size:10px;font-weight:900;color:var(--muted)}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.gallery-item{overflow:hidden;border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.025);box-shadow:0 12px 30px rgba(0,0,0,.14)}.gallery-photo{display:block;position:relative;width:100%;padding:0;border:0;background:#06111b;cursor:pointer;overflow:hidden}.gallery-photo img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;transition:transform .35s ease,filter .35s ease}.gallery-photo:hover img{transform:scale(1.04);filter:brightness(.72)}.gallery-overlay{position:absolute;left:12px;bottom:12px;padding:7px 9px;border-radius:9px;background:rgba(0,0,0,.58);backdrop-filter:blur(5px);color:#fff;font-size:10px;font-weight:900;opacity:0;transition:opacity .2s}.gallery-photo:hover .gallery-overlay{opacity:1}
+.gallery-caption{padding:12px 13px 14px}.gallery-caption strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gallery-caption p{margin:5px 0;color:var(--muted);font-size:11px;line-height:1.45}.gallery-caption small{font-size:10px}.gallery-empty{grid-column:1/-1}
+.admin-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:15px}.gallery-upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.gallery-upload-wide{grid-column:1/-1}.admin-gallery-list{margin-top:18px;padding-top:15px;border-top:1px solid var(--border)}.admin-gallery-title{font-weight:900;margin-bottom:10px}.admin-gallery-items{display:grid;gap:8px}.admin-gallery-item{display:grid;grid-template-columns:55px 1fr auto;align-items:center;gap:10px;padding:8px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.025)}.admin-gallery-item img{width:55px;height:42px;object-fit:cover;border-radius:8px}.admin-gallery-item strong,.admin-gallery-item small{display:block}.admin-gallery-item small{font-size:9px;margin-top:3px}
+.image-lightbox{text-align:center}.image-lightbox img{display:block;max-width:100%;max-height:76vh;margin:0 auto;border-radius:14px}.image-lightbox-caption{margin-top:12px;text-align:left;color:var(--muted);font-size:12px}
+@media(max-width:850px){.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.gallery-grid{grid-template-columns:1fr}.gallery-hero,.admin-card-head{align-items:flex-start;flex-direction:column}.gallery-upload-grid{grid-template-columns:1fr}.gallery-upload-wide{grid-column:auto}.chat-header{align-items:flex-start;flex-direction:column}.chat-input-row .btn{padding-left:14px;padding-right:14px}}
+
+.gallery-home-card{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 22px;background:linear-gradient(135deg,rgba(44,156,255,.08),rgba(48,214,126,.05));border-color:rgba(255,255,255,.09)}
+@media(max-width:700px){.gallery-home-card{align-items:flex-start;flex-direction:column}.gallery-home-card .btn{width:100%}}
 /* ===== FINAL SPORTS REDESIGN ===== */
 body::before{
   content:"";
@@ -1644,6 +1660,7 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
       <button onclick="showSection('stats')">Statistika</button>
       <button onclick="showSection('comments')">Komentari</button>
       <button onclick="showSection('chat')">Chat</button>
+      <button onclick="showSection('gallery')">Galerija</button>
 
       <button id="loginNav" onclick="showSection('login')">
         Prijava
@@ -1806,6 +1823,16 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
   </h2>
 
   <div id="homeResults"></div>
+
+
+  <div class="card gallery-home-card" style="margin-top:30px">
+    <div>
+      <span class="hero-kicker">FOTO ARHIVA</span>
+      <h3 style="margin:4px 0 6px">📸 Trenuci iz lige</h3>
+      <p class="muted">Pogledaj fotografije utakmica, ekipa i atmosfere iz Medjaši Futsal Lige.</p>
+    </div>
+    <button class="btn btn-green" onclick="showSection('gallery')">Otvori galeriju →</button>
+  </div>
 
 
   <div class="grid grid-2" style="margin-top:30px">
@@ -2056,40 +2083,61 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
 
 <section id="chat" class="section">
 
-  <h2 class="section-title">
-    💬 Chat
-  </h2>
+  <h2 class="section-title">💬 Chat</h2>
 
   <div class="card">
 
-    <div id="chatBox" class="chat-box"></div>
-
-    <div id="chatForm"
-         class="hidden"
-         style="margin-top:12px">
-
-      <div class="actions">
-
-        <input id="chatText"
-               placeholder="Napiši poruku..."
-               onkeydown="if(event.key==='Enter')sendChat()">
-
-        <button class="btn btn-green"
-                onclick="sendChat()">
-          Pošalji
-        </button>
-
+    <div class="chat-header">
+      <div>
+        <strong>💬 Razgovor navijača</strong>
+        <span class="muted">Piši, šalji slike i prati šta se dešava u ligi.</span>
       </div>
-
+      <span class="chat-online-dot">● AKTIVAN CHAT</span>
     </div>
 
-    <p id="chatLoginText"
-       class="muted"
-       style="margin-top:12px">
+    <div id="chatBox" class="chat-box"></div>
+
+    <div id="chatForm" class="hidden" style="margin-top:12px">
+      <div class="chat-composer">
+        <div class="chat-input-row">
+          <label class="chat-image-btn" title="Dodaj sliku">
+            📷
+            <input id="chatImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+          </label>
+
+          <input id="chatText" placeholder="Napiši poruku..."
+                 onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendChat()}">
+
+          <button class="btn btn-green" onclick="sendChat()">Pošalji</button>
+        </div>
+        <div id="chatImagePreview" class="chat-image-preview hidden"></div>
+        <div id="chatImageMeta" class="chat-image-meta muted">Možeš poslati sliku uz poruku.</div>
+      </div>
+    </div>
+
+    <p id="chatLoginText" class="muted" style="margin-top:12px">
       🔒 Prijavi se da bi koristio chat.
     </p>
 
   </div>
+
+</section>
+
+
+<!-- ================= GALLERY ================= -->
+
+<section id="gallery" class="section">
+
+  <div class="gallery-hero">
+    <div>
+      <span class="hero-kicker">FOTO ARHIVA LIGE</span>
+      <h2 class="section-title" style="margin:4px 0 6px">📸 Galerija</h2>
+      <p class="muted">Najbolji trenuci, utakmice i atmosfera Medjaši Futsal Lige.</p>
+    </div>
+    <div class="gallery-count" id="galleryCount">0 fotografija</div>
+  </div>
+
+  <div id="galleryGrid" class="gallery-grid"></div>
 
 </section>
 
@@ -2381,6 +2429,38 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
     </div>
 
   </div>
+<!-- GALERIJA -->
+<div class="card" style="margin-top:20px;">
+  <div class="admin-card-head">
+    <div>
+      <h3>📸 Galerija</h3>
+      <p class="muted">Postavi fotografije koje će svi posjetioci moći pregledati u galeriji.</p>
+    </div>
+    <span class="admin-pill">SAMO ADMIN</span>
+  </div>
+
+  <div class="gallery-upload-grid">
+    <div class="form-group">
+      <label>Fotografija</label>
+      <input id="galleryImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+    </div>
+
+    <div class="form-group">
+      <label>Naslov</label>
+      <input id="galleryTitle" maxlength="100" placeholder="npr. Finale lige">
+    </div>
+
+    <div class="form-group gallery-upload-wide">
+      <label>Opis</label>
+      <input id="galleryDescription" maxlength="250" placeholder="Kratak opis fotografije (opcionalno)">
+    </div>
+  </div>
+
+  <button class="btn btn-green" onclick="adminAddGalleryImage()">📤 Objavi u galeriju</button>
+  <div id="adminGalleryList" class="admin-gallery-list"></div>
+</div>
+
+
 <!-- YOUTUBE MUZIKA -->
 <div class="card" style="margin-top:20px;">
   <h3>🎵 Muzika stranice</h3>
@@ -2521,6 +2601,7 @@ let goals = [];
 let cards = [];
 let comments = [];
 let messages = [];
+let gallery = [];
 let matchPlayers = [];
 
 let currentMatchId = null;
@@ -3231,6 +3312,8 @@ function updateAuthUI(){
   renderTeams();
   renderComments();
   renderChat();
+  renderGallery();
+  renderAdminGallery();
   renderAdminMatches();
 }
 
@@ -3282,6 +3365,11 @@ async function loadAll(){
           .order("created_at",{ascending:true}),
 
         supabaseClient
+          .from("gallery")
+          .select("*")
+          .order("created_at",{ascending:false}),
+
+        supabaseClient
           .from("match_players")
           .select("*")
 
@@ -3296,6 +3384,7 @@ async function loadAll(){
       cardsResult,
       commentsResult,
       messagesResult,
+      galleryResult,
       matchPlayersResult
     ] = results;
 
@@ -3321,6 +3410,9 @@ async function loadAll(){
     if(messagesResult.error)
       console.error(messagesResult.error);
 
+    if(galleryResult.error)
+      console.error(galleryResult.error);
+
     if(matchPlayersResult.error)
       console.error(matchPlayersResult.error);
 
@@ -3345,6 +3437,9 @@ async function loadAll(){
 
     messages =
       messagesResult.data || [];
+
+    gallery =
+      galleryResult.data || [];
 
     matchPlayers =
       matchPlayersResult.data || [];
@@ -5210,82 +5305,71 @@ async function deleteComment(id){
 
 function renderChat(){
 
-  const box =
-    document.getElementById(
-      "chatBox"
-    );
-
+  const box=document.getElementById("chatBox");
   if(!box) return;
 
-
-  box.innerHTML =
-    messages
-      .map(m => {
-
-        /*
-          messages tabela u postojećoj bazi
-          može imati username, ali nije obavezno.
-        */
-
-        const username =
-          m.username ||
-          (
-            currentUser &&
-            m.user_id === currentUser.id
-              ? currentProfile?.username
-              : null
-          ) ||
-          (
-            m.user_id
-              ? String(m.user_id).slice(0,8)
-              : "Korisnik"
-          );
-
+  box.innerHTML = messages.length
+    ? messages.map(m => {
+        const username = m.username ||
+          (currentUser && m.user_id===currentUser.id ? currentProfile?.username : null) ||
+          (m.user_id ? String(m.user_id).slice(0,8) : "Korisnik");
 
         return `
-
           <div class="chat-message">
+            <div class="chat-avatar">💬</div>
+            <div class="chat-message-body">
+              <div class="chat-message-top">
+                <strong>${esc(username)}</strong>
+                <small class="muted">${formatDate(m.created_at)}</small>
+              </div>
+              ${m.content ? `<div class="chat-message-text">${esc(m.content)}</div>` : ""}
+              ${m.image_url ? `
+                <button class="chat-photo" type="button" onclick="openImagePreview('${esc(m.image_url)}','${esc(username)}')">
+                  <img src="${esc(m.image_url)}" alt="Slika u chatu" loading="lazy">
+                </button>` : ""}
+              ${currentUser && (m.user_id===currentUser.id || isAdmin())
+                ? `<button class="btn btn-red btn-small chat-delete" onclick="deleteChat('${m.id}')">🗑️</button>` : ""}
+            </div>
+          </div>`;
+      }).join("")
+    : `<div class="empty">Još nema poruka.<br>Budi prvi koji će započeti razgovor.</div>`;
 
-            <strong>
-              ${esc(username)}
-            </strong>
+  box.scrollTop=box.scrollHeight;
+}
 
-            <span>
-              ${esc(m.content)}
-            </span>
+function setupChatImageUI(){
+  const input=document.getElementById("chatImageFile");
+  if(!input || input.dataset.ready==="1") return;
+  input.dataset.ready="1";
 
-            <small class="muted">
-              ${formatDate(
-                m.created_at
-              )}
-            </small>
+  input.addEventListener("change",()=>{
+    const file=input.files?.[0];
+    const preview=document.getElementById("chatImagePreview");
+    const meta=document.getElementById("chatImageMeta");
 
-            ${
-              currentUser &&
-              (
-                m.user_id ===
-                currentUser.id ||
-                isAdmin()
-              )
-                ? `
-                  <button
-                    class="btn btn-red btn-small"
-                    onclick="deleteChat('${m.id}')">
-                    ×
-                  </button>
-                `
-                : ""
-            }
+    if(!file){ clearChatImage(); return; }
+    if(!file.type.startsWith("image/") || file.size>5*1024*1024){
+      alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB.");
+      clearChatImage();
+      return;
+    }
 
-          </div>
+    if(meta) meta.textContent=`Odabrano: ${file.name}`;
+    if(preview){
+      const url=URL.createObjectURL(file);
+      preview.innerHTML=`<img src="${url}" alt="Pregled slike"><button type="button" class="btn btn-red btn-small" onclick="clearChatImage()">✕ Ukloni</button>`;
+      preview.classList.remove("hidden");
+    }
+  });
+}
 
-        `;
-      })
-      .join("");
-
-
-  box.scrollTop =
-    box.scrollHeight;
+function clearChatImage(){
+  const input=document.getElementById("chatImageFile");
+  const preview=document.getElementById("chatImagePreview");
+  const meta=document.getElementById("chatImageMeta");
+  if(input) input.value="";
+  if(preview){preview.innerHTML="";preview.classList.add("hidden");}
+  if(meta) meta.textContent="Možeš poslati sliku uz poruku.";
 }
 
 
@@ -5295,52 +5379,40 @@ function renderChat(){
 
 async function sendChat(){
 
-  if(!currentUser){
+  if(!currentUser){ alert("Moraš biti prijavljen."); return; }
 
-    alert(
-      "Moraš biti prijavljen."
-    );
+  const input=document.getElementById("chatText");
+  const fileInput=document.getElementById("chatImageFile");
+  const content=input?.value.trim() || "";
+  const file=fileInput?.files?.[0] || null;
 
-    return;
+  if(!content && !file){ alert("Napiši poruku ili dodaj sliku."); return; }
+  if(content.length>1000){ alert("Poruka može imati najviše 1000 znakova."); return; }
+  if(file && (!file.type.startsWith("image/") || file.size>5*1024*1024)){
+    alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB."); return;
   }
 
+  try{
+    let image_url=null;
+    if(file) image_url=await uploadFile(file,"chat");
 
-  const input =
-    document.getElementById(
-      "chatText"
-    );
+    const username=currentProfile?.username || currentUser.user_metadata?.username || currentUser.email?.split("@")[0] || "Korisnik";
 
+    const {error}=await supabaseClient.from("messages").insert({
+      user_id:currentUser.id,
+      username:String(username).slice(0,30),
+      content,
+      image_url
+    });
+    if(error) throw error;
 
-  const content =
-    input.value.trim();
-
-
-  if(!content) return;
-
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("messages")
-      .insert({
-        user_id:currentUser.id,
-        content
-      });
-
-
-  if(error){
-
-    alert(error.message);
-
-    return;
+    if(input) input.value="";
+    clearChatImage();
+    await loadAll();
+  }catch(error){
+    console.error(error);
+    alert(error.message || "Greška pri slanju poruke.");
   }
-
-
-  input.value = "";
-
-
-  await loadAll();
 }
 
 
@@ -5385,6 +5457,100 @@ async function deleteChat(id){
   await loadAll();
 }
 
+
+/* =========================================================
+   GALLERY
+========================================================= */
+
+function renderGallery(){
+  const grid=document.getElementById("galleryGrid");
+  const count=document.getElementById("galleryCount");
+  if(count) count.textContent=`${gallery.length} fotografija`;
+  if(!grid) return;
+
+  if(!gallery.length){
+    grid.innerHTML=`<div class="empty gallery-empty">📸 Galerija je trenutno prazna.</div>`;
+    return;
+  }
+
+  grid.innerHTML=gallery.map(item=>`
+    <article class="gallery-item">
+      <button class="gallery-photo" type="button" onclick="openImagePreview('${esc(item.image_url)}','${esc(item.title || "Galerija")}')">
+        <img src="${esc(item.image_url)}" alt="${esc(item.title || "Fotografija")}" loading="lazy">
+        <span class="gallery-overlay">🔍 Pregledaj</span>
+      </button>
+      <div class="gallery-caption">
+        <strong>${esc(item.title || "Fotografija lige")}</strong>
+        ${item.description ? `<p>${esc(item.description)}</p>` : ""}
+        <small class="muted">${formatDate(item.created_at)}</small>
+      </div>
+    </article>`).join("");
+}
+
+function renderAdminGallery(){
+  const box=document.getElementById("adminGalleryList");
+  if(!box) return;
+  if(!isAdmin()){ box.innerHTML=""; return; }
+
+  box.innerHTML=`
+    <div class="admin-gallery-title">Objavljene fotografije (${gallery.length})</div>
+    ${gallery.length ? `<div class="admin-gallery-items">
+      ${gallery.map(item=>`
+        <div class="admin-gallery-item">
+          <img src="${esc(item.image_url)}" alt="">
+          <div><strong>${esc(item.title || "Bez naslova")}</strong><small class="muted">${formatDate(item.created_at)}</small></div>
+          <button class="btn btn-red btn-small" onclick="adminDeleteGalleryImage('${item.id}')">🗑️</button>
+        </div>`).join("")}
+    </div>` : `<div class="muted">Još nema fotografija.</div>`}`;
+}
+
+async function adminAddGalleryImage(){
+  if(!isAdmin()){ toast("Nemaš admin ovlaštenje.","error"); return; }
+
+  const file=document.getElementById("galleryImageFile")?.files?.[0];
+  const title=document.getElementById("galleryTitle")?.value.trim() || "";
+  const description=document.getElementById("galleryDescription")?.value.trim() || "";
+
+  if(!file){ alert("Izaberi fotografiju."); return; }
+  if(!file.type.startsWith("image/") || file.size>8*1024*1024){ alert("Dozvoljene su slike do 8 MB."); return; }
+
+  try{
+    const image_url=await uploadFile(file,"gallery");
+    const {error}=await supabaseClient.from("gallery").insert({
+      image_url,
+      title:title.slice(0,100) || "Fotografija lige",
+      description:description.slice(0,250),
+      created_by:currentUser.id
+    });
+    if(error) throw error;
+
+    document.getElementById("galleryImageFile").value="";
+    document.getElementById("galleryTitle").value="";
+    document.getElementById("galleryDescription").value="";
+    toast("Fotografija je objavljena u galeriji.","success");
+    await loadAll();
+  }catch(error){
+    console.error(error);
+    alert(error.message || "Greška pri objavljivanju fotografije.");
+  }
+}
+
+async function adminDeleteGalleryImage(id){
+  if(!isAdmin()) return;
+  const item=gallery.find(g=>String(g.id)===String(id));
+  if(!item) return;
+  if(!confirm(`Obrisati "${item.title || "ovu fotografiju"}" iz galerije?`)) return;
+
+  const {error}=await supabaseClient.from("gallery").delete().eq("id",id);
+  if(error){ alert(error.message); return; }
+  toast("Fotografija je obrisana.","success");
+  await loadAll();
+}
+
+function openImagePreview(url,title="Fotografija"){
+  if(!url) return;
+  showModal(`<div class="image-lightbox"><img src="${esc(url)}" alt="${esc(title)}"><div class="image-lightbox-caption"><strong>${esc(title)}</strong></div></div>`);
+}
 
 /* =========================================================
    STORAGE
@@ -9160,6 +9326,18 @@ function subscribeRealtime(){
 
         .on(
           "postgres_changes",
+          {
+            event:"*",
+            schema:"public",
+            table:"gallery"
+          },
+          () =>
+            loadAll()
+        )
+
+
+        .on(
+          "postgres_changes",
           {event:"*",schema:"public",table:"site_settings"},
           () => loadMusicSettings()
         )
@@ -9732,6 +9910,7 @@ updateAuthUI=function(){
   if(adminNav) adminNav.classList.toggle("hidden",!(isAdmin()||isModerator()));
   if(isAdmin()) injectModeratorPanel();
   setupCommentImageUI();
+  setupChatImageUI();
 };
 
 const _baseShowSection=showSection;
