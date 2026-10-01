@@ -10088,5 +10088,1210 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 </script>
 
+<style>
+/* =========================================================
+   MEĐASI ADMIN CRUD
+   ========================================================= */
+
+.admin-crud-v4 {
+  margin-top: 22px;
+}
+
+.admin-crud-v4 .crud-section {
+  margin-top: 18px;
+}
+
+.admin-crud-v4 .crud-section:first-child {
+  margin-top: 0;
+}
+
+.admin-crud-v4 .crud-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-weight: 800;
+}
+
+.admin-crud-v4 .crud-list {
+  display: grid;
+  gap: 9px;
+}
+
+.admin-crud-v4 .crud-item {
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 13px;
+  padding: 12px;
+}
+
+.admin-crud-v4 .crud-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-crud-v4 .crud-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-crud-v4 .crud-name {
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.admin-crud-v4 .crud-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: .7;
+  line-height: 1.45;
+}
+
+.admin-crud-v4 .crud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.admin-crud-v4 .crud-empty {
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+  opacity: .65;
+  text-align: center;
+}
+
+.admin-crud-v4 .crud-danger {
+  background: #b42318 !important;
+  color: #fff !important;
+}
+
+.admin-crud-v4 .crud-edit {
+  background: #2563eb !important;
+  color: #fff !important;
+}
+
+.admin-crud-v4 .crud-small {
+  padding: 7px 10px !important;
+  font-size: 12px !important;
+}
+
+.admin-crud-v4 .crud-thumb {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 9px;
+  flex: 0 0 auto;
+}
+
+.admin-crud-v4 .crud-gallery-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-crud-v4 .crud-modal-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-crud-v4 .crud-modal-grid label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-crud-v4 .crud-modal-grid input,
+.admin-crud-v4 .crud-modal-grid select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+  .admin-crud-v4 .crud-main {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-crud-v4 .crud-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .admin-crud-v4 .crud-actions button {
+    flex: 1 1 auto;
+  }
+
+  .admin-crud-v4 .crud-gallery-row {
+    align-items: flex-start;
+  }
+}
+</style>
+
+<script>
+/* =========================================================
+   MEĐASI ADMIN CRUD V4
+   Dodaje se na postojeći sistem.
+   Ne zamjenjuje postojeće funkcije.
+   ========================================================= */
+
+(() => {
+  if (window.__MEDJASI_ADMIN_CRUD_V4__) return;
+  window.__MEDJASI_ADMIN_CRUD_V4__ = true;
+
+  /* -------------------------------------------------------
+     HELPERS
+     ------------------------------------------------------- */
+
+  const esc4 = value => {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
+  const toast4 = message => {
+    if (typeof toast === "function") {
+      toast(message);
+    } else {
+      alert(message);
+    }
+  };
+
+  const rpc4 = async (name, params = {}) => {
+    const { data, error } =
+      await supabaseClient.rpc(name, params);
+
+    if (error) {
+      console.error(name, error);
+      throw error;
+    }
+
+    return data;
+  };
+
+  const requireAdmin4 = () => {
+    if (!currentUser) {
+      alert("Moraš biti prijavljen.");
+      return false;
+    }
+
+    if (!isAdmin()) {
+      alert("Nemaš admin ovlaštenje.");
+      return false;
+    }
+
+    return true;
+  };
+
+  /* -------------------------------------------------------
+     DELETE MATCH
+     ------------------------------------------------------- */
+
+  window.adminDeleteMatch = async function(matchId) {
+    if (!requireAdmin4()) return;
+
+    const match = matches.find(
+      m => String(m.id) === String(matchId)
+    );
+
+    if (!match) return;
+
+    const home = teamName(match.home_team_id);
+    const away = teamName(match.away_team_id);
+
+    if (
+      !confirm(
+        `Obrisati utakmicu "${home} - ${away}"?\n\n` +
+        `Biće obrisani i golovi, kartoni i postava te utakmice.`
+      )
+    ) return;
+
+    try {
+      await rpc4("delete_match_admin", {
+        match_uuid: matchId
+      });
+
+      toast4("Utakmica je obrisana.");
+      await loadAll();
+    } catch (error) {
+      alert(error.message || "Greška pri brisanju utakmice.");
+    }
+  };
+
+
+  /* -------------------------------------------------------
+     DELETE PLAYER
+     ------------------------------------------------------- */
+
+  window.adminDeletePlayer = async function(playerId) {
+    if (!requireAdmin4()) return;
+
+    const player = players.find(
+      p => String(p.id) === String(playerId)
+    );
+
+    if (!player) return;
+
+    if (
+      !confirm(
+        `Obrisati igrača "${player.name}"?\n\n` +
+        `Biće uklonjen i iz golova, kartona i postava.`
+      )
+    ) return;
+
+    try {
+      await rpc4("delete_player_admin", {
+        player_uuid: playerId
+      });
+
+      toast4("Igrač je obrisan.");
+      await loadAll();
+    } catch (error) {
+      alert(error.message || "Greška pri brisanju igrača.");
+    }
+  };
+
+
+  /* -------------------------------------------------------
+     DELETE GOAL
+     ------------------------------------------------------- */
+
+  window.adminDeleteGoal = async function(goalId) {
+    if (!requireAdmin4()) return;
+
+    const goal = goals.find(
+      g => String(g.id) === String(goalId)
+    );
+
+    if (!goal) return;
+
+    const player = players.find(
+      p => String(p.id) === String(goal.player_id)
+    );
+
+    const playerName = player
+      ? player.name
+      : "Nepoznat igrač";
+
+    if (
+      !confirm(
+        `Obrisati gol igrača "${playerName}"?\n\n` +
+        `Rezultat utakmice će se automatski preračunati.`
+      )
+    ) return;
+
+    try {
+      await rpc4("delete_goal_admin", {
+        goal_uuid: goalId
+      });
+
+      toast4("Gol je obrisan, rezultat je ažuriran.");
+      await loadAll();
+    } catch (error) {
+      alert(error.message || "Greška pri brisanju gola.");
+    }
+  };
+
+
+  /* -------------------------------------------------------
+     DELETE CARD
+     ------------------------------------------------------- */
+
+  window.adminDeleteCard = async function(cardId) {
+    if (!requireAdmin4()) return;
+
+    if (!confirm("Obrisati ovaj karton?")) return;
+
+    try {
+      await rpc4("delete_card_admin", {
+        card_uuid: cardId
+      });
+
+      toast4("Karton je obrisan.");
+      await loadAll();
+    } catch (error) {
+      alert(error.message || "Greška pri brisanju kartona.");
+    }
+  };
+
+
+  /* -------------------------------------------------------
+     DELETE COMMENT
+     ------------------------------------------------------- */
+
+  window.adminDeleteCommentV4 = async function(commentId) {
+    if (!requireAdmin4()) return;
+
+    if (!confirm("Admin: obrisati ovaj komentar?")) return;
+
+    try {
+      await rpc4("delete_comment_admin", {
+        comment_uuid: commentId
+      });
+
+      toast4("Komentar je obrisan.");
+      await loadAll();
+    } catch (error) {
+      alert(error.message || "Greška pri brisanju komentara.");
+    }
+  };
+
+
+  /* -------------------------------------------------------
+     DELETE CHAT
+     ------------------------------------------------------- */
+
+  window.adminDeleteMessageV4 = async function(messageId) {
+    if (!requireAdmin4()) return;
+
+    if (!confirm("Admin: obrisati ovu chat poruku?")) return;
+
+    try {
+      await rpc4("delete_message_admin", {
+        message_uuid: messageId
+      });
+
+      toast4("Poruka je obrisana.");
+      await loadAll();
+    } catch (error) {
+      alert(error.message || "Greška pri brisanju poruke.");
+    }
+  };
+
+
+  /* -------------------------------------------------------
+     DELETE GALLERY IMAGE
+     ------------------------------------------------------- */
+
+  window.adminDeleteGalleryV4 = async function(galleryId) {
+    if (!requireAdmin4()) return;
+
+    if (!confirm("Obrisati ovu sliku iz galerije?")) return;
+
+    try {
+      await rpc4("delete_gallery_admin", {
+        gallery_uuid: galleryId
+      });
+
+      toast4("Slika je obrisana.");
+      await loadAll();
+    } catch (error) {
+      alert(error.message || "Greška pri brisanju slike.");
+    }
+  };
+
+
+  /* -------------------------------------------------------
+     EDIT MATCH
+     ------------------------------------------------------- */
+
+  window.openEditMatchV4 = function(matchId) {
+    if (!requireAdmin4()) return;
+
+    const match = matches.find(
+      m => String(m.id) === String(matchId)
+    );
+
+    if (!match) return;
+
+    const date = new Date(match.match_date);
+
+    const localDate =
+      date.getFullYear() +
+      "-" +
+      String(date.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(date.getDate()).padStart(2, "0") +
+      "T" +
+      String(date.getHours()).padStart(2, "0") +
+      ":" +
+      String(date.getMinutes()).padStart(2, "0");
+
+    const teamOptions = teams.map(team => `
+      <option
+        value="${esc4(team.id)}"
+        ${String(team.id) === String(match.home_team_id) ? "selected" : ""}
+      >
+        ${esc4(team.name)}
+      </option>
+    `).join("");
+
+    const awayOptions = teams.map(team => `
+      <option
+        value="${esc4(team.id)}"
+        ${String(team.id) === String(match.away_team_id) ? "selected" : ""}
+      >
+        ${esc4(team.name)}
+      </option>
+    `).join("");
+
+    const html = `
+      <div class="crud-modal-grid">
+
+        <label>
+          Domaća ekipa
+          <select id="crudMatchHome">
+            ${teamOptions}
+          </select>
+        </label>
+
+        <label>
+          Gostujuća ekipa
+          <select id="crudMatchAway">
+            ${awayOptions}
+          </select>
+        </label>
+
+        <label>
+          Datum i vrijeme
+          <input
+            id="crudMatchDate"
+            type="datetime-local"
+            value="${localDate}"
+          >
+        </label>
+
+        <label>
+          Kolo
+          <input
+            id="crudMatchRound"
+            type="text"
+            value="${esc4(match.round || "")}"
+            placeholder="npr. 1"
+          >
+        </label>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button
+            class="btn btn-small"
+            onclick="hideModal()"
+          >
+            Otkaži
+          </button>
+
+          <button
+            class="btn btn-green btn-small"
+            onclick="saveEditMatchV4('${esc4(match.id)}')"
+          >
+            💾 Sačuvaj
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    if (typeof showModal === "function") {
+      showModal(
+        "✏️ Uredi utakmicu",
+        html
+      );
+    } else {
+      alert("Modal funkcija nije pronađena.");
+    }
+  };
+
+
+  window.saveEditMatchV4 = async function(matchId) {
+    if (!requireAdmin4()) return;
+
+    const home =
+      document.getElementById("crudMatchHome")?.value;
+
+    const away =
+      document.getElementById("crudMatchAway")?.value;
+
+    const date =
+      document.getElementById("crudMatchDate")?.value;
+
+    const round =
+      document.getElementById("crudMatchRound")?.value || null;
+
+    if (!home || !away || !date) {
+      alert("Popuni sva obavezna polja.");
+      return;
+    }
+
+    if (home === away) {
+      alert("Domaćin i gost moraju biti različite ekipe.");
+      return;
+    }
+
+    try {
+      await rpc4("update_match_admin", {
+        match_uuid: matchId,
+        new_home_team_id: home,
+        new_away_team_id: away,
+        new_match_date: new Date(date).toISOString(),
+        new_round: round
+      });
+
+      if (typeof hideModal === "function") {
+        hideModal();
+      }
+
+      toast4("Utakmica je izmijenjena.");
+      await loadAll();
+
+    } catch (error) {
+      alert(error.message || "Greška pri izmjeni utakmice.");
+    }
+  };
+
+
+  /* -------------------------------------------------------
+     EDIT PLAYER
+     ------------------------------------------------------- */
+
+  window.openEditPlayerV4 = function(playerId) {
+    if (!requireAdmin4()) return;
+
+    const player = players.find(
+      p => String(p.id) === String(playerId)
+    );
+
+    if (!player) return;
+
+    const teamOptions = teams.map(team => `
+      <option
+        value="${esc4(team.id)}"
+        ${String(team.id) === String(player.team_id) ? "selected" : ""}
+      >
+        ${esc4(team.name)}
+      </option>
+    `).join("");
+
+    const html = `
+      <div class="crud-modal-grid">
+
+        <label>
+          Ime i prezime
+          <input
+            id="crudPlayerName"
+            type="text"
+            value="${esc4(player.name || "")}"
+          >
+        </label>
+
+        <label>
+          Ekipa
+          <select id="crudPlayerTeam">
+            ${teamOptions}
+          </select>
+        </label>
+
+        <label>
+          Broj dresa
+          <input
+            id="crudPlayerNumber"
+            type="number"
+            min="0"
+            value="${player.jersey_number ?? ""}"
+          >
+        </label>
+
+        <label>
+          Pozicija
+          <input
+            id="crudPlayerPosition"
+            type="text"
+            value="${esc4(player.position || "")}"
+            placeholder="npr. Pivot"
+          >
+        </label>
+
+        <label style="display:flex;align-items:center;gap:8px;">
+          <input
+            id="crudPlayerCaptain"
+            type="checkbox"
+            ${player.is_captain ? "checked" : ""}
+            style="width:auto;"
+          >
+          Kapiten
+        </label>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button
+            class="btn btn-small"
+            onclick="hideModal()"
+          >
+            Otkaži
+          </button>
+
+          <button
+            class="btn btn-green btn-small"
+            onclick="saveEditPlayerV4('${esc4(player.id)}')"
+          >
+            💾 Sačuvaj
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    if (typeof showModal === "function") {
+      showModal(
+        "✏️ Uredi igrača",
+        html
+      );
+    } else {
+      alert("Modal funkcija nije pronađena.");
+    }
+  };
+
+
+  window.saveEditPlayerV4 = async function(playerId) {
+    if (!requireAdmin4()) return;
+
+    const name =
+      document.getElementById("crudPlayerName")?.value.trim();
+
+    const team =
+      document.getElementById("crudPlayerTeam")?.value;
+
+    const numberValue =
+      document.getElementById("crudPlayerNumber")?.value;
+
+    const position =
+      document.getElementById("crudPlayerPosition")?.value || "";
+
+    const captain =
+      document.getElementById("crudPlayerCaptain")?.checked || false;
+
+    if (!name || !team) {
+      alert("Ime i ekipa su obavezni.");
+      return;
+    }
+
+    const jersey =
+      numberValue === ""
+        ? null
+        : Number(numberValue);
+
+    try {
+      await rpc4("update_player_admin", {
+        player_uuid: playerId,
+        new_name: name,
+        new_team_id: team,
+        new_jersey_number: jersey,
+        new_position: position,
+        new_is_captain: captain
+      });
+
+      if (typeof hideModal === "function") {
+        hideModal();
+      }
+
+      toast4("Igrač je izmijenjen.");
+      await loadAll();
+
+    } catch (error) {
+      alert(error.message || "Greška pri izmjeni igrača.");
+    }
+  };
+
+
+  /* -------------------------------------------------------
+     RENDER CRUD PANEL
+     ------------------------------------------------------- */
+
+  window.renderAdminCrudV4 = function() {
+    const adminContent =
+      document.getElementById("adminContent");
+
+    if (!adminContent) return;
+
+    const old =
+      document.getElementById("adminCrudV4");
+
+    if (old) old.remove();
+
+    if (!isAdmin()) return;
+
+    const card = document.createElement("div");
+
+    card.id = "adminCrudV4";
+    card.className = "card admin-crud-v4";
+
+    const matchesHtml = matches.length
+      ? matches.map(m => `
+        <div class="crud-item">
+          <div class="crud-main">
+
+            <div class="crud-info">
+              <div class="crud-name">
+                ${esc4(teamName(m.home_team_id))}
+                ${Number(m.home_score || 0)}
+                :
+                ${Number(m.away_score || 0)}
+                ${esc4(teamName(m.away_team_id))}
+              </div>
+
+              <div class="crud-meta">
+                ${esc4(formatDate(m.match_date))}
+                ·
+                ${esc4(m.status || "scheduled")}
+                ·
+                ${esc4(m.round ? "Kolo " + m.round : "Bez kola")}
+              </div>
+            </div>
+
+            <div class="crud-actions">
+
+              <button
+                class="btn btn-blue crud-small crud-edit"
+                onclick="openEditMatchV4('${esc4(m.id)}')"
+              >
+                ✏️ Uredi
+              </button>
+
+              <button
+                class="btn btn-red crud-small crud-danger"
+                onclick="adminDeleteMatch('${esc4(m.id)}')"
+              >
+                🗑️ Obriši
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+      `).join("")
+      : `<div class="crud-empty">Nema utakmica.</div>`;
+
+
+    const playersHtml = players.length
+      ? players.map(p => `
+        <div class="crud-item">
+          <div class="crud-main">
+
+            <div class="crud-info">
+              <div class="crud-name">
+                ${esc4(p.name)}
+                ${p.is_captain ? " 👑" : ""}
+              </div>
+
+              <div class="crud-meta">
+                ${esc4(teamName(p.team_id))}
+                ·
+                ${p.jersey_number != null
+                  ? "#" + esc4(p.jersey_number)
+                  : "Bez broja"}
+                ·
+                ${esc4(p.position || "Bez pozicije")}
+              </div>
+            </div>
+
+            <div class="crud-actions">
+
+              <button
+                class="btn btn-blue crud-small crud-edit"
+                onclick="openEditPlayerV4('${esc4(p.id)}')"
+              >
+                ✏️ Uredi
+              </button>
+
+              <button
+                class="btn btn-red crud-small crud-danger"
+                onclick="adminDeletePlayer('${esc4(p.id)}')"
+              >
+                🗑️ Obriši
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+      `).join("")
+      : `<div class="crud-empty">Nema igrača.</div>`;
+
+
+    const goalsHtml = goals.length
+      ? goals.map(g => {
+          const player =
+            players.find(
+              p => String(p.id) === String(g.player_id)
+            );
+
+          const match =
+            matches.find(
+              m => String(m.id) === String(g.match_id)
+            );
+
+          return `
+            <div class="crud-item">
+              <div class="crud-main">
+
+                <div class="crud-info">
+
+                  <div class="crud-name">
+                    ⚽ ${esc4(
+                      player?.name || "Nepoznat igrač"
+                    )}
+                  </div>
+
+                  <div class="crud-meta">
+                    ${match
+                      ? esc4(teamName(match.home_team_id))
+                        + " "
+                        + Number(match.home_score || 0)
+                        + " : "
+                        + Number(match.away_score || 0)
+                        + " "
+                        + esc4(teamName(match.away_team_id))
+                      : "Utakmica nije pronađena"
+                    }
+
+                    ${g.minute != null
+                      ? " · " + esc4(g.minute) + "'"
+                      : ""
+                    }
+                  </div>
+
+                </div>
+
+                <div class="crud-actions">
+                  <button
+                    class="btn btn-red crud-small crud-danger"
+                    onclick="adminDeleteGoal('${esc4(g.id)}')"
+                  >
+                    🗑️
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          `;
+        }).join("")
+      : `<div class="crud-empty">Nema golova.</div>`;
+
+
+    const cardsHtml = cards.length
+      ? cards.map(c => {
+          const player =
+            players.find(
+              p => String(p.id) === String(c.player_id)
+            );
+
+          return `
+            <div class="crud-item">
+              <div class="crud-main">
+
+                <div class="crud-info">
+
+                  <div class="crud-name">
+                    ${c.card_type === "red" ? "🟥" : "🟨"}
+                    ${esc4(
+                      player?.name || "Nepoznat igrač"
+                    )}
+                  </div>
+
+                  <div class="crud-meta">
+                    ${esc4(c.card_type || "")}
+                    ${c.minute != null
+                      ? " · " + esc4(c.minute) + "'"
+                      : ""
+                    }
+                  </div>
+
+                </div>
+
+                <div class="crud-actions">
+                  <button
+                    class="btn btn-red crud-small crud-danger"
+                    onclick="adminDeleteCard('${esc4(c.id)}')"
+                  >
+                    🗑️
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          `;
+        }).join("")
+      : `<div class="crud-empty">Nema kartona.</div>`;
+
+
+    const commentsHtml = comments.length
+      ? comments.map(c => `
+          <div class="crud-item">
+            <div class="crud-main">
+
+              <div class="crud-info">
+                <div class="crud-name">
+                  ${esc4(
+                    c.username ||
+                    c.user_name ||
+                    "Korisnik"
+                  )}
+                </div>
+
+                <div class="crud-meta">
+                  ${esc4(c.content || "")}
+                </div>
+              </div>
+
+              <div class="crud-actions">
+                <button
+                  class="btn btn-red crud-small crud-danger"
+                  onclick="adminDeleteCommentV4('${esc4(c.id)}')"
+                >
+                  🗑️
+                </button>
+              </div>
+
+            </div>
+          </div>
+        `).join("")
+      : `<div class="crud-empty">Nema komentara.</div>`;
+
+
+    const messagesHtml = messages.length
+      ? messages.map(m => `
+          <div class="crud-item">
+            <div class="crud-main">
+
+              <div class="crud-info">
+                <div class="crud-name">
+                  ${esc4(
+                    m.username ||
+                    m.user_name ||
+                    "Korisnik"
+                  )}
+                </div>
+
+                <div class="crud-meta">
+                  ${esc4(m.content || "")}
+                </div>
+              </div>
+
+              <div class="crud-actions">
+                <button
+                  class="btn btn-red crud-small crud-danger"
+                  onclick="adminDeleteMessageV4('${esc4(m.id)}')"
+                >
+                  🗑️
+                </button>
+              </div>
+
+            </div>
+          </div>
+        `).join("")
+      : `<div class="crud-empty">Nema chat poruka.</div>`;
+
+
+    const galleryHtml = gallery.length
+      ? gallery.map(g => `
+          <div class="crud-item">
+
+            <div class="crud-gallery-row">
+
+              ${
+                g.image_url
+                  ? `
+                    <img
+                      class="crud-thumb"
+                      src="${esc4(g.image_url)}"
+                      alt=""
+                    >
+                  `
+                  : ""
+              }
+
+              <div class="crud-info">
+
+                <div class="crud-name">
+                  ${esc4(
+                    g.title ||
+                    "Slika bez naslova"
+                  )}
+                </div>
+
+                <div class="crud-meta">
+                  ${esc4(g.description || "")}
+                </div>
+
+              </div>
+
+              <div class="crud-actions">
+                <button
+                  class="btn btn-red crud-small crud-danger"
+                  onclick="adminDeleteGalleryV4('${esc4(g.id)}')"
+                >
+                  🗑️
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+        `).join("")
+      : `<div class="crud-empty">Galerija je prazna.</div>`;
+
+
+    card.innerHTML = `
+      <h3>🛠️ Admin CRUD</h3>
+
+      <div class="muted" style="margin-bottom:16px;">
+        Upravljanje utakmicama, igračima, golovima,
+        kartonima, komentarima, chatom i galerijom.
+      </div>
+
+
+      <div class="crud-section">
+        <div class="crud-title">
+          <span>🏟️ Utakmice</span>
+          <span class="muted">${matches.length}</span>
+        </div>
+
+        <div class="crud-list">
+          ${matchesHtml}
+        </div>
+      </div>
+
+
+      <div class="crud-section">
+        <div class="crud-title">
+          <span>👤 Igrači</span>
+          <span class="muted">${players.length}</span>
+        </div>
+
+        <div class="crud-list">
+          ${playersHtml}
+        </div>
+      </div>
+
+
+      <div class="crud-section">
+        <div class="crud-title">
+          <span>⚽ Golovi</span>
+          <span class="muted">${goals.length}</span>
+        </div>
+
+        <div class="crud-list">
+          ${goalsHtml}
+        </div>
+      </div>
+
+
+      <div class="crud-section">
+        <div class="crud-title">
+          <span>🟨 Kartoni</span>
+          <span class="muted">${cards.length}</span>
+        </div>
+
+        <div class="crud-list">
+          ${cardsHtml}
+        </div>
+      </div>
+
+
+      <div class="crud-section">
+        <div class="crud-title">
+          <span>💬 Komentari</span>
+          <span class="muted">${comments.length}</span>
+        </div>
+
+        <div class="crud-list">
+          ${commentsHtml}
+        </div>
+      </div>
+
+
+      <div class="crud-section">
+        <div class="crud-title">
+          <span>💬 Chat</span>
+          <span class="muted">${messages.length}</span>
+        </div>
+
+        <div class="crud-list">
+          ${messagesHtml}
+        </div>
+      </div>
+
+
+      <div class="crud-section">
+        <div class="crud-title">
+          <span>🖼️ Galerija</span>
+          <span class="muted">${gallery.length}</span>
+        </div>
+
+        <div class="crud-list">
+          ${galleryHtml}
+        </div>
+      </div>
+    `;
+
+    adminContent.appendChild(card);
+  };
+
+
+  /* -------------------------------------------------------
+     AUTOMATSKO OSVJEŽAVANJE ADMIN PANELA
+     ------------------------------------------------------- */
+
+  const originalUpdateAuthUI =
+    window.updateAuthUI;
+
+  if (typeof originalUpdateAuthUI === "function") {
+    window.updateAuthUI = function(...args) {
+      const result =
+        originalUpdateAuthUI.apply(this, args);
+
+      setTimeout(() => {
+        try {
+          renderAdminCrudV4();
+        } catch (error) {
+          console.error("Admin CRUD render:", error);
+        }
+      }, 0);
+
+      return result;
+    };
+  }
+
+
+  const originalLoadAll =
+    window.loadAll;
+
+  if (typeof originalLoadAll === "function") {
+    window.loadAll = async function(...args) {
+      const result =
+        await originalLoadAll.apply(this, args);
+
+      setTimeout(() => {
+        try {
+          renderAdminCrudV4();
+        } catch (error) {
+          console.error("Admin CRUD render:", error);
+        }
+      }, 0);
+
+      return result;
+    };
+  }
+
+
+  /* -------------------------------------------------------
+     PRVI RENDER
+     ------------------------------------------------------- */
+
+  setTimeout(() => {
+    try {
+      renderAdminCrudV4();
+    } catch (error) {
+      console.error("Admin CRUD initial render:", error);
+    }
+  }, 1200);
+
+})();
+</script>
 </body>
 </html>
