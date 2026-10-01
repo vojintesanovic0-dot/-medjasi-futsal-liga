@@ -1549,6 +1549,97 @@ tbody tr:hover{
  input,textarea,select{font-size:16px;min-height:44px}
 }
 
+
+/* ===== FINAL SPORTS REDESIGN ===== */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
+  opacity:.22;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:42px 42px;
+}
+header{box-shadow:0 10px 35px rgba(0,0,0,.18)}
+.logo-ball{position:relative;overflow:hidden}
+.logo-ball::after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.2),transparent 65%);transform:translateX(-80%) rotate(15deg);animation:logoShine 5s infinite}
+@keyframes logoShine{0%,65%{transform:translateX(-80%) rotate(15deg)}85%,100%{transform:translateX(80%) rotate(15deg)}}
+.hero{position:relative;overflow:hidden;border-radius:30px;margin-top:12px;padding:58px 34px;background:radial-gradient(circle at 80% 40%,rgba(32,212,123,.13),transparent 30%),linear-gradient(135deg,rgba(255,255,255,.025),transparent 60%)}
+.hero::after{content:"⚽";position:absolute;right:-45px;bottom:-80px;font-size:290px;opacity:.035;transform:rotate(-18deg);pointer-events:none}
+.hero-content h1{text-shadow:0 10px 40px rgba(0,0,0,.3)}
+.hero-card{border-color:rgba(32,212,123,.16);min-height:270px;display:grid;place-items:center}
+.hero-ball{animation:ballFloat 4s ease-in-out infinite}
+@keyframes ballFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-9px) rotate(4deg)}}
+.card{box-shadow:0 12px 35px rgba(0,0,0,.12);transition:transform .2s,border-color .2s,box-shadow .2s}
+.card:hover{border-color:rgba(255,255,255,.13)}
+.stat{position:relative;overflow:hidden}
+.stat::after{content:"";position:absolute;right:-22px;bottom:-28px;width:90px;height:90px;border-radius:50%;background:rgba(32,212,123,.055)}
+.stat-number{color:#fff}
+.section-title{letter-spacing:-.5px}
+.section-title::after{content:"";display:block;width:42px;height:3px;margin-top:8px;border-radius:4px;background:linear-gradient(90deg,var(--green),transparent)}
+.match-row{box-shadow:0 9px 28px rgba(0,0,0,.1)}
+.match-row:has(.status.live){border-color:rgba(255,77,93,.3);box-shadow:0 0 0 1px rgba(255,77,93,.06),0 12px 35px rgba(255,77,93,.07)}
+.status.live{animation:livePulse 1.6s infinite}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,77,93,.25)}50%{box-shadow:0 0 0 6px rgba(255,77,93,0)}}
+.score{letter-spacing:1px}
+.team-logo,.team-mini-logo,.player-photo{border:1px solid rgba(255,255,255,.07)}
+.rank-row{transition:.18s;cursor:default}
+.rank-row:hover{background:rgba(32,212,123,.045)}
+.music-card{background:linear-gradient(135deg,rgba(32,212,123,.07),rgba(44,156,255,.045)),var(--card)}
+.music-player{border:1px solid rgba(255,255,255,.08);box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.music-player iframe{height:170px}
+.music-live-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(32,212,123,.1);color:var(--green);font-size:11px;font-weight:900}
+.music-live-badge::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px rgba(32,212,123,.08)}
+.admin-music-card{background:linear-gradient(135deg,rgba(32,212,123,.07),rgba(44,156,255,.04)),var(--card)}
+.moderator-panel,.comment-media{box-shadow:0 10px 28px rgba(0,0,0,.12)}
+.table-wrap{box-shadow:0 12px 30px rgba(0,0,0,.12)}
+@media(max-width:700px){
+  main{padding-left:12px;padding-right:12px}
+  .hero{padding:35px 18px;margin-top:8px;border-radius:22px;min-height:auto}
+  .hero-content h1{letter-spacing:-2px}
+  .hero-card{min-height:190px;padding:18px}
+  .hero-ball{font-size:75px}
+  .section{padding-top:18px}
+  .card{border-radius:15px;padding:15px}
+  .stat-grid{gap:9px}
+  .stat{padding:14px 8px}
+  .stat-number{font-size:25px}
+  .match-row{padding:13px;border-radius:14px}
+  .team-logo{width:46px;height:46px}
+  .score{font-size:25px}
+  .music-player iframe{height:150px}
+  .section-title{font-size:23px}
+}
+
+
+/* FINAL VISUAL POLISH */
+:root{--accent:#20d47b;--accent-soft:rgba(32,212,123,.12)}
+body{background:radial-gradient(circle at 10% -5%,rgba(32,212,123,.16),transparent 28%),radial-gradient(circle at 95% 8%,rgba(44,156,255,.12),transparent 26%),linear-gradient(180deg,#06101b 0%,#071522 45%,#06101b 100%)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.035;background-image:linear-gradient(rgba(255,255,255,.8) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.8) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,black,transparent 78%);z-index:-1}
+header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
+.logo-ball{box-shadow:0 0 0 5px rgba(32,212,123,.05),0 10px 30px rgba(32,212,123,.22)}
+.hero{position:relative;min-height:470px;margin-top:14px;padding:65px 38px;overflow:hidden;border:1px solid rgba(255,255,255,.08);border-radius:32px;background:radial-gradient(circle at 78% 35%,rgba(32,212,123,.16),transparent 24%),radial-gradient(circle at 92% 90%,rgba(44,156,255,.12),transparent 26%),linear-gradient(135deg,rgba(255,255,255,.045),rgba(255,255,255,.012));box-shadow:0 25px 70px rgba(0,0,0,.22)}
+.hero::before{content:"";position:absolute;width:420px;height:420px;right:-150px;top:-160px;border:1px solid rgba(32,212,123,.12);border-radius:50%;box-shadow:0 0 0 45px rgba(32,212,123,.025),0 0 0 90px rgba(32,212,123,.015)}
+.hero::after{content:"⚽";position:absolute;right:-45px;bottom:-90px;font-size:310px;opacity:.035;transform:rotate(-18deg);pointer-events:none}
+.hero-content,.hero-card{position:relative;z-index:1}
+.hero-kicker{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;margin-bottom:18px;border:1px solid rgba(32,212,123,.2);border-radius:999px;background:rgba(32,212,123,.07);color:#79efb2;font-size:11px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}
+.hero-kicker::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
+.hero-content h1{text-shadow:0 15px 50px rgba(0,0,0,.35)}
+.hero-card{min-height:300px;border-color:rgba(32,212,123,.18);background:linear-gradient(145deg,rgba(32,212,123,.10),rgba(44,156,255,.05)),rgba(10,23,36,.82);backdrop-filter:blur(14px)}
+.hero-ball{filter:drop-shadow(0 20px 35px rgba(32,212,123,.18));animation:ballFloat 4s ease-in-out infinite}
+@keyframes ballFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-8px) rotate(4deg)}}
+.card{background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012)),rgba(10,23,36,.86);border-color:rgba(255,255,255,.075);box-shadow:0 12px 35px rgba(0,0,0,.10)}
+.stat{position:relative;overflow:hidden;padding:18px 16px}.stat::after{content:"";position:absolute;right:-28px;bottom:-32px;width:90px;height:90px;border-radius:50%;background:var(--accent-soft)}.stat-number,.stat-label{position:relative;z-index:1}.stat-label{text-transform:uppercase;letter-spacing:.7px;font-size:10px;font-weight:800}
+.section-title{display:flex;align-items:center;gap:10px;letter-spacing:-.7px}.section-title::after{content:"";width:48px;height:3px;margin-left:2px;border-radius:4px;background:linear-gradient(90deg,var(--green),transparent)}
+.match-row{background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012)),rgba(10,23,36,.86);border-color:rgba(255,255,255,.075)}.match-row:hover{border-color:rgba(32,212,123,.35);box-shadow:0 12px 30px rgba(0,0,0,.16)}
+.status.live{animation:livePulse 1.5s ease-in-out infinite}@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,77,93,.15)}50%{box-shadow:0 0 0 7px rgba(255,77,93,0)}}
+.music-card{position:relative;overflow:hidden}.music-card::before{content:"";position:absolute;left:0;top:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--green),#2c9cff,transparent)}
+.music-player{border:1px solid rgba(255,255,255,.07);box-shadow:inset 0 0 35px rgba(0,0,0,.3)}
+.filters input,.filters select{background:rgba(5,15,24,.82)}
+.btn{box-shadow:0 5px 15px rgba(0,0,0,.10)}.btn-green{box-shadow:0 8px 22px rgba(32,212,123,.16)}
+.mobile-bottom{backdrop-filter:blur(16px);background:rgba(5,13,22,.92)!important;border-top-color:rgba(255,255,255,.08)!important}
+@media(max-width:700px){main{padding-left:12px;padding-right:12px}.hero{margin-top:8px;padding:34px 18px;border-radius:24px}.hero::after{font-size:190px;right:-35px;bottom:-55px}.hero-kicker{font-size:9px}.hero-content p{font-size:14px}.hero-buttons .btn{flex:1;min-width:145px}.stat-grid{gap:9px}.stat{padding:15px 8px}.stat-number{font-size:27px}.section{padding-top:20px}.section-title{font-size:21px}}
 </style>
 </head>
 
@@ -1561,7 +1652,7 @@ tbody tr:hover{
       <div class="logo-ball">⚽</div>
       <div>
         <span>Medjaši Futsal Liga</span>
-        <small>Official league hub</small>
+        <small>Zvanična stranica lige</small>
       </div>
     </div>
 
@@ -1608,6 +1699,8 @@ tbody tr:hover{
 
     <div class="hero-content">
 
+      <div class="hero-kicker">Zvanična stranica lige</div>
+
       <h1>
         Medjaši<br>
         <span>Futsal Liga</span>
@@ -1635,10 +1728,13 @@ tbody tr:hover{
     <div class="hero-card">
       <div class="hero-ball">⚽</div>
       <div style="text-align:center">
-        <strong>MEDJAŠI FUTSAL</strong>
-        <p class="muted" style="margin-top:5px">
-          Rezultati • Liga • Futsal
-        </p>
+        <strong style="font-size:20px;letter-spacing:.4px">MEDJAŠI FUTSAL</strong>
+        <p class="muted" style="margin-top:7px">Rezultati • Liga • Futsal</p>
+        <div style="margin-top:15px;display:flex;justify-content:center;gap:7px;flex-wrap:wrap">
+          <span class="badge">LIVE</span>
+          <span class="badge">TABELA</span>
+          <span class="badge">STATISTIKA</span>
+        </div>
       </div>
     </div>
 
@@ -1665,7 +1761,7 @@ tbody tr:hover{
     <h3>🎵 Liga muzika</h3>
 
     <p class="muted" style="margin:5px 0 12px">
-      Muzika može automatski krenuti kada posjetilac otvori stranicu.
+      Admin bira trenutnu muziku lige. Na telefonu browser može tražiti da posjetilac pritisne Play.
     </p>
 
     <div id="musicPlayerWrap" class="music-player"></div>
@@ -2312,7 +2408,7 @@ tbody tr:hover{
 <div class="card" style="margin-top:20px;">
   <h3>🎵 Muzika stranice</h3>
   <p class="muted">
-    Postavi YouTube pjesmu koju će stranica koristiti za posjetioce.
+    Admin bira muziku lige. Kada je uključiš, ista pjesma postaje aktivna na stranici za sve posjetioce.
   </p>
 
   <input
@@ -2327,11 +2423,11 @@ tbody tr:hover{
     </button>
 
     <button class="btn btn-green" onclick="adminPlayMusic()">
-      ▶️ Pokreni
+      ▶️ Pusti na stranici
     </button>
 
     <button class="btn btn-red" onclick="adminStopMusic()">
-      ⏹️ Zaustavi
+      ⏹️ Zaustavi na stranici
     </button>
   </div>
 
@@ -2341,20 +2437,9 @@ tbody tr:hover{
   </label>
 
   <p id="musicAdminStatus" class="muted" style="margin-top:10px;"></p>
+  <div class="music-live-badge" style="margin-top:10px">🎵 Admin upravlja trenutnom muzikom lige</div>
 </div>
-  <iframe
-  id="youtubeMusicFrame"
-  width="1"
-  height="1"
-  style="
-    position:absolute;
-    left:-9999px;
-    border:0;
-    opacity:0;
-    pointer-events:none;
-  "
-  allow="autoplay; encrypted-media">
-</iframe>
+
 </section>
 
 </main>
@@ -2436,16 +2521,6 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
 "sb_publishable_MVCdydxN-3CMuHpp8a5Nqg_aw5ZPDjH";
 
-
-/*
-  OVDJE UPISI ID YOUTUBE VIDEA.
-
-  Primjer:
-  const YOUTUBE_MUSIC_ID = "dQw4w9WgXcQ";
-
-  Ako ostaviš prazno, muzika je isključena.
-*/
-const YOUTUBE_MUSIC_ID = "";
 
 
 const supabaseClient =
@@ -3342,120 +3417,51 @@ function renderAll(){
 ========================================================= */
 
 function initMusic(){
-
-  const wrap =
-    document.getElementById("musicPlayerWrap");
-
-  const hint =
-    document.getElementById("musicHint");
-
-  const btn =
-    document.getElementById("musicUnmute");
-
-
+  const wrap=document.getElementById("musicPlayerWrap");
+  const hint=document.getElementById("musicHint");
+  const btn=document.getElementById("musicUnmute");
   if(!wrap) return;
 
+  const videoId=musicSettings?.youtube_music_id || "";
+  const enabled=!!musicSettings?.youtube_music_enabled;
 
-  if(!YOUTUBE_MUSIC_ID){
-
-    if(!musicInitialized){
-
-      wrap.innerHTML = `
-        <div class="music-placeholder">
-          🎵 Dodaj YouTube ID u
-          <code>YOUTUBE_MUSIC_ID</code>
-          u kodu da aktiviraš muziku.
-        </div>
-      `;
-
-      musicInitialized = true;
-    }
-
-
-    if(hint){
-      hint.textContent =
-        "Autoplay sa zvukom zavisi od pravila browsera.";
-    }
-
-
-    if(btn){
-      btn.style.display = "none";
-    }
-
+  if(!enabled || !videoId){
+    wrap.innerHTML=`<div class="music-placeholder">
+      <div>
+        <span style="font-size:28px">🎵</span><br>
+        Trenutno nema aktivne muzike lige.
+      </div>
+    </div>`;
+    if(hint) hint.textContent="Admin može uključiti pjesmu iz Admin panela.";
+    if(btn) btn.style.display="none";
     return;
   }
 
-
-  /*
-    VAŽNO:
-    Ne pravimo iframe ponovo na svakih 30 sekundi.
-    Time muzika ne kreće ispočetka prilikom osvježavanja podataka.
-  */
-
   if(!document.getElementById("ytMusic")){
-
-    wrap.innerHTML = `
-      <iframe
-        id="ytMusic"
-        src="https://www.youtube.com/embed/${encodeURIComponent(YOUTUBE_MUSIC_ID)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(YOUTUBE_MUSIC_ID)}&playsinline=1"
-        title="Liga muzika"
-        allow="autoplay; encrypted-media"
-        allowfullscreen>
-      </iframe>
-    `;
+    wrap.innerHTML=`<iframe id="ytMusic"
+      src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?controls=1&rel=0&playsinline=1&modestbranding=1"
+      title="Zvanična muzika lige"
+      allow="autoplay; encrypted-media"
+      allowfullscreen></iframe>`;
+  } else if(currentMusicId!==videoId){
+    document.getElementById("ytMusic").src=
+      `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?controls=1&rel=0&playsinline=1&modestbranding=1`;
   }
 
-
-  if(hint){
-
-    hint.textContent =
-      "Muzika se pokušava automatski pokrenuti. Browser može zahtijevati da ručno uključiš zvuk.";
-  }
-
-
-  if(btn){
-    btn.style.display =
-      "inline-flex";
-  }
+  if(hint) hint.innerHTML='<span class="music-live-badge">AKTIVNA MUZIKA LIGE</span> &nbsp; Pritisni Play ako browser blokira automatsko pokretanje.';
+  if(btn) btn.style.display="inline-flex";
 }
 
 
 function unmuteMusic(){
-
-  const frame =
-    document.getElementById("ytMusic");
-
-  if(!frame) return;
-
-
-  frame.src =
-    `https://www.youtube.com/embed/${encodeURIComponent(YOUTUBE_MUSIC_ID)}?autoplay=1&mute=0&loop=1&playlist=${encodeURIComponent(YOUTUBE_MUSIC_ID)}&playsinline=1`;
-
-
-  const btn =
-    document.getElementById("musicUnmute");
-
-
-  if(btn){
-    btn.textContent =
-      "🔊 Zvuk uključen";
-  }
-
-
-  const hint =
-    document.getElementById("musicHint");
-
-
-  if(hint){
-    hint.textContent =
-      "Muzika je uključena.";
-  }
+  const videoId=musicSettings?.youtube_music_id;
+  const frame=document.getElementById("ytMusic");
+  if(!frame || !videoId) return;
+  frame.src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&modestbranding=1`;
+  const btn=document.getElementById("musicUnmute");
+  if(btn) btn.textContent="🔊 Zvuk uključen";
 }
 
-
-/* =========================================================
-   ANNOUNCEMENT
-========================================================= */
 
 function renderAnnouncement(){
 
@@ -9186,6 +9192,7 @@ function subscribeRealtime(){
 async function init(){
 
   await checkAuth();
+  await loadMusicSettings();
 
   await loadAll();
 
@@ -9315,14 +9322,7 @@ async function loadMusicSettings() {
 
   renderMusicAdmin();
 
-  if (
-    musicSettings.youtube_music_enabled &&
-    musicSettings.youtube_music_id
-  ) {
-    loadGlobalYoutubeMusic(true);
-  } else {
-    stopGlobalYoutubeMusic();
-  }
+  initMusic();
 }
 
 
@@ -9397,8 +9397,7 @@ async function saveMusicSettings() {
       .from("site_settings")
       .update({
         youtube_music_id: videoId,
-        youtube_music_enabled: checkbox.checked,
-        updated_at: new Date().toISOString()
+        youtube_music_enabled: checkbox.checked
       })
       .eq("id", 1);
 
@@ -9426,7 +9425,7 @@ async function saveMusicSettings() {
       "✅ Pjesma je sačuvana.";
   }
 
-  loadGlobalYoutubeMusic(true);
+  initMusic();
 
   toast(
     "YouTube pjesma je sačuvana.",
@@ -9475,8 +9474,7 @@ async function adminPlayMusic() {
       .from("site_settings")
       .update({
         youtube_music_id: videoId,
-        youtube_music_enabled: true,
-        updated_at: new Date().toISOString()
+        youtube_music_enabled: true
       })
       .eq("id", 1);
 
@@ -9513,10 +9511,10 @@ async function adminPlayMusic() {
       "▶️ Muzika je uključena.";
   }
 
-  loadGlobalYoutubeMusic(true);
+  initMusic();
 
   toast(
-    "Muzika je pokrenuta.",
+    "Muzika je aktivna na stranici.",
     "success"
   );
 }
@@ -9537,8 +9535,7 @@ async function adminStopMusic() {
     await supabaseClient
       .from("site_settings")
       .update({
-        youtube_music_enabled: false,
-        updated_at: new Date().toISOString()
+        youtube_music_enabled: false
       })
       .eq("id", 1);
 
@@ -9566,7 +9563,7 @@ async function adminStopMusic() {
     checkbox.checked = false;
   }
 
-  stopGlobalYoutubeMusic();
+  initMusic();
 
   const status =
     document.getElementById(
@@ -9583,94 +9580,6 @@ async function adminStopMusic() {
     "success"
   );
 }
-
-
-/* -----------------------------------------
-   POKRENI YOUTUBE PLAYER
------------------------------------------ */
-
-function loadGlobalYoutubeMusic(force = false) {
-
-  const frame =
-    document.getElementById(
-      "youtubeMusicFrame"
-    );
-
-  if (!frame) {
-    console.warn(
-      "youtubeMusicFrame nije pronađen."
-    );
-    return;
-  }
-
-  const videoId =
-    musicSettings.youtube_music_id;
-
-  if (
-    !musicSettings.youtube_music_enabled ||
-    !videoId
-  ) {
-
-    stopGlobalYoutubeMusic();
-    return;
-  }
-
-  if (
-    !force &&
-    currentMusicId === videoId &&
-    frame.src
-  ) {
-    return;
-  }
-
-  currentMusicId =
-    videoId;
-
-  frame.src =
-    "https://www.youtube.com/embed/" +
-    encodeURIComponent(videoId) +
-    "?autoplay=1" +
-    "&loop=1" +
-    "&playlist=" +
-    encodeURIComponent(videoId) +
-    "&controls=1" +
-    "&rel=0" +
-    "&playsinline=1" +
-    "&mute=1";
-}
-
-
-/* -----------------------------------------
-   ZAUSTAVI PLAYER
------------------------------------------ */
-
-function stopGlobalYoutubeMusic() {
-
-  const frame =
-    document.getElementById(
-      "youtubeMusicFrame"
-    );
-
-  if (frame) {
-    frame.src = "";
-  }
-
-  currentMusicId = "";
-}
-
-
-/* -----------------------------------------
-   UČITAJ MUZIKU KAD SE STRANICA OTVORI
------------------------------------------ */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  function () {
-
-    loadMusicSettings();
-
-  }
-);
 
 
 /* =========================================================
@@ -9852,81 +9761,17 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 
 
-/* =========================================================
-   YOUTUBE V2
-   Mobilni browseri ne dozvoljavaju pouzdan autoplay zvuka.
-   Zato je player vidljiv i korisnik može pritisnuti Play.
-========================================================= */
-
-function ensureMusicPlayerUI(){
-  const frame=document.getElementById("youtubeMusicFrame");
-  if(!frame) return null;
-
-  let box=document.getElementById("siteMusicPlayer");
-  if(!box){
-    box=document.createElement("div");
-    box.id="siteMusicPlayer";
-    box.className="site-music-player";
-    box.innerHTML=`
-      <div class="site-music-info">
-        <span class="site-music-icon">🎵</span>
-        <div>
-          <strong>Zvanična muzika lige</strong>
-          <small id="siteMusicStatus">Pritisni Play za pokretanje</small>
-        </div>
-      </div>
-    `;
-    frame.parentNode.insertBefore(box,frame);
-    box.appendChild(frame);
-  }
-
-  frame.style.position="static";
-  frame.style.left="auto";
-  frame.style.width="100%";
-  frame.style.height="90px";
-  frame.style.opacity="1";
-  frame.style.pointerEvents="auto";
-  frame.style.display="block";
-
-  return box;
+function loadGlobalYoutubeMusic(force=false){
+  initMusic();
 }
 
-loadGlobalYoutubeMusic=function(force=false){
-  const frame=document.getElementById("youtubeMusicFrame");
-  if(!frame) return;
-
-  const videoId=musicSettings.youtube_music_id;
-
-  if(!musicSettings.youtube_music_enabled || !videoId){
-    stopGlobalYoutubeMusic();
-    return;
-  }
-
-  const box=ensureMusicPlayerUI();
-  if(box) box.classList.remove("hidden");
-
-  if(!force && currentMusicId===videoId && frame.src) return;
-
-  currentMusicId=videoId;
-
-  frame.src=
-    "https://www.youtube-nocookie.com/embed/"+
-    encodeURIComponent(videoId)+
-    "?controls=1"+
-    "&rel=0"+
-    "&playsinline=1"+
-    "&modestbranding=1";
-};
-
-stopGlobalYoutubeMusic=function(){
-  const frame=document.getElementById("youtubeMusicFrame");
-  const box=document.getElementById("siteMusicPlayer");
-
+function stopGlobalYoutubeMusic(){
+  const frame=document.getElementById("ytMusic");
   if(frame) frame.src="";
-  if(box) box.classList.add("hidden");
-
   currentMusicId="";
-};
+  initMusic();
+}
+
 
 </script>
 
