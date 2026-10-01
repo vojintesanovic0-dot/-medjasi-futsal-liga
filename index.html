@@ -1490,36 +1490,11 @@ tbody tr:hover{
     margin-top:5px;
   }
 }
-  @media (max-width: 700px) {
-  #mainNav {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-    overflow-x: visible !important;
-    height: auto !important;
-  }
-
-  #mainNav button {
-    display: block !important;
-    flex: 0 0 auto !important;
-    white-space: nowrap !important;
-  }
-
-  #loginNav,
-  #logoutNav,
-  #adminNav {
-    display: block !important;
-  }
-
-  #loginNav.hidden,
-  #logoutNav.hidden,
-  #adminNav.hidden {
-    display: none !important;
-  }
-}
 
 /* ===== MOBILE V2 ===== */
 .mobile-menu-btn{display:none;border:1px solid var(--border);background:rgba(255,255,255,.06);color:#fff;width:42px;height:42px;border-radius:12px;font-size:20px;align-items:center;justify-content:center}
+.mobile-nav-account{display:none;padding:10px 12px 9px;margin:0 0 4px;border-bottom:1px solid var(--border)}
+.mobile-nav-account strong,.mobile-nav-account small{display:block}.mobile-nav-account strong{font-size:13px;color:#fff}.mobile-nav-account small{font-size:10px;color:var(--muted);margin-top:3px}
 .moderator-management{margin-bottom:20px}
 .moderator-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:15px}
 .moderator-users{display:grid;gap:8px}
@@ -1535,6 +1510,7 @@ tbody tr:hover{
  .mobile-menu-btn{display:flex}
  #mainNav{display:none!important;position:absolute;top:64px;left:10px;right:10px;padding:8px;border:1px solid var(--border);border-radius:15px;background:rgba(7,18,29,.98);box-shadow:0 18px 45px rgba(0,0,0,.35);flex-direction:column!important;align-items:stretch!important;z-index:120}
  #mainNav.mobile-open{display:flex!important}
+  #mainNav.mobile-open .mobile-nav-account{display:block}
  #mainNav button{width:100%;text-align:left;min-height:44px;padding:11px 13px}
  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
  .filters{grid-template-columns:1fr}
@@ -1656,9 +1632,10 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
       </div>
     </div>
 
-    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Otvori meni">☰</button>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Otvori meni" aria-expanded="false">☰</button>
 
     <nav id="mainNav">
+      <div class="mobile-nav-account" id="mobileNavAccount"><strong>👤 Gost</strong><small>Prijavi se za komentare i chat</small></div>
       <button onclick="showSection('home')" class="active">Početna</button>
       <button onclick="showSection('table')">Tabela</button>
       <button onclick="showSection('matches')">Utakmice</button>
@@ -2553,6 +2530,10 @@ let musicInitialized = false;
 let selectedCommentImage = null;
 let mobileMenuOpen = false;
 
+let musicSettings={youtube_music_id:"",youtube_music_enabled:false};
+let currentMusicId="";
+let musicUserStarted=false;
+
 
 /* =========================================================
    HELPERS
@@ -3209,6 +3190,14 @@ function updateAuthUI(){
     ?.classList
     .toggle("hidden",!isAdmin());
 
+  const mobileAccount=document.getElementById("mobileNavAccount");
+  if(mobileAccount){
+    const username=currentProfile?.username || currentUser?.user_metadata?.username || "Korisnik";
+    mobileAccount.innerHTML=logged
+      ? `<strong>👤 ${esc(username)}</strong><small>Prijavljen nalog</small>`
+      : `<strong>👤 Gost</strong><small>Prijavi se za komentare i chat</small>`;
+  }
+
 
   document
     .getElementById("commentForm")
@@ -3426,38 +3415,34 @@ function initMusic(){
   const enabled=!!musicSettings?.youtube_music_enabled;
 
   if(!enabled || !videoId){
-    wrap.innerHTML=`<div class="music-placeholder">
-      <div>
-        <span style="font-size:28px">🎵</span><br>
-        Trenutno nema aktivne muzike lige.
-      </div>
-    </div>`;
+    wrap.innerHTML=`<div class="music-placeholder"><div><span style="font-size:28px">🎵</span><br>Trenutno nema aktivne muzike lige.</div></div>`;
+    currentMusicId="";
+    musicUserStarted=false;
     if(hint) hint.textContent="Admin može uključiti pjesmu iz Admin panela.";
     if(btn) btn.style.display="none";
     return;
   }
 
-  if(!document.getElementById("ytMusic")){
-    wrap.innerHTML=`<iframe id="ytMusic"
-      src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?controls=1&rel=0&playsinline=1&modestbranding=1"
-      title="Zvanična muzika lige"
-      allow="autoplay; encrypted-media"
-      allowfullscreen></iframe>`;
-  } else if(currentMusicId!==videoId){
-    document.getElementById("ytMusic").src=
-      `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?controls=1&rel=0&playsinline=1&modestbranding=1`;
+  const base=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`;
+  const params=`?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&modestbranding=1`;
+  let frame=document.getElementById("ytMusic");
+
+  if(!frame || currentMusicId!==videoId){
+    wrap.innerHTML=`<iframe id="ytMusic" src="${base}${params}" title="Zvanična muzika lige" loading="lazy" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    currentMusicId=videoId;
+    musicUserStarted=false;
   }
 
-  if(hint) hint.innerHTML='<span class="music-live-badge">AKTIVNA MUZIKA LIGE</span> &nbsp; Pritisni Play ako browser blokira automatsko pokretanje.';
-  if(btn) btn.style.display="inline-flex";
+  if(hint) hint.innerHTML='<span class="music-live-badge">AKTIVNA MUZIKA LIGE</span> &nbsp; Ako nema zvuka, pritisni dugme.';
+  if(btn){btn.style.display="inline-flex";btn.textContent=musicUserStarted ? "🔊 Zvuk uključen" : "🔊 Uključi zvuk";}
 }
-
 
 function unmuteMusic(){
   const videoId=musicSettings?.youtube_music_id;
   const frame=document.getElementById("ytMusic");
   if(!frame || !videoId) return;
   frame.src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&modestbranding=1`;
+  musicUserStarted=true;
   const btn=document.getElementById("musicUnmute");
   if(btn) btn.textContent="🔊 Zvuk uključen";
 }
@@ -9173,6 +9158,13 @@ function subscribeRealtime(){
         )
 
 
+        .on(
+          "postgres_changes",
+          {event:"*",schema:"public",table:"site_settings"},
+          () => loadMusicSettings()
+        )
+
+
         .subscribe();
 
   }catch(error){
@@ -9220,6 +9212,7 @@ async function init(){
     async()=>{
 
       await loadAll();
+      await loadMusicSettings();
 
     },
     30000
@@ -9256,13 +9249,6 @@ init();
   /* =========================================
    GLOBALNA YOUTUBE MUZIKA
 ========================================= */
-
-let musicSettings = {
-  youtube_music_id: "",
-  youtube_music_enabled: false
-};
-
-let currentMusicId = "";
 
 
 /* -----------------------------------------
@@ -9591,7 +9577,7 @@ function toggleMobileMenu(){
   const nav=document.getElementById("mainNav");
   const btn=document.getElementById("mobileMenuBtn");
   nav?.classList.toggle("mobile-open",mobileMenuOpen);
-  if(btn) btn.textContent=mobileMenuOpen ? "✕" : "☰";
+  if(btn){btn.textContent=mobileMenuOpen ? "✕" : "☰";btn.setAttribute("aria-expanded",String(mobileMenuOpen));}
 }
 
 function setupCommentImageUI(){
@@ -9701,9 +9687,10 @@ async function changeUserRole(userId,role){
   if(!["user","moderator","admin"].includes(role)) return;
 
   const {error}=await supabaseClient
-    .from("profiles")
-    .update({role})
-    .eq("id",userId);
+    .rpc("admin_set_user_role",{
+      target_user_id:userId,
+      new_role:role
+    });
 
   if(error){
     alert(error.message);
@@ -9753,7 +9740,7 @@ showSection=function(id){
   mobileMenuOpen=false;
   document.getElementById("mainNav")?.classList.remove("mobile-open");
   const btn=document.getElementById("mobileMenuBtn");
-  if(btn) btn.textContent="☰";
+  if(btn){btn.textContent="☰";btn.setAttribute("aria-expanded","false");}
 };
 
 document.addEventListener("DOMContentLoaded",()=>{
@@ -9761,16 +9748,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 
 
-function loadGlobalYoutubeMusic(force=false){
-  initMusic();
-}
-
-function stopGlobalYoutubeMusic(){
-  const frame=document.getElementById("ytMusic");
-  if(frame) frame.src="";
-  currentMusicId="";
-  initMusic();
-}
 
 
 </script>
