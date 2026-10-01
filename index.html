@@ -2070,6 +2070,28 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 .section-title:before{content:"";width:5px;height:28px;border-radius:99px;background:linear-gradient(180deg,#25e487,#1598ff);box-shadow:0 0 18px rgba(37,228,135,.2)}
 .card:hover{border-color:rgba(37,228,135,.13)}
 
+
+/* MOBILE MORE DRAWER */
+.mobile-more-drawer{display:none}
+@media(max-width:780px){
+  .mobile-more-drawer{position:fixed;inset:0;z-index:900;display:block;pointer-events:none;visibility:hidden}
+  .mobile-more-drawer.open{pointer-events:auto;visibility:visible}
+  .mobile-more-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.68);backdrop-filter:blur(5px);opacity:0;transition:.25s}
+  .mobile-more-panel{position:absolute;left:0;right:0;bottom:0;padding:18px 15px calc(18px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#0b1a29,#06101b);border:1px solid rgba(255,255,255,.09);border-bottom:0;border-radius:26px 26px 0 0;box-shadow:0 -25px 70px rgba(0,0,0,.55);transform:translateY(105%);transition:.28s cubic-bezier(.2,.8,.2,1);max-height:82vh;overflow:auto}
+  .mobile-more-drawer.open .mobile-more-backdrop{opacity:1}
+  .mobile-more-drawer.open .mobile-more-panel{transform:translateY(0)}
+  .mobile-more-head{display:flex;align-items:center;justify-content:space-between;padding:3px 3px 16px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:14px}
+  .mobile-more-head small{display:block;color:#6e8598;font-size:9px;letter-spacing:1.5px;font-weight:900}
+  .mobile-more-head strong{display:block;font-size:22px;margin-top:3px}
+  .mobile-more-close{width:38px;height:38px;border:1px solid rgba(255,255,255,.09);border-radius:12px;background:rgba(255,255,255,.05);color:#fff;font-size:16px}
+  .mobile-more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .mobile-more-grid button{min-height:82px;text-align:left;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:rgba(255,255,255,.035);color:#fff;padding:13px;display:grid;grid-template-columns:32px 1fr;grid-template-rows:auto auto;column-gap:9px;align-items:center}
+  .mobile-more-grid button:active{transform:scale(.98);background:rgba(37,228,135,.09);border-color:rgba(37,228,135,.25)}
+  .mobile-more-grid button span{grid-row:1 / span 2;font-size:22px;display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:rgba(37,228,135,.09)}
+  .mobile-more-grid button b{font-size:13px}
+  .mobile-more-grid button small{color:#72889a;font-size:10px;margin-top:2px}
+}
+@media(max-width:390px){.mobile-more-grid{grid-template-columns:1fr}.mobile-more-grid button{min-height:68px}}
 </style>
 </head>
 
@@ -2920,13 +2942,37 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
     Galerija
   </button>
 
-  <button onclick="toggleMobileMenu()">
+  <button onclick="toggleMobileMore()" id="mobileMoreBtn">
     <span>☰</span>
     Više
   </button>
 
 </div>
 
+
+<div id="mobileMoreDrawer" class="mobile-more-drawer" aria-hidden="true">
+  <div class="mobile-more-backdrop" onclick="closeMobileMore()"></div>
+  <div class="mobile-more-panel">
+    <div class="mobile-more-head">
+      <div>
+        <small>MEDJAŠI FUTSAL LIGA</small>
+        <strong>Meni</strong>
+      </div>
+      <button type="button" class="mobile-more-close" onclick="closeMobileMore()" aria-label="Zatvori meni">✕</button>
+    </div>
+    <div class="mobile-more-grid">
+      <button onclick="mobileMoreGo('home')"><span>⌂</span><b>Početna</b><small>Naslovna</small></button>
+      <button onclick="mobileMoreGo('matches')"><span>⚽</span><b>Utakmice</b><small>Raspored i rezultati</small></button>
+      <button onclick="mobileMoreGo('table')"><span>🏆</span><b>Tabela</b><small>Poredak lige</small></button>
+      <button onclick="mobileMoreGo('teams')"><span>🛡️</span><b>Ekipe</b><small>Timovi lige</small></button>
+      <button onclick="mobileMoreGo('players')"><span>👤</span><b>Igrači</b><small>Spisak igrača</small></button>
+      <button onclick="mobileMoreGo('stats')"><span>📊</span><b>Statistika</b><small>Najbolji igrači</small></button>
+      <button onclick="mobileMoreGo('gallery')"><span>📸</span><b>Galerija</b><small>Fotografije</small></button>
+      <button onclick="mobileMoreGo('chat')"><span>💬</span><b>Chat</b><small>Razgovor uživo</small></button>
+      <button onclick="mobileMoreGo('comments')"><span>💭</span><b>Komentari</b><small>Komentari zajednice</small></button>
+    </div>
+  </div>
+</div>
 
 <div id="toastWrap" class="toast-wrap"></div>
 
@@ -9821,6 +9867,39 @@ function toggleMobileMenu(){
   const btn=document.getElementById("mobileMenuBtn");
   nav?.classList.toggle("mobile-open",mobileMenuOpen);
   if(btn){btn.textContent=mobileMenuOpen ? "✕" : "☰";btn.setAttribute("aria-expanded",String(mobileMenuOpen));}
+}
+
+
+function openMobileMore(){
+  const drawer=document.getElementById("mobileMoreDrawer");
+  if(!drawer) return;
+  mobileMenuOpen=false;
+  document.getElementById("mainNav")?.classList.remove("mobile-open");
+  closeMobileMore();
+  const topBtn=document.getElementById("mobileMenuBtn");
+  if(topBtn){topBtn.textContent="☰";topBtn.setAttribute("aria-expanded","false");}
+  drawer.classList.add("open");
+  drawer.setAttribute("aria-hidden","false");
+  document.body.classList.add("mobile-more-open");
+}
+
+function closeMobileMore(){
+  const drawer=document.getElementById("mobileMoreDrawer");
+  if(!drawer) return;
+  drawer.classList.remove("open");
+  drawer.setAttribute("aria-hidden","true");
+  document.body.classList.remove("mobile-more-open");
+}
+
+function toggleMobileMore(){
+  const drawer=document.getElementById("mobileMoreDrawer");
+  if(drawer?.classList.contains("open")) closeMobileMore();
+  else openMobileMore();
+}
+
+function mobileMoreGo(id){
+  closeMobileMore();
+  setTimeout(()=>showSection(id),40);
 }
 
 function setupCommentImageUI(){
