@@ -1,9 +1,11 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v1";
+const CACHE_NAME = "medjasi-futsal-pwa-v2";
 
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./images/icon-192.png",
+  "./images/icon-512.png"
 ];
 
 self.addEventListener("install", event => {
@@ -29,14 +31,19 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const request = event.request;
 
+  // Samo GET zahtjevi
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
 
-  // Ne diramo Supabase, YouTube, CDN i ostale vanjske servise.
-  if (url.origin !== location.origin) return;
+  // Supabase, YouTube, CDN i ostali vanjski zahtjevi
+  // ne diramo kroz ovaj cache.
+  if (url.origin !== self.location.origin) {
+    return;
+  }
 
-  // Za samu stranicu uvijek prvo pokušaj novu verziju.
+  // Za navigaciju pokušaj prvo učitati najnoviju verziju
+  // sa servera, a ako nema interneta koristi cache.
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
@@ -49,15 +56,36 @@ self.addEventListener("fetch", event => {
 
           return response;
         })
-        .catch(() => caches.match("./index.html"))
+        .catch(() => {
+          return caches.match("./index.html");
+        })
     );
 
     return;
   }
 
-  // Ostale lokalne fajlove uzmi iz cache-a ako postoje.
+  // Za ostale lokalne fajlove:
+  // prvo cache, pa mreža.
   event.respondWith(
     caches.match(request)
-      .then(cached => cached || fetch(request))
+      .then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return fetch(request).then(response => {
+          if (!response || response.status !== 200) {
+            return response;
+          }
+
+          const copy = response.clone();
+
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, copy);
+          });
+
+          return response;
+        });
+      })
   );
 });
