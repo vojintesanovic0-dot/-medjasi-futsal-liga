@@ -1814,6 +1814,194 @@ main{max-width:1480px;padding:0 28px 90px}.section{padding-top:36px}.hero{min-he
 @media(max-width:780px){.site-header .header-inner{min-height:68px;padding:0 15px}.logo{min-width:0}.logo-ball{width:40px;height:40px;border-radius:12px;font-size:21px}.logo span{font-size:14px}.logo small{font-size:9px}.header-account{display:flex}.header-account .account-name{display:none}#mainNav{position:absolute;display:none;top:68px;left:10px;right:10px;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:10px;background:rgba(6,16,27,.98);border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 25px 60px rgba(0,0,0,.45);z-index:120;max-height:calc(100vh - 90px);overflow:auto}#mainNav.mobile-open{display:flex!important}#mainNav .nav-group-title{display:block;color:#607689;font-size:9px;font-weight:900;letter-spacing:1.3px;padding:8px 12px 3px}#mainNav button{width:100%;text-align:left;min-height:44px;font-size:13px}.mobile-menu-btn{display:block}.hero{grid-template-columns:1fr;min-height:auto;padding:35px 0;gap:22px}.hero-card-premium{min-height:300px}.hero-score-orb{font-size:85px;padding:10px 0}main{padding:0 14px 80px}.playlist-add-grid{grid-template-columns:1fr}}
 @media(min-width:781px){.mobile-menu-btn{display:none!important}}
 .auth-shell{max-width:980px;margin:20px auto}.playlist-add-grid{display:grid;grid-template-columns:1.4fr 1fr auto;gap:9px;margin-top:15px}.admin-playlist{display:grid;gap:8px;margin-top:15px}.playlist-row{display:grid;grid-template-columns:38px 1fr auto auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);border-radius:13px}.playlist-num{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:rgba(37,228,135,.1);color:var(--accent);font-weight:900}.playlist-row small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.playlist-actions{display:flex;gap:5px}@media(max-width:780px){.playlist-add-grid{grid-template-columns:1fr}}
+
+/* =========================================================
+   FINAL NAVIGATION SYSTEM — CLEAN SPORTS PORTAL
+   ========================================================= */
+:root{--nav-w:252px;--nav-bg:#07131f;--nav-line:rgba(255,255,255,.075);--nav-text:#8ea3b5;--nav-active:#25e487}
+body{padding-left:var(--nav-w);}
+.site-header{margin-left:0!important;}
+.site-header .header-inner{max-width:none!important;padding:0 30px!important;min-height:78px!important;}
+.logo{min-width:0!important;}
+.logo-ball{width:44px;height:44px;border-radius:13px!important;}
+.header-actions{margin-left:auto;}
+
+/* desktop navigation rail */
+#mainNav{
+  position:fixed!important;
+  left:0!important;
+  top:0!important;
+  bottom:0!important;
+  width:var(--nav-w)!important;
+  height:100vh!important;
+  z-index:400!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  gap:4px!important;
+  padding:24px 16px 20px!important;
+  background:
+    radial-gradient(280px 220px at 0% 0%,rgba(37,228,135,.10),transparent 70%),
+    linear-gradient(180deg,#091a28 0%,#06111c 55%,#050d16 100%)!important;
+  border-right:1px solid var(--nav-line)!important;
+  box-shadow:12px 0 45px rgba(0,0,0,.18)!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+#mainNav::before{
+  content:'MEDJAŠI  •  FUTSAL';
+  display:block;
+  padding:10px 12px 24px;
+  color:#f4f8fb;
+  font-size:17px;
+  font-weight:950;
+  letter-spacing:.3px;
+  border-bottom:1px solid var(--nav-line);
+  margin-bottom:14px;
+}
+#mainNav::after{
+  content:'SEZONA 2026  •  LIGA ONLINE';
+  order:99;
+  margin-top:auto;
+  padding:14px 12px 0;
+  border-top:1px solid var(--nav-line);
+  color:#5f7587;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:1.1px;
+}
+#mainNav .nav-group-title{
+  display:block!important;
+  padding:13px 11px 5px!important;
+  color:#50687a!important;
+  font-size:9px!important;
+  font-weight:950!important;
+  letter-spacing:1.6px!important;
+}
+#mainNav button{
+  width:100%!important;
+  min-height:45px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:11px!important;
+  text-align:left!important;
+  padding:10px 12px!important;
+  border:1px solid transparent!important;
+  border-radius:12px!important;
+  background:transparent!important;
+  color:var(--nav-text)!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  box-shadow:none!important;
+  position:relative!important;
+  transition:background .18s ease,color .18s ease,transform .18s ease,border-color .18s ease!important;
+}
+#mainNav button span:first-child{
+  width:28px!important;
+  margin:0!important;
+  text-align:center!important;
+  font-size:16px!important;
+  opacity:.82;
+}
+#mainNav button:hover{
+  color:#fff!important;
+  background:rgba(255,255,255,.045)!important;
+  transform:translateX(2px)!important;
+}
+#mainNav button.active{
+  color:#fff!important;
+  background:linear-gradient(90deg,rgba(37,228,135,.15),rgba(37,228,135,.035))!important;
+  border-color:rgba(37,228,135,.12)!important;
+  box-shadow:inset 3px 0 0 var(--nav-active),0 8px 20px rgba(0,0,0,.08)!important;
+}
+#mainNav button.active span:first-child{opacity:1;filter:drop-shadow(0 0 7px rgba(37,228,135,.35));}
+
+/* content follows the rail */
+main{max-width:none!important;margin:0!important;padding:0 42px 100px!important;}
+.footer{margin:0!important;max-width:none!important;padding-left:42px!important;padding-right:42px!important;}
+
+/* header becomes a clean command bar */
+.site-header{background:rgba(5,12,20,.86)!important;border-bottom:1px solid var(--nav-line)!important;}
+.site-header .header-inner{gap:20px!important;}
+.header-live{padding:8px 11px;border:1px solid var(--nav-line);border-radius:999px;background:rgba(255,255,255,.025);}
+.header-account{gap:6px!important;}
+.account-btn{min-height:40px!important;border-radius:11px!important;}
+
+/* mobile: rail becomes drawer */
+@media(max-width:780px){
+  body{padding-left:0!important;padding-bottom:72px!important;}
+  .site-header .header-inner{padding:0 14px!important;min-height:68px!important;}
+  #mainNav{
+    position:fixed!important;
+    top:68px!important;
+    bottom:auto!important;
+    left:10px!important;
+    right:10px!important;
+    width:auto!important;
+    height:auto!important;
+    max-height:calc(100vh - 84px)!important;
+    padding:12px!important;
+    display:none!important;
+    border:1px solid rgba(255,255,255,.09)!important;
+    border-radius:20px!important;
+    background:rgba(6,15,24,.985)!important;
+    box-shadow:0 28px 80px rgba(0,0,0,.55)!important;
+    overflow-y:auto!important;
+  }
+  #mainNav.mobile-open{display:flex!important;}
+  #mainNav::before{padding:8px 10px 15px;font-size:15px;margin-bottom:7px;}
+  #mainNav::after{display:none;}
+  #mainNav .nav-group-title{padding:10px 10px 4px!important;}
+  #mainNav button{min-height:47px!important;padding:11px 12px!important;}
+  #mainNav button:hover{transform:none!important;}
+  main{padding:0 14px 88px!important;}
+  .footer{padding-left:14px!important;padding-right:14px!important;}
+  .header-live{display:none!important;}
+  .header-account .account-name{display:none!important;}
+  .header-account .account-btn{padding:8px 10px!important;}
+}
+
+/* mobile bottom dock — only the most-used destinations */
+.mobile-bottom{
+  display:none;
+}
+@media(max-width:780px){
+  .mobile-bottom{
+    position:fixed!important;
+    display:grid!important;
+    grid-template-columns:repeat(5,1fr)!important;
+    left:10px!important;
+    right:10px!important;
+    bottom:10px!important;
+    height:62px!important;
+    z-index:350!important;
+    padding:5px!important;
+    border:1px solid rgba(255,255,255,.09)!important;
+    border-radius:19px!important;
+    background:rgba(6,15,24,.94)!important;
+    backdrop-filter:blur(22px)!important;
+    box-shadow:0 16px 45px rgba(0,0,0,.42)!important;
+  }
+  .mobile-bottom button{
+    border:0!important;
+    border-radius:13px!important;
+    background:transparent!important;
+    color:#71889a!important;
+    padding:5px 2px!important;
+    font-size:8px!important;
+    font-weight:850!important;
+  }
+  .mobile-bottom button.active{background:rgba(37,228,135,.10)!important;color:#fff!important;}
+  .mobile-bottom span{font-size:17px!important;margin-bottom:2px!important;}
+  .mobile-bottom button:last-child{color:#9eb0bf!important;}
+}
+
+/* page chrome spacing for the new shell */
+@media(min-width:781px){
+  .section{padding-top:34px!important;}
+  .hero{margin-top:10px!important;}
+}
 </style>
 </head>
 
