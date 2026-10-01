@@ -12437,5 +12437,231 @@ if ("serviceWorker" in navigator) {
 
 })();
 </script>
+<script>
+/* =========================================================
+   MEDJASI V2 POLISH / MATCH CENTER / PLAYER & STATS ENHANCEMENTS
+   Nadogradnja preko postojećeg sistema - bez mijenjanja Supabase šeme.
+========================================================= */
+(function(){
+  const baseRenderHome = window.renderHome;
+  const baseRenderStats = window.renderStats;
+  const baseOpenPlayer = window.openPlayer;
+  const baseOpenTeam = window.openTeam;
+  const baseOpenMatch = window.openMatch;
+
+  function n(v){ return Number(v || 0); }
+  function esc2(v){
+    if(typeof window.esc === "function") return window.esc(v);
+    return String(v ?? "").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+  function team(id){ return typeof getTeam === "function" ? getTeam(id) : null; }
+  function player(id){ return typeof getPlayer === "function" ? getPlayer(id) : null; }
+
+  function playerAssists(id){
+    return (goals || []).filter(g=>String(g.assist_player_id||"")===String(id)).length;
+  }
+
+  function playerGoalMinutes(id){
+    return (goals || []).filter(g=>String(g.player_id)===String(id)).map(g=>n(g.minute)).sort((a,b)=>a-b);
+  }
+
+  function playerMatchIds(id){
+    const set=new Set();
+    (matchPlayers||[]).forEach(mp=>{
+      if(String(mp.player_id)===String(id)) set.add(String(mp.match_id));
+    });
+    (goals||[]).forEach(g=>{
+      if(String(g.player_id)===String(id)||String(g.assist_player_id||"")===String(id)) set.add(String(g.match_id));
+    });
+    return set;
+  }
+
+  /* ---------------- PLAYER PROFILE ---------------- */
+  if(typeof baseOpenPlayer === "function"){
+    window.openPlayer = function(playerId){
+      const p=player(playerId);
+      if(!p){ baseOpenPlayer(playerId); return; }
+      const t=team(p.team_id);
+      const gs=(goals||[]).filter(g=>String(g.player_id)===String(playerId));
+      const cs=(cards||[]).filter(c=>String(c.player_id)===String(playerId));
+      const assists=playerAssists(playerId);
+      const matchesCount=playerMatchIds(playerId).size;
+      const yellows=cs.filter(c=>String(c.card_type||"").toLowerCase()!="red").length;
+      const reds=cs.filter(c=>String(c.card_type||"").toLowerCase()==="red").length;
+      const minutes=playerGoalMinutes(playerId);
+      const recent=Array.from(playerMatchIds(playerId)).map(id=>getMatch(id)).filter(Boolean).sort((a,b)=>new Date(b.match_date)-new Date(a.match_date)).slice(0,5);
+
+      if(typeof showModal !== "function"){ baseOpenPlayer(playerId); return; }
+      showModal(`
+        <div class="v2-player-hero">
+          <img src="${playerPhoto(p)}" alt="${esc2(p.name)}">
+          <div class="v2-player-main">
+            <div class="hero-kicker">PROFIL IGRAČA</div>
+            <h2>${esc2(p.name)}</h2>
+            <div class="muted">${esc2(t?.name||"")}</div>
+            <div class="v2-player-badges">
+              <span class="player-number">#${p.jersey_number ?? "-"}</span>
+              <span class="badge">${esc2(p.position||"-" )}</span>
+              ${p.is_captain?`<span class="captain">©️ Kapiten</span>`:""}
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-3 v2-stat-grid">
+          <div class="card stat"><div class="stat-number">${gs.length}</div><div class="stat-label">Golova</div></div>
+          <div class="card stat"><div class="stat-number">${assists}</div><div class="stat-label">Asistencija</div></div>
+          <div class="card stat"><div class="stat-number">${matchesCount}</div><div class="stat-label">Nastupa</div></div>
+          <div class="card stat"><div class="stat-number">${yellows}</div><div class="stat-label">Žutih</div></div>
+          <div class="card stat"><div class="stat-number">${reds}</div><div class="stat-label">Crvenih</div></div>
+          <div class="card stat"><div class="stat-number">${gs.length+assists}</div><div class="stat-label">Gol + asist.</div></div>
+        </div>
+        <div class="card v2-detail-card">
+          <h3>⚽ Učinak</h3>
+          <div class="v2-detail-grid">
+            <div><span>Golovi</span><b>${gs.length}</b></div>
+            <div><span>Asistencije</span><b>${assists}</b></div>
+            <div><span>Učinak po nastupu</span><b>${matchesCount ? ((gs.length+assists)/matchesCount).toFixed(2) : "0.00"}</b></div>
+            <div><span>Minute golova</span><b>${minutes.length?minutes.map(x=>x+"'").join(", "):"—"}</b></div>
+          </div>
+        </div>
+        <div class="card v2-detail-card">
+          <h3>📅 Posljednje utakmice</h3>
+          ${recent.length ? recent.map(m=>{
+            const h=team(m.home_team_id), a=team(m.away_team_id);
+            return `<button class="v2-recent-match" type="button" onclick="openMatch('${m.id}')">
+              <span>${esc2(h?.name||"Domaćin")} – ${esc2(a?.name||"Gost")}</span>
+              <b>${n(m.home_score)} : ${n(m.away_score)}</b>
+              <small>${typeof formatDate==='function'?formatDate(m.match_date):""}</small>
+            </button>`;
+          }).join(""):`<div class="empty compact">Nema evidentiranih utakmica.</div>`}
+        </div>
+      `);
+    };
+  }
+
+  /* ---------------- TEAM PROFILE ---------------- */
+  if(typeof baseOpenTeam === "function"){
+    window.openTeam = function(teamId){
+      const t=team(teamId);
+      if(!t){ baseOpenTeam(teamId); return; }
+      const list=(players||[]).filter(p=>String(p.team_id)===String(teamId));
+      const finished=(matches||[]).filter(m=>m.status==="finished"&&(String(m.home_team_id)===String(teamId)||String(m.away_team_id)===String(teamId)));
+      let w=0,d=0,l=0,gf=0,ga=0;
+      finished.forEach(m=>{
+        const home=String(m.home_team_id)===String(teamId), my=n(home?m.home_score:m.away_score), op=n(home?m.away_score:m.home_score);
+        gf+=my; ga+=op; if(my>op)w++; else if(my===op)d++; else l++;
+      });
+      const teamGoals=(goals||[]).filter(g=>{
+        const pl=player(g.player_id); return pl && String(pl.team_id)===String(teamId);
+      }).length;
+      const teamAssists=(goals||[]).filter(g=>{
+        const pl=player(g.assist_player_id); return pl && String(pl.team_id)===String(teamId);
+      }).length;
+
+      showModal(`
+        <div class="v2-team-hero">
+          <img src="${teamLogo(t)}" alt="${esc2(t.name)}">
+          <div><div class="hero-kicker">PROFIL EKIPE</div><h2>${esc2(t.name)}</h2><div class="muted">${list.length} igrača • ${finished.length} odigranih utakmica</div></div>
+        </div>
+        <div class="grid grid-3 v2-stat-grid">
+          <div class="card stat"><div class="stat-number">${w}</div><div class="stat-label">Pobjede</div></div>
+          <div class="card stat"><div class="stat-number">${d}</div><div class="stat-label">Neriješeno</div></div>
+          <div class="card stat"><div class="stat-number">${l}</div><div class="stat-label">Porazi</div></div>
+          <div class="card stat"><div class="stat-number">${gf}</div><div class="stat-label">Postignuti golovi</div></div>
+          <div class="card stat"><div class="stat-number">${ga}</div><div class="stat-label">Primljeni golovi</div></div>
+          <div class="card stat"><div class="stat-number">${teamGoals+teamAssists}</div><div class="stat-label">Gol + asist.</div></div>
+        </div>
+        <div class="card v2-detail-card">
+          <h3>👥 Igrači</h3>
+          <div class="v2-roster-grid">${list.length?list.map(p=>`<button type="button" class="v2-roster" onclick="openPlayer('${p.id}')"><img src="${playerPhoto(p)}" alt=""><span><b>#${p.jersey_number??"-"} ${esc2(p.name)}</b><small>${esc2(p.position||"-")}</small></span></button>`).join(""):`<div class="empty compact">Ekipa još nema igrača.</div>`}</div>
+        </div>
+      `);
+    };
+  }
+
+  /* ---------------- MATCH CENTER EXTRA ---------------- */
+  function enhanceCurrentMatch(){
+    const panel=document.getElementById("match-panel-stats");
+    const m=typeof currentMatchId!=="undefined" ? getMatch(currentMatchId) : null;
+    if(!panel||!m) return;
+    panel.querySelector(".v2-match-extra")?.remove();
+    const hg=(goals||[]).filter(g=>String(g.match_id)===String(m.id)&&player(g.player_id)?.team_id===m.home_team_id);
+    const ag=(goals||[]).filter(g=>String(g.match_id)===String(m.id)&&player(g.player_id)?.team_id===m.away_team_id);
+    const ha=(goals||[]).filter(g=>String(g.match_id)===String(m.id)&&player(g.assist_player_id)?.team_id===m.home_team_id).length;
+    const aa=(goals||[]).filter(g=>String(g.match_id)===String(m.id)&&player(g.assist_player_id)?.team_id===m.away_team_id).length;
+    const hc=(cards||[]).filter(c=>String(c.match_id)===String(m.id)&&player(c.player_id)?.team_id===m.home_team_id);
+    const ac=(cards||[]).filter(c=>String(c.match_id)===String(m.id)&&player(c.player_id)?.team_id===m.away_team_id);
+    const home=team(m.home_team_id), away=team(m.away_team_id);
+    const card=document.createElement("div"); card.className="card v2-match-extra"; card.innerHTML=`
+      <h3>📊 Detaljna statistika</h3>
+      <div class="v2-match-stat-table">
+        <div><b>${hg.length}</b><span>Golovi</span><b>${ag.length}</b></div>
+        <div><b>${ha}</b><span>Asistencije</span><b>${aa}</b></div>
+        <div><b>${hc.length}</b><span>Kartoni</span><b>${ac.length}</b></div>
+      </div>
+      <div class="v2-match-players">
+        <div><strong>${esc2(home?.name||"Domaćin")}</strong>${hg.length?hg.map(g=>`<span>⚽ ${esc2(player(g.player_id)?.name||"Igrač")} ${n(g.minute)}'</span>`).join(""):"<small class='muted'>Bez golova</small>"}</div>
+        <div><strong>${esc2(away?.name||"Gost")}</strong>${ag.length?ag.map(g=>`<span>⚽ ${esc2(player(g.player_id)?.name||"Igrač")} ${n(g.minute)}'</span>`).join(""):"<small class='muted'>Bez golova</small>"}</div>
+      </div>`;
+    panel.appendChild(card);
+  }
+  if(typeof baseOpenMatch === "function"){
+    window.openMatch=function(id){ baseOpenMatch(id); setTimeout(enhanceCurrentMatch,30); };
+  }
+
+  /* ---------------- ADVANCED LEAGUE STATS ---------------- */
+  if(typeof baseRenderStats === "function"){
+    window.renderStats=function(){
+      baseRenderStats();
+      const sec=document.getElementById("stats"); if(!sec) return;
+      document.getElementById("v2AdvancedStats")?.remove();
+      const gs=goals||[], cs=cards||[], ms=(matches||[]).filter(m=>m.status==="finished");
+      const assists={}; gs.forEach(g=>{if(g.assist_player_id) assists[g.assist_player_id]=(assists[g.assist_player_id]||0)+1;});
+      const reds=cs.filter(c=>String(c.card_type||"").toLowerCase()==="red").length;
+      const yellows=cs.filter(c=>String(c.card_type||"").toLowerCase()!=="red").length;
+      const avg=ms.length?(gs.length/ms.length).toFixed(2):"0.00";
+      const topAssist=Object.entries(assists).sort((a,b)=>b[1]-a[1]).slice(0,5);
+      const teamAttack=(teams||[]).map(t=>{const own=gs.filter(g=>player(g.player_id)?.team_id===t.id).length;return {t,own};}).sort((a,b)=>b.own-a.own).slice(0,5);
+      const block=document.createElement("div"); block.id="v2AdvancedStats"; block.className="v2-advanced-stats"; block.innerHTML=`
+        <div class="card"><div class="hero-kicker">LIGA PREGLED</div><h3>📈 Napredna statistika</h3><div class="grid grid-2 v2-kpi-grid">
+          <div><b>${gs.length}</b><span>Ukupno golova</span></div><div><b>${avg}</b><span>Golova po utakmici</span></div><div><b>${yellows}</b><span>Žutih kartona</span></div><div><b>${reds}</b><span>Crvenih kartona</span></div>
+        </div></div>
+        <div class="grid grid-2"><div class="card"><h3>🎯 Asistenti</h3>${topAssist.length?topAssist.map(([id,v],i)=>`<button type="button" class="v2-rank-line" onclick="openPlayer('${id}')"><span>${i+1}.</span><strong>${esc2(player(id)?.name||"Igrač")}</strong><b>${v}</b></button>`).join(""):`<div class="empty compact">Još nema asistencija.</div>`}</div>
+        <div class="card"><h3>🔥 Napad ekipa</h3>${teamAttack.length?teamAttack.map((x,i)=>`<div class="v2-rank-line"><span>${i+1}.</span><strong>${esc2(x.t.name)}</strong><b>${x.own}</b></div>`).join(""):`<div class="empty compact">Još nema golova.</div>`}</div></div>`;
+      sec.appendChild(block);
+    };
+  }
+
+  /* ---------------- HOME COUNTDOWN / QUICK INSIGHT ---------------- */
+  if(typeof baseRenderHome === "function"){
+    window.renderHome=function(){
+      baseRenderHome();
+      const box=document.getElementById("homeAnnouncement");
+      if(!box) return;
+      const next=(matches||[]).filter(m=>m.status==="scheduled"&&m.match_date).sort((a,b)=>new Date(a.match_date)-new Date(b.match_date))[0];
+      box.querySelector(".v2-countdown")?.remove();
+      if(!next) return;
+      const h=team(next.home_team_id), a=team(next.away_team_id);
+      const d=new Date(next.match_date).getTime()-Date.now();
+      let countdown="Uskoro";
+      if(d>0){const total=Math.floor(d/1000), days=Math.floor(total/86400), hours=Math.floor((total%86400)/3600), mins=Math.floor((total%3600)/60); countdown=days?`${days}d ${hours}h`:hours?`${hours}h ${mins}min`:`${Math.max(1,mins)} min`;}
+      const el=document.createElement("div"); el.className="v2-countdown"; el.innerHTML=`<button type="button" onclick="openMatch('${next.id}')"><span>⏱️</span><div><b>${esc2(h?.name||"Domaćin")} – ${esc2(a?.name||"Gost")}</b><small>Sljedeća utakmica • počinje za <strong>${countdown}</strong></small></div><i>→</i></button>`; box.appendChild(el);
+    };
+  }
+
+  /* live countdown refresh without touching existing 30s data refresh */
+  setInterval(()=>{
+    if(typeof window.renderHome==='function' && document.getElementById('home')?.classList.contains('active')) window.renderHome();
+  },60000);
+
+  /* ---------------- SMALL MOBILE POLISH ---------------- */
+  const style=document.createElement("style"); style.textContent=`
+    .v2-player-hero,.v2-team-hero{display:flex;align-items:center;gap:18px;padding:18px;border-radius:20px;background:linear-gradient(145deg,rgba(32,212,123,.09),rgba(44,156,255,.06));border:1px solid rgba(255,255,255,.07);margin-bottom:16px}
+    .v2-player-hero>img,.v2-team-hero>img{width:96px;height:96px;object-fit:cover;border-radius:20px;background:#081622}.v2-team-hero>img{object-fit:contain;padding:8px}
+    .v2-player-main{min-width:0}.v2-player-main h2,.v2-team-hero h2{margin:2px 0 5px}.v2-player-badges{margin-top:8px}.v2-stat-grid{margin-top:14px}.v2-detail-card{margin-top:14px}.v2-detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:10px}.v2-detail-grid>div{padding:11px;border-radius:12px;background:rgba(255,255,255,.035)}.v2-detail-grid span,.v2-detail-grid b{display:block}.v2-detail-grid span{font-size:11px;color:var(--muted)}.v2-detail-grid b{margin-top:3px}.v2-recent-match{display:grid;grid-template-columns:1fr auto;gap:3px 10px;width:100%;text-align:left;padding:11px;margin-top:7px;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:rgba(255,255,255,.03);color:#fff;cursor:pointer}.v2-recent-match small{grid-column:1/-1;color:var(--muted)}.v2-roster-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.v2-roster{display:flex;align-items:center;gap:9px;text-align:left;border:1px solid rgba(255,255,255,.06);border-radius:13px;padding:9px;background:rgba(255,255,255,.03);color:#fff}.v2-roster img{width:42px;height:42px;border-radius:11px;object-fit:cover}.v2-roster span{min-width:0}.v2-roster b,.v2-roster small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v2-roster small{color:var(--muted);margin-top:2px}.v2-match-extra{margin-top:14px}.v2-match-stat-table{display:grid;gap:6px;margin-top:10px}.v2-match-stat-table>div{display:grid;grid-template-columns:55px 1fr 55px;align-items:center;text-align:center;padding:10px;border-radius:10px;background:rgba(255,255,255,.035)}.v2-match-stat-table span{color:var(--muted);font-size:11px}.v2-match-players{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:13px}.v2-match-players>div{display:grid;gap:5px}.v2-match-players span{font-size:12px}.v2-advanced-stats{display:grid;gap:14px;margin-top:16px}.v2-kpi-grid{margin-top:12px}.v2-kpi-grid>div{padding:13px;border-radius:13px;background:rgba(255,255,255,.035)}.v2-kpi-grid b,.v2-kpi-grid span{display:block}.v2-kpi-grid b{font-size:25px}.v2-kpi-grid span{color:var(--muted);font-size:11px;margin-top:2px}.v2-rank-line{width:100%;display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:10px;border:0;border-bottom:1px solid rgba(255,255,255,.05);background:transparent;color:#fff;text-align:left}.v2-rank-line:last-child{border-bottom:0}.v2-countdown{margin-top:10px}.v2-countdown button{width:100%;display:flex;align-items:center;gap:12px;text-align:left;border:1px solid rgba(32,212,123,.22);background:rgba(32,212,123,.055);color:#fff;border-radius:14px;padding:12px}.v2-countdown button>span{font-size:22px}.v2-countdown button>div{flex:1}.v2-countdown b,.v2-countdown small{display:block}.v2-countdown small{color:var(--muted);margin-top:3px}.v2-countdown i{font-style:normal;font-size:20px;color:var(--green)}
+    @media(max-width:600px){.v2-player-hero,.v2-team-hero{padding:13px;gap:12px}.v2-player-hero>img,.v2-team-hero>img{width:74px;height:74px}.v2-roster-grid{grid-template-columns:1fr}.v2-match-players{grid-template-columns:1fr}.v2-detail-grid{grid-template-columns:1fr}.v2-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.live-scoreboard{grid-template-columns:1fr 110px 1fr;padding:12px;gap:7px}.live-team img{width:62px;height:62px}.live-score{font-size:38px}.live-team-name{font-size:12px}.notification-modal-head{align-items:flex-start}.notification-modal-head .btn{white-space:nowrap}}
+  `; document.head.appendChild(style);
+})();
+</script>
+
 </body>
 </html>
