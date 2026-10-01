@@ -2002,6 +2002,74 @@ main{max-width:none!important;margin:0!important;padding:0 42px 100px!important;
   .section{padding-top:34px!important;}
   .hero{margin-top:10px!important;}
 }
+/* FINAL POLISH — BALANCED MATCH CARDS + CLICKABLE BRAND */
+.logo-home{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:inherit;
+  padding:0;
+  margin:0;
+  cursor:pointer;
+  text-align:left;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.logo-home:hover .logo-ball{transform:translateY(-1px) rotate(-2deg);box-shadow:0 0 0 6px rgba(37,228,135,.07),0 14px 38px rgba(37,228,135,.25)}
+.logo-home .logo-ball{transition:.25s ease}
+.match-row{
+  grid-template-columns:minmax(0,1fr) 190px minmax(0,1fr)!important;
+  min-height:108px!important;
+  padding:16px 20px!important;
+  background:linear-gradient(135deg,rgba(255,255,255,.045),rgba(255,255,255,.012))!important;
+}
+.match-row .team-side{
+  display:grid!important;
+  grid-template-columns:64px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:13px!important;
+  min-width:0!important;
+  width:100%!important;
+}
+.match-row .team-side.away{
+  grid-template-columns:minmax(0,1fr) 64px!important;
+  justify-content:initial!important;
+  text-align:right!important;
+}
+.match-row .team-side .team-logo{
+  width:64px!important;
+  height:64px!important;
+  justify-self:center!important;
+}
+.match-row .team-side .team-name{
+  font-size:15px!important;
+  line-height:1.15!important;
+  overflow-wrap:anywhere!important;
+}
+.match-row .team-side.away .team-name{text-align:right!important}
+.match-row .match-center{
+  min-width:0!important;
+  padding:0 8px!important;
+}
+.match-row .score{font-size:30px!important;line-height:1!important}
+.match-row .status{white-space:nowrap!important}
+@media(max-width:780px){
+  .match-row{grid-template-columns:minmax(0,1fr) 112px minmax(0,1fr)!important;gap:7px!important;padding:13px 10px!important;min-height:92px!important}
+  .match-row .team-side{grid-template-columns:42px minmax(0,1fr)!important;gap:7px!important}
+  .match-row .team-side.away{grid-template-columns:minmax(0,1fr) 42px!important}
+  .match-row .team-side .team-logo{width:42px!important;height:42px!important}
+  .match-row .team-side .team-name{font-size:11px!important}
+  .match-row .score{font-size:22px!important}
+  .match-row .match-center{padding:0 2px!important}
+  .match-row .round-badge{font-size:8px!important;padding:3px 5px!important}
+}
+/* Subtle portal depth — different visual language without changing functionality */
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,black,transparent 72%)}
+.section-title{display:flex;align-items:center;gap:11px}
+.section-title:before{content:"";width:5px;height:28px;border-radius:99px;background:linear-gradient(180deg,#25e487,#1598ff);box-shadow:0 0 18px rgba(37,228,135,.2)}
+.card:hover{border-color:rgba(37,228,135,.13)}
+
 </style>
 </head>
 
@@ -2009,7 +2077,7 @@ main{max-width:none!important;margin:0!important;padding:0 42px 100px!important;
 
 <header class="site-header">
   <div class="header-inner">
-    <div class="logo"><div class="logo-ball">⚽</div><div><span>Medjaši Futsal Liga</span><small>Zvanična stranica lige</small></div></div>
+    <button class="logo logo-home" type="button" onclick="showSection('home')" aria-label="Medjaši Futsal Liga - Početna"><div class="logo-ball">⚽</div><div><span>Medjaši Futsal Liga</span><small>Zvanična stranica lige</small></div></button>
     <nav id="mainNav" aria-label="Glavna navigacija">
       <div class="nav-group-title">LIGA</div>
       <button onclick="showSection('home')" class="active"><span>⌂</span><span>Početna</span></button>
