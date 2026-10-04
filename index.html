@@ -12663,5 +12663,200 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+<script>
+/* =========================================================
+   MEDJAŠI V3 — IGRAČI, OCJENE, MVP
+   Dodaje se preko postojećeg sistema bez promjene koncepta.
+========================================================= */
+(function(){
+  const esc3 = window.esc || (v=>String(v??""));
+  const player3 = id => (window.players||[]).find(p=>String(p.id)===String(id));
+  const team3 = id => (window.teams||[]).find(t=>String(t.id)===String(id));
+  const goals3 = () => window.goals||[];
+  const cards3 = () => window.cards||[];
+  const mp3 = () => window.matchPlayers||[];
+
+  function roleWeight(p){
+    const pos=String(p?.position||"").toLowerCase();
+    if(pos.includes("golman")) return 1.0;
+    if(pos.includes("pivot")) return 1.45;
+    if(pos.includes("krilo")) return 1.35;
+    return 1.25;
+  }
+
+  function matchPlayerRating(matchId, playerId){
+    const p=player3(playerId); if(!p) return 0;
+    const g=goals3().filter(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(playerId)).length;
+    const a=goals3().filter(x=>String(x.match_id)===String(matchId)&&String(x.assist_player_id)===String(playerId)).length;
+    const c=cards3().filter(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(playerId));
+    const yellow=c.filter(x=>String(x.card_type).toLowerCase()!=='red').length;
+    const red=c.filter(x=>String(x.card_type).toLowerCase()==='red').length;
+    const row=mp3().find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(playerId));
+    let r=6.0;
+    if(row?.is_starting) r+=0.20;
+    if(row?.is_active) r+=0.15;
+    r+=g*roleWeight(p);
+    r+=a*0.90;
+    r-=yellow*0.45;
+    r-=red*2.25;
+    return Math.max(1,Math.min(10,Number(r.toFixed(2))));
+  }
+
+  function matchRatings(matchId){
+    const rows=mp3().filter(x=>String(x.match_id)===String(matchId));
+    return rows.map(x=>({
+      player:player3(x.player_id),
+      row:x,
+      rating:matchPlayerRating(matchId,x.player_id),
+      goals:goals3().filter(g=>String(g.match_id)===String(matchId)&&String(g.player_id)===String(x.player_id)).length,
+      assists:goals3().filter(g=>String(g.match_id)===String(matchId)&&String(g.assist_player_id)===String(x.player_id)).length,
+      cards:cards3().filter(c=>String(c.match_id)===String(matchId)&&String(c.player_id)===String(x.player_id)).length
+    })).filter(x=>x.player);
+  }
+
+  function mvpForMatch(matchId){
+    const rows=matchRatings(matchId);
+    if(!rows.length) return null;
+    rows.sort((a,b)=>b.rating-a.rating || b.goals-a.goals || b.assists-a.assists || Number(!!b.row?.is_starting)-Number(!!a.row?.is_starting));
+    return rows[0];
+  }
+
+  function playerSeasonStats(id){
+    const appearances=new Set(mp3().filter(x=>String(x.player_id)===String(id)).map(x=>String(x.match_id))).size;
+    const gs=goals3().filter(x=>String(x.player_id)===String(id));
+    const assists=goals3().filter(x=>String(x.assist_player_id)===String(id)).length;
+    const cs=cards3().filter(x=>String(x.player_id)===String(id));
+    const ratings=[];
+    [...new Set(gs.map(x=>String(x.match_id)).concat(cs.map(x=>String(x.match_id)),mp3().filter(x=>String(x.player_id)===String(id)).map(x=>String(x.match_id))))].forEach(mid=>ratings.push(matchPlayerRating(mid,id)));
+    const avg=ratings.length?ratings.reduce((a,b)=>a+b,0)/ratings.length:6;
+    const mvps=(window.matches||[]).filter(m=>m.status==='finished').reduce((n,m)=>n+(mvpForMatch(m.id)?.player?.id===id?1:0),0);
+    return {appearances,goals:gs.length,assists,cards:cs.length,avg:Number(avg.toFixed(2)),mvps};
+  }
+
+  function editPlayer(playerId){
+    if(!window.isAdmin?.()){ alert('Nemaš admin ovlaštenje.'); return; }
+    const p=player3(playerId); if(!p) return;
+    const teamOptions=(window.teams||[]).map(t=>`<option value="${t.id}" ${String(t.id)===String(p.team_id)?'selected':''}>${esc3(t.name)}</option>`).join('');
+    showModal(`
+      <div class="modal-title"><h2>✏️ Uredi igrača</h2><p class="muted">Podatke i fotografiju možeš promijeniti bilo kada.</p></div>
+      <div class="player-edit-preview"><img src="${window.playerPhoto(p)}"><div><strong>${esc3(p.name)}</strong><div class="muted">${esc3(team3(p.team_id)?.name||'')}</div></div></div>
+      <div class="form">
+        <div class="form-group"><label>Ime i prezime</label><input id="editPlayerName" value="${esc3(p.name||'')}"></div>
+        <div class="form-group"><label>Ekipa</label><select id="editPlayerTeam">${teamOptions}</select></div>
+        <div class="form-group"><label>Broj</label><input id="editPlayerNumber" type="number" min="0" value="${p.jersey_number??''}"></div>
+        <div class="form-group"><label>Pozicija</label><select id="editPlayerPosition">
+          <option value="Golman" ${p.position==='Golman'?'selected':''}>Golman</option>
+          <option value="Pivot" ${p.position==='Pivot'?'selected':''}>Pivot</option>
+          <option value="Bek" ${p.position==='Bek'?'selected':''}>Bek</option>
+          <option value="Krilo" ${p.position==='Krilo'?'selected':''}>Krilo</option>
+        </select></div>
+        <label style="display:flex;gap:8px;align-items:center"><input id="editPlayerCaptain" type="checkbox" style="width:auto" ${p.is_captain?'checked':''}> Kapiten</label>
+        <div class="form-group"><label>Nova fotografija</label><input id="editPlayerPhoto" type="file" accept="image/*"></div>
+        ${p.photo_url?`<button class="btn" type="button" onclick="removePlayerPhoto('${p.id}')">🗑️ Ukloni fotografiju</button>`:''}
+        <div class="actions"><button class="btn btn-green" onclick="savePlayerEdit('${p.id}')">💾 Sačuvaj</button><button class="btn" onclick="openPlayer('${p.id}')">Odustani</button></div>
+      </div>`);
+  }
+
+  async function removePlayerPhoto(id){
+    if(!window.isAdmin?.()) return;
+    const p=player3(id); if(!p) return;
+    if(!confirm(`Ukloniti fotografiju igrača "${p.name}"?`)) return;
+    const old=p.photo_url;
+    const {error}=await window.supabaseClient.from('players').update({photo_url:null}).eq('id',id);
+    if(error){alert(error.message);return;}
+    try{
+      const marker='/storage/v1/object/public/liga-images/';
+      if(old?.includes(marker)){
+        const path=decodeURIComponent(old.split(marker)[1].split('?')[0]);
+        await window.supabaseClient.storage.from('liga-images').remove([path]);
+      }
+    }catch(e){console.warn('Brisanje stare fotografije:',e);}
+    await window.loadAll();
+    openPlayer(id);
+  }
+
+  async function savePlayerEdit(id){
+    if(!window.isAdmin?.()) return;
+    const p=player3(id); if(!p) return;
+    const name=document.getElementById('editPlayerName')?.value.trim();
+    const teamId=document.getElementById('editPlayerTeam')?.value;
+    const number=document.getElementById('editPlayerNumber')?.value;
+    const position=document.getElementById('editPlayerPosition')?.value;
+    const captain=document.getElementById('editPlayerCaptain')?.checked;
+    const file=document.getElementById('editPlayerPhoto')?.files?.[0];
+    if(!name||!teamId){alert('Unesi ime i izaberi ekipu.');return;}
+    try{
+      if(captain){
+        const {error}=await window.supabaseClient.from('players').update({is_captain:false}).eq('team_id',teamId).neq('id',id);
+        if(error) throw error;
+      }
+      let photo_url=p.photo_url||null;
+      if(file) photo_url=await window.uploadFile(file,'players');
+      const {error}=await window.supabaseClient.from('players').update({name,team_id:teamId,jersey_number:number||null,position,photo_url,is_captain:captain}).eq('id',id);
+      if(error) throw error;
+      toast('Igrač je izmijenjen.');
+      await window.loadAll();
+      openPlayer(id);
+    }catch(e){alert(e.message||'Greška pri izmjeni igrača.');}
+  }
+
+  function renderPlayersV3(){
+    if(typeof window.populatePlayerFilter==='function') window.populatePlayerFilter();
+    const q=(document.getElementById('playerSearch')?.value||'').toLowerCase();
+    const tid=document.getElementById('playerTeamFilter')?.value||'';
+    const list=(window.players||[]).filter(p=>(!q||String(p.name||'').toLowerCase().includes(q))&&(!tid||p.team_id===tid));
+    const box=document.getElementById('playersGrid'); if(!box)return;
+    box.innerHTML=list.length?list.map(p=>{
+      const s=playerSeasonStats(p.id),team=team3(p.team_id);
+      return `<div class="card player-card" onclick="openPlayer('${p.id}')">
+        <img class="player-photo" src="${window.playerPhoto(p)}">
+        <div style="min-width:0;flex:1"><h3>${esc3(p.name||'Bez imena')}</h3><div class="muted">${esc3(team?.name||'')}</div>
+        <div style="margin-top:6px"><span class="player-number">#${p.jersey_number??'-'}</span><span class="badge">${esc3(p.position||'-')}</span>${p.is_captain?'<span class="captain">Kapiten</span>':''}</div>
+        <div class="match-meta" style="margin-top:8px">⚽ ${s.goals} &nbsp; 🎯 ${s.assists} &nbsp; 🟨 ${s.cards} &nbsp; 👟 ${s.appearances} &nbsp; ⭐ ${s.avg}</div>
+        ${window.isAdmin?.()?`<button class="btn btn-small" style="margin-top:9px" onclick="event.stopPropagation();editPlayer('${p.id}')">✏️ Uredi</button>`:''}
+        </div></div>`;
+    }).join(''):`<div class="empty">Nema igrača koji odgovaraju filteru.</div>`;
+  }
+
+  function openPlayerV3(id){
+    const p=player3(id); if(!p)return;
+    const team=team3(p.team_id), s=playerSeasonStats(id);
+    const recent=(window.matches||[]).filter(m=>m.status==='finished'&&mp3().some(x=>String(x.match_id)===String(m.id)&&String(x.player_id)===String(id))).sort((a,b)=>new Date(b.match_date)-new Date(a.match_date)).slice(0,5);
+    showModal(`<div class="v3-player-hero"><img src="${window.playerPhoto(p)}"><div class="v3-player-main"><h2>${esc3(p.name)}</h2><div class="muted">${esc3(team?.name||'')}</div><div class="v3-player-badges"><span class="player-number">#${p.jersey_number??'-'}</span><span class="badge">${esc3(p.position||'-')}</span>${p.is_captain?'<span class="captain">Kapiten</span>':''}</div></div></div>
+      <div class="grid grid-3 v3-stat-grid"><div class="card stat"><div class="stat-number">${s.goals}</div><div class="stat-label">Golova</div></div><div class="card stat"><div class="stat-number">${s.assists}</div><div class="stat-label">Asistencija</div></div><div class="card stat"><div class="stat-number">${s.avg}</div><div class="stat-label">Prosj. ocjena</div></div></div>
+      <div class="card v3-detail-card"><h3>📊 Sezonski učinak</h3><div class="v3-detail-grid"><div><b>${s.appearances}</b><span>Nastupa</span></div><div><b>${s.cards}</b><span>Kartona</span></div><div><b>${s.mvps}</b><span>Igrač utakmice</span></div><div><b>${s.avg}/10</b><span>Prosječna ocjena</span></div></div></div>
+      ${recent.length?`<div class="card v3-detail-card"><h3>🔥 Posljednje utakmice</h3>${recent.map(m=>{const r=matchPlayerRating(m.id,id),h=team3(m.home_team_id),a=team3(m.away_team_id);return `<button class="v3-recent-match" onclick="openMatch('${m.id}')"><span>${esc3(h?.name||'')} ${m.home_score??0}:${m.away_score??0} ${esc3(a?.name||'')}</span><b>⭐ ${r}</b><small>${m.status==='finished'?'Završeno':''}</small></button>`}).join('')}</div>`:''}
+      ${window.isAdmin?.()?`<div class="actions"><button class="btn btn-blue" onclick="editPlayer('${id}')">✏️ Uredi igrača / fotografiju</button></div>`:''}`);
+  }
+
+  function enhanceMatchRatings(id){
+    const content=document.getElementById('modalContent'); if(!content)return;
+    content.querySelector('#v3MatchRatings')?.remove();
+    const rows=matchRatings(id); if(!rows.length)return;
+    rows.sort((a,b)=>b.rating-a.rating||b.goals-a.goals||b.assists-a.assists);
+    const mvp=rows[0];
+    const byTeam={}; rows.forEach(x=>{const tid=x.player.team_id;(byTeam[tid] ||= []).push(x);});
+    const teamBlocks=Object.entries(byTeam).map(([tid,list])=>`<div><h4>${esc3(team3(tid)?.name||'Ekipa')}</h4>${list.sort((a,b)=>b.rating-a.rating).map((x,i)=>`<div class="v3-rating-row"><div><img src="${window.playerPhoto(x.player)}"><span><b>${i===0?'⭐ ':''}${esc3(x.player.name)}</b><small>${x.goals?'⚽ '+x.goals+' ':''}${x.assists?'🎯 '+x.assists+' ':''}${x.cards?'🟨 '+x.cards:''}</small></span></div><strong>${x.rating.toFixed(2)}</strong></div>`).join('')}</div>`).join('');
+    const card=document.createElement('div'); card.id='v3MatchRatings'; card.className='card v3-match-ratings';
+    card.innerHTML=`<h3>⭐ Ocjene igrača</h3><div class="v3-mvp"><span>🏆 Igrač utakmice</span><b>${esc3(mvp.player.name)}</b><strong>${mvp.rating.toFixed(2)}</strong></div><p class="muted" style="margin:8px 0 14px">Ocjena se automatski računa iz nastupa, golova, asistencija i kartona.</p><div class="v3-rating-teams">${teamBlocks}</div>`;
+    content.appendChild(card);
+  }
+
+  const oldOpenMatch=window.openMatch;
+  if(typeof oldOpenMatch==='function') window.openMatch=function(id){oldOpenMatch(id);setTimeout(()=>enhanceMatchRatings(id),50);};
+  window.editPlayer=editPlayer;
+  window.removePlayerPhoto=removePlayerPhoto;
+  window.savePlayerEdit=savePlayerEdit;
+  window.renderPlayers=renderPlayersV3;
+  window.openPlayer=openPlayerV3;
+  window.matchPlayerRating=matchPlayerRating;
+  window.mvpForMatch=mvpForMatch;
+
+  const style=document.createElement('style');style.textContent=`
+    .player-edit-preview{display:flex;align-items:center;gap:12px;margin:10px 0 16px;padding:12px;border-radius:14px;background:rgba(255,255,255,.035)}.player-edit-preview img{width:64px;height:64px;object-fit:cover;border-radius:14px}.v3-player-hero{display:flex;align-items:center;gap:16px;padding:15px;border-radius:18px;background:rgba(255,255,255,.035);margin-bottom:14px}.v3-player-hero>img{width:92px;height:92px;object-fit:cover;border-radius:18px}.v3-player-main{min-width:0}.v3-player-main h2{margin:0 0 4px}.v3-player-badges{margin-top:8px}.v3-detail-card{margin-top:14px}.v3-detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.v3-detail-grid>div{padding:11px;border-radius:12px;background:rgba(255,255,255,.035)}.v3-detail-grid b,.v3-detail-grid span{display:block}.v3-detail-grid span{font-size:11px;color:var(--muted);margin-top:3px}.v3-recent-match{width:100%;display:grid;grid-template-columns:1fr auto;gap:3px 10px;text-align:left;border:0;border-bottom:1px solid rgba(255,255,255,.05);background:transparent;color:#fff;padding:10px 0}.v3-recent-match small{grid-column:1/-1;color:var(--muted)}.v3-mvp{display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:center;padding:12px;border-radius:14px;background:rgba(37,228,135,.08);border:1px solid rgba(37,228,135,.16);margin-top:10px}.v3-mvp span{grid-column:1/-1;font-size:11px;color:var(--muted)}.v3-mvp b{font-size:18px}.v3-mvp strong{font-size:22px}.v3-rating-teams{display:grid;grid-template-columns:1fr 1fr;gap:14px}.v3-rating-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}.v3-rating-row>div{display:flex;align-items:center;gap:8px;min-width:0}.v3-rating-row img{width:34px;height:34px;border-radius:9px;object-fit:cover}.v3-rating-row b,.v3-rating-row small{display:block}.v3-rating-row small{color:var(--muted);font-size:10px;margin-top:2px}@media(max-width:600px){.v3-detail-grid{grid-template-columns:1fr 1fr}.v3-rating-teams{grid-template-columns:1fr}.v3-player-hero>img{width:74px;height:74px}}
+  `;document.head.appendChild(style);
+})();
+</script>
+
 </body>
 </html>
