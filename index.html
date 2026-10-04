@@ -11258,127 +11258,103 @@ document.addEventListener("DOMContentLoaded",()=>{
   window.openEditPlayerV4 = function(playerId) {
     if (!requireAdmin4()) return;
 
-    const player = players.find(
-      p => String(p.id) === String(playerId)
-    );
-
-    if (!player) return;
+    const player = players.find(p => String(p.id) === String(playerId));
+    if (!player) {
+      alert("Igrač nije pronađen.");
+      return;
+    }
 
     const teamOptions = teams.map(team => `
-      <option
-        value="${esc4(team.id)}"
-        ${String(team.id) === String(player.team_id) ? "selected" : ""}
-      >
+      <option value="${esc4(team.id)}" ${String(team.id) === String(player.team_id) ? "selected" : ""}>
         ${esc4(team.name)}
       </option>
     `).join("");
 
     const html = `
-      <div class="crud-modal-grid">
+      <div class="modal-title">
+        <h2 style="margin:0">✏️ Uredi igrača</h2>
+        <p class="muted" style="margin-top:5px">Izmijeni podatke igrača i sačuvaj promjene.</p>
+      </div>
 
+      <div class="crud-modal-grid" style="margin-top:16px">
         <label>
           Ime i prezime
-          <input
-            id="crudPlayerName"
-            type="text"
-            value="${esc4(player.name || "")}"
-          >
+          <input id="crudPlayerName" type="text" value="${esc4(player.name || "")}" autocomplete="off">
         </label>
 
         <label>
           Ekipa
-          <select id="crudPlayerTeam">
-            ${teamOptions}
-          </select>
+          <select id="crudPlayerTeam">${teamOptions}</select>
         </label>
 
         <label>
           Broj dresa
-          <input
-            id="crudPlayerNumber"
-            type="number"
-            min="0"
-            value="${player.jersey_number ?? ""}"
-          >
+          <input id="crudPlayerNumber" type="number" min="0" value="${player.jersey_number ?? ""}">
         </label>
 
         <label>
           Pozicija
-          <input
-            id="crudPlayerPosition"
-            type="text"
-            value="${esc4(player.position || "")}"
-            placeholder="npr. Pivot"
-          >
+          <input id="crudPlayerPosition" type="text" value="${esc4(player.position || "")}" placeholder="npr. Pivot">
         </label>
 
-        <label style="display:flex;align-items:center;gap:8px;">
-          <input
-            id="crudPlayerCaptain"
-            type="checkbox"
-            ${player.is_captain ? "checked" : ""}
-            style="width:auto;"
-          >
-          Kapiten
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input id="crudPlayerCaptain" type="checkbox" ${player.is_captain ? "checked" : ""} style="width:auto">
+          <span>Kapiten</span>
         </label>
+      </div>
 
-        <div style="display:flex;gap:8px;justify-content:flex-end;">
-          <button
-            class="btn btn-small"
-            onclick="hideModal()"
-          >
-            Otkaži
-          </button>
-
-          <button
-            class="btn btn-green btn-small"
-            onclick="saveEditPlayerV4('${esc4(player.id)}')"
-          >
-            💾 Sačuvaj
-          </button>
-        </div>
-
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap">
+        <button id="crudPlayerCancel" type="button" class="btn btn-small">Otkaži</button>
+        <button id="crudPlayerSave" type="button" class="btn btn-green btn-small">💾 Sačuvaj promjene</button>
       </div>
     `;
 
-    if (typeof showModal === "function") {
-      showModal(html);
-    } else {
-      alert("Modal funkcija nije pronađena.");
-    }
+    showModal(html);
+
+    const saveButton = document.getElementById("crudPlayerSave");
+    const cancelButton = document.getElementById("crudPlayerCancel");
+
+    cancelButton?.addEventListener("click", () => hideModal());
+    saveButton?.addEventListener("click", () => saveEditPlayerV4(playerId));
+
+    document.getElementById("crudPlayerName")?.focus();
   };
 
 
   window.saveEditPlayerV4 = async function(playerId) {
     if (!requireAdmin4()) return;
 
-    const name =
-      document.getElementById("crudPlayerName")?.value.trim();
+    const nameEl = document.getElementById("crudPlayerName");
+    const teamEl = document.getElementById("crudPlayerTeam");
+    const numberEl = document.getElementById("crudPlayerNumber");
+    const positionEl = document.getElementById("crudPlayerPosition");
+    const captainEl = document.getElementById("crudPlayerCaptain");
+    const saveButton = document.getElementById("crudPlayerSave");
 
-    const team =
-      document.getElementById("crudPlayerTeam")?.value;
-
-    const numberValue =
-      document.getElementById("crudPlayerNumber")?.value;
-
-    const position =
-      document.getElementById("crudPlayerPosition")?.value || "";
-
-    const captain =
-      document.getElementById("crudPlayerCaptain")?.checked || false;
+    const name = nameEl?.value.trim() || "";
+    const team = teamEl?.value || "";
+    const numberValue = numberEl?.value ?? "";
+    const position = positionEl?.value.trim() || "";
+    const captain = !!captainEl?.checked;
 
     if (!name || !team) {
       alert("Ime i ekipa su obavezni.");
       return;
     }
 
-    const jersey =
-      numberValue === ""
-        ? null
-        : Number(numberValue);
+    const jersey = numberValue === "" ? null : Number(numberValue);
+    if (jersey !== null && (!Number.isFinite(jersey) || jersey < 0)) {
+      alert("Broj dresa nije ispravan.");
+      return;
+    }
 
     try {
-      await rpc4("update_player_admin", {
+      if (saveButton) {
+        saveButton.disabled = true;
+        saveButton.textContent = "⏳ Čuvam...";
+      }
+
+      const { error } = await supabaseClient.rpc("update_player_admin", {
         player_uuid: playerId,
         new_name: name,
         new_team_id: team,
@@ -11387,15 +11363,19 @@ document.addEventListener("DOMContentLoaded",()=>{
         new_is_captain: captain
       });
 
-      if (typeof hideModal === "function") {
-        hideModal();
-      }
+      if (error) throw error;
 
-      toast4("Igrač je izmijenjen.");
+      hideModal();
+      toast4("Igrač je uspješno izmijenjen.");
       await loadAll();
 
     } catch (error) {
-      alert(error.message || "Greška pri izmjeni igrača.");
+      console.error("update_player_admin:", error);
+      alert(error?.message || "Greška pri izmjeni igrača.");
+      if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.textContent = "💾 Sačuvaj promjene";
+      }
     }
   };
 
