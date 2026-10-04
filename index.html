@@ -2103,6 +2103,10 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
   .mobile-more-grid button small{color:#72889a;font-size:10px;margin-top:2px}
 }
 @media(max-width:390px){.mobile-more-grid{grid-template-columns:1fr}.mobile-more-grid button{min-height:68px}}
+
+/* PLAYER PROFILE V6 */
+.rank-row .rank-num{flex:0 0 34px}
+.player-profile-form{display:flex;gap:6px;align-items:center}
 </style>
 </head>
 
@@ -2460,6 +2464,13 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
         👟 Nastupi
       </h3>
       <div id="appearancesList" class="rank-list"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:13px">
+        🎯 Asistencije
+      </h3>
+      <div id="assistsList" class="rank-list"></div>
     </div>
 
     <div class="card">
@@ -5925,6 +5936,37 @@ function renderStats(){
     );
 
 
+  const assistMap = {};
+
+  goals.forEach(g => {
+    if(!g.assist_player_id) return;
+    assistMap[g.assist_player_id] =
+      (assistMap[g.assist_player_id] || 0) + 1;
+  });
+
+  const assistsRank =
+    Object
+      .entries(assistMap)
+      .sort((a,b)=>b[1]-a[1])
+      .slice(0,10)
+      .map(([id,v]) => ({
+        id,
+        name:playerName(id),
+        sub:teamName(getPlayer(id)?.team_id),
+        value:v
+      }));
+
+  const assistsList = document.getElementById("assistsList");
+  if(assistsList){
+    assistsList.innerHTML = rankList(
+      assistsRank,
+      `<div class="empty">
+        Nema evidentiranih asistencija.
+      </div>`
+    );
+  }
+
+
   const tr =
     sortedTableRows()
       .slice(0,10)
@@ -8352,7 +8394,7 @@ function getMatchEvents(id){
         text:
           `${playerName(
             g.player_id
-          )} · Gol`,
+          )}${g.assist_player_id ? ` · 🎯 asistencija: ${playerName(g.assist_player_id)}` : ""} · Gol`,
         type:"goal"
       });
 
@@ -8527,6 +8569,29 @@ function openMatch(id){
         )?.team_id ===
         match.away_team_id
     ).length;
+
+
+  const hAssists = goals.filter(g =>
+    String(g.match_id) === String(id) &&
+    g.assist_player_id &&
+    getPlayer(g.assist_player_id)?.team_id === match.home_team_id
+  ).length;
+
+  const aAssists = goals.filter(g =>
+    String(g.match_id) === String(id) &&
+    g.assist_player_id &&
+    getPlayer(g.assist_player_id)?.team_id === match.away_team_id
+  ).length;
+
+  const hPlayers = matchPlayers.filter(mp =>
+    String(mp.match_id) === String(id) &&
+    getPlayer(mp.player_id)?.team_id === match.home_team_id
+  ).length;
+
+  const aPlayers = matchPlayers.filter(mp =>
+    String(mp.match_id) === String(id) &&
+    getPlayer(mp.player_id)?.team_id === match.away_team_id
+  ).length;
 
 
   showModal(`
@@ -9055,6 +9120,27 @@ function openMatch(id){
           <div class="muted">
             🟨 + 🟥
           </div>
+
+        </div>
+
+      </div>
+
+      <div class="grid grid-3" style="margin-top:15px">
+
+        <div class="card stat">
+          <div class="stat-number">${hAssists} — ${aAssists}</div>
+          <div class="stat-label">🎯 Asistencije</div>
+        </div>
+
+        <div class="card stat">
+          <div class="stat-number">${hPlayers} — ${aPlayers}</div>
+          <div class="stat-label">👥 Evidentirani igrači</div>
+        </div>
+
+        <div class="card stat">
+          <div class="stat-number">${events.length}</div>
+          <div class="stat-label">📋 Ukupno događaja</div>
+        </div>
 
         </div>
 
@@ -9847,152 +9933,177 @@ function openPlayer(
   playerId
 ){
 
-  const p =
-    getPlayer(playerId);
-
-
+  const p = getPlayer(playerId);
   if(!p) return;
 
+  const team = getTeam(p.team_id);
 
-  const team =
-    getTeam(p.team_id);
+  const playerGoals = goals.filter(g => g.player_id === playerId);
+  const playerCards = cards.filter(c => c.player_id === playerId);
+  const playerAssists = goals.filter(g => g.assist_player_id === playerId);
 
+  const playerAppearanceRows = matchPlayers.filter(
+    mp => mp.player_id === playerId
+  );
 
-  const playerGoals =
-    goals.filter(
-      g =>
-        g.player_id ===
-        playerId
-    );
+  const appearanceIds = new Set(
+    playerAppearanceRows.map(mp => mp.match_id)
+  );
 
+  const appearances = appearanceIds.size;
 
-  const playerCards =
-    cards.filter(
-      c =>
-        c.player_id ===
-        playerId
-    );
+  const playerMatches = matches
+    .filter(m => appearanceIds.has(m.id))
+    .sort((a,b) => new Date(b.match_date || 0) - new Date(a.match_date || 0));
 
+  const lastMatches = playerMatches.slice(0,5);
 
-  const appearances =
-    new Set(
-      matchPlayers
-        .filter(
-          mp =>
-            mp.player_id ===
-            playerId
-        )
-        .map(
-          mp =>
-            mp.match_id
-        )
-    ).size;
+  const getResultForTeam = match => {
+    const home = String(match.home_team_id) === String(p.team_id);
+    const gf = Number(home ? match.home_score : match.away_score);
+    const ga = Number(home ? match.away_score : match.home_score);
+    if(Number.isNaN(gf) || Number.isNaN(ga)) return {label:"—", cls:""};
+    if(gf > ga) return {label:"P", cls:"win"};
+    if(gf < ga) return {label:"I", cls:"loss"};
+    return {label:"N", cls:"draw"};
+  };
 
+  const formHTML = lastMatches.length
+    ? lastMatches.map(m => {
+        const result = getResultForTeam(m);
+        const home = String(m.home_team_id) === String(p.team_id);
+        const opponentId = home ? m.away_team_id : m.home_team_id;
+        const opponent = getTeam(opponentId);
+        const gf = Number(home ? m.home_score : m.away_score);
+        const ga = Number(home ? m.away_score : m.home_score);
+        return `
+          <div class="card" style="padding:11px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+              <div style="min-width:0">
+                <strong>${esc(opponent?.name || "Nepoznata ekipa")}</strong>
+                <div class="muted" style="font-size:12px;margin-top:3px">
+                  ${formatDate(m.match_date)}
+                </div>
+              </div>
+              <div style="text-align:right">
+                <strong>${Number.isNaN(gf) || Number.isNaN(ga) ? "—" : `${gf}:${ga}`}</strong>
+                <div class="muted" style="font-size:12px;margin-top:3px">${result.label === "P" ? "Pobjeda" : result.label === "N" ? "Neriješeno" : result.label === "I" ? "Poraz" : "Nema rezultata"}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("")
+    : `<div class="empty">Nema evidentiranih nastupa u utakmicama.</div>`;
+
+  const goalRows = playerGoals.length
+    ? playerGoals
+        .slice()
+        .sort((a,b) => Number(a.minute || 0) - Number(b.minute || 0))
+        .map(g => {
+          const m = getMatch(g.match_id);
+          return `
+            <div class="rank-row">
+              <div class="rank-num">⚽</div>
+              <div class="rank-avatar">
+                <div>
+                  <strong>${m ? `${esc(teamName(m.home_team_id))} – ${esc(teamName(m.away_team_id))}` : "Utakmica"}</strong>
+                  <small>${g.minute != null ? `${esc(String(g.minute))}. minut` : "Minut nije unesen"}</small>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("")
+    : `<div class="empty">Nema evidentiranih golova.</div>`;
+
+  const assistRows = playerAssists.length
+    ? playerAssists
+        .slice()
+        .sort((a,b) => Number(a.minute || 0) - Number(b.minute || 0))
+        .map(g => {
+          const m = getMatch(g.match_id);
+          const scorer = getPlayer(g.player_id);
+          return `
+            <div class="rank-row">
+              <div class="rank-num">🎯</div>
+              <div class="rank-avatar">
+                <div>
+                  <strong>${scorer ? esc(scorer.name) : "Strijelac"}</strong>
+                  <small>${m ? `${esc(teamName(m.home_team_id))} – ${esc(teamName(m.away_team_id))}` : "Utakmica"}${g.minute != null ? ` • ${esc(String(g.minute))}. minut` : ""}</small>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("")
+    : `<div class="empty">Nema evidentiranih asistencija.</div>`;
+
+  const cardRows = playerCards.length
+    ? playerCards
+        .slice()
+        .sort((a,b) => Number(a.minute || 0) - Number(b.minute || 0))
+        .map(c => {
+          const m = getMatch(c.match_id);
+          const icon = c.card_type === "red" ? "🟥" : "🟨";
+          return `
+            <div class="rank-row">
+              <div class="rank-num">${icon}</div>
+              <div class="rank-avatar">
+                <div>
+                  <strong>${c.card_type === "red" ? "Crveni karton" : "Žuti karton"}</strong>
+                  <small>${m ? `${esc(teamName(m.home_team_id))} – ${esc(teamName(m.away_team_id))}` : "Utakmica"}${c.minute != null ? ` • ${esc(String(c.minute))}. minut` : ""}</small>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("")
+    : `<div class="empty">Nema evidentiranih kartona.</div>`;
 
   showModal(`
-
     <div class="player-card">
-
       <img
         class="player-photo"
-        style="
-          width:95px;
-          height:95px;
-        "
+        style="width:110px;height:110px"
         src="${playerPhoto(p)}">
 
-
-      <div>
-
-        <h2>
-          ${esc(p.name)}
-        </h2>
-
-
-        <p class="muted">
-          ${esc(
-            team?.name || ""
-          )}
-        </p>
-
-
-        <div
-          style="margin-top:7px">
-
-          <span class="player-number">
-            #${p.jersey_number ?? "-"}
-          </span>
-
-          <span class="badge">
-            ${esc(
-              p.position || "-"
-            )}
-          </span>
-
-          ${
-            p.is_captain
-              ? `
-                <span class="captain">
-                  ©️ Kapiten
-                </span>
-              `
-              : ""
-          }
-
+      <div style="min-width:0;flex:1">
+        <h2>${esc(p.name)}</h2>
+        <p class="muted">${esc(team?.name || "")}</p>
+        <div style="margin-top:7px">
+          <span class="player-number">#${p.jersey_number ?? "-"}</span>
+          <span class="badge">${esc(p.position || "-")}</span>
+          ${p.is_captain ? `<span class="captain">©️ Kapiten</span>` : ""}
         </div>
-
       </div>
-
     </div>
 
-
-    <div
-      class="grid grid-3"
-      style="margin-top:20px">
-
-      <div class="card stat">
-
-        <div class="stat-number">
-          ${playerGoals.length}
-        </div>
-
-        <div class="stat-label">
-          Golova
-        </div>
-
-      </div>
-
-
-      <div class="card stat">
-
-        <div class="stat-number">
-          ${playerCards.length}
-        </div>
-
-        <div class="stat-label">
-          Kartona
-        </div>
-
-      </div>
-
-
-      <div class="card stat">
-
-        <div class="stat-number">
-          ${appearances}
-        </div>
-
-        <div class="stat-label">
-          Nastupa
-        </div>
-
-      </div>
-
+    <div class="grid grid-3" style="margin-top:20px">
+      <div class="card stat"><div class="stat-number">${playerGoals.length}</div><div class="stat-label">Golova</div></div>
+      <div class="card stat"><div class="stat-number">${playerAssists.length}</div><div class="stat-label">Asistencija</div></div>
+      <div class="card stat"><div class="stat-number">${appearances}</div><div class="stat-label">Nastupa</div></div>
     </div>
 
+    <div class="grid grid-2" style="margin-top:18px">
+      <div class="card">
+        <h3 style="margin-bottom:13px">📈 Forma – posljednjih 5 nastupa</h3>
+        ${formHTML}
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:13px">⚽ Golovi</h3>
+        <div class="rank-list">${goalRows}</div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:13px">🎯 Asistencije</h3>
+        <div class="rank-list">${assistRows}</div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:13px">🟨 Kartoni</h3>
+        <div class="rank-list">${cardRows}</div>
+      </div>
+    </div>
   `);
 }
-
 
 /* =========================================================
    DELETE TEAM
@@ -10759,6 +10870,47 @@ document.addEventListener("DOMContentLoaded",()=>{
   opacity: .7;
 }
 
+.admin-crud-v4 .crud-player-photo-editor {
+  display:flex;
+  gap:14px;
+  align-items:center;
+  margin-top:16px;
+  padding:12px;
+  border:1px solid var(--border, rgba(255,255,255,.1));
+  border-radius:14px;
+}
+
+.admin-crud-v4 .crud-player-photo-preview-wrap {
+  flex:0 0 auto;
+}
+
+.admin-crud-v4 .crud-player-photo-preview {
+  width:88px;
+  height:88px;
+  border-radius:16px;
+  object-fit:cover;
+  display:block;
+  background:rgba(255,255,255,.06);
+}
+
+.admin-crud-v4 .crud-player-photo-controls {
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.admin-crud-v4 .crud-photo-button {
+  width:max-content;
+  margin-top:4px;
+}
+
+@media (max-width:600px) {
+  .admin-crud-v4 .crud-player-photo-editor {
+    align-items:flex-start;
+  }
+}
+
 .admin-crud-v4 .admin-player-item.is-hidden {
   display: none;
 }
@@ -11303,6 +11455,25 @@ document.addEventListener("DOMContentLoaded",()=>{
         </label>
       </div>
 
+      <div class="crud-player-photo-editor">
+        <div class="crud-player-photo-preview-wrap">
+          <img
+            id="crudPlayerPhotoPreview"
+            class="crud-player-photo-preview"
+            src="${playerPhoto(player)}"
+            alt="Slika igrača">
+        </div>
+        <div class="crud-player-photo-controls">
+          <strong>🖼️ Slika igrača</strong>
+          <span class="muted">Trenutna slika se zadržava ako ne izabereš novu.</span>
+          <label class="btn btn-small crud-photo-button">
+            📷 Izaberi novu sliku
+            <input id="crudPlayerPhoto" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+          </label>
+          <span id="crudPlayerPhotoName" class="muted">Nije odabrana nova slika</span>
+        </div>
+      </div>
+
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap">
         <button id="crudPlayerCancel" type="button" class="btn btn-small">Otkaži</button>
         <button id="crudPlayerSave" type="button" class="btn btn-green btn-small">💾 Sačuvaj promjene</button>
@@ -11313,9 +11484,36 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     const saveButton = document.getElementById("crudPlayerSave");
     const cancelButton = document.getElementById("crudPlayerCancel");
+    const photoInput = document.getElementById("crudPlayerPhoto");
+    const photoPreview = document.getElementById("crudPlayerPhotoPreview");
+    const photoName = document.getElementById("crudPlayerPhotoName");
 
     cancelButton?.addEventListener("click", () => hideModal());
     saveButton?.addEventListener("click", () => saveEditPlayerV4(playerId));
+
+    photoInput?.addEventListener("change", () => {
+      const file = photoInput.files?.[0];
+      if (!file) return;
+
+      if (!file.type.match(/^image\/(png|jpeg|webp)$/i)) {
+        alert("Dozvoljene su JPG, PNG i WEBP slike.");
+        photoInput.value = "";
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Slika može imati najviše 5 MB.");
+        photoInput.value = "";
+        return;
+      }
+
+      if (photoPreview) {
+        const url = URL.createObjectURL(file);
+        photoPreview.src = url;
+        photoPreview.onload = () => URL.revokeObjectURL(url);
+      }
+      if (photoName) photoName.textContent = file.name;
+    });
 
     document.getElementById("crudPlayerName")?.focus();
   };
@@ -11329,6 +11527,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     const numberEl = document.getElementById("crudPlayerNumber");
     const positionEl = document.getElementById("crudPlayerPosition");
     const captainEl = document.getElementById("crudPlayerCaptain");
+    const photoEl = document.getElementById("crudPlayerPhoto");
     const saveButton = document.getElementById("crudPlayerSave");
 
     const name = nameEl?.value.trim() || "";
@@ -11354,19 +11553,44 @@ document.addEventListener("DOMContentLoaded",()=>{
         saveButton.textContent = "⏳ Čuvam...";
       }
 
-      const { error } = await supabaseClient.rpc("update_player_admin", {
-        player_uuid: playerId,
-        new_name: name,
-        new_team_id: team,
-        new_jersey_number: jersey,
-        new_position: position,
-        new_is_captain: captain
-      });
+      /* Ako je postavljen kapiten, prvo skini kapiten status ostalima u toj ekipi. */
+      if (captain) {
+        const { error: captainError } = await supabaseClient
+          .from("players")
+          .update({ is_captain: false })
+          .eq("team_id", team)
+          .neq("id", playerId);
+        if (captainError) throw captainError;
+      }
+
+      let photoUrl = undefined;
+      const photoFile = photoEl?.files?.[0];
+
+      if (photoFile) {
+        photoUrl = await uploadFile(photoFile, `players/${playerId}`);
+      }
+
+      const updatePayload = {
+        name,
+        team_id: team,
+        jersey_number: jersey,
+        position,
+        is_captain: captain
+      };
+
+      if (photoUrl !== undefined) {
+        updatePayload.photo_url = photoUrl;
+      }
+
+      const { error } = await supabaseClient
+        .from("players")
+        .update(updatePayload)
+        .eq("id", playerId);
 
       if (error) throw error;
 
       hideModal();
-      toast4("Igrač je uspješno izmijenjen.");
+      toast4(photoUrl !== undefined ? "Igrač i slika su uspješno izmijenjeni." : "Igrač je uspješno izmijenjen.");
       await loadAll();
 
     } catch (error) {
@@ -12587,6 +12811,15 @@ if ("serviceWorker" in navigator) {
           </div>
         </div>
         <div class="card v2-detail-card">
+          <h3>📈 Forma</h3>
+          <div class="v2-form-strip">${recent.length ? recent.map(m=>{
+            const home=String(m.home_team_id)===String(p.team_id), my=n(home?m.home_score:m.away_score), op=n(home?m.away_score:m.home_score);
+            const result=my>op?'P':my===op?'N':'I';
+            return `<span class="v2-form-dot v2-form-${result}">${result}</span>`;
+          }).join('') : '<span class="muted">Nema dovoljno utakmica</span>'}</div>
+          <small class="muted">Posljednjih ${recent.length} evidentiranih nastupa</small>
+        </div>
+        <div class="card v2-detail-card">
           <h3>📅 Posljednje utakmice</h3>
           ${recent.length ? recent.map(m=>{
             const h=team(m.home_team_id), a=team(m.away_team_id);
@@ -12642,6 +12875,31 @@ if ("serviceWorker" in navigator) {
   }
 
   /* ---------------- MATCH CENTER EXTRA ---------------- */
+  function calculateMatchMVP(matchId){
+    const m=getMatch(matchId); if(!m) return null;
+    const ids=new Set();
+    (matchPlayers||[]).forEach(mp=>{ if(String(mp.match_id)===String(matchId)) ids.add(String(mp.player_id)); });
+    (goals||[]).forEach(g=>{ if(String(g.match_id)===String(matchId)){ ids.add(String(g.player_id)); if(g.assist_player_id) ids.add(String(g.assist_player_id)); }});
+    (cards||[]).forEach(c=>{ if(String(c.match_id)===String(matchId)) ids.add(String(c.player_id)); });
+    const candidates=Array.from(ids).map(id=>{
+      const p=player(id); if(!p) return null;
+      const pg=(goals||[]).filter(g=>String(g.match_id)===String(matchId)&&String(g.player_id)===String(id)).length;
+      const pa=(goals||[]).filter(g=>String(g.match_id)===String(matchId)&&String(g.assist_player_id||'')===String(id)).length;
+      const pc=(cards||[]).filter(c=>String(c.match_id)===String(matchId)&&String(c.player_id)===String(id));
+      const red=pc.filter(c=>String(c.card_type||'').toLowerCase()==='red').length;
+      const yellow=pc.length-red;
+      const registered=(matchPlayers||[]).some(mp=>String(mp.match_id)===String(matchId)&&String(mp.player_id)===String(id));
+      const score=pg*3+pa*2-yellow*.5-red*2+(registered?.1:0);
+      return {p,pg,pa,yellow,red,score};
+    }).filter(Boolean).sort((a,b)=>b.score-a.score || b.pg-a.pg || b.pa-a.pa);
+    return candidates[0] && candidates[0].score>0 ? candidates[0] : null;
+  }
+
+  function renderMatchMVP(matchId){
+    const mvp=calculateMatchMVP(matchId); if(!mvp) return `<div class="empty compact">MVP se još ne može odrediti — nema dovoljno evidentiranih učinaka.</div>`;
+    return `<div class="v2-mvp-card"><div class="v2-mvp-crown">🏆</div><img src="${playerPhoto(mvp.p)}" alt=""><div class="v2-mvp-info"><div class="hero-kicker">IGRAČ UTAKMICE</div><button type="button" onclick="openPlayer('${mvp.p.id}')"><b>${esc2(mvp.p.name)}</b></button><small>${esc2(team(mvp.p.team_id)?.name||'')} · #${mvp.p.jersey_number??'-'}</small><div class="v2-mvp-stats"><span>⚽ ${mvp.pg} gol</span><span>🎯 ${mvp.pa} asist.</span><span>🟨 ${mvp.yellow}</span>${mvp.red?`<span>🟥 ${mvp.red}</span>`:''}</div></div></div>`;
+  }
+
   function enhanceCurrentMatch(){
     const panel=document.getElementById("match-panel-stats");
     const m=typeof currentMatchId!=="undefined" ? getMatch(currentMatchId) : null;
@@ -12654,6 +12912,7 @@ if ("serviceWorker" in navigator) {
     const hc=(cards||[]).filter(c=>String(c.match_id)===String(m.id)&&player(c.player_id)?.team_id===m.home_team_id);
     const ac=(cards||[]).filter(c=>String(c.match_id)===String(m.id)&&player(c.player_id)?.team_id===m.away_team_id);
     const home=team(m.home_team_id), away=team(m.away_team_id);
+    const mvpBox=document.createElement("div"); mvpBox.className="v2-match-mvp"; mvpBox.innerHTML=renderMatchMVP(m.id); panel.prepend(mvpBox);
     const card=document.createElement("div"); card.className="card v2-match-extra"; card.innerHTML=`
       <h3>📊 Detaljna statistika</h3>
       <div class="v2-match-stat-table">
@@ -12721,7 +12980,118 @@ if ("serviceWorker" in navigator) {
     .v2-player-hero,.v2-team-hero{display:flex;align-items:center;gap:18px;padding:18px;border-radius:20px;background:linear-gradient(145deg,rgba(32,212,123,.09),rgba(44,156,255,.06));border:1px solid rgba(255,255,255,.07);margin-bottom:16px}
     .v2-player-hero>img,.v2-team-hero>img{width:96px;height:96px;object-fit:cover;border-radius:20px;background:#081622}.v2-team-hero>img{object-fit:contain;padding:8px}
     .v2-player-main{min-width:0}.v2-player-main h2,.v2-team-hero h2{margin:2px 0 5px}.v2-player-badges{margin-top:8px}.v2-stat-grid{margin-top:14px}.v2-detail-card{margin-top:14px}.v2-detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:10px}.v2-detail-grid>div{padding:11px;border-radius:12px;background:rgba(255,255,255,.035)}.v2-detail-grid span,.v2-detail-grid b{display:block}.v2-detail-grid span{font-size:11px;color:var(--muted)}.v2-detail-grid b{margin-top:3px}.v2-recent-match{display:grid;grid-template-columns:1fr auto;gap:3px 10px;width:100%;text-align:left;padding:11px;margin-top:7px;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:rgba(255,255,255,.03);color:#fff;cursor:pointer}.v2-recent-match small{grid-column:1/-1;color:var(--muted)}.v2-roster-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.v2-roster{display:flex;align-items:center;gap:9px;text-align:left;border:1px solid rgba(255,255,255,.06);border-radius:13px;padding:9px;background:rgba(255,255,255,.03);color:#fff}.v2-roster img{width:42px;height:42px;border-radius:11px;object-fit:cover}.v2-roster span{min-width:0}.v2-roster b,.v2-roster small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v2-roster small{color:var(--muted);margin-top:2px}.v2-match-extra{margin-top:14px}.v2-match-stat-table{display:grid;gap:6px;margin-top:10px}.v2-match-stat-table>div{display:grid;grid-template-columns:55px 1fr 55px;align-items:center;text-align:center;padding:10px;border-radius:10px;background:rgba(255,255,255,.035)}.v2-match-stat-table span{color:var(--muted);font-size:11px}.v2-match-players{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:13px}.v2-match-players>div{display:grid;gap:5px}.v2-match-players span{font-size:12px}.v2-advanced-stats{display:grid;gap:14px;margin-top:16px}.v2-kpi-grid{margin-top:12px}.v2-kpi-grid>div{padding:13px;border-radius:13px;background:rgba(255,255,255,.035)}.v2-kpi-grid b,.v2-kpi-grid span{display:block}.v2-kpi-grid b{font-size:25px}.v2-kpi-grid span{color:var(--muted);font-size:11px;margin-top:2px}.v2-rank-line{width:100%;display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:10px;border:0;border-bottom:1px solid rgba(255,255,255,.05);background:transparent;color:#fff;text-align:left}.v2-rank-line:last-child{border-bottom:0}.v2-countdown{margin-top:10px}.v2-countdown button{width:100%;display:flex;align-items:center;gap:12px;text-align:left;border:1px solid rgba(32,212,123,.22);background:rgba(32,212,123,.055);color:#fff;border-radius:14px;padding:12px}.v2-countdown button>span{font-size:22px}.v2-countdown button>div{flex:1}.v2-countdown b,.v2-countdown small{display:block}.v2-countdown small{color:var(--muted);margin-top:3px}.v2-countdown i{font-style:normal;font-size:20px;color:var(--green)}
+    .v2-match-mvp{margin-bottom:14px}.v2-mvp-card{display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:linear-gradient(135deg,rgba(244,197,66,.12),rgba(32,212,123,.06));border:1px solid rgba(244,197,66,.22)}.v2-mvp-card img{width:72px;height:72px;border-radius:16px;object-fit:cover;background:#081622}.v2-mvp-crown{font-size:27px}.v2-mvp-info{min-width:0;flex:1}.v2-mvp-info button{display:block;border:0;background:none;color:#fff;padding:0;text-align:left;font-size:18px}.v2-mvp-info small{display:block;color:var(--muted);margin-top:3px}.v2-mvp-stats{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.v2-mvp-stats span{font-size:10px;padding:4px 7px;border-radius:7px;background:rgba(255,255,255,.055)}.v2-form-strip{display:flex;gap:7px;margin:10px 0}.v2-form-dot{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:11px;font-weight:950}.v2-form-P{background:rgba(32,212,123,.16);color:var(--green)}.v2-form-N{background:rgba(244,197,66,.16);color:var(--yellow)}.v2-form-I{background:rgba(255,77,93,.16);color:#ff7882}
     @media(max-width:600px){.v2-player-hero,.v2-team-hero{padding:13px;gap:12px}.v2-player-hero>img,.v2-team-hero>img{width:74px;height:74px}.v2-roster-grid{grid-template-columns:1fr}.v2-match-players{grid-template-columns:1fr}.v2-detail-grid{grid-template-columns:1fr}.v2-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.live-scoreboard{grid-template-columns:1fr 110px 1fr;padding:12px;gap:7px}.live-team img{width:62px;height:62px}.live-score{font-size:38px}.live-team-name{font-size:12px}.notification-modal-head{align-items:flex-start}.notification-modal-head .btn{white-space:nowrap}}
+  `; document.head.appendChild(style);
+})();
+</script>
+
+
+<script>
+/* =========================================================
+   MEDJASI MATCH CENTER 2.0
+   Nadogradnja postojećeg Match Centera bez promjene Supabase šeme.
+========================================================= */
+(function(){
+  const previousOpenMatch = window.openMatch;
+  if(typeof previousOpenMatch !== 'function') return;
+
+  const safe = v => typeof esc2 === 'function' ? esc2(v) : String(v ?? '');
+  const num = v => Number(v || 0);
+  const pget = id => typeof getPlayer === 'function' ? getPlayer(id) : null;
+  const tget = id => typeof getTeam === 'function' ? getTeam(id) : null;
+
+  function teamGoals(matchId, teamId){
+    return (goals||[]).filter(g => String(g.match_id)===String(matchId) && pget(g.player_id)?.team_id===teamId).sort((a,b)=>num(a.minute)-num(b.minute));
+  }
+  function teamCards(matchId, teamId){
+    return (cards||[]).filter(c => String(c.match_id)===String(matchId) && pget(c.player_id)?.team_id===teamId).sort((a,b)=>num(a.minute)-num(b.minute));
+  }
+  function teamAssists(matchId, teamId){
+    return (goals||[]).filter(g => String(g.match_id)===String(matchId) && g.assist_player_id && pget(g.assist_player_id)?.team_id===teamId).sort((a,b)=>num(a.minute)-num(b.minute));
+  }
+  function registered(matchId, teamId){
+    return (matchPlayers||[]).filter(mp => String(mp.match_id)===String(matchId) && pget(mp.player_id)?.team_id===teamId);
+  }
+  function playerLine(id, matchId){
+    const p=pget(id); if(!p) return '';
+    const g=(goals||[]).filter(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(id)).length;
+    const a=(goals||[]).filter(x=>String(x.match_id)===String(matchId)&&String(x.assist_player_id||'')===String(id)).length;
+    const c=(cards||[]).filter(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(id));
+    const red=c.filter(x=>String(x.card_type||'').toLowerCase()==='red').length;
+    const yellow=c.length-red;
+    const mp=(matchPlayers||[]).find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(id));
+    return `<button type="button" class="mc20-player-row" onclick="openPlayer('${id}')"><img src="${playerPhoto(p)}"><span><b>#${p.jersey_number??'-'} ${safe(p.name)}</b><small>${safe(p.position||'-')} ${mp?.is_active?'· 🟢 na terenu':'· prijavljen'}</small></span><em>${g?'⚽ '+g:''}${a?' 🎯 '+a:''}${yellow?' 🟨 '+yellow:''}${red?' 🟥 '+red:''}</em></button>`;
+  }
+  function eventText(e){
+    const p=pget(e.player_id); const a=e.assist_player_id?pget(e.assist_player_id):null;
+    return `<div class="mc20-event"><strong>${num(e.minute)}'</strong><span>⚽</span><div><b>${safe(p?.name||'Igrač')}</b>${a?`<small>🎯 asistencija: ${safe(a.name)}</small>`:''}</div></div>`;
+  }
+  function cardText(c){
+    const p=pget(c.player_id); const icon=String(c.card_type||'').toLowerCase()==='red'?'🟥':'🟨';
+    return `<div class="mc20-event"><strong>${num(c.minute)}'</strong><span>${icon}</span><div><b>${safe(p?.name||'Igrač')}</b><small>${String(c.card_type||'Karton')}</small></div></div>`;
+  }
+  function makeBlock(title, html, cls=''){
+    return `<div class="card mc20-block ${cls}"><h3>${title}</h3>${html}</div>`;
+  }
+
+  function enhance(){
+    const id=currentMatchId, m=getMatch(id); if(!m) return;
+    const stats=document.getElementById('match-panel-stats');
+    const eventsPanel=document.getElementById('match-panel-events');
+    const lineupPanel=document.getElementById('match-panel-lineup');
+    if(!stats||!eventsPanel||!lineupPanel) return;
+    stats.querySelector('.mc20-extra')?.remove();
+    eventsPanel.querySelector('.mc20-extra')?.remove();
+    lineupPanel.querySelector('.mc20-extra')?.remove();
+
+    const ht=tget(m.home_team_id), at=tget(m.away_team_id);
+    const hg=teamGoals(id,m.home_team_id), ag=teamGoals(id,m.away_team_id);
+    const hc=teamCards(id,m.home_team_id), ac=teamCards(id,m.away_team_id);
+    const hp=registered(id,m.home_team_id), ap=registered(id,m.away_team_id);
+    const hActive=hp.filter(x=>x.is_active).length, aActive=ap.filter(x=>x.is_active).length;
+    const hBench=hp.filter(x=>!x.is_active).length, aBench=ap.filter(x=>!x.is_active).length;
+    const hAs=teamAssists(id,m.home_team_id), aAs=teamAssists(id,m.away_team_id);
+    const totalGoals=hg.length+ag.length, totalCards=hc.length+ac.length;
+
+    const statsExtra=document.createElement('div'); statsExtra.className='mc20-extra'; statsExtra.innerHTML=`
+      <div class="grid grid-2 mc20-grid">
+        ${makeBlock('⚽ ${safe(ht?.name||'Domaćin')} — učinak', hp.length?hp.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Nema evidentiranih igrača.</div>','mc20-roster')}
+        ${makeBlock('⚽ ${safe(at?.name||'Gost')} — učinak', ap.length?ap.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Nema evidentiranih igrača.</div>','mc20-roster')}
+      </div>
+      ${makeBlock('📊 Pregled utakmice',`<div class="mc20-compare"><div><b>${hg.length}</b><span>Golovi</span><b>${ag.length}</b></div><div><b>${hAs.length}</b><span>Asistencije</span><b>${aAs.length}</b></div><div><b>${hc.length}</b><span>Kartoni</span><b>${ac.length}</b></div><div><b>${hActive}</b><span>Trenutno na terenu</span><b>${aActive}</b></div><div><b>${hBench}</b><span>Na klupi</span><b>${aBench}</b></div><div><b>${hp.length}</b><span>Prijavljeni</span><b>${ap.length}</b></div></div>`)}
+    `;
+    stats.appendChild(statsExtra);
+
+    const allEvents=[...hg.map(g=>({minute:num(g.minute),html:eventText(g),type:'goal'})),...ag.map(g=>({minute:num(g.minute),html:eventText(g),type:'goal'})),...hc.map(c=>({minute:num(c.minute),html:cardText(c),type:'card'})),...ac.map(c=>({minute:num(c.minute),html:cardText(c),type:'card'}))].sort((a,b)=>a.minute-b.minute);
+    const ev=document.createElement('div'); ev.className='mc20-extra'; ev.innerHTML=`
+      <div class="grid grid-2 mc20-grid">
+        ${makeBlock('⚽ Strijelci', `<div>${allEvents.filter(x=>x.type==='goal').length?allEvents.filter(x=>x.type==='goal').map(x=>x.html).join(''):'<div class="empty compact">Nema golova.</div>'}</div>`)}
+        ${makeBlock('🟨 Kartoni', `<div>${allEvents.filter(x=>x.type==='card').length?allEvents.filter(x=>x.type==='card').map(x=>x.html).join(''):'<div class="empty compact">Nema kartona.</div>'}</div>`)}
+      </div>
+      ${makeBlock('🎯 Asistencije', `<div class="mc20-assists">${hAs.concat(aAs).length?hAs.concat(aAs).map(g=>`<div class="mc20-event"><strong>${num(g.minute)}'</strong><span>🎯</span><div><b>${safe(pget(g.assist_player_id)?.name||'Igrač')}</b><small>asistencija za ${safe(pget(g.player_id)?.name||'strijelca')}</small></div></div>`).join(''):'<div class="empty compact">Nema evidentiranih asistencija.</div>'}</div>`)}
+      ${makeBlock('📋 Hronologija', `<div>${allEvents.length?allEvents.map(x=>x.html).join(''):'<div class="empty compact">Nema događaja.</div>'}</div>`)}
+    `;
+    eventsPanel.appendChild(ev);
+
+    const lp=document.createElement('div'); lp.className='mc20-extra'; lp.innerHTML=`
+      <div class="grid grid-2 mc20-grid">
+        ${makeBlock('👥 ${safe(ht?.name||'Domaćin')}', `<div class="mc20-lineup-summary"><b>${hActive}</b><span>na terenu</span><b>${hBench}</b><span>klupa</span></div>${hp.length?hp.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Postava nije evidentirana.</div>'}`)}
+        ${makeBlock('👥 ${safe(at?.name||'Gost')}', `<div class="mc20-lineup-summary"><b>${aActive}</b><span>na terenu</span><b>${aBench}</b><span>klupa</span></div>${ap.length?ap.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Postava nije evidentirana.</div>'}`)}
+      </div>
+      ${makeBlock('🔄 Izmjene', `<div class="muted">Trenutna baza čuva samo stanje igrača (teren/klupa), ne istoriju minuta izmjena. Zato ovdje prikazujemo tačno trenutno stanje bez izmišljanja vremena izmjena.</div><div class="grid grid-2" style="margin-top:10px"><div><b>${safe(ht?.name||'Domaćin')}</b><p class="muted">${hActive} aktivnih · ${hBench} na klupi</p></div><div><b>${safe(at?.name||'Gost')}</b><p class="muted">${aActive} aktivnih · ${aBench} na klupi</p></div></div>`)}
+    `;
+    lineupPanel.appendChild(lp);
+  }
+
+  window.openMatch=function(id){
+    previousOpenMatch(id);
+    setTimeout(enhance,50);
+  };
+
+  const style=document.createElement('style'); style.textContent=`
+    .mc20-extra{margin-top:15px}.mc20-grid{margin-top:15px}.mc20-block{overflow:hidden}.mc20-block h3{margin-bottom:12px}.mc20-player-row{width:100%;display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:9px;padding:9px 0;border:0;border-bottom:1px solid var(--border);background:transparent;color:inherit;text-align:left;cursor:pointer}.mc20-player-row:last-child{border-bottom:0}.mc20-player-row img{width:38px;height:38px;border-radius:10px;object-fit:cover}.mc20-player-row span{min-width:0}.mc20-player-row span b,.mc20-player-row span small{display:block}.mc20-player-row small{color:var(--muted);font-size:10px;margin-top:2px}.mc20-player-row em{font-style:normal;font-size:11px;white-space:nowrap}.mc20-event{display:grid;grid-template-columns:38px 28px 1fr;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}.mc20-event:last-child{border-bottom:0}.mc20-event>strong{color:var(--green)}.mc20-event span{font-size:17px}.mc20-event small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.mc20-compare>div{display:grid;grid-template-columns:70px 1fr 70px;align-items:center;text-align:center;padding:10px;border-bottom:1px solid var(--border)}.mc20-compare>div:last-child{border-bottom:0}.mc20-compare b:first-child{text-align:right}.mc20-compare b:last-child{text-align:left}.mc20-compare span{color:var(--muted);font-size:11px}.mc20-lineup-summary{display:flex;gap:8px;align-items:baseline;padding:8px 10px;margin-bottom:7px;border-radius:10px;background:rgba(255,255,255,.025)}.mc20-lineup-summary b{font-size:18px}.mc20-lineup-summary span{color:var(--muted);font-size:10px}.mc20-assists{display:grid;gap:0}
+    @media(max-width:700px){.mc20-player-row{grid-template-columns:34px 1fr auto}.mc20-player-row img{width:34px;height:34px}.mc20-player-row em{font-size:10px}.mc20-compare>div{grid-template-columns:55px 1fr 55px}}
   `; document.head.appendChild(style);
 })();
 </script>
