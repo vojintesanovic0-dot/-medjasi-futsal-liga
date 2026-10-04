@@ -13096,5 +13096,510 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+
+<!-- =========================================================
+     MEDJASI V3 - ADMIN COMMUNITY + MOBILE/POLISH LAYER
+     Ova nadogradnja čuva postojeći sistem i dodaje:
+     - ADMIN oznaku u chatu i komentarima
+     - poseban izgled Admin poruka
+     - Admin banner/objavu
+     - sigurnije prikazivanje role iz profiles tabele
+     - reakcije na chat poruke (lokalno po uređaju, bez nove DB šeme)
+     - bolji chat/komentar UX
+========================================================= -->
+<style id="medjasi-v3-community-css">
+.v3-admin-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-left:7px;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:9px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.5px;
+  color:#fff;
+  background:linear-gradient(135deg,#ffb300,#ff6b00);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 4px 14px rgba(255,140,0,.18);
+  vertical-align:middle;
+}
+.v3-admin-name{color:#ffd166!important;font-weight:950!important}
+.v3-admin-message{
+  border-color:rgba(255,179,0,.28)!important;
+  background:linear-gradient(135deg,rgba(255,179,0,.075),rgba(255,255,255,.018))!important;
+  box-shadow:0 10px 28px rgba(255,140,0,.07)!important;
+}
+.v3-admin-message .chat-avatar{
+  background:linear-gradient(135deg,#ffb300,#ff6b00)!important;
+  color:#fff!important;
+}
+.v3-admin-comment{
+  border-color:rgba(255,179,0,.28)!important;
+  background:linear-gradient(135deg,rgba(255,179,0,.07),rgba(255,255,255,.018))!important;
+  box-shadow:0 10px 28px rgba(255,140,0,.06)!important;
+}
+.v3-admin-comment .comment-author{color:#ffd166!important;font-weight:950!important}
+.v3-admin-tools{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:0 0 12px;
+}
+.v3-admin-tools .v3-admin-live{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(255,179,0,.08);
+  border:1px solid rgba(255,179,0,.18);
+  color:#ffd166;
+  font-size:10px;
+  font-weight:900;
+}
+.v3-admin-tools .v3-admin-live i{
+  width:7px;height:7px;border-radius:50%;
+  background:#ffb300;
+  box-shadow:0 0 0 4px rgba(255,179,0,.08);
+}
+.v3-reaction-row{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.v3-reaction{
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.035);
+  color:var(--text);
+  border-radius:999px;
+  padding:4px 8px;
+  font-size:11px;
+  cursor:pointer;
+}
+.v3-reaction:hover{background:rgba(255,255,255,.08)}
+.v3-reaction.active{border-color:rgba(32,212,123,.4);background:rgba(32,212,123,.1)}
+.v3-admin-compose{
+  margin:0 0 12px;
+  padding:11px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,179,0,.2);
+  background:rgba(255,179,0,.055);
+}
+.v3-admin-compose label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  font-weight:900;
+  color:#ffd166;
+  cursor:pointer;
+}
+.v3-admin-compose input{accent-color:#ffb300}
+.v3-admin-notice{
+  margin:0 0 14px;
+  padding:13px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,179,0,.2);
+  background:linear-gradient(135deg,rgba(255,179,0,.09),rgba(255,255,255,.02));
+}
+.v3-admin-notice strong{display:block;color:#ffd166}
+.v3-admin-notice small{display:block;margin-top:4px;color:var(--muted)}
+@media(max-width:700px){
+  .v3-admin-tools{align-items:flex-start}
+  .v3-admin-badge{font-size:8px;padding:4px 7px}
+}
+</style>
+
+<script id="medjasi-v3-community-js">
+(function(){
+  "use strict";
+
+  window.medjasiV3 = window.medjasiV3 || {};
+  const V3 = window.medjasiV3;
+
+  V3.adminIds = V3.adminIds || new Set();
+  V3.roleCacheReady = false;
+
+  V3.escape = function(v){
+    if(typeof window.esc === "function") return window.esc(v);
+    return String(v ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  };
+
+  V3.isAdminMessage = function(item){
+    if(!item) return false;
+    if(item.role === "admin") return true;
+    return !!item.user_id && V3.adminIds.has(String(item.user_id));
+  };
+
+  V3.badge = function(){
+    return `<span class="v3-admin-badge">👑 ADMIN</span>`;
+  };
+
+  V3.reactionKey = "medjasi_v3_chat_reactions_v1";
+
+  V3.readReactions = function(){
+    try{return JSON.parse(localStorage.getItem(V3.reactionKey)||"{}")||{}}
+    catch(e){return {}}
+  };
+
+  V3.writeReactions = function(data){
+    try{localStorage.setItem(V3.reactionKey,JSON.stringify(data))}
+    catch(e){}
+  };
+
+  V3.toggleReaction = function(id,emoji){
+    const all=V3.readReactions();
+    all[id]=all[id]||{};
+    all[id][emoji]=!all[id][emoji];
+    V3.writeReactions(all);
+    if(typeof window.renderChat==="function") window.renderChat();
+  };
+  window.v3ToggleReaction=V3.toggleReaction;
+
+  V3.reactionHTML = function(id){
+    const data=V3.readReactions()[id]||{};
+    return `<div class="v3-reaction-row">
+      ${["❤️","🔥","⚽","👏","😂"].map(e =>
+        `<button type="button" class="v3-reaction ${data[e]?"active":""}"
+          onclick="v3ToggleReaction('${V3.escape(id)}','${e}')">${e}</button>`
+      ).join("")}
+    </div>`;
+  };
+
+  V3.loadAdminIds = async function(){
+    if(!window.supabaseClient) return;
+    try{
+      const {data,error}=await supabaseClient
+        .from("profiles")
+        .select("id,role")
+        .eq("role","admin");
+      if(error){
+        console.warn("V3: nije moguće učitati admin profile:",error);
+        return;
+      }
+      V3.adminIds = new Set((data||[]).map(x=>String(x.id)));
+      V3.roleCacheReady = true;
+    }catch(error){
+      console.warn("V3 admin role cache:",error);
+    }
+  };
+
+  V3.adminName = function(item){
+    return V3.isAdminMessage(item) ? "Admin" :
+      item?.username ||
+      (window.currentUser && item.user_id===window.currentUser.id ? window.currentProfile?.username : null) ||
+      (item?.user_id ? String(item.user_id).slice(0,8) : "Korisnik");
+  };
+
+  /* ---------------- CHAT ---------------- */
+  const originalSendChat = window.sendChat;
+
+  window.renderChat = function(){
+    const box=document.getElementById("chatBox");
+    if(!box) return;
+
+    const list=Array.isArray(window.messages)?window.messages:[];
+    box.innerHTML=list.length ? list.map(m=>{
+      const admin=V3.isAdminMessage(m);
+      const username=V3.adminName(m);
+      const safeId=V3.escape(m.id);
+
+      return `
+        <div class="chat-message ${admin?"v3-admin-message":""}">
+          <div class="chat-avatar">${admin?"👑":"💬"}</div>
+          <div class="chat-message-body">
+            <div class="chat-message-top">
+              <strong class="${admin?"v3-admin-name":""}">
+                ${V3.escape(username)}${admin?V3.badge():""}
+              </strong>
+              <small class="muted">${typeof formatDate==="function"?formatDate(m.created_at):""}</small>
+            </div>
+            ${m.content ? `<div class="chat-message-text">${V3.escape(m.content)}</div>` : ""}
+            ${m.image_url ? `
+              <button class="chat-photo" type="button"
+                onclick="openImagePreview('${V3.escape(m.image_url)}','${V3.escape(username)}')">
+                <img src="${V3.escape(m.image_url)}" alt="Slika u chatu" loading="lazy">
+              </button>` : ""}
+            ${V3.reactionHTML(safeId)}
+            ${window.currentUser && (m.user_id===window.currentUser.id || typeof isAdmin==="function" && isAdmin())
+              ? `<button class="btn btn-red btn-small chat-delete" onclick="deleteChat('${safeId}')">🗑️</button>` : ""}
+          </div>
+        </div>`;
+    }).join("") :
+      `<div class="empty">Još nema poruka.<br>Budi prvi koji će započeti razgovor.</div>`;
+
+    box.scrollTop=box.scrollHeight;
+  };
+
+  window.sendChat = async function(){
+    if(!window.currentUser){
+      alert("Moraš biti prijavljen.");
+      return;
+    }
+
+    const input=document.getElementById("chatText");
+    const fileInput=document.getElementById("chatImageFile");
+    const content=input?.value.trim()||"";
+    const file=fileInput?.files?.[0]||null;
+
+    if(!content && !file){alert("Napiši poruku ili dodaj sliku.");return;}
+    if(content.length>1000){alert("Poruka može imati najviše 1000 znakova.");return;}
+    if(file && (!file.type.startsWith("image/") || file.size>5*1024*1024)){
+      alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB.");
+      return;
+    }
+
+    try{
+      let image_url=null;
+      if(file && typeof uploadFile==="function") image_url=await uploadFile(file,"chat");
+
+      const username=window.currentProfile?.username ||
+        window.currentUser.user_metadata?.username ||
+        window.currentUser.email?.split("@")[0] || "Korisnik";
+
+      const {error}=await supabaseClient.from("messages").insert({
+        user_id:window.currentUser.id,
+        username:String(username).slice(0,30),
+        content,
+        image_url
+      });
+      if(error) throw error;
+
+      if(input) input.value="";
+      if(typeof clearChatImage==="function") clearChatImage();
+      if(typeof toast==="function") toast("Poruka je poslata.");
+      if(typeof loadAll==="function") await loadAll();
+    }catch(error){
+      console.error(error);
+      alert(error.message||"Greška pri slanju poruke.");
+    }
+  };
+
+  /* ---------------- COMMENTS ---------------- */
+  window.renderComments = function(){
+    const container=document.getElementById("commentsList");
+    if(!container) return;
+
+    const list=Array.isArray(window.comments)?window.comments:[];
+    container.innerHTML=list.length ? list.map(c=>{
+      const admin=V3.isAdminMessage(c);
+      const username=V3.adminName(c);
+
+      return `
+        <div class="comment ${admin?"v3-admin-comment":""}">
+          <div class="comment-top">
+            <div>
+              <span class="comment-author ${admin?"v3-admin-name":""}">
+                ${V3.escape(username)}${admin?V3.badge():""}
+              </span>
+            </div>
+            <small class="comment-date">${typeof formatDate==="function"?formatDate(c.created_at):""}</small>
+          </div>
+          ${c.content ? `<div class="comment-text">${V3.escape(c.content)}</div>` : ""}
+          ${c.image_url ? `
+            <div class="comment-media">
+              <a href="${V3.escape(c.image_url)}" target="_blank" rel="noopener noreferrer">
+                <img src="${V3.escape(c.image_url)}" alt="Slika uz komentar" loading="lazy">
+              </a>
+            </div>` : ""}
+          ${window.currentUser && (c.user_id===window.currentUser.id || typeof isAdmin==="function" && isAdmin())
+            ? `<button class="btn btn-red btn-small" style="margin-top:8px" onclick="deleteComment('${V3.escape(c.id)}')">🗑️ Obriši</button>` : ""}
+        </div>`;
+    }).join("") :
+      `<div class="empty">Nema komentara.<br>Budi prvi koji će nešto napisati.</div>`;
+
+    if(typeof setupCommentImageUI==="function") setupCommentImageUI();
+
+    const counter=document.getElementById("commentCounter");
+    const input=document.getElementById("commentText");
+    if(input&&counter) counter.textContent=`${input.value.length} / 1000`;
+  };
+
+  /* ---------------- ADMIN COMPOSE LABEL ---------------- */
+  V3.addAdminControls=function(){
+    if(typeof isAdmin!=="function" || !isAdmin()) return;
+
+    const chatInput=document.getElementById("chatText");
+    if(chatInput && !document.getElementById("v3AdminChatNotice")){
+      const parent=chatInput.closest(".chat-input-row") || chatInput.parentElement;
+      if(parent){
+        const notice=document.createElement("div");
+        notice.id="v3AdminChatNotice";
+        notice.className="v3-admin-compose";
+        notice.innerHTML=`<label><input type="checkbox" checked disabled> 👑 Poruka će biti objavljena kao <strong>ADMIN</strong></label>`;
+        parent.parentElement?.insertBefore(notice,parent);
+      }
+    }
+
+    const commentsInput=document.getElementById("commentText");
+    if(commentsInput && !document.getElementById("v3AdminCommentNotice")){
+      const parent=commentsInput.closest(".comment-form") || commentsInput.parentElement;
+      if(parent){
+        const notice=document.createElement("div");
+        notice.id="v3AdminCommentNotice";
+        notice.className="v3-admin-compose";
+        notice.innerHTML=`<label><input type="checkbox" checked disabled> 👑 Komentar će biti objavljen kao <strong>ADMIN</strong></label>`;
+        parent.insertBefore(notice,commentsInput);
+      }
+    }
+  };
+
+  /* Admin status header for community areas */
+  V3.addAdminNotice=function(){
+    if(typeof isAdmin!=="function" || !isAdmin()) return;
+    ["chat","comments"].forEach(sectionId=>{
+      const section=document.getElementById(sectionId);
+      if(!section || section.querySelector(".v3-admin-tools")) return;
+      const host=section.querySelector(".card") || section.firstElementChild;
+      if(!host) return;
+      const notice=document.createElement("div");
+      notice.className="v3-admin-tools";
+      notice.innerHTML=`<span class="v3-admin-live"><i></i> ADMIN način rada</span><span class="muted">Tvoje objave se prikazuju kao 👑 ADMIN</span>`;
+      host.insertBefore(notice,host.firstChild);
+    });
+  };
+
+  V3.refresh=function(){
+    V3.addAdminControls();
+    V3.addAdminNotice();
+    if(typeof window.renderChat==="function") window.renderChat();
+    if(typeof window.renderComments==="function") window.renderComments();
+  };
+
+  /* Make role lookup happen before the first useful repaint. */
+  V3.start=async function(){
+    await V3.loadAdminIds();
+    V3.refresh();
+  };
+
+  /* Re-run after existing app initialization and auth changes. */
+  setTimeout(()=>V3.start(),500);
+  setTimeout(()=>V3.refresh(),1800);
+  window.addEventListener("load",()=>setTimeout(()=>V3.start(),300));
+
+})();
+</script>
+
+
+<style id="medjasi-v3-push-css">
+.v3-push-card{margin-top:16px;padding:14px;border:1px solid rgba(44,156,255,.2);border-radius:16px;background:rgba(44,156,255,.045)}
+.v3-push-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.v3-push-status{font-size:11px;color:var(--muted)}
+.v3-push-status.ok{color:#20d47b}.v3-push-status.warn{color:#f4c542}
+</style>
+<script id="medjasi-v3-push-js">
+(function(){
+  "use strict";
+  const PUBLIC_VAPID_KEY = "PASTE_YOUR_VAPID_PUBLIC_KEY_HERE";
+  const PUSH_ENDPOINT = "https://mesryrrjnsnhadoahbux.supabase.co/functions/v1/send-push";
+
+  function b64ToUint8Array(base64){
+    const pad="=".repeat((4-base64.length%4)%4);
+    const raw=atob((base64+pad).replace(/-/g,"+").replace(/_/g,"/"));
+    return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+  }
+
+  async function registerSW(){
+    if(!("serviceWorker" in navigator)) return null;
+    try{return await navigator.serviceWorker.register("./sw.js",{scope:"./"});}
+    catch(e){console.warn("Service worker nije registrovan:",e);return null;}
+  }
+
+  async function subscribePush(){
+    if(!window.currentUser){alert("Prvo se prijavi.");return;}
+    if(!("Notification" in window) || !("PushManager" in window)){
+      alert("Ovaj browser ne podržava push notifikacije.");
+      return;
+    }
+    if(PUBLIC_VAPID_KEY.startsWith("PASTE_")){
+      alert("Prvo treba ubaciti VAPID public key u V3 kod. Napravićemo ga u sljedećem koraku u Supabase.");
+      return;
+    }
+
+    const permission=await Notification.requestPermission();
+    if(permission!=="granted"){
+      alert("Obavještenja nisu dozvoljena.");
+      return;
+    }
+
+    const reg=await registerSW();
+    if(!reg) return;
+
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:b64ToUint8Array(PUBLIC_VAPID_KEY)
+      });
+    }
+
+    const payload=sub.toJSON();
+    const {error}=await supabaseClient.from("push_subscriptions").upsert({
+      user_id:window.currentUser.id,
+      endpoint:sub.endpoint,
+      p256dh:payload.keys?.p256dh||null,
+      auth:payload.keys?.auth||null,
+      user_agent:navigator.userAgent,
+      updated_at:new Date().toISOString()
+    },{onConflict:"endpoint"});
+
+    if(error) throw error;
+    localStorage.setItem("medjasi_push_enabled","1");
+    updatePushUI();
+    if(typeof toast==="function") toast("🔔 Push obavještenja su uključena.");
+  }
+
+  async function disablePush(){
+    try{
+      const reg=await navigator.serviceWorker.getRegistration("./");
+      const sub=await reg?.pushManager.getSubscription();
+      if(sub){
+        await supabaseClient.from("push_subscriptions").delete().eq("endpoint",sub.endpoint);
+        await sub.unsubscribe();
+      }
+    }catch(e){console.warn(e)}
+    localStorage.removeItem("medjasi_push_enabled");
+    updatePushUI();
+  }
+
+  function updatePushUI(){
+    const status=document.getElementById("v3PushStatus");
+    const btn=document.getElementById("v3PushButton");
+    if(!status||!btn) return;
+    const enabled=localStorage.getItem("medjasi_push_enabled")==="1";
+    status.textContent=enabled?"🔔 Push obavještenja su uključena.":"Push obavještenja nisu uključena.";
+    status.className="v3-push-status "+(enabled?"ok":"warn");
+    btn.textContent=enabled?"🔕 Isključi obavještenja":"🔔 Uključi obavještenja";
+    btn.onclick=enabled?disablePush:subscribePush;
+  }
+
+  function addPushUI(){
+    const admin=document.querySelector("#admin");
+    if(!admin || document.getElementById("v3PushCard")) return;
+    const card=document.createElement("div");
+    card.id="v3PushCard";
+    card.className="card v3-push-card";
+    card.innerHTML=`<div class="v3-push-row">
+      <div><strong>🔔 Push obavještenja</strong><div id="v3PushStatus" class="v3-push-status">Provjera...</div></div>
+      <button id="v3PushButton" class="btn btn-blue" type="button">🔔 Uključi obavještenja</button>
+    </div>`;
+    admin.appendChild(card);
+    updatePushUI();
+  }
+
+  window.medjasiPush={registerSW,subscribePush,disablePush};
+  window.addEventListener("load",async()=>{await registerSW(); setTimeout(addPushUI,1500);});
+  setInterval(addPushUI,3000);
+})();
+</script>
+
 </body>
 </html>
