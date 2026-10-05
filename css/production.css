@@ -443,3 +443,61 @@ img{max-width:100%}table{max-width:100%}pre{max-width:100%;overflow:auto}
   .v10-ball-wrap,.logo-ball{animation:none!important}
   .card,.player-card,.match-row,.rank-row,#mainNav button{transition:none!important}
 }
+
+/* FUNCTIONAL UI POLISH */
+.v9-community-section{max-width:1320px;margin-inline:auto}
+.v9-community-section .v9-community-hero{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.v9-community-actions{display:flex;gap:10px;flex-wrap:wrap}
+.v9-community-grid{display:grid;grid-template-columns:minmax(250px,.32fr) minmax(0,1fr);gap:20px;align-items:start}
+.v9-community-side{display:flex;flex-direction:column;gap:16px}
+.v9-community-main{min-width:0}
+.v9-community-help{padding:18px}
+.v9-community-help h3{margin-bottom:8px}
+.v9-stories-card{padding:18px}
+.v9-stories-wrap{display:flex;gap:12px;overflow-x:auto;padding:6px 2px 4px;scrollbar-width:thin}
+.v9-story{flex:0 0 76px}
+.v9-story-avatar{width:64px;height:64px;border-radius:50%;overflow:hidden;border:2px solid rgba(32,212,123,.45);background:rgba(255,255,255,.06);display:grid;place-items:center}
+.v9-story-avatar img{width:100%;height:100%;object-fit:cover}
+.v9-story-name{display:block;max-width:76px;margin-top:5px;font-size:11px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v9-add-story .v9-story-avatar{font-size:26px}
+.v9-feed{display:grid;gap:18px}
+.v9-post{min-width:0;animation:medjasiFadeUp .38s ease both}
+.v9-post-image{display:block;width:100%;max-height:680px;object-fit:cover}
+.v9-profile-card{min-height:220px}
+.v9-community-section .v9-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.v9-community-section .v9-section-head h2{margin:2px 0}
+.v7-admin-news-list{display:grid;gap:10px}
+.v7-admin-news-row{display:grid;grid-template-columns:70px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(255,255,255,.025)}
+.v7-news-row-media{width:70px;height:52px;border-radius:9px;overflow:hidden;background:rgba(255,255,255,.05)}
+.v7-news-row-media img,.v7-news-row-media video{width:100%;height:100%;object-fit:cover}
+.v7-news-row-main{min-width:0;display:grid;gap:3px}
+.v7-news-row-main strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v7-news-row-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.v7-admin-news-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.v7-admin-news-form .wide{grid-column:1/-1}
+@media(min-width:1101px){
+  body{padding-left:270px!important}
+  .site-header{width:270px!important}
+  .site-header .header-inner{padding:22px 15px 16px!important}
+  .logo{padding-inline:8px!important}
+  #mainNav{gap:6px!important}
+  #mainNav button{min-height:46px;padding:10px 13px}
+  #mainNav button span:last-child{font-size:13px;font-weight:750}
+  .header-account{display:grid!important;grid-template-columns:1fr 1fr;gap:5px!important}
+  .header-account .account-btn{min-width:0;width:100%;justify-content:center}
+  .header-account .account-admin-btn{grid-column:1/-1}
+  .v9-community-section{max-width:1380px}
+}
+@media(max-width:1100px){.v9-community-grid{grid-template-columns:1fr}.v9-community-side{order:2}.v9-community-main{order:1}}
+@media(max-width:640px){
+  .v9-community-section .v9-community-hero{align-items:stretch;flex-direction:column;padding:18px 15px}
+  .v9-community-actions{display:grid;grid-template-columns:1fr 1fr}
+  .v9-community-actions .btn{width:100%;padding-inline:8px}
+  .v9-community-grid{gap:14px}
+  .v7-admin-news-form{grid-template-columns:1fr}
+  .v7-admin-news-form .wide{grid-column:auto}
+  .v7-admin-news-row{grid-template-columns:54px minmax(0,1fr);gap:9px}
+  .v7-news-row-media{width:54px;height:46px}
+  .v7-news-row-actions{grid-column:1/-1;justify-content:stretch}
+  .v7-news-row-actions .btn{flex:1}
+}
