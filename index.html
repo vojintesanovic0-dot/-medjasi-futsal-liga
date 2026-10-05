@@ -2178,7 +2178,37 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
 @media(max-width:950px){.v10-hero{grid-template-columns:1fr;min-height:auto;padding-top:30px}.v10-hero-visual{height:300px}.v10-hero h1{font-size:clamp(48px,13vw,76px)}.v10-kpi-grid{grid-template-columns:repeat(2,1fr)}.v10-feature-grid,.v10-bottom-grid{grid-template-columns:1fr}.v10-community-banner,.v10-media-strip{align-items:flex-start;flex-direction:column}.v10-community-banner .btn,.v10-media-strip .btn{width:100%}}
 @media(max-width:600px){.v10-hero{padding:22px 4px 15px}.v10-hero-visual{height:245px}.v10-ball{width:115px;height:115px;font-size:66px}.v10-ball-wrap{width:190px;height:190px}.orbit-a{width:260px;height:110px}.orbit-b{width:210px;height:210px}.v10-floating-card{transform:scale(.88)}.v10-fc-top{right:0;top:4%}.v10-fc-bottom{left:0;bottom:3%}.v10-kpi-grid,.v10-feature-grid,.v10-live-section,.v10-results-section,.v10-bottom-grid{padding-left:4px;padding-right:4px}.v10-kpi{padding:13px}.v10-kpi strong{font-size:21px}.v10-trust-row{font-size:9px}.v10-card-head,.v10-section-heading{align-items:flex-start;flex-direction:column}.v10-section-heading .btn{width:100%}.v10-community-banner,.v10-media-strip,.v10-music-card{margin-left:4px;margin-right:4px}.v10-community-banner,.v10-media-strip{padding:20px}.v10-home{padding-bottom:15px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
-</style></head>
+</style>
+<style id="medjasi-v13-header-css">
+/* V13 — header/account area: clean, clear, premium */
+.header-actions{gap:10px!important;align-items:center!important}
+.header-account{display:flex!important;align-items:center!important;gap:8px!important}
+.header-account .account-btn{font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:42px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.045);color:#fff;border-radius:13px;padding:8px 12px;cursor:pointer;transition:.18s ease}
+.header-account .account-btn:hover{background:rgba(255,255,255,.08);border-color:rgba(37,228,135,.22);transform:translateY(-1px)}
+.header-account .v13-auth-main{min-width:152px;justify-content:flex-start;text-align:left}
+.header-account .v13-auth-main img{width:32px;height:32px;border-radius:10px;object-fit:cover;background:#0b1b2b;border:1px solid rgba(255,255,255,.08);flex:0 0 32px}
+.header-account .v13-auth-copy{min-width:0;display:flex;flex-direction:column;align-items:flex-start;line-height:1.05}
+.header-account .v13-auth-copy strong{font-size:12px;font-weight:900;color:#f5f8fb;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.header-account .v13-auth-copy small{font-size:9px;color:#7f94a6;margin-top:4px;white-space:nowrap}
+.header-account .v13-auth-copy .account-admin{display:inline-block;margin-left:6px;color:var(--accent);font-size:9px;font-weight:900;letter-spacing:.3px}
+.header-account .v13-logout{width:42px;padding:0!important;font-size:16px;color:#aebdca!important}
+.header-account .v13-login,.header-account .v13-register{min-height:42px!important;font-weight:900!important}
+.header-account .v13-login{background:linear-gradient(135deg,rgba(37,228,135,.15),rgba(21,152,255,.10))!important;border-color:rgba(37,228,135,.22)!important;color:#fff!important}
+.header-account .v13-register{background:transparent!important;color:#9fb2c2!important}
+.header-account .v13-login:hover{box-shadow:0 8px 24px rgba(37,228,135,.12)}
+@media(max-width:1050px){.header-account .v13-auth-main{min-width:130px}.header-account .v13-auth-copy strong{max-width:95px}.header-account .v13-register{display:none!important}}
+@media(max-width:780px){
+  .header-actions{gap:6px!important}
+  .header-account{gap:5px!important}
+  .header-account .v13-auth-main{min-width:0!important;width:auto!important;padding:6px 9px!important}
+  .header-account .v13-auth-copy{display:none!important}
+  .header-account .v13-auth-main img{width:32px;height:32px}
+  .header-account .v13-login{min-height:40px!important;padding:8px 11px!important;font-size:12px!important}
+  .header-account .v13-logout{width:40px!important;min-height:40px!important}
+}
+</style>
+
+</head>
 <body>
 <header class="site-header">
 <div class="header-inner">
@@ -13695,6 +13725,53 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     patchAvatarImages();
   });
   observer.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+
+<script id="medjasi-v13-header-js">
+(function(){
+  'use strict';
+  const q=id=>document.getElementById(id);
+  const esc13=v=>typeof esc==='function'?esc(v??''):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const fallback='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="32" fill="#0b1b2b"/><circle cx="80" cy="61" r="28" fill="#5f7487"/><path d="M31 139c6-31 25-47 49-47s43 16 49 47" fill="#5f7487"/></svg>');
+
+  function renderHeaderAccount(){
+    const host=q('headerAccount');
+    if(!host)return;
+    const u=window.currentUser;
+    const p=window.currentProfile||{};
+    if(!u){
+      host.innerHTML=`<button type="button" class="account-btn v13-login" onclick="showSection('login')">🔐 Prijava</button><button type="button" class="account-btn v13-register" onclick="showSection('login');setTimeout(()=>document.getElementById('registerUsername')?.focus(),80)">Registracija</button>`;
+      return;
+    }
+    const name=esc13(p.username||u.user_metadata?.username||u.email?.split('@')[0]||'Korisnik');
+    const av=esc13(p.avatar_url||fallback);
+    const admin=p.role==='admin';
+    host.innerHTML=`<button type="button" class="account-btn v13-auth-main" onclick="openV9Profile('${esc13(u.id)}')" title="Otvori profil"><img src="${av}" alt="Profil" onerror="this.src='${fallback}'"><span class="v13-auth-copy"><strong>${name}${admin?'<span class="account-admin">Admin</span>':''}</strong><small>Profil</small></span></button><button type="button" class="account-btn v13-logout" onclick="logout()" title="Odjava" aria-label="Odjava">↪</button>`;
+  }
+
+  function patch(){renderHeaderAccount();}
+  window.addEventListener('load',()=>{
+    patch();
+    [250,800,1600,3000].forEach(ms=>setTimeout(patch,ms));
+  });
+  const observer=new MutationObserver(()=>{
+    const host=q('headerAccount');
+    if(host && !host.dataset.v13Ready) { host.dataset.v13Ready='1'; }
+  });
+  observer.observe(document.body,{childList:true,subtree:true});
+
+  /* Re-render immediately whenever the existing auth UI finishes. */
+  const old=window.updateAuthUI;
+  if(old && !window.__V13_AUTH_WRAPPED__){
+    window.__V13_AUTH_WRAPPED__=true;
+    window.updateAuthUI=function(){
+      const r=old.apply(this,arguments);
+      setTimeout(renderHeaderAccount,0);
+      return r;
+    };
+  }
 })();
 </script>
 
