@@ -7804,12 +7804,12 @@ updateAuthUI=function(){
       const username=esc(currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik");
       const admin=isAdmin();
       account.innerHTML=
-        '<button class="account-btn account-profile-btn" type="button" onclick="window.openV9Profile(\\''+currentUser.id+'\\')">👤 '+username+'</button>'+
+        '<button class="account-btn account-profile-btn" type="button" onclick="window.openV9Profile(\''+currentUser.id+'\')">👤 '+username+'</button>'+
         '<button class="account-btn account-edit-btn" type="button" onclick="window.openV9EditProfile()">✏️ Uredi profil</button>'+
-        (admin?'<button class="account-btn account-admin-btn" type="button" onclick="window.showSection(\\'admin\\')">⚙️ Admin</button>':'')+
+        (admin?'<button class="account-btn account-admin-btn" type="button" onclick="window.showSection(\'admin\')">⚙️ Admin</button>':'')+
         '<button class="account-btn account-logout-btn" type="button" onclick="window.logout()">↪ Odjava</button>';
     }else{
-      account.innerHTML='<button class="account-btn account-login-btn" type="button" onclick="window.showSection(\\'login\\')">🔐 Prijava / Registracija</button>';
+      account.innerHTML='<button class="account-btn account-login-btn" type="button" onclick="window.showSection(\'login\')">🔐 Prijava / Registracija</button>';
     }
   }
 
@@ -7836,8 +7836,8 @@ updateAuthUI=function(){
       nav.appendChild(authGroup);
     }
     authGroup.innerHTML=currentUser
-      ? '<button type="button" class="nav-auth-profile" onclick="window.openV9Profile(\\''+currentUser.id+'\\')"><span>👤</span><span>Moj profil</span></button><button type="button" class="nav-auth-logout" onclick="window.logout()"><span>↪</span><span>Odjava</span></button>'
-      : '<button type="button" class="nav-auth-login" onclick="window.showSection(\\'login\\')"><span>🔐</span><span>Prijava / Registracija</span></button>';
+      ? '<button type="button" class="nav-auth-profile" onclick="window.openV9Profile(\''+currentUser.id+'\')"><span>👤</span><span>Moj profil</span></button><button type="button" class="nav-auth-logout" onclick="window.logout()"><span>↪</span><span>Odjava</span></button>'
+      : '<button type="button" class="nav-auth-login" onclick="window.showSection(\'login\')"><span>🔐</span><span>Prijava / Registracija</span></button>';
   }
 
   if(isAdmin()){
