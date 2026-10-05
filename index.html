@@ -2195,7 +2195,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
 <button onclick="showSection('gallery')"><span>📸</span><span>Galerija</span></button>
 <button onclick="showSection('community')"><span>✨</span><span>Community</span></button>
 <button onclick="showSection('chat')"><span>💬</span><span>Chat</span></button>
-<button onclick="showSection('comments')"><span>💭</span><span>Komentari</span></button>
+<button onclick="showSection('news')"><span>📰</span><span>Vijesti</span></button>
 </nav>
 <div class="header-actions"><span class="header-live"><i></i> Liga online</span><button aria-label="Obavještenja" class="notification-bell" id="notificationBell" onclick="openNotifications()" title="Obavještenja" type="button"><span>🔔</span><b class="notification-badge" hidden="" id="notificationBadge">0</b></button><div class="header-account" id="headerAccount"></div><button aria-expanded="false" aria-label="Otvori meni" class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">☰</button></div>
 </div>
@@ -2213,7 +2213,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
 <button class="btn btn-green v10-main-cta" onclick="showSection('matches')">⚽ Pogledaj utakmice <span>→</span></button>
 <button class="btn v10-ghost-cta" onclick="showSection('community')">✨ Uđi u Community</button>
 </div>
-<div class="v10-trust-row"><span>● LIVE rezultati</span><span>•</span><span>⚡ Brzo osvježavanje</span><span>•</span><span>📱 Mobile first</span></div>
+
 </div>
 <div class="v10-hero-visual">
 <div class="v10-orbit orbit-a"></div><div class="v10-orbit orbit-b"></div>
@@ -2713,7 +2713,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
 <button onclick="mobileMoreGo('stats')"><span>📊</span><b>Statistika</b><small>Najbolji igrači</small></button>
 <button onclick="mobileMoreGo('gallery')"><span>📸</span><b>Galerija</b><small>Fotografije</small></button>
 <button onclick="mobileMoreGo('community')"><span>✨</span><b>Community</b><small>Objave i priče</small></button><button onclick="mobileMoreGo('chat')"><span>💬</span><b>Chat</b><small>Razgovor uživo</small></button>
-<button onclick="mobileMoreGo('comments')"><span>💭</span><b>Komentari</b><small>Komentari zajednice</small></button>
+<button onclick="mobileMoreGo('news')"><span>📰</span><b>Vijesti</b><small>Novosti lige</small></button>
 </div>
 </div>
 </div>
@@ -3998,7 +3998,7 @@ async function logout(){
    AUTH UI
 ========================================================= */
 
-function updateAuthUI(){const logged=!!currentUser;const username=currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik";const account=document.getElementById("headerAccount");if(account)account.innerHTML=logged?`<button class="account-btn" onclick="${isAdmin()?"showSection('admin')":"showSection('comments')"}"><span class="account-name">👤 ${esc(username)}</span>${isAdmin()?'<span class="account-admin">ADMIN</span>':''}</button><button class="account-btn" onclick="logout()">↪</button>`:`<button class="account-btn" onclick="showSection('login')">🔐 Prijava</button>`;document.getElementById("commentForm")?.classList.toggle("hidden",!logged);renderHome();renderTable();renderMatches();renderTeams();renderPlayers();renderStats();renderComments();renderChat();renderAdminMatches();fillTeamSelects();}
+function updateAuthUI(){const logged=!!currentUser;const username=currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik";const account=document.getElementById("headerAccount");if(account)account.innerHTML=logged?`<button class="account-btn" onclick="openV9Profile('${currentUser.id}')"><span class="account-name">👤 ${esc(username)}</span>${isAdmin()?'<span class="account-admin">Admin</span>':''}</button><button class="account-btn" onclick="logout()">↪</button>`:`<button class="account-btn" onclick="showSection('login')">🔐 Prijava</button>`;document.getElementById("commentForm")?.classList.toggle("hidden",!logged);renderHome();renderTable();renderMatches();renderTeams();renderPlayers();renderStats();renderComments();renderChat();renderAdminMatches();fillTeamSelects();}
 
 /* =========================================================
    LOAD ALL DATA
@@ -13489,5 +13489,111 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   window.addEventListener('load',()=>setTimeout(()=>{patchAuth();load()},450));
   setTimeout(()=>{patchAuth()},900);
 })();
-</script></body>
+</script>
+<style id="medjasi-v11-final-polish">
+/* =========================================================
+   MEDJAŠI V11 — PROFILE / NEWS / COMMUNITY POLISH
+========================================================= */
+:root{--v11-green:#24e487;--v11-blue:#2d9cff;--v11-panel:rgba(8,20,33,.86)}
+.v10-trust-row{display:none!important}
+/* The old comments area is retired; News is the public information channel. */
+#comments{display:none!important}
+/* Real profile/avatar treatment */
+.header-account{gap:7px}
+.header-account .account-btn:first-child{display:inline-flex;align-items:center;gap:8px;padding:7px 10px}
+.header-account .account-name{display:inline-flex;align-items:center;gap:7px}
+.header-account .v11-header-avatar{width:28px;height:28px;border-radius:9px;object-fit:cover;border:1px solid rgba(36,228,135,.24);background:#0b1b2b;box-shadow:0 5px 18px rgba(0,0,0,.2)}
+.v11-profile-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.045),rgba(255,255,255,.018));cursor:pointer;transition:.2s ease}
+.v11-profile-chip:hover{transform:translateY(-2px);border-color:rgba(36,228,135,.24);box-shadow:0 14px 35px rgba(0,0,0,.22)}
+.v11-profile-chip img{width:42px;height:42px;border-radius:13px;object-fit:cover;border:2px solid rgba(36,228,135,.22)}
+.v11-profile-chip strong{display:block;font-size:13px}.v11-profile-chip small{display:block;color:#71899b;margin-top:3px;font-size:10px}
+.v9-avatar,.v9-profile-avatar,.v9-avatar-big{object-fit:cover!important;background:#0a1725!important}
+.v9-post-head .v9-avatar{border:2px solid rgba(36,228,135,.18);box-shadow:0 5px 18px rgba(0,0,0,.18)}
+.v9-story-avatar{overflow:hidden}.v9-story-avatar img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.v9-profile-avatar{border:3px solid rgba(36,228,135,.24)!important;box-shadow:0 12px 35px rgba(0,0,0,.25)}
+.v9-profile-cover{background:radial-gradient(circle at 20% 10%,rgba(36,228,135,.28),transparent 32%),radial-gradient(circle at 80% 20%,rgba(45,156,255,.28),transparent 35%),linear-gradient(135deg,#0b2637,#06121f)!important}
+.v9-profile-full-inner{padding-bottom:28px!important}
+/* News is editorial, not a comment feed. */
+#news{max-width:1200px;margin:auto}
+#news .gallery-hero{border-radius:24px;border:1px solid rgba(255,255,255,.07);background:radial-gradient(circle at 85% 0%,rgba(45,156,255,.15),transparent 35%),linear-gradient(135deg,rgba(36,228,135,.08),rgba(255,255,255,.02));padding:26px;margin-bottom:18px;box-shadow:0 20px 55px rgba(0,0,0,.2)}
+.v7-news-card{border-radius:20px!important;border:1px solid rgba(255,255,255,.07)!important;background:linear-gradient(145deg,rgba(11,27,43,.88),rgba(6,14,23,.86))!important;overflow:hidden}
+.v7-news-title{letter-spacing:-.35px}.v7-news-body{padding:19px}.v7-news-actions .btn{border-radius:11px}
+.v7-news-feature .v7-news-media{min-height:260px}.v7-news-feature .v7-news-media img,.v7-news-feature .v7-news-media video{min-height:260px}
+.v7-news-row{background:rgba(255,255,255,.025);border-color:rgba(255,255,255,.07);transition:.22s ease}.v7-news-row:hover{transform:translateY(-3px);border-color:rgba(36,228,135,.18);box-shadow:0 18px 45px rgba(0,0,0,.2)}
+/* Better home hierarchy */
+.v10-hero{padding-bottom:20px}.v10-hero-copy{max-width:760px}.v10-hero h1{font-weight:950}.v10-hero-visual{filter:saturate(1.04)}
+.v10-ball{box-shadow:0 28px 80px rgba(0,0,0,.42),0 0 45px rgba(36,228,135,.08),inset -15px -20px 30px rgba(0,0,0,.13)!important}
+.v10-feature-grid,.v10-live-section,.v10-results-section,.v10-bottom-grid{position:relative}
+.v10-section-heading{padding-bottom:3px}.v10-section-heading h2{font-size:21px}
+.v10-community-banner{box-shadow:0 18px 50px rgba(0,0,0,.18);position:relative;overflow:hidden}.v10-community-banner:after{content:'⚽';position:absolute;right:20px;bottom:-52px;font-size:150px;opacity:.035;transform:rotate(-12deg);pointer-events:none}
+/* Community feed refinement */
+.v9-community-hero{box-shadow:0 22px 70px rgba(0,0,0,.24)!important}
+.v9-post{background:linear-gradient(145deg,rgba(10,24,39,.9),rgba(5,13,22,.9))!important;border:1px solid rgba(255,255,255,.07)!important;box-shadow:0 16px 48px rgba(0,0,0,.18)}
+.v9-post-image{background:#030912}.v9-reaction{border-radius:12px!important}.v9-reaction.active{box-shadow:0 0 0 1px rgba(36,228,135,.22),0 8px 22px rgba(36,228,135,.07)}
+@media(max-width:700px){
+ .header-account .account-btn:first-child{padding:6px}.header-account .account-name{font-size:0}.header-account .account-name .v11-header-avatar{width:31px;height:31px}
+ .v10-hero{padding-top:24px}.v10-hero h1{letter-spacing:-2.5px}.v10-hero p{font-size:14px}.v10-hero-visual{height:270px}
+ .v10-floating-card{font-size:10px}.v10-fc-top{right:2%}.v10-fc-bottom{left:2%}
+ .v7-news-feature .v7-news-media,.v7-news-feature .v7-news-media img,.v7-news-feature .v7-news-media video{min-height:190px}
+}
+@media(prefers-reduced-motion:reduce){.v10-ball,.logo-ball,.section,.v10-home-bg span{animation:none!important}.v11-profile-chip,.v7-news-row{transition:none}}
+</style>
+<script id="medjasi-v11-repair-js">
+(function(){
+  'use strict';
+  const q=id=>document.getElementById(id);
+  const esc11=v=>typeof esc==='function'?esc(v??''):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const fallback='https://via.placeholder.com/160?text=%F0%9F%91%A4';
+  const getAvatar=()=>currentProfile?.avatar_url||currentUser?.user_metadata?.avatar_url||fallback;
+
+  function patchHeader(){
+    const account=q('headerAccount');
+    if(!account || typeof currentUser==='undefined' || !currentUser) return;
+    const name=esc11(currentProfile?.username||currentUser.user_metadata?.username||currentUser.email?.split('@')[0]||'Korisnik');
+    const avatar=esc11(getAvatar());
+    const admin=currentProfile?.role==='admin';
+    account.innerHTML=`<button class="account-btn v11-profile-chip" onclick="openV9Profile('${esc11(currentUser.id)}')" title="Otvori profil"><img class="v11-header-avatar" src="${avatar}" alt=""><span><strong>${name}${admin?'<span class="account-admin">Admin</span>':''}</strong><small>Otvori profil</small></span></button><button class="account-btn" onclick="logout()" title="Odjava">↪</button>`;
+  }
+
+  async function refreshProfileEverywhere(){
+    patchHeader();
+    if(typeof renderMyProfile==='function') try{await renderMyProfile()}catch(e){}
+  }
+
+  // If the older updater fires later, restore the profile presentation immediately.
+  const oldUpdate=window.updateAuthUI;
+  if(!window.__V11_UPDATE_PATCH__){
+    window.__V11_UPDATE_PATCH__=true;
+    window.updateAuthUI=function(){
+      try{oldUpdate?.apply(this,arguments)}catch(e){}
+      setTimeout(refreshProfileEverywhere,0);
+    };
+  }
+
+  // Retire the legacy comments navigation even if an older bootstrap recreates it.
+  function normalizeNewsNav(){
+    document.querySelectorAll('#mainNav button,.mobile-more-grid button').forEach(b=>{
+      if((b.getAttribute('onclick')||'').includes("showSection('comments')") || (b.getAttribute('onclick')||'').includes("mobileMoreGo('comments')") || /Komentari/.test(b.textContent||'')){
+        b.innerHTML=b.closest('#mainNav')?'<span>📰</span><span>Vijesti</span>':'<span>📰</span><b>Vijesti</b><small>Novosti lige</small>';
+        b.setAttribute('onclick',b.closest('#mainNav')?"showSection('news')":"mobileMoreGo('news')");
+      }
+    });
+  }
+
+  // News is intentionally shareable to chat, but never has a comment control.
+  function polishNews(){
+    const n=q('news');if(!n)return;
+    n.querySelectorAll('.comment,.comment-form,.comments,.news-comments').forEach(x=>x.remove());
+  }
+
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{normalizeNewsNav();patchHeader();polishNews()},250);
+    setTimeout(()=>{normalizeNewsNav();patchHeader();polishNews()},1200);
+    setTimeout(()=>{normalizeNewsNav();polishNews()},2600);
+  });
+  const observer=new MutationObserver(()=>{normalizeNewsNav();});
+  observer.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+</body>
 </html>
