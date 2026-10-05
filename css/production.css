@@ -477,3 +477,141 @@ img{max-width:100%}table{max-width:100%}pre{max-width:100%;overflow:auto}
   .header-actions{display:flex!important;flex:0 0 auto!important;align-items:center!important;margin-left:auto!important}
   .header-account{display:flex!important;flex-wrap:nowrap!important;align-items:center!important}
 }
+
+/* =========================================================
+   HEADER FIX v11 — završni, čist raspored zaglavlja
+   Ovaj blok je namjerno na kraju fajla i pregazuje starija
+   (sidebar) pravila iz app.css koja su kvarila zaglavlje.
+========================================================= */
+
+/* Nikad ne prikazuj ostatke starog "sidebar" dizajna u navigaciji */
+body #mainNav::before,
+body #mainNav::after{display:none!important;content:none!important}
+body #mainNav .nav-group-title{display:none!important}
+
+/* ---------- RAČUNAR (1280px i šire): jedan red ---------- */
+@media(min-width:1280px){
+  body .site-header .header-inner{
+    display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;
+    align-items:center!important;justify-content:flex-start!important;
+    gap:14px!important;max-width:1560px!important;width:100%!important;
+    min-height:76px!important;height:auto!important;padding:0 24px!important;margin:0 auto!important;
+  }
+  body .site-header .logo{flex:0 0 auto!important;min-width:0!important;width:auto!important;text-align:left}
+  body .site-header .logo span{white-space:nowrap}
+  body .site-header .logo small{white-space:nowrap}
+  body #mainNav{
+    position:static!important;display:flex!important;flex-direction:row!important;
+    flex-wrap:nowrap!important;align-items:center!important;justify-content:center!important;
+    flex:1 1 0!important;min-width:0!important;width:auto!important;max-width:none!important;
+    height:auto!important;max-height:none!important;padding:0!important;margin:0!important;
+    gap:2px!important;overflow:visible!important;background:none!important;border:0!important;box-shadow:none!important;
+  }
+  body #mainNav button{
+    flex:0 0 auto!important;width:auto!important;white-space:nowrap!important;
+    min-height:40px!important;padding:8px 10px!important;gap:6px!important;font-size:12.5px!important;
+  }
+  body #mainNav .nav-auth-group,
+  body #mainNav .mobile-nav-account{display:none!important}
+  body .header-actions{
+    display:flex!important;flex:0 0 auto!important;align-items:center!important;
+    flex-wrap:nowrap!important;gap:8px!important;margin:0 0 0 auto!important;
+  }
+  body .v7-search-wrap{flex:0 0 auto}
+  body #v7Search{width:190px!important;max-width:190px!important}
+  body .header-account{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:6px!important}
+  body .header-account .account-btn{white-space:nowrap!important}
+  body .mobile-menu-btn{display:none!important}
+}
+/* Uži računar / laptop: sakrij ikonice u meniju da stane u jedan red */
+@media(min-width:1280px){
+  body #mainNav{justify-content:flex-start!important}
+  body #mainNav button span:first-child{display:none!important}
+  body #mainNav button{padding:8px 8px!important;font-size:12px!important}
+  body .site-header .logo small{display:none!important}
+  /* pretraga postaje ikonica (širi se kad se klikne) da meni stane */
+  body .v7-search-wrap{flex:0 0 40px!important;width:40px!important;min-width:40px!important;position:static!important}
+  body #v7Search{
+    width:40px!important;max-width:40px!important;height:40px!important;padding:0!important;
+    color:transparent!important;cursor:pointer;border-radius:12px!important;
+    background:rgba(255,255,255,.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23cbd7e2' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center no-repeat!important;
+  }
+  body #v7Search::placeholder{color:transparent!important}
+  body #v7Search::-webkit-search-cancel-button{display:none}
+  body #v7Search:focus{
+    position:fixed!important;top:14px!important;left:50%!important;transform:translateX(-50%)!important;
+    width:min(520px,calc(100vw - 40px))!important;max-width:none!important;padding:0 16px!important;z-index:2000!important;
+    color:#fff!important;background:#0b1a28!important;cursor:text;
+  }
+  body #v7Search:focus::placeholder{color:#8fa4b5!important}
+  body .v7-search-results{position:fixed!important;top:62px!important;left:50%!important;transform:translateX(-50%)!important;width:min(520px,calc(100vw - 40px))!important;max-height:60vh;overflow-y:auto;z-index:2000!important}
+}
+
+/* ---------- TABLET + TELEFON (do 1279px): hamburger meni ---------- */
+@media(max-width:1279px){
+  body .site-header{position:sticky!important;top:0!important}
+  body .site-header .header-inner{
+    display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;
+    align-items:center!important;gap:8px!important;
+    min-height:64px!important;height:auto!important;padding:0 12px!important;
+  }
+  body .site-header .logo{flex:1 1 auto!important;min-width:0!important;overflow:hidden}
+  body .site-header .logo span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px!important}
+  body .site-header .logo small{display:none!important}
+  body .logo-ball{flex:0 0 auto}
+  body .header-actions{display:flex!important;flex:0 0 auto!important;flex-wrap:nowrap!important;align-items:center!important;gap:6px!important;margin:0!important;min-width:0!important}
+  body .header-live{display:none!important}
+  body .header-account{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:6px!important;max-width:none!important;min-width:0!important}
+  body .header-account .account-name{display:none!important}
+  body .header-account .account-btn{min-height:40px!important;padding:8px 11px!important;white-space:nowrap!important;font-size:12px!important}
+  body .notification-bell{width:40px!important;height:40px!important}
+  body .mobile-menu-btn{display:flex!important;flex:0 0 auto!important;width:40px!important;height:40px!important;align-items:center;justify-content:center}
+
+  /* meni se otvara kao panel ispod zaglavlja */
+  body #mainNav{
+    display:none!important;position:fixed!important;top:68px!important;left:10px!important;right:10px!important;
+    bottom:auto!important;width:auto!important;height:auto!important;max-height:calc(100vh - 150px)!important;
+    padding:10px!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;
+    gap:4px!important;overflow-y:auto!important;z-index:1500!important;
+    background:rgba(6,15,24,.985)!important;border:1px solid rgba(255,255,255,.09)!important;
+    border-radius:18px!important;box-shadow:0 28px 80px rgba(0,0,0,.55)!important;
+  }
+  body #mainNav.mobile-open{display:flex!important}
+  body #mainNav button{width:100%!important;justify-content:flex-start!important;text-align:left!important;min-height:46px!important;padding:11px 13px!important}
+  body #mainNav .nav-auth-group,
+  body #mainNav .mobile-nav-account{display:block!important}
+  body #mainNav .nav-auth-group button{margin-top:4px}
+
+  /* pretraga: samo ikonica, širi se kad se klikne */
+  body .v7-search-wrap{flex:0 0 40px!important;width:40px!important;min-width:40px!important;max-width:40px!important;position:static!important}
+  body .notification-bell,body .mobile-menu-btn,body .header-account .account-btn{flex-shrink:0!important}
+  body #v7Search{
+    width:40px!important;max-width:40px!important;height:40px!important;padding:0!important;
+    color:transparent!important;cursor:pointer;border-radius:12px!important;
+    background:rgba(255,255,255,.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23cbd7e2' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center no-repeat!important;
+  }
+  body #v7Search::placeholder{color:transparent!important}
+  body #v7Search::-webkit-search-cancel-button{display:none}
+  body #v7Search:focus{
+    position:fixed!important;top:12px!important;left:10px!important;right:10px!important;
+    width:auto!important;max-width:none!important;padding:0 16px!important;z-index:2000!important;
+    color:#fff!important;background:#0b1a28!important;cursor:text;
+  }
+  body #v7Search:focus::placeholder{color:#8fa4b5!important}
+  body .v7-search-results{position:fixed!important;top:60px!important;left:10px!important;right:10px!important;width:auto!important;max-height:60vh;overflow-y:auto;z-index:2000!important}
+}
+
+/* Vrlo uski telefoni */
+@media(max-width:380px){
+  body .site-header .header-inner{padding:0 8px!important;gap:5px!important}
+  body .site-header .logo span{font-size:13px!important}
+  body .header-account .account-btn{padding:8px 9px!important}
+}
+@media(max-width:560px){
+  body .site-header .logo span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.12!important;font-size:14px!important}
+}
+@media(max-width:420px){
+  /* odjava je dostupna u hamburger meniju, pa u zaglavlju štedimo mjesto */
+  body .header-account .v13-logout{display:none!important}
+  body .site-header .logo span{font-size:13px!important}
+}
