@@ -2176,6 +2176,7 @@ input,select,textarea{transition:border-color .2s ease,box-shadow .2s ease,backg
       <button onclick="showSection('stats')"><span>📊</span><span>Statistika</span></button>
       <div class="nav-group-title">ZAJEDNICA</div>
       <button onclick="showSection('gallery')"><span>📸</span><span>Galerija</span></button>
+      <button onclick="showSection('community')"><span>✨</span><span>Community</span></button>
       <button onclick="showSection('chat')"><span>💬</span><span>Chat</span></button>
       <button onclick="showSection('comments')"><span>💭</span><span>Komentari</span></button>
     </nav>
@@ -2977,6 +2978,33 @@ input,select,textarea{transition:border-color .2s ease,box-shadow .2s ease,backg
 </div>
 </section>
 
+
+
+<!-- ================= COMMUNITY V9 ================= -->
+<section id="community" class="section v9-community-section">
+  <div class="v9-community-hero">
+    <div>
+      <span class="v9-kicker">MEDJAŠI COMMUNITY</span>
+      <h1>Zajednica lige</h1>
+      <p>Fotografije, priče i trenutci sa Medjaši lige — na jednom mjestu.</p>
+    </div>
+    <div class="v9-community-actions">
+      <button class="btn btn-green" onclick="openV9PostComposer()">＋ Objavi fotografiju</button>
+      <button class="btn btn-blue" onclick="openV9StoryComposer()">＋ Moja priča</button>
+    </div>
+  </div>
+  <div id="v9Stories" class="v9-stories-wrap"></div>
+  <div class="v9-community-grid">
+    <div>
+      <div class="v9-section-head"><div><span class="v9-kicker">FEED</span><h2>Najnovije objave</h2></div><button class="btn btn-small" onclick="loadV9Community()">↻ Osvježi</button></div>
+      <div id="v9Feed" class="v9-feed"></div>
+    </div>
+    <aside id="v9MyProfileCard" class="v9-profile-card"></aside>
+  </div>
+</section>
+
+<!-- ================= V9 PROFILE / POST / STORY MODAL HOST ================= -->
+<div id="v9ProfileHost"></div>
 </main>
 
 
@@ -13778,6 +13806,97 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     if(!b)return;
     b.classList.remove('v8-goal-flash'); void b.offsetWidth; b.classList.add('v8-goal-flash');
   });
+})();
+</script>
+
+<style id="v9-community-css">
+:root{--v9-green:#25e487;--v9-blue:#1598ff;--v9-bg:#06111d;--v9-card:rgba(10,23,38,.78);--v9-line:rgba(255,255,255,.08)}
+body{background:radial-gradient(circle at 15% 5%,rgba(37,228,135,.08),transparent 30%),radial-gradient(circle at 85% 20%,rgba(21,152,255,.10),transparent 28%),linear-gradient(135deg,#06111d 0%,#081726 45%,#050c14 100%) fixed!important}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,black,transparent 85%);z-index:-1}
+.v9-community-section{max-width:1200px;margin:auto}.v9-community-hero{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:28px;border:1px solid var(--v9-line);border-radius:24px;background:linear-gradient(135deg,rgba(37,228,135,.10),rgba(21,152,255,.08)),rgba(7,18,30,.82);box-shadow:0 20px 70px rgba(0,0,0,.24);overflow:hidden;position:relative}.v9-community-hero:after{content:"⚽";position:absolute;right:30px;bottom:-45px;font-size:180px;opacity:.035;transform:rotate(-14deg)}.v9-kicker{font-size:10px;letter-spacing:2px;font-weight:900;color:var(--v9-green)}.v9-community-hero h1{margin:7px 0 5px;font-size:clamp(28px,5vw,48px)}.v9-community-hero p{margin:0;color:#8ea3b5}.v9-community-actions{display:flex;gap:9px;flex-wrap:wrap;position:relative;z-index:1}.v9-stories-wrap{display:flex;gap:12px;overflow:auto;padding:20px 2px 12px;scrollbar-width:none}.v9-stories-wrap::-webkit-scrollbar{display:none}.v9-story{flex:0 0 76px;text-align:center;cursor:pointer}.v9-story-avatar{width:64px;height:64px;border-radius:50%;padding:3px;margin:auto;background:conic-gradient(var(--v9-green),var(--v9-blue),#8b5cf6,var(--v9-green));box-shadow:0 0 0 2px #07131f,0 0 22px rgba(37,228,135,.18);transition:.25s}.v9-story:hover .v9-story-avatar{transform:scale(1.06)}.v9-story-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;border:3px solid #07131f}.v9-story-name{display:block;margin-top:7px;font-size:10px;color:#b8c8d5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.v9-add-story .v9-story-avatar{display:grid;place-items:center;background:linear-gradient(135deg,var(--v9-green),var(--v9-blue));font-size:25px;color:#06111d}.v9-community-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px}.v9-section-head{display:flex;justify-content:space-between;align-items:end;margin:12px 0}.v9-section-head h2{margin:5px 0 0}.v9-feed{display:grid;gap:16px}.v9-post{border:1px solid var(--v9-line);background:var(--v9-card);border-radius:22px;overflow:hidden;box-shadow:0 15px 45px rgba(0,0,0,.18);animation:v9In .4s ease both}.v9-post-head{display:flex;align-items:center;gap:10px;padding:15px}.v9-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#122234;border:1px solid rgba(255,255,255,.12)}.v9-post-author{font-weight:850}.v9-post-meta{font-size:10px;color:#6f8495;margin-top:2px}.v9-post-menu{margin-left:auto}.v9-post-image{display:block;width:100%;max-height:650px;object-fit:cover;background:#050c14}.v9-post-body{padding:14px 15px 16px}.v9-post-caption{white-space:pre-wrap;color:#dce7ef;line-height:1.55}.v9-post-actions{display:flex;gap:8px;align-items:center;margin-top:12px}.v9-reaction{border:1px solid var(--v9-line);background:rgba(255,255,255,.035);color:#c8d5df;border-radius:999px;padding:7px 10px;cursor:pointer;transition:.2s}.v9-reaction:hover,.v9-reaction.active{background:rgba(37,228,135,.12);border-color:rgba(37,228,135,.28);color:#fff;transform:translateY(-1px)}.v9-comments{margin-top:12px;border-top:1px solid var(--v9-line);padding-top:11px}.v9-comment{font-size:12px;margin:7px 0;color:#b9c8d4}.v9-comment b{color:#fff}.v9-comment-form{display:flex;gap:7px;margin-top:10px}.v9-comment-form input{flex:1;min-width:0}.v9-profile-card{position:sticky;top:90px;height:max-content;border:1px solid var(--v9-line);border-radius:22px;background:linear-gradient(180deg,rgba(13,29,46,.9),rgba(7,18,30,.86));padding:18px;box-shadow:0 20px 55px rgba(0,0,0,.18)}.v9-profile-top{text-align:center}.v9-profile-avatar{width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid rgba(37,228,135,.55);box-shadow:0 0 30px rgba(37,228,135,.12)}.v9-profile-card h3{margin:10px 0 3px}.v9-profile-bio{color:#8fa4b7;font-size:12px;line-height:1.5;white-space:pre-wrap}.v9-profile-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:14px 0}.v9-profile-stat{padding:10px;border-radius:14px;background:rgba(255,255,255,.035);text-align:center}.v9-profile-stat b{display:block;font-size:18px}.v9-profile-stat span{font-size:9px;color:#70879a;text-transform:uppercase;letter-spacing:1px}.v9-empty{padding:35px 18px;text-align:center;border:1px dashed var(--v9-line);border-radius:20px;color:#70879a}.v9-modal-card{max-width:620px;margin:auto}.v9-modal-card textarea{min-height:100px}.v9-profile-full{max-width:900px;margin:auto}.v9-profile-cover{height:130px;border-radius:22px 22px 0 0;background:radial-gradient(circle at 20% 20%,rgba(37,228,135,.28),transparent 35%),linear-gradient(135deg,#0b2637,#07131f);position:relative}.v9-profile-full-inner{margin-top:-42px;position:relative;padding:0 22px 22px}.v9-profile-full .v9-avatar-big{width:88px;height:88px;border:4px solid #07131f;border-radius:50%;object-fit:cover;background:#102336}.v9-profile-full h2{margin:8px 0 3px}.v9-profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.v9-post-form-preview{width:100%;max-height:300px;object-fit:cover;border-radius:16px;margin-top:10px;display:none}.v9-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:1000;display:grid;place-items:center;padding:20px}.v9-lightbox img{max-width:min(100%,1100px);max-height:90vh;object-fit:contain;border-radius:14px}.v9-story-view{max-width:520px;width:100%;margin:auto}.v9-story-view img{width:100%;max-height:75vh;object-fit:contain;border-radius:20px;background:#02070c}.v9-story-caption{padding:12px;color:#fff;text-align:center}.v9-admin-badge{font-size:9px;font-weight:900;letter-spacing:1px;color:var(--v9-green);margin-left:5px}.v9-drop{border:1px dashed rgba(37,228,135,.28);border-radius:16px;padding:18px;text-align:center;color:#7990a3;cursor:pointer;background:rgba(37,228,135,.03)}
+@keyframes v9In{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(max-width:850px){.v9-community-grid{grid-template-columns:1fr}.v9-profile-card{position:static}.v9-community-hero{align-items:flex-start;flex-direction:column}.v9-community-actions{width:100%}.v9-community-actions .btn{flex:1}.v9-post-image{max-height:520px}}
+@media(prefers-reduced-motion:reduce){.v9-post{animation:none}.v9-story-avatar,.v9-reaction{transition:none}}
+</style>
+
+<script id="v9-community-js">
+(function(){
+  const V9={posts:[],stories:[],comments:{},reactions:{},loaded:false};
+  const imgFallback='https://via.placeholder.com/160?text=%F0%9F%91%A4';
+  const q=id=>document.getElementById(id);
+  const e=v=>typeof esc==='function'?esc(v??''):String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const avatar=p=>e(p?.avatar_url||imgFallback);
+  const fmt=d=>{try{return new Intl.DateTimeFormat('bs-BA',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(d))}catch{return ''}};
+  const logged=()=>!!currentUser;
+  function guard(){if(!logged()){showSection('login');toastV?.('Prijavi se da bi koristio Community.','error');return false}return true}
+  async function load(){
+    const [{data:posts,error:pe},{data:stories,error:se}]=await Promise.all([
+      supabaseClient.from('community_posts').select('*, profiles:author_id(id,username,avatar_url,bio,role)').order('created_at',{ascending:false}).limit(50),
+      supabaseClient.from('community_stories').select('*, profiles:author_id(id,username,avatar_url,bio,role)').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(40)
+    ]);
+    if(pe){console.warn('Community posts:',pe); V9.posts=[]} else V9.posts=posts||[];
+    if(se){console.warn('Community stories:',se); V9.stories=[]} else V9.stories=stories||[];
+    await render(); V9.loaded=true;
+  }
+  async function render(){
+    renderStories(); renderFeed(); await renderMyProfile();
+  }
+  function renderStories(){
+    const host=q('v9Stories'); if(!host)return;
+    const mine=logged()?`<div class="v9-story v9-add-story" onclick="openV9StoryComposer()"><div class="v9-story-avatar">＋</div><span class="v9-story-name">Moja priča</span></div>`:'';
+    const seen=new Set(); const rows=[];
+    V9.stories.forEach(s=>{const p=s.profiles||{};if(seen.has(p.id))return;seen.add(p.id);rows.push(`<div class="v9-story" onclick="openV9Story('${e(s.id)}')"><div class="v9-story-avatar"><img src="${avatar(p)}" alt=""></div><span class="v9-story-name">${e(p.username||'Korisnik')}</span></div>`)});
+    host.innerHTML=mine+rows.join('')||'<div class="v9-empty" style="width:100%">Još nema aktivnih priča.</div>';
+  }
+  async function renderFeed(){
+    const host=q('v9Feed'); if(!host)return;
+    if(!V9.posts.length){host.innerHTML='<div class="v9-empty">Još nema objava. Budi prvi koji će objaviti fotografiju. 📸</div>';return}
+    host.innerHTML=V9.posts.map((p,i)=>{const a=p.profiles||{};const own=logged()&&p.author_id===currentUser.id;return `<article class="v9-post" style="animation-delay:${Math.min(i,8)*35}ms">
+      <div class="v9-post-head"><img class="v9-avatar" src="${avatar(a)}" alt="" onclick="openV9Profile('${e(p.author_id)}')" style="cursor:pointer"><div><div class="v9-post-author" onclick="openV9Profile('${e(p.author_id)}')" style="cursor:pointer">${e(a.username||'Korisnik')}${a.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</div><div class="v9-post-meta">${fmt(p.created_at)}</div></div>${own?`<button class="btn btn-small v9-post-menu" onclick="deleteV9Post('${e(p.id)}')">Obriši</button>`:''}</div>
+      <img class="v9-post-image" src="${e(p.image_url)}" alt="${e(p.caption||'Fotografija')}" loading="lazy" onclick="openV9Lightbox('${e(p.image_url)}')">
+      <div class="v9-post-body">${p.caption?`<div class="v9-post-caption">${e(p.caption)}</div>`:''}<div class="v9-post-actions"><button id="v9r-${e(p.id)}" class="v9-reaction" onclick="toggleV9Reaction('${e(p.id)}','❤️')">❤️ <span>${p.reaction_count||0}</span></button><button class="v9-reaction" onclick="toggleV9Comments('${e(p.id)}')">💬 <span id="v9cnum-${e(p.id)}">...</span></button></div><div id="v9comments-${e(p.id)}" class="v9-comments" hidden></div></div></article>`}).join('');
+    for(const p of V9.posts) await refreshPostMeta(p.id);
+  }
+  async function refreshPostMeta(id){
+    const [{data:r},{data:comments}]=await Promise.all([
+      supabaseClient.from('community_reactions').select('id,user_id').eq('post_id',id),
+      supabaseClient.from('community_comments').select('id').eq('post_id',id)
+    ]);
+    const b=q('v9r-'+id);if(b)b.querySelector('span').textContent=(r||[]).length;
+    const c=q('v9cnum-'+id);if(c)c.textContent=(comments||[]).length;
+    if(logged()&&r?.some(x=>x.user_id===currentUser.id))b?.classList.add('active');
+  }
+  async function renderMyProfile(){
+    const host=q('v9MyProfileCard');if(!host)return;
+    if(!logged()){host.innerHTML='<div class="v9-profile-top"><img class="v9-profile-avatar" src="'+imgFallback+'"><h3>Pridruži se zajednici</h3><p class="v9-profile-bio">Registruj se ili prijavi da objavljuješ fotografije, priče i komentare.</p><button class="btn btn-green" onclick="showSection(\'login\')">Prijava</button></div>';return}
+    const p=currentProfile||{}; const postCount=V9.posts.filter(x=>x.author_id===currentUser.id).length; const storyCount=V9.stories.filter(x=>x.author_id===currentUser.id).length;
+    host.innerHTML=`<div class="v9-profile-top"><img class="v9-profile-avatar" src="${avatar(p)}" alt=""><h3>${e(p.username||'Korisnik')}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h3><div class="v9-profile-bio">${e(p.bio||'Dodaj kratak opis svog profila.')}</div></div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${postCount}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${storyCount}</b><span>Priče</span></div></div><button class="btn btn-blue" style="width:100%" onclick="openV9Profile('${e(currentUser.id)}')">Moj profil</button><button class="btn" style="width:100%;margin-top:7px" onclick="openV9EditProfile()">Uredi profil</button>`;
+  }
+  window.loadV9Community=load;
+  window.openV9PostComposer=function(){if(!guard())return;showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>📸 Nova objava</h2><p class="muted">Dodaj fotografiju i napiši šta želiš podijeliti.</p></div><div class="form"><label class="v9-drop" for="v9PostFile">📷 Izaberi fotografiju<input id="v9PostFile" type="file" accept="image/*" hidden></label><img id="v9PostPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9PostCaption" maxlength="1000" placeholder="Napiši nešto..."></textarea></div><button class="btn btn-green" onclick="publishV9Post()">Objavi fotografiju</button></div></div>`);q('v9PostFile')?.addEventListener('change',()=>{const f=q('v9PostFile').files?.[0],im=q('v9PostPreview');if(f&&im){im.src=URL.createObjectURL(f);im.style.display='block'}})};
+  window.publishV9Post=async function(){if(!guard())return;const f=q('v9PostFile')?.files?.[0];if(!f)return toastV?.('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV?.('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV?.('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`community/${currentUser.id}`);const {error}=await supabaseClient.from('community_posts').insert({author_id:currentUser.id,image_url:url,caption:q('v9PostCaption')?.value.trim()||null});if(error)throw error;hideModal();await load();toastV?.('Objava je objavljena.')}catch(err){toastV?.(err.message||'Greška pri objavi.','error')}};
+  window.openV9StoryComposer=function(){if(!guard())return;showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/*" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div><button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>`);q('v9StoryFile')?.addEventListener('change',()=>{const f=q('v9StoryFile').files?.[0],im=q('v9StoryPreview');if(f&&im){im.src=URL.createObjectURL(f);im.style.display='block'}})};
+  window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV?.('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV?.('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV?.('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({author_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null});if(error)throw error;hideModal();await load();toastV?.('Priča je objavljena.')}catch(err){toastV?.(err.message||'Greška pri objavi.','error')}};
+  window.openV9Story=async function(id){const s=V9.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=s.profiles||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${e(p.username||'Korisnik')}</b><div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${e(s.image_url)}" alt=""><div class="v9-story-caption">${e(s.caption||'')}</div></div>`)};
+  window.openV9Profile=async function(id){
+    const {data:p,error}=await supabaseClient.from('profiles').select('*').eq('id',id).maybeSingle();if(error||!p)return toastV?.('Profil nije pronađen.','error');
+    const [{data:posts},{data:stories}]=await Promise.all([supabaseClient.from('community_posts').select('*').eq('author_id',id).order('created_at',{ascending:false}).limit(30),supabaseClient.from('community_stories').select('*').eq('author_id',id).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false})]);
+    showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${e(p.username||'Korisnik')}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${e(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&id===currentUser.id?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<img class="v9-post-image" style="border-radius:16px" src="${e(x.image_url)}" alt="${e(x.caption||'')}" onclick="openV9Lightbox('${e(x.image_url)}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${e(x.caption)}</div>`:''}`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
+  };
+  window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/*" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${e(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${e(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);q('v9AvatarFile')?.addEventListener('change',()=>{const f=q('v9AvatarFile').files?.[0],im=q('v9AvatarPreview');if(f&&im)im.src=URL.createObjectURL(f)})};
+  window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV?.('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!f.type.startsWith('image/'))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await supabaseClient.from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV?.('Profil je ažuriran.')}catch(err){toastV?.(err.message||'Greška pri čuvanju profila.','error')}};
+  window.deleteV9Post=async function(id){if(!guard())return;const p=V9.posts.find(x=>String(x.id)===String(id));if(!p||p.author_id!==currentUser.id&&!isAdmin())return toastV?.('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);if(error)return toastV?.(error.message,'error');await load();toastV?.('Objava je obrisana.')};
+  window.toggleV9Reaction=async function(postId,type){if(!guard())return;const {data:existing}=await supabaseClient.from('community_reactions').select('id').eq('post_id',postId).eq('user_id',currentUser.id).eq('reaction',type).maybeSingle();let error;if(existing){({error}=await supabaseClient.from('community_reactions').delete().eq('id',existing.id))}else{({error}=await supabaseClient.from('community_reactions').insert({post_id:postId,user_id:currentUser.id,reaction:type}))}if(error)return toastV?.(error.message,'error');await refreshPostMeta(postId)};
+  window.toggleV9Comments=async function(postId){const box=q('v9comments-'+postId);if(!box)return;if(!box.hidden){box.hidden=true;return}const {data,error}=await supabaseClient.from('community_comments').select('*, profiles:author_id(username,avatar_url,role)').eq('post_id',postId).order('created_at',{ascending:true});if(error)return toastV?.(error.message,'error');box.innerHTML=(data||[]).map(c=>`<div class="v9-comment"><b>${e(c.profiles?.username||'Korisnik')}</b>${c.profiles?.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}: ${e(c.content)}</div>`).join('')+`<div class="v9-comment-form"><input id="v9ci-${e(postId)}" maxlength="500" placeholder="Napiši komentar..." ${logged()?'':'disabled'}><button class="btn btn-small btn-green" onclick="addV9Comment('${e(postId)}')">Pošalji</button></div>`;box.hidden=false};
+  window.addV9Comment=async function(postId){if(!guard())return;const input=q('v9ci-'+postId);const content=input?.value.trim();if(!content)return;const {error}=await supabaseClient.from('community_comments').insert({post_id:postId,author_id:currentUser.id,content});if(error)return toastV?.(error.message,'error');input.value='';await toggleV9Comments(postId);await refreshPostMeta(postId)};
+  window.openV9Lightbox=function(url){showModal(`<div class="v9-lightbox" onclick="hideModal()"><img src="${e(url)}" alt="" onclick="event.stopPropagation()"></div>`) };
+  function patchAuth(){
+    const old=window.updateAuthUI;
+    window.updateAuthUI=function(){old?.();const account=q('headerAccount');if(account&&currentUser){const name=e(currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik');account.innerHTML=`<button class="account-btn" onclick="openV9Profile('${e(currentUser.id)}')"><span class="account-name">👤 ${name}${currentProfile?.role==='admin'?'<span class="account-admin">Admin</span>':''}</span></button><button class="account-btn" onclick="logout()">↪</button>`}renderMyProfile()};
+  }
+  function patchNavigation(){const nav=q('mainNav');if(nav&&!nav.querySelector('[data-v9-community]')){const b=document.createElement('button');b.dataset.v9Community='1';b.onclick=()=>showSection('community');b.innerHTML='<span>✨</span><span>Community</span>';const ref=[...nav.querySelectorAll('button')].find(x=>x.getAttribute('onclick')?.includes("showSection('gallery')"));ref?.after(b)} }
+  window.addEventListener('load',()=>{setTimeout(()=>{patchAuth();patchNavigation();load();},1000)});
+  const originalShowSection=window.showSection;window.showSection=function(id){originalShowSection?.(id);if(id==='community')setTimeout(load,30)};
 })();
 </script>
 </body>
