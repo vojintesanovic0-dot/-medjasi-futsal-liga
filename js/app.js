@@ -7820,6 +7820,21 @@ updateAuthUI=function(){
   }
 
   if(isAdmin()) injectModeratorPanel();
+
+  /* AUTH ACTIONS MUST EXIST IN BOTH DESKTOP SIDEBAR AND MOBILE DRAWER */
+  const nav=document.getElementById("mainNav");
+  if(nav){
+    let authGroup=nav.querySelector(".nav-auth-group");
+    if(!authGroup){
+      authGroup=document.createElement("div");
+      authGroup.className="nav-auth-group";
+      nav.appendChild(authGroup);
+    }
+    authGroup.innerHTML=currentUser
+      ? '<button type="button" class="nav-auth-profile" onclick="openV9Profile(\''+currentUser.id+'\')"><span>👤</span><span>Moj profil</span></button><button type="button" class="nav-auth-logout" onclick="logout()"><span>↪</span><span>Odjava</span></button>'
+      : '<button type="button" class="nav-auth-login" onclick="showSection(\'login\')"><span>🔐</span><span>Prijava / Registracija</span></button>';
+  }
+
   setupCommentImageUI();
   setupChatImageUI();
 };
@@ -10281,7 +10296,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   function patchHeader(){
     const account=q('headerAccount');
     if(!account||!window.currentUser)return;
-    const p=window.currentProfile||{};
+    const p=currentProfile||{};
     const name=esc12(p.username||window.currentUser.user_metadata?.username||window.currentUser.email?.split('@')[0]||'Korisnik');
     const av=esc12(avatarFor(p));
     const admin=p.role==='admin';
@@ -10334,7 +10349,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   function renderHeaderAccount(){
     const host=q('headerAccount');
     if(!host)return;
-    const u=window.currentUser;
+    const u=currentUser;
     const p=window.currentProfile||{};
     if(!u){
       host.innerHTML=`<button type="button" class="account-btn v13-login" onclick="showSection('login')">🔐 Prijava</button><button type="button" class="account-btn v13-register" onclick="showSection('login');setTimeout(()=>document.getElementById('registerUsername')?.focus(),80)">Registracija</button>`;
