@@ -3610,6 +3610,9 @@ async function addTeam(){
         .getElementById("teamLogoFile")
         .files[0];
 
+    const coach =
+      document.getElementById("teamCoach")?.value.trim() || null;
+
 
     if(!name){
 
@@ -3641,7 +3644,8 @@ async function addTeam(){
         .from("teams")
         .insert({
           name,
-          logo_url
+          logo_url,
+          coach
         });
 
 
@@ -3651,6 +3655,9 @@ async function addTeam(){
     document.getElementById(
       "teamName"
     ).value = "";
+
+    const coachInput = document.getElementById("teamCoach");
+    if(coachInput) coachInput.value = "";
 
 
     document.getElementById(
