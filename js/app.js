@@ -1336,9 +1336,6 @@ async function loadAll(){
   loadAllPromise = (async()=>{
     try{
 
-
-  try{
-
     const results =
       await Promise.all([
 
@@ -1463,13 +1460,6 @@ async function loadAll(){
 
     renderAll();
 
-  }catch(error){
-
-    console.error(
-      "Greška pri učitavanju:",
-      error
-    );
-  }
     }catch(error){
       console.error("Greška pri učitavanju:",error);
     }
