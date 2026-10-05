@@ -1,0 +1,31 @@
+/* Medjasi production polish v10 */
+:root{--prod-green:#20d47b}
+html{scroll-padding-top:84px}
+body{overflow-x:hidden}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--prod-green);outline-offset:2px}
+img{content-visibility:auto}
+@media(max-width:900px){
+  .header-inner{padding:0 14px;gap:10px}
+  main{padding-left:14px;padding-right:14px}
+  .grid-4,.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid-3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero{grid-template-columns:1fr;padding-top:25px}
+  .hero-card{display:none}
+  .match-row{grid-template-columns:1fr 120px 1fr}
+  .admin-grid{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .grid-2,.grid-3,.grid-4,.stat-grid{grid-template-columns:1fr}
+  .section{padding-top:20px}
+  .section-title{font-size:23px}
+  .match-row{grid-template-columns:1fr;gap:9px;text-align:center}
+  .team-side,.team-side.away{justify-content:center;text-align:center}
+  .team-side.away .team-name{text-align:center}
+  .announcement-match{align-items:flex-start;flex-direction:column}
+  .live-scoreboard{grid-template-columns:1fr}
+  .bench-grid{grid-template-columns:1fr}
+  .modal{padding:10px}
+  .modal-box{padding:18px;border-radius:18px}
+  .filters{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;transition-duration:.001ms!important}}
