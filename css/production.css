@@ -29,3 +29,30 @@ img{content-visibility:auto}
   .filters{grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;transition-duration:.001ms!important}}
+
+/* Live clock + mobile finishing polish */
+.live-time{
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.04em;
+  font-weight:900;
+  min-width:5.5ch;
+  text-align:center;
+}
+.goal-time-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.goal-time-grid input{min-width:0}
+.live-scoreboard{align-items:center}
+@media(max-width:640px){
+  .site-header{position:sticky;top:0;z-index:1000}
+  .header-inner{min-height:64px}
+  .header-live{display:none}
+  .header-account .v11-profile-chip{max-width:145px}
+  .header-account .v11-profile-chip small{display:none}
+  .header-account .v11-profile-chip .v11-header-avatar{width:30px;height:30px}
+  .section{padding-left:0;padding-right:0}
+  .card,.v10-next-card,.v10-quick-card{border-radius:16px}
+  .live-time{font-size:24px}
+  .goal-time-grid{grid-template-columns:1fr 1fr}
+}
+@media(min-width:641px){
+  .live-time{font-size:30px}
+}
