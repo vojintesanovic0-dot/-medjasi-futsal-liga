@@ -330,16 +330,6 @@ img{max-width:100%}table{max-width:100%}pre{max-width:100%;overflow:auto}
 .v7-admin-news-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .v7-admin-news-form .wide{grid-column:1/-1}
 @media(min-width:1101px){
-  body{padding-left:270px!important}
-  .site-header{width:270px!important}
-  .site-header .header-inner{padding:22px 15px 16px!important}
-  .logo{padding-inline:8px!important}
-  #mainNav{gap:6px!important}
-  #mainNav button{min-height:46px;padding:10px 13px}
-  #mainNav button span:last-child{font-size:13px;font-weight:750}
-  .header-account{display:grid!important;grid-template-columns:1fr 1fr;gap:5px!important}
-  .header-account .account-btn{min-width:0;width:100%;justify-content:center}
-  .header-account .account-admin-btn{grid-column:1/-1}
   .v9-community-section{max-width:1380px}
 }
 @media(max-width:1100px){.v9-community-grid{grid-template-columns:1fr}.v9-community-side{order:2}.v9-community-main{order:1}}
@@ -475,4 +465,15 @@ img{max-width:100%}table{max-width:100%}pre{max-width:100%;overflow:auto}
 @media(max-width:1100px){
   body{padding-left:0!important}
   .site-header{position:sticky!important;inset:auto!important;width:100%!important;height:auto!important}
+}
+
+/* FINAL DESKTOP HEADER RESET — top navigation, no sidebar */
+@media(min-width:1101px){
+  body{padding-left:0!important}
+  .site-header{position:sticky!important;left:auto!important;top:0!important;bottom:auto!important;width:100%!important;height:auto!important;margin-left:0!important}
+  .site-header .header-inner{width:100%!important;max-width:1560px!important;min-height:76px!important;padding:0 30px!important;margin:0 auto!important;display:flex!important;flex-direction:row!important;align-items:center!important}
+  #mainNav{position:static!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;display:flex!important;flex:1 1 auto!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:4px!important;padding:0!important;background:transparent!important;border:0!important;overflow:visible!important;z-index:auto!important}
+  #mainNav button{width:auto!important;min-height:42px!important;padding:9px 10px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+  .header-actions{display:flex!important;flex:0 0 auto!important;align-items:center!important;margin-left:auto!important}
+  .header-account{display:flex!important;flex-wrap:nowrap!important;align-items:center!important}
 }
