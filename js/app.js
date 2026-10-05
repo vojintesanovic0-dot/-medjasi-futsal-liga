@@ -1220,14 +1220,34 @@ async function register(){
     vjerovatno je potrebno potvrditi email.
   */
 
-  message.textContent =
-    "Registracija je uspješna. Poslali smo ti potvrdu na email. Otvori poruku, klikni potvrdu, pa se vrati ovdje i prijavi se.";
+  message.innerHTML =
+    "Registracija je uspješna. Poslali smo ti potvrdu na email. Otvori poruku i potvrdi nalog.<br><button type=\"button\" class=\"btn btn-small btn-blue\" style=\"margin-top:10px\" onclick=\"resendConfirmation()\">📩 Pošalji potvrdu ponovo</button>";
 
-  toast(
-    "Provjeri email radi potvrde naloga."
-  );
+  toast("Provjeri email radi potvrde naloga.");
 }
 
+
+async function resendConfirmation(){
+  const email=document.getElementById("registerEmail")?.value.trim()||document.getElementById("loginEmail")?.value.trim()||"";
+  const message=document.getElementById("registerMessage")||document.getElementById("loginMessage");
+  if(!email){
+    if(message) message.textContent="Unesi email adresu na koju želiš ponovo poslati potvrdu.";
+    return;
+  }
+  if(message) message.textContent="Šaljem novu potvrdu...";
+  const {error}=await supabaseClient.auth.resend({
+    type:"signup",
+    email,
+    options:{emailRedirectTo:window.location.origin+window.location.pathname}
+  });
+  if(error){
+    if(message) message.textContent=error.message;
+    return;
+  }
+  if(message) message.textContent="Nova potvrda je poslana. Provjeri Inbox i Spam/Junk folder.";
+  toast("Potvrda je ponovo poslana.");
+}
+window.resendConfirmation=resendConfirmation;
 
 /* =========================================================
    LOGOUT
