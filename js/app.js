@@ -2481,6 +2481,11 @@ function renderTeams(){
                               ${esc(captain.name)}`
                           : ""
                       }
+                      ${
+                        t.coach
+                          ? ` • Trener: ${esc(t.coach)}`
+                          : ""
+                      }
                     </div>
 
                   </div>
@@ -6856,6 +6861,7 @@ function openTeam(
           <p class="muted">
             ${teamPlayers.length}
             igrača
+            ${team.coach ? ` • Trener: ${esc(team.coach)}` : ""}
           </p>
 
         </div>
