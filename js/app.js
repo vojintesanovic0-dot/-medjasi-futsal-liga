@@ -1020,16 +1020,17 @@ async function login(){
   if(error){
 
     if(message){
-      message.textContent =
-        error.message;
+      const msg=String(error.message||"");
+      message.textContent=/confirm|email/i.test(msg)?"Email još nije potvrđen. Otvori poruku koju smo poslali na email i potvrdi nalog, pa se onda prijavi.":msg;
     }
-
     return;
   }
-
-
-  currentUser =
-    data.user;
+  if(data?.user && !data?.session && !data?.user?.email_confirmed_at){
+    if(message) message.textContent="Email još nije potvrđen. Otvori poruku koju smo poslali na email i potvrdi nalog, pa se onda prijavi.";
+    toast("Potvrdi email prije prijave.","error");
+    return;
+  }
+  currentUser=data.user;
 
 
   await checkAuth();
@@ -1175,9 +1176,8 @@ async function register(){
         email,
         password,
         options:{
-          data:{
-            username
-          }
+          data:{username},
+          emailRedirectTo:window.location.origin + window.location.pathname
         }
       });
 
@@ -1221,7 +1221,7 @@ async function register(){
   */
 
   message.textContent =
-    "Registracija je uspješna. Provjeri email i potvrdi nalog, zatim se prijavi.";
+    "Registracija je uspješna. Poslali smo ti potvrdu na email. Otvori poruku, klikni potvrdu, pa se vrati ovdje i prijavi se.";
 
   toast(
     "Provjeri email radi potvrde naloga."
@@ -4125,15 +4125,11 @@ async function changeMatchStatus(
   if(!canManageMatch()) return;
 
 
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("matches")
-      .update({
-        status
-      })
-      .eq("id",id);
+  const existing=getMatch(id);
+  const patch={status};
+  if(status==="live" && existing?.status!=="live") patch.live_started_at=new Date().toISOString();
+  else if(status!=="live" && existing?.status==="live") patch.live_started_at=null;
+  const {error}=await supabaseClient.from("matches").update(patch).eq("id",id);
 
 
   if(error){
@@ -5461,6 +5457,20 @@ function switchMatchTab(
    OPEN MATCH
 ========================================================= */
 
+function getLiveElapsedSeconds(match){
+  if(!match || match.status !== "live") return 0;
+  if(match.live_started_at){
+    const start=Date.parse(match.live_started_at);
+    if(Number.isFinite(start)) return Math.max(0,Math.floor((Date.now()-start)/1000));
+  }
+  return Math.max(0,Number(match.current_minute||0)*60);
+}
+function formatLiveClock(totalSeconds){
+  const s=Math.max(0,Math.floor(Number(totalSeconds)||0));
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+  return h>0?String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0"):String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");
+}
+function getLiveMinute(match){return Math.floor(getLiveElapsedSeconds(match)/60);}
 function openMatch(id){
 
   currentMatchId = id;
@@ -5639,10 +5649,7 @@ function openMatch(id){
               match.status ===
               "live"
 
-                ? `${
-                    match.current_minute ||
-                    0
-                  }'`
+                ? formatLiveClock(getLiveElapsedSeconds(match))
 
                 : formatDate(
                     match.match_date
@@ -5834,7 +5841,7 @@ function openMatch(id){
                     <div class="event">
 
                       <div class="event-minute">
-                        ${e.minute}'
+                        ${e.minute}:${String(Number(e.second||0)).padStart(2,"0")}
                       </div>
 
                       <div class="event-icon">
@@ -6005,7 +6012,7 @@ function openMatch(id){
                     <div class="event">
 
                       <div class="event-minute">
-                        ${e.minute}'
+                        ${e.minute}:${String(Number(e.second||0)).padStart(2,"0")}
                       </div>
 
                       <div class="event-icon">
@@ -6210,6 +6217,16 @@ function openMatch(id){
 function startLiveRefresh(
   matchId
 ){
+  clearInterval(window.__medjasiLiveClock);
+  window.__medjasiLiveClock=setInterval(()=>{
+    const current=getMatch(matchId);
+    if(!current || current.status!=="live"){
+      clearInterval(window.__medjasiLiveClock);
+      return;
+    }
+    const el=document.querySelector(".live-time");
+    if(el) el.textContent=formatLiveClock(getLiveElapsedSeconds(current));
+  },1000);
 
   clearInterval(
     liveRefreshInterval
@@ -6381,19 +6398,11 @@ function openGoalControl(
 
       <div class="form-group">
 
-        <label>
-          Minuta
-        </label>
-
-        <input
-          id="goalMinute"
-          type="number"
-          min="0"
-          value="${
-            match.current_minute || 0
-          }">
-
-      </div>
+        <label>Vrijeme gola</label>
+<div class="goal-time-grid">
+<input id="goalMinute" type="number" min="0" value="${match.status==="live" ? getLiveMinute(match) : (match.current_minute || 0)}" aria-label="Minuta gola">
+<input id="goalSecond" type="number" min="0" max="59" value="${match.status==="live" ? getLiveElapsedSeconds(match)%60 : 0}" aria-label="Sekunda gola">
+</div>
 
 
       <button
@@ -6440,6 +6449,8 @@ async function addGoal(
       )?.value
     ) || 0;
 
+  const second=Math.max(0,Math.min(59,Number(document.getElementById("goalSecond")?.value)||0));
+
 
   const player =
     getPlayer(player_id);
@@ -6478,8 +6489,9 @@ async function addGoal(
       .insert({
         match_id:matchId,
         player_id,
-        minute
-      });
+         minute,
+         second
+       });
 
 
   if(error){
