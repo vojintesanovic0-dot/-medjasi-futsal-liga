@@ -7794,12 +7794,23 @@ function injectModeratorPanel(){
 
 const _baseUpdateAuthUI = updateAuthUI;
 updateAuthUI=function(){
-  _baseUpdateAuthUI();
+  /* UI must never become unusable because a secondary render function fails. */
+  try{ _baseUpdateAuthUI(); }
+  catch(error){ console.error("Auth UI render:",error); }
 
   const account=document.getElementById("headerAccount");
-  if(account && currentUser){
-    const username=esc(currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik");
-    account.innerHTML='<button class="account-btn" type="button" onclick="openV9Profile(\''+currentUser.id+'\')">👤 '+username+'</button><button class="account-btn" type="button" onclick="openV9EditProfile()">✏️ Uredi</button>'+(isAdmin()?'<button class="account-btn account-admin-btn" type="button" onclick="showSection(\'admin\')">⚙️ Admin</button>':'')+'<button class="account-btn" type="button" onclick="logout()">↪</button>';
+  if(account){
+    if(currentUser){
+      const username=esc(currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik");
+      const admin=isAdmin();
+      account.innerHTML=
+        '<button class="account-btn account-profile-btn" type="button" onclick="window.openV9Profile(\\''+currentUser.id+'\\')">👤 '+username+'</button>'+
+        '<button class="account-btn account-edit-btn" type="button" onclick="window.openV9EditProfile()">✏️ Uredi profil</button>'+
+        (admin?'<button class="account-btn account-admin-btn" type="button" onclick="window.showSection(\\'admin\\')">⚙️ Admin</button>':'')+
+        '<button class="account-btn account-logout-btn" type="button" onclick="window.logout()">↪ Odjava</button>';
+    }else{
+      account.innerHTML='<button class="account-btn account-login-btn" type="button" onclick="window.showSection(\\'login\\')">🔐 Prijava / Registracija</button>';
+    }
   }
 
   const nav=document.getElementById("mainNav");
@@ -7811,32 +7822,30 @@ updateAuthUI=function(){
         adminBtn.type="button";
         adminBtn.className="nav-admin-btn";
         adminBtn.innerHTML="<span>⚙️</span><span>Admin</span>";
-        adminBtn.onclick=()=>showSection("admin");
+        adminBtn.addEventListener("click",()=>window.showSection("admin"));
         nav.appendChild(adminBtn);
       }
     }else{
       adminBtn?.remove();
     }
-  }
 
-  if(isAdmin()) injectModeratorPanel();
-
-  /* AUTH ACTIONS — shared desktop/mobile navigation */
-  const authNav=document.getElementById("mainNav");
-  if(authNav){
-    let authGroup=authNav.querySelector(".nav-auth-group");
+    let authGroup=nav.querySelector(".nav-auth-group");
     if(!authGroup){
       authGroup=document.createElement("div");
       authGroup.className="nav-auth-group";
-      authNav.appendChild(authGroup);
+      nav.appendChild(authGroup);
     }
     authGroup.innerHTML=currentUser
-      ? '<button type="button" class="nav-auth-profile" onclick="openV9Profile(\''+currentUser.id+'\')"><span>👤</span><span>Moj profil</span></button><button type="button" class="nav-auth-logout" onclick="logout()"><span>↪</span><span>Odjava</span></button>'
-      : '<button type="button" class="nav-auth-login" onclick="showSection(\'login\')"><span>🔐</span><span>Prijava / Registracija</span></button>';
+      ? '<button type="button" class="nav-auth-profile" onclick="window.openV9Profile(\\''+currentUser.id+'\\')"><span>👤</span><span>Moj profil</span></button><button type="button" class="nav-auth-logout" onclick="window.logout()"><span>↪</span><span>Odjava</span></button>'
+      : '<button type="button" class="nav-auth-login" onclick="window.showSection(\\'login\\')"><span>🔐</span><span>Prijava / Registracija</span></button>';
   }
 
-  setupCommentImageUI();
-  setupChatImageUI();
+  if(isAdmin()){
+    try{ injectModeratorPanel?.(); }catch(error){ console.error("Moderator panel:",error); }
+  }
+
+  try{ setupCommentImageUI(); }catch(error){}
+  try{ setupChatImageUI(); }catch(error){}
 };
 
 const _baseShowSection=showSection;
