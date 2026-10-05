@@ -154,3 +154,33 @@ img{max-width:100%}table{max-width:100%}pre{max-width:100%;overflow:auto}
 @media(max-width:768px){
   main{padding-inline:0}
 }
+
+/* FINAL COMPONENT BALANCE */
+@media(min-width:1101px){
+ .site-header .header-inner{height:78px;min-height:78px!important}
+ main{padding-top:18px!important}
+ .hero{min-height:420px!important;padding:46px 48px!important;grid-template-columns:minmax(0,1.12fr) minmax(340px,.88fr)!important;gap:38px!important}
+ .hero-content h1{font-size:clamp(48px,4.5vw,72px)!important;line-height:.94!important}
+ .hero-content p{font-size:16px!important;max-width:650px}
+ .hero-card-premium{min-height:330px!important;border-radius:24px!important}
+ .hero-score-orb{font-size:96px!important}
+ .section{padding-top:32px!important}
+ .section-title{font-size:28px!important;margin-bottom:16px}
+ .match-row{min-height:82px;padding:16px 20px!important}
+ .team-logo{width:52px;height:52px}.score{font-size:27px}.rank-row{min-height:58px}
+ .table-wrap{border-radius:18px;overflow:hidden}.table-wrap table{width:100%}
+ .live-modal .modal-box,.live-match-modal .modal-box{width:min(1080px,calc(100vw - 320px))}
+}
+@media(min-width:781px) and (max-width:1100px){
+ main{padding:20px 22px 90px!important}
+ .hero{grid-template-columns:1fr!important;min-height:auto!important;padding:34px!important}
+ .hero-card-premium{min-height:280px}
+}
+@media(max-width:780px){
+ .site-header .header-inner{height:68px!important}
+ main{padding:10px 14px 88px!important}
+ .hero{padding:28px 16px!important}
+ .match-row{min-height:0!important}
+ .live-modal .modal-box,.live-match-modal .modal-box{width:100%!important}
+}
+@media(max-width:420px){main{padding-inline:10px!important}.hero{padding-inline:13px!important}}
