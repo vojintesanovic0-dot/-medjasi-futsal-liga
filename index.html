@@ -1,698 +1,158 @@
 <!DOCTYPE html>
-
 <html lang="bs">
 <head>
-<link href="images/icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
-<link href="images/icon-192.png" rel="apple-touch-icon" sizes="192x192"/>
-<link href="images/icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<!-- PWA / Mobile App -->
-<meta content="#07111f" name="theme-color"/>
-<meta content="yes" name="apple-mobile-web-app-capable"/>
-<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
-<meta content="Međasi Futsal" name="apple-mobile-web-app-title"/>
-<link href="./manifest.json" rel="manifest"/>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1.0" name="viewport"/>
-<meta content="Medjaši Futsal Liga – rezultati, tabela, utakmice, ekipe, igrači i statistika." name="description"/>
-<meta content="Medjaši Futsal Liga, futsal, mali fudbal, Medjaši, liga, utakmice, rezultati" name="keywords"/>
-<meta content="Medjaši Futsal Liga" name="author"/>
-<meta content="#06101b" name="theme-color"/>
-<meta content="Medjaši Futsal Liga" property="og:title"/>
-<meta content="Rezultati, tabela, ekipe, igrači i live dešavanja Medjaši Futsal Lige." property="og:description"/>
-<meta content="website" property="og:type"/>
-<title>Medjaši Futsal Liga</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-
-
-
-
-
-<link rel="stylesheet" href="./css/app.css?v=20261005v18">
-<link rel="stylesheet" href="./css/production.css?v=20261005v18">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Medjaši Futsal Liga" />
+  <title>Medjaši Futsal Liga</title>
+  <link rel="stylesheet" href="./css/app.css?v=2026.10.1" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<header class="site-header">
-<div class="header-inner">
-<button aria-label="Medjaši Futsal Liga - Početna" class="logo logo-home" onclick="showSection('home')" type="button"><div class="logo-ball">⚽</div><div><span>Medjaši Futsal Liga</span><small>Zvanična stranica lige</small></div></button>
-<nav aria-label="Glavna navigacija" id="mainNav">
-<div class="nav-group-title">LIGA</div>
-<button class="active" onclick="showSection('home')"><span>⌂</span><span>Početna</span></button>
-<button onclick="showSection('matches')"><span>⚽</span><span>Utakmice</span></button>
-<button onclick="showSection('table')"><span>🏆</span><span>Tabela</span></button>
-<button onclick="showSection('teams')"><span>🛡️</span><span>Ekipe</span></button>
-<button onclick="showSection('players')"><span>👟</span><span>Igrači</span></button>
-<button onclick="showSection('stats')"><span>📊</span><span>Statistika</span></button>
-<div class="nav-group-title">ZAJEDNICA</div>
-<button onclick="showSection('gallery')"><span>📸</span><span>Galerija</span></button>
-<button onclick="showSection('community')"><span>✨</span><span>Community</span></button>
-<button onclick="showSection('chat')"><span>💬</span><span>Chat</span></button>
-<button onclick="showSection('news')"><span>📰</span><span>Vijesti</span></button>
-</nav>
-<div class="header-actions"><span class="header-live"><i></i> Liga online</span><button aria-label="Obavještenja" class="notification-bell" id="notificationBell" onclick="openNotifications()" title="Obavještenja" type="button"><span>🔔</span><b class="notification-badge" hidden="" id="notificationBadge">0</b></button><div class="header-account" id="headerAccount"></div><button aria-expanded="false" aria-label="Otvori meni" class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">☰</button></div>
-</div>
-</header>
-<main>
-<!-- ================= HOME ================= -->
-<section class="section active v10-home" id="home">
-<div class="v10-home-bg"><span></span><span></span><span></span><div class="v10-grid"></div></div>
-<section class="v10-hero">
-<div class="v10-hero-copy">
-<div class="v10-eyebrow"><i></i> ZVANIČNA STRANICA LIGE <b>2026/27</b></div>
-<h1>Medjaši<br/><em>Futsal Liga</em></h1>
-<p>Rezultati, tabela, ekipe, igrači i atmosfera lige — brzo, moderno i na jednom mjestu.</p>
-<div class="v10-hero-actions">
-<button class="btn btn-green v10-main-cta" onclick="showSection('matches')">⚽ Pogledaj utakmice <span>→</span></button>
-<button class="btn v10-ghost-cta" onclick="showSection('community')">✨ Uđi u Community</button>
-</div>
-
-</div>
-<div class="v10-hero-visual">
-<div class="v10-orbit orbit-a"></div><div class="v10-orbit orbit-b"></div>
-<div class="v10-ball-wrap"><div class="v10-ball-glow"></div><div class="v10-ball">⚽</div></div>
-<div class="v10-floating-card v10-fc-top"><small>STATUS LIGE</small><strong><i></i> ONLINE</strong></div>
-<div class="v10-floating-card v10-fc-bottom"><span>SEZONA</span><b>2026/27</b></div>
-</div>
-</section>
-<section class="v10-kpi-grid">
-<div class="v10-kpi"><span class="v10-kpi-icon">🛡️</span><div><strong id="statTeams">0</strong><small>Ekipa</small></div></div>
-<div class="v10-kpi"><span class="v10-kpi-icon">👤</span><div><strong id="statPlayers">0</strong><small>Igrača</small></div></div>
-<div class="v10-kpi"><span class="v10-kpi-icon">⚽</span><div><strong id="statMatches">0</strong><small>Utakmica</small></div></div>
-<div class="v10-kpi"><span class="v10-kpi-icon">🔥</span><div><strong id="statGoals">0</strong><small>Golova</small></div></div>
-</section>
-<section class="v10-feature-grid">
-<div class="v10-next-card card">
-<div class="v10-card-head"><div><span class="v10-mini-label">SLJEDEĆE</span><h2>📣 Naredna utakmica</h2></div><span class="v10-live-chip">SCHEDULE</span></div>
-<div id="homeAnnouncement"><div class="empty compact">Učitavanje...</div></div>
-</div>
-<div class="v10-quick-card card">
-<div><span class="v10-mini-label">BRZI PRISTUP</span><h2>Otvori ligu</h2></div>
-<div class="v10-quick-grid">
-<button onclick="showSection('table')"><b>🏆</b><span>Tabela</span></button>
-<button onclick="showSection('teams')"><b>🛡️</b><span>Ekipe</span></button>
-<button onclick="showSection('players')"><b>👤</b><span>Igrači</span></button>
-<button onclick="showSection('stats')"><b>📊</b><span>Statistika</span></button>
-</div>
-</div>
-</section>
-<section class="v10-live-section">
-<div class="v10-section-heading"><div><span class="v10-mini-label">UTAKMICE</span><h2>🔴 Uživo i uskoro</h2></div><button class="btn btn-small" onclick="showSection('matches')">Sve utakmice →</button></div>
-<div id="homeLive"></div>
-<div class="v10-home-list" id="homeNext"></div>
-</section>
-<section class="v10-results-section">
-<div class="v10-section-heading"><div><span class="v10-mini-label">REZULTATI</span><h2>🏁 Posljednje utakmice</h2></div><button class="btn btn-small" onclick="showSection('table')">Tabela →</button></div>
-<div id="homeResults"></div>
-</section>
-<section class="v10-community-banner">
-<div><span class="v10-mini-label">NOVA ZONA</span><h2>✨ Community</h2><p>Objavi fotografiju, podijeli priču i upoznaj ljude koji prate Medjaši ligu.</p></div>
-<button class="btn btn-green" onclick="showSection('community')">Otvori Community →</button>
-</section>
-<section class="v10-bottom-grid">
-<div class="card v10-form-card"><div class="v10-section-heading"><div><span class="v10-mini-label">FORMA</span><h2>📈 Forma ekipa</h2></div></div><div id="homeForm"></div></div>
-<div class="card v10-rank-card"><div class="v10-rank-item"><span>🏆</span><div><small>LIDER</small><div id="homeLeader"></div></div></div><div class="v10-rank-item"><span>⚽</span><div><small>NAJBOLJI STRIJELAC</small><div id="homeTopScorer"></div></div></div></div>
-</section>
-<section class="v10-media-strip card"><div><span class="v10-mini-label">FOTO ARHIVA</span><h2>📸 Trenuci iz lige</h2><p>Najbolje fotografije utakmica, ekipa i atmosfere.</p></div><button class="btn btn-green" onclick="showSection('gallery')">Otvori galeriju →</button></section>
-<section class="card music-card v10-music-card"><div class="v10-card-head"><div><span class="v10-mini-label">SOUNDTRACK</span><h2>🎵 Liga muzika</h2></div></div><p class="muted">Muzika lige može svirati u pozadini dok pregledavaš stranicu. Browser pokreće zvuk tek nakon tvoje interakcije.</p><div class="music-player" id="musicPlayerWrap"></div><div class="music-actions"><button class="btn btn-green btn-small" id="musicUnmute" onclick="unmuteMusic()" style="display:none">🔊 Uključi zvuk</button><span class="muted" id="musicHint"></span></div></section>
-</section>
-<!-- ================= TABLE ================= -->
-<section class="section" id="table">
-<h2 class="section-title">
-    🏆 Tabela
-  </h2>
-<div class="card table-wrap">
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Ekipa</th>
-<th>Forma</th>
-<th>U</th>
-<th>P</th>
-<th>N</th>
-<th>I</th>
-<th>DG</th>
-<th>PG</th>
-<th>GR</th>
-<th>Bod</th>
-</tr>
-</thead>
-<tbody id="tableBody"></tbody>
-</table>
-</div>
-</section>
-<!-- ================= MATCHES ================= -->
-<section class="section" id="matches">
-<h2 class="section-title">
-    ⚽ Utakmice
-  </h2>
-<div class="filters">
-<input id="matchSearch" oninput="renderMatches()" placeholder="🔎 Pretraži ekipu..."/>
-<select id="matchRoundFilter" onchange="renderMatches()">
-<option value="">Sva kola</option>
-</select>
-<select id="matchStatusFilter" onchange="renderMatches()">
-<option value="">Svi statusi</option>
-<option value="scheduled">Zakazane</option>
-<option value="live">Uživo</option>
-<option value="finished">Završene</option>
-</select>
-</div>
-<div id="matchesList"></div>
-</section>
-<!-- ================= TEAMS ================= -->
-<section class="section" id="teams">
-<h2 class="section-title">
-    🛡️ Ekipe
-  </h2>
-<input id="teamSearch" oninput="renderTeams()" placeholder="🔎 Pretraži ekipe..." style="margin-bottom:17px"/>
-<div class="grid grid-3" id="teamsGrid"></div>
-</section>
-<!-- ================= PLAYERS ================= -->
-<section class="section" id="players">
-<h2 class="section-title">
-    👟 Igrači
-  </h2>
-<div class="filters">
-<input id="playerSearch" oninput="renderPlayers()" placeholder="🔎 Pretraži igrača..."/>
-<select id="playerTeamFilter" onchange="renderPlayers()">
-<option value="">Sve ekipe</option>
-</select>
-<div></div>
-</div>
-<div class="grid grid-3" id="playersGrid"></div>
-</section>
-<!-- ================= STATS ================= -->
-<section class="section" id="stats">
-<h2 class="section-title">
-    📊 Statistika
-  </h2>
-<div class="grid grid-2">
-<div class="card">
-<h3 style="margin-bottom:13px">
-        ⚽ Strijelci
-      </h3>
-<div class="rank-list" id="scorersList"></div>
-</div>
-<div class="card">
-<h3 style="margin-bottom:13px">
-        🟨 Kartoni
-      </h3>
-<div class="rank-list" id="cardsList"></div>
-</div>
-<div class="card">
-<h3 style="margin-bottom:13px">
-        👟 Nastupi
-      </h3>
-<div class="rank-list" id="appearancesList"></div>
-</div>
-<div class="card">
-<h3 style="margin-bottom:13px">
-        🎯 Asistencije
-      </h3>
-<div class="rank-list" id="assistsList"></div>
-</div>
-<div class="card">
-<h3 style="margin-bottom:13px">
-        🏆 Statistika ekipa
-      </h3>
-<div class="rank-list" id="teamStatsList"></div>
-</div>
-</div>
-</section>
-<!-- ================= COMMENTS ================= -->
-<section class="section" id="comments">
-<h2 class="section-title">
-    💬 Komentari
-  </h2>
-<div class="card">
-<div id="commentsList"></div>
-<div class="hidden" id="commentForm" style="margin-top:18px">
-<textarea id="commentText" maxlength="1000" placeholder="Napiši komentar..."></textarea>
-<div class="comment-counter" id="commentCounter">
-        0 / 1000
-      </div>
-<button class="btn btn-green" onclick="addComment()" style="margin-top:8px">
-        💬 Objavi komentar
-      </button>
-</div>
-<p class="muted" id="commentLoginText" style="margin-top:15px">
-      🔒 Prijavi se da bi mogao ostaviti komentar.
-    </p>
-</div>
-</section>
-<!-- ================= CHAT ================= -->
-<section class="section" id="chat">
-<h2 class="section-title">💬 Chat</h2>
-<div class="card">
-<div class="chat-header">
-<div>
-<strong>💬 Razgovor navijača</strong>
-<span class="muted">Piši, šalji slike i prati šta se dešava u ligi.</span>
-</div>
-<span class="chat-online-dot">● AKTIVAN CHAT</span>
-</div>
-<div class="chat-box" id="chatBox"></div>
-<div class="hidden" id="chatForm" style="margin-top:12px">
-<div class="chat-composer">
-<div class="chat-input-row">
-<label class="chat-image-btn" title="Dodaj sliku">
-            📷
-            <input accept="image/png,image/jpeg,image/webp,image/gif" hidden="" id="chatImageFile" type="file"/>
-</label>
-<input id="chatText" onkeydown="if(event.key==='Enter' &amp;&amp; !event.shiftKey){event.preventDefault();sendChat()}" placeholder="Napiši poruku..."/>
-<button class="btn btn-green" onclick="sendChat()">Pošalji</button>
-</div>
-<div class="chat-image-preview hidden" id="chatImagePreview"></div>
-<div class="chat-image-meta muted" id="chatImageMeta">Možeš poslati sliku uz poruku.</div>
-</div>
-</div>
-<p class="muted" id="chatLoginText" style="margin-top:12px">
-      🔒 Prijavi se da bi koristio chat.
-    </p>
-</div>
-</section>
-<!-- ================= GALLERY ================= -->
-<section class="section" id="gallery">
-<div class="gallery-hero">
-<div>
-<span class="hero-kicker">FOTO ARHIVA LIGE</span>
-<h2 class="section-title" style="margin:4px 0 6px">📸 Galerija</h2>
-<p class="muted">Najbolji trenuci, utakmice i atmosfera Medjaši Futsal Lige.</p>
-</div>
-<div class="gallery-count" id="galleryCount">0 fotografija</div>
-</div>
-<div class="gallery-grid" id="galleryGrid"></div>
-</section>
-<!-- ================= LOGIN / REGISTER ================= -->
-<section class="section" id="login">
-<div class="grid grid-2" style="max-width:900px;margin:30px auto">
-<div class="card">
-<h2 style="margin-bottom:8px">
-        🔐 Prijava
-      </h2>
-<p class="muted" style="margin-bottom:18px">
-        Prijavi se za komentare, chat i sadržaj namijenjen članovima zajednice.
-      </p>
-<div class="form">
-<div class="form-group">
-<label>Email</label>
-<input id="loginEmail" placeholder="Email" type="email"/>
-</div>
-<div class="form-group">
-<label>Lozinka</label>
-<input id="loginPassword" onkeydown="if(event.key==='Enter')login()" placeholder="Lozinka" type="password"/>
-</div>
-<button class="btn btn-green" onclick="login()">
-          🔐 Prijavi se
-        </button>
-<button class="btn" onclick="resetPassword()" type="button">
-          🔑 Zaboravljena lozinka?
-        </button>
-<p class="muted" id="loginMessage"></p>
-</div>
-</div>
-<div class="card">
-<h2 style="margin-bottom:8px">
-        👤 Registracija
-      </h2>
-<p class="muted" style="margin-bottom:18px">
-        Napravi nalog i učestvuj u komentarima i chatu.
-      </p>
-<div class="form">
-<div class="form-group">
-<label>Korisničko ime</label>
-<input id="registerUsername" maxlength="30" placeholder="npr. MedjasiFan"/>
-</div>
-<div class="form-group">
-<label>Email</label>
-<input id="registerEmail" placeholder="Email" type="email"/>
-</div>
-<div class="form-group">
-<label>Lozinka</label>
-<input id="registerPassword" placeholder="Najmanje 6 znakova" type="password"/>
-</div>
-<div class="form-group">
-<label>Ponovi lozinku</label>
-<input id="registerPasswordConfirm" placeholder="Ponovi lozinku" type="password"/>
-</div>
-<button class="btn btn-green" onclick="register()">
-          Registruj se
-        </button>
-<p class="muted" id="registerMessage"></p>
-</div>
-</div>
-</div>
-</section>
-<!-- ================= ADMIN ================= -->
-<section class="section" id="admin">
-<h2 class="section-title">
-    ⚙️ Admin panel
-  </h2>
-<div id="adminContent">
-<div class="admin-grid">
-<!-- TEAM -->
-<div class="card">
-<h3>🛡️ Dodaj ekipu</h3>
-<p class="muted" style="margin:5px 0 15px">
-          Kreiraj novu ekipu.
-        </p>
-<div class="form">
-<div class="form-group">
-<label>Naziv ekipe</label>
-<input id="teamName" placeholder="Naziv ekipe"/>
-</div>
-<div class="form-group">
-<label>Trener <span class="muted">(opcionalno)</span></label>
-<input id="teamCoach" maxlength="80" placeholder="Ime i prezime trenera — nije obavezno"/>
-</div>
-<div class="form-group">
-<label>Logo ekipe</label>
-<input accept="image/*" id="teamLogoFile" type="file"/>
-</div>
-<button class="btn btn-green" onclick="addTeam()">
-            Dodaj ekipu
-          </button>
-</div>
-</div>
-<!-- PLAYER -->
-<div class="card">
-<h3>👟 Dodaj igrača</h3>
-<p class="muted" style="margin:5px 0 15px">
-          Dodaj igrača u ekipu.
-        </p>
-<div class="form">
-<div class="form-group">
-<label>Ime i prezime</label>
-<input id="playerName" placeholder="Ime igrača"/>
-</div>
-<div class="form-group">
-<label>Ekipa</label>
-<select id="playerTeam">
-<option value="">Izaberi ekipu</option>
-</select>
-</div>
-<div class="form-group">
-<label>Broj</label>
-<input id="playerNumber" min="0" placeholder="10" type="number"/>
-</div>
-<div class="form-group">
-<label>Pozicija</label>
-<select id="playerPosition">
-<option value="Golman">Golman</option>
-<option value="Pivot">Pivot</option>
-<option value="Bek">Bek</option>
-<option value="Krilo">Krilo</option>
-</select>
-</div>
-<label style="display:flex;gap:8px;align-items:center">
-<input id="playerCaptain" style="width:auto" type="checkbox"/>
-            Kapiten
-          </label>
-<div class="form-group">
-<label>Fotografija</label>
-<input accept="image/*" id="playerPhotoFile" type="file"/>
-</div>
-<button class="btn btn-green" onclick="addPlayer()">
-            Dodaj igrača
-          </button>
-</div>
-</div>
-<!-- MATCH -->
-<div class="card">
-<h3>⚽ Dodaj utakmicu</h3>
-<p class="muted" style="margin:5px 0 15px">
-          Kreiraj narednu utakmicu.
-        </p>
-<div class="form">
-<div class="form-group">
-<label>Domaćin</label>
-<select id="matchHome">
-<option value="">Izaberi ekipu</option>
-</select>
-</div>
-<div class="form-group">
-<label>Gost</label>
-<select id="matchAway">
-<option value="">Izaberi ekipu</option>
-</select>
-</div>
-<div class="form-group">
-<label>Datum i vrijeme</label>
-<input id="matchDate" type="datetime-local"/>
-</div>
-<div class="form-group">
-<label>Kolo</label>
-<input id="matchRound" min="1" placeholder="1" type="number"/>
-</div>
-<button class="btn btn-green" onclick="addMatch()">
-            Dodaj utakmicu
-          </button>
-<button class="btn btn-blue" onclick="postNextMatchAnnouncement()">
-            📣 Objavi najavu u chat
-          </button>
-</div>
-</div>
-</div>
-<div class="card" style="margin-top:20px">
-<h3 style="margin-bottom:14px">
-        🎛️ Upravljanje utakmicama
-      </h3>
-<div id="adminMatches"></div>
-</div>
-</div>
-<!-- GALERIJA -->
-<div class="card" style="margin-top:20px;">
-<div class="admin-card-head">
-<div>
-<h3>📸 Galerija</h3>
-<p class="muted">Postavi fotografije koje će svi posjetioci moći pregledati u galeriji.</p>
-</div>
-<span class="admin-pill">SAMO ADMIN</span>
-</div>
-<div class="gallery-upload-grid">
-<div class="form-group">
-<label>Fotografija</label>
-<input accept="image/png,image/jpeg,image/webp,image/gif" id="galleryImageFile" type="file"/>
-</div>
-<div class="form-group">
-<label>Naslov</label>
-<input id="galleryTitle" maxlength="100" placeholder="npr. Finale lige"/>
-</div>
-<div class="form-group gallery-upload-wide">
-<label>Opis</label>
-<input id="galleryDescription" maxlength="250" placeholder="Kratak opis fotografije (opcionalno)"/>
-</div>
-</div>
-<button class="btn btn-green" onclick="adminAddGalleryImage()">📤 Objavi u galeriju</button>
-<div class="admin-gallery-list" id="adminGalleryList"></div>
-</div>
-<!-- PLAYLIST MUZIKA -->
-<div class="card admin-music-card" style="margin-top:20px;">
-<div class="admin-card-head"><div><span class="hero-kicker">SOUNDTRACK LIGE</span><h3>🎵 Playlist muzika</h3><p class="muted">Dodaj više YouTube pjesama. Redaju se automatski jedna za drugom i ostaju aktivne dok je posjetilac na stranici.</p></div><span class="admin-pill">SAMO ADMIN</span></div>
-<div class="playlist-add-grid"><input id="adminYoutubeUrl" placeholder="YouTube link pjesme" type="text"/><input id="adminYoutubeTitle" maxlength="100" placeholder="Naziv pjesme (opcionalno)" type="text"/><button class="btn btn-green" onclick="addMusicTrack()">＋ Dodaj pjesmu</button></div>
-<div class="actions" style="margin-top:12px"><button class="btn btn-blue" onclick="toggleMusicPlaylist(true)">▶️ Uključi playlistu</button><button class="btn btn-red" onclick="toggleMusicPlaylist(false)">⏹️ Zaustavi muziku</button></div>
-<div class="muted" id="musicAdminStatus" style="margin-top:10px"></div><div class="admin-playlist" id="adminMusicPlaylist"></div>
-</div>
-</section>
-<!-- ================= COMMUNITY V10 ================= -->
-<section class="section v9-community-section" id="community">
-  <div class="v9-community-hero">
-    <div>
-      <span class="v9-kicker">MEDJAŠI COMMUNITY</span>
-      <h1>Zajednica lige</h1>
-      <p>Fotografije, priče i trenutci sa Medjaši lige — na jednom mjestu.</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <button class="logo-home" onclick="showSection('home')">⚽ Medjaši</button>
+      <nav>
+        <button onclick="showSection('home')">Početna</button>
+        <button onclick="showSection('matches')">Utakmice</button>
+        <button onclick="showSection('table')">Tabela</button>
+        <button onclick="showSection('teams')">Ekipe</button>
+        <button onclick="showSection('players')">Igrači</button>
+        <button onclick="showSection('gallery')">Galerija</button>
+        <button onclick="showSection('community')">Community</button>
+        <button onclick="showSection('chat')">Chat</button>
+        <button onclick="showSection('news')">Vijesti</button>
+      </nav>
+      <div id="headerAccount"></div>
     </div>
-    <div class="v9-community-actions">
-      <button class="btn btn-green" type="button" onclick="openV9PostComposer()">＋ Nova objava</button>
-      <button class="btn btn-blue" type="button" onclick="openV9StoryComposer()">＋ Nova priča</button>
-    </div>
-  </div>
-  <div class="v9-community-grid">
-    <aside class="v9-community-side">
-      <div class="v9-profile-card" id="v9MyProfileCard"></div>
-      <div class="card v9-community-help">
-        <h3>Kako objaviti?</h3>
-        <p class="muted">Klikni <b>Nova objava</b>, izaberi fotografiju, dodaj opis i pritisni <b>Objavi fotografiju</b>.</p>
-        <p class="muted">Priča traje 24 sata. Objave imaju reakcije i komentare.</p>
+  </header>
+
+  <main>
+    <section id="home" class="section active">
+      <div class="card">
+        <h1>Medjaši Futsal Liga</h1>
+        <p>Rezultati, tabela, ekipe, igrači i live informacije.</p>
+        <button onclick="showSection('matches')">Pogledaj utakmice</button>
       </div>
-    </aside>
-    <div class="v9-community-main">
-      <div class="card v9-stories-card">
-        <div class="v9-section-head">
-          <div><span class="v9-kicker">24 SATA</span><h2>🔵 Priče</h2></div>
-          <button class="btn btn-small btn-blue" type="button" onclick="openV9StoryComposer()">＋ Dodaj</button>
-        </div>
-        <div class="v9-stories-wrap" id="v9Stories"></div>
+    </section>
+
+    <section id="matches" class="section">
+      <h2>Utakmice</h2>
+      <div id="matchesList"></div>
+    </section>
+
+    <section id="table" class="section">
+      <h2>Tabela</h2>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Ekipa</th><th>U</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>PTS</th></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </section>
+
+    <section id="teams" class="section">
+      <h2>Ekipe</h2>
+      <input id="teamSearch" oninput="renderTeams()" placeholder="Pretraži ekipe..." />
+      <div id="teamsGrid"></div>
+    </section>
+
+    <section id="players" class="section">
+      <h2>Igrači</h2>
+      <input id="playerSearch" oninput="renderPlayers()" placeholder="Pretraži igrače..." />
+      <div id="playersGrid"></div>
+    </section>
+
+    <section id="gallery" class="section">
+      <h2>Galerija</h2>
+      <div id="galleryGrid"></div>
+    </section>
+
+    <section id="community" class="section">
+      <h2>Community</h2>
+      <div id="communityFeed"></div>
+    </section>
+
+    <section id="chat" class="section">
+      <h2>Chat</h2>
+      <div id="chatBox"></div>
+      <div id="chatForm" class="hidden">
+        <input id="chatText" placeholder="Napiši poruku..." />
+        <button onclick="sendChat()">Pošalji</button>
       </div>
-      <div class="v9-section-head" style="margin-top:20px">
-        <div><span class="v9-kicker">FEED</span><h2>Najnovije objave</h2></div>
-        <button class="btn btn-small" type="button" onclick="loadV9Community()">↻ Osvježi</button>
+    </section>
+
+    <section id="news" class="section">
+      <h2>Vijesti</h2>
+      <div id="newsFeed"></div>
+    </section>
+
+    <section id="login" class="section">
+      <h2>Prijava</h2>
+      <div class="card">
+        <input id="loginEmail" type="email" placeholder="Email" />
+        <input id="loginPassword" type="password" placeholder="Lozinka" />
+        <button onclick="login()">Prijavi se</button>
       </div>
-      <div class="v9-feed" id="v9Feed"></div>
-    </div>
+      <div class="card">
+        <h3>Registracija</h3>
+        <input id="registerUsername" placeholder="Korisničko ime" />
+        <input id="registerEmail" type="email" placeholder="Email" />
+        <input id="registerPassword" type="password" placeholder="Lozinka" />
+        <input id="registerPasswordConfirm" type="password" placeholder="Ponovi lozinku" />
+        <button onclick="register()">Registruj se</button>
+      </div>
+    </section>
+
+    <section id="admin" class="section" style="display:none;">
+      <h2>Admin panel</h2>
+      <div class="card">
+        <h3>Dodaj ekipu</h3>
+        <input id="teamName" placeholder="Naziv ekipe" />
+        <input id="teamCoach" placeholder="Trener" />
+        <button onclick="addTeam()">Dodaj ekipu</button>
+      </div>
+      <div class="card">
+        <h3>Dodaj igrača</h3>
+        <input id="playerName" placeholder="Ime igrača" />
+        <input id="playerNumber" type="number" placeholder="Broj" />
+        <select id="playerPosition">
+          <option value="Krilo">Krilo</option>
+          <option value="Bek">Bek</option>
+          <option value="Pivot">Pivot</option>
+          <option value="Golman">Golman</option>
+        </select>
+        <select id="playerTeam"></select>
+        <button onclick="addPlayer()">Dodaj igrača</button>
+      </div>
+      <div class="card">
+        <h3>Dodaj utakmicu</h3>
+        <select id="matchHome"></select>
+        <select id="matchAway"></select>
+        <input id="matchDate" type="datetime-local" />
+        <input id="matchRound" type="number" min="1" value="1" />
+        <button onclick="addMatch()">Dodaj utakmicu</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="toastWrap"></div>
+  <div id="modal" class="modal" onclick="closeModal(event)">
+    <div class="modal-content" id="modalContent" onclick="event.stopPropagation()"></div>
   </div>
-</section>
-<!-- ================= V9 PROFILE / POST / STORY MODAL HOST ================= -->
-<div id="v9ProfileHost"></div>
-</main>
-<footer class="footer">
-<div>
-    © 2026 Medjaši Futsal Liga
-  </div>
-<div>
-    Rezultati • Tabela • Ekipe • Igrači • Statistika
-  </div>
-</footer>
-<div class="mobile-bottom">
-<button onclick="showSection('home')">
-<span>⌂</span>
-    Početna
-  </button>
-<button onclick="showSection('matches')">
-<span>⚽</span>
-    Utakmice
-  </button>
-<button onclick="showSection('table')">
-<span>🏆</span>
-    Tabela
-  </button>
-<button onclick="showSection('gallery')">
-<span>📸</span>
-    Galerija
-  </button>
-<button id="mobileMoreBtn" onclick="toggleMobileMore()">
-<span>☰</span>
-    Više
-  </button>
-</div>
-<div aria-hidden="true" class="mobile-more-drawer" id="mobileMoreDrawer">
-<div class="mobile-more-backdrop" onclick="closeMobileMore()"></div>
-<div class="mobile-more-panel">
-<div class="mobile-more-head">
-<div>
-<small>MEDJAŠI FUTSAL LIGA</small>
-<strong>Meni</strong>
-</div>
-<button aria-label="Zatvori meni" class="mobile-more-close" onclick="closeMobileMore()" type="button">✕</button>
-</div>
-<div class="mobile-more-grid">
-<button onclick="mobileMoreGo('home')"><span>⌂</span><b>Početna</b><small>Naslovna</small></button>
-<button onclick="mobileMoreGo('matches')"><span>⚽</span><b>Utakmice</b><small>Raspored i rezultati</small></button>
-<button onclick="mobileMoreGo('table')"><span>🏆</span><b>Tabela</b><small>Poredak lige</small></button>
-<button onclick="mobileMoreGo('teams')"><span>🛡️</span><b>Ekipe</b><small>Timovi lige</small></button>
-<button onclick="mobileMoreGo('players')"><span>👤</span><b>Igrači</b><small>Spisak igrača</small></button>
-<button onclick="mobileMoreGo('stats')"><span>📊</span><b>Statistika</b><small>Najbolji igrači</small></button>
-<button onclick="mobileMoreGo('gallery')"><span>📸</span><b>Galerija</b><small>Fotografije</small></button>
-<button onclick="mobileMoreGo('community')"><span>✨</span><b>Community</b><small>Objave i priče</small></button><button onclick="mobileMoreGo('chat')"><span>💬</span><b>Chat</b><small>Razgovor uživo</small></button>
-<button onclick="mobileMoreGo('news')"><span>📰</span><b>Vijesti</b><small>Novosti lige</small></button>
-</div>
-</div>
-</div>
-<div class="toast-wrap" id="toastWrap"></div>
-<div class="modal" id="modal" onclick="closeModal(event)">
-<div class="modal-box" onclick="event.stopPropagation()">
-<button class="close" onclick="hideModal()">
-      ✕
-    </button>
-<div id="modalContent"></div>
-</div>
-</div>
 
-
-
-<!-- PWA Service Worker -->
-
-<!-- PWA INSTALL -->
-<div class="pwa-install-banner" id="pwaInstallBanner">
-<div class="pwa-install-icon">
-    ⚽
-  </div>
-<div class="pwa-install-content">
-<strong>Međasi Futsal Liga</strong>
-<span>Dodaj aplikaciju na početni ekran</span>
-</div>
-<button class="pwa-install-btn" id="pwaInstallButton">
-    Instaliraj
-  </button>
-<button aria-label="Zatvori" class="pwa-install-close" id="pwaInstallClose">
-    ×
-  </button>
-</div>
-<div class="pwa-modal" id="pwaInstallModal">
-<div class="pwa-modal-box">
-<button class="pwa-modal-close" id="pwaModalClose">
-      ×
-    </button>
-<div class="pwa-modal-logo">
-      ⚽
-    </div>
-<h2>Instaliraj Međasi</h2>
-<p class="pwa-modal-subtitle">
-      Dodaj Međasi Futsal Ligu na početni ekran telefona
-      i koristi je kao aplikaciju.
-    </p>
-<div class="pwa-ios-steps">
-<div class="pwa-step">
-<div class="pwa-step-number">1</div>
-<div>
-<strong>Otvori Safari</strong>
-<span>Otvori Međasi stranicu u Safari browseru.</span>
-</div>
-</div>
-<div class="pwa-step">
-<div class="pwa-step-number">2</div>
-<div>
-<strong>Pritisni Share</strong>
-<span>Na dnu ekrana pritisni dugme za dijeljenje.</span>
-</div>
-</div>
-<div class="pwa-step">
-<div class="pwa-step-number">3</div>
-<div>
-<strong>Dodaj na početni ekran</strong>
-<span>Izaberi „Add to Home Screen“ / „Dodaj na početni ekran“.</span>
-</div>
-</div>
-</div>
-<button class="pwa-modal-done" id="pwaModalDone">
-      Razumijem
-    </button>
-</div>
-</div>
-
-
-
-
-<!-- =========================================================
-     MEDJASI V3 - ADMIN COMMUNITY + MOBILE/POLISH LAYER
-     Ova nadogradnja čuva postojeći sistem i dodaje:
-     - ADMIN oznaku u chatu i komentarima
-     - poseban izgled Admin poruka
-     - Admin banner/objavu
-     - sigurnije prikazivanje role iz profiles tabele
-     - reakcije na chat poruke (lokalno po uređaju, bez nove DB šeme)
-     - bolji chat/komentar UX
-========================================================= -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<script src="./js/app.js?v=20261005v19" defer></script>
-<script src="./js/production.js?v=20261005" defer></script>
+  <script src="./js/modules/core.js" defer></script>
+  <script src="./js/modules/auth.js" defer></script>
+  <script src="./js/modules/teams.js" defer></script>
+  <script src="./js/modules/players.js" defer></script>
+  <script src="./js/modules/matches.js" defer></script>
+  <script src="./js/modules/chat.js" defer></script>
+  <script src="./js/modules/gallery.js" defer></script>
+  <script src="./js/modules/community.js" defer></script>
+  <script src="./js/modules/news.js" defer></script>
+  <script src="./js/modules/admin.js" defer></script>
+  <script src="./js/modules/notifications.js" defer></script>
+  <script src="./js/modules/realtime.js" defer></script>
+  <script src="./js/index.js" defer></script>
 </body>
 </html>

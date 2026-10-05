@@ -1,150 +1,75 @@
 /**
- * Medjaši Futsal Liga - Admin Module
- * Team, player, match, gallery, music, season admin actions
+ * Admin module
  */
 
-async function addSeason() {
+function renderAdmin() {
+  const adminSection = $('admin');
+  if (!adminSection) return;
+  adminSection.style.display = window.medjasi.isAdmin ? 'block' : 'none';
+}
+
+async function addTeam() {
   if (!requireAdmin()) return;
-
-  const name = $("#v7SeasonName")?.value.trim();
-  if (!name) {
-    toast("Unesite naziv sezone", "error");
-    return;
-  }
-
-  try {
-    const { error } = await supabaseClient.from("seasons").insert({ name, is_active: false });
-
-    if (error) {
-      toast(`Greška: ${error.message}`, "error");
-      return;
-    }
-
-    toast("Sezona dodana ✅", "success");
-    $("#v7SeasonName").value = "";
-    await loadSeasons();
-  } catch (error) {
-    console.error("Add season error:", error);
-    toast("Greška pri dodavanju sezone", "error");
-  }
+  const name = $('teamName')?.value.trim();
+  if (!name) return toast('Unesite naziv ekipe.', 'error');
+  const team = { id: Date.now(), name, coach: $('teamCoach')?.value.trim() || 'Bez trenera' };
+  window.medjasi.teams.push(team);
+  $('teamName').value = '';
+  $('teamCoach').value = '';
+  renderTeams();
+  renderTable();
+  toast('Ekipa dodana.', 'success');
 }
 
-async function activateSeason(id) {
+async function addPlayer() {
   if (!requireAdmin()) return;
-
-  try {
-    await supabaseClient.from("seasons").update({ is_active: false }).neq("id", "00000000-0000-0000-0000-000000000000");
-    const { error } = await supabaseClient.from("seasons").update({ is_active: true }).eq("id", id);
-
-    if (error) {
-      toast(`Greška: ${error.message}`, "error");
-      return;
-    }
-
-    toast("Sezona aktivirana ✅", "success");
-    await loadSeasons();
-  } catch (error) {
-    console.error("Activate season error:", error);
-    toast("Greška pri aktivaciji sezone", "error");
-  }
+  const name = $('playerName')?.value.trim();
+  const teamId = $('playerTeam')?.value;
+  if (!name || !teamId) return toast('Popunite ime i ekipu.', 'error');
+  window.medjasi.players.push({
+    id: Date.now(),
+    name,
+    number: Number($('playerNumber')?.value || 0),
+    team_id: Number(teamId),
+    position: $('playerPosition')?.value || 'Igrač'
+  });
+  $('playerName').value = '';
+  $('playerNumber').value = '';
+  renderPlayers();
+  toast('Igrač dodan.', 'success');
 }
 
-async function addMusicTrack() {
+async function addMatch() {
   if (!requireAdmin()) return;
-
-  const url = $("#adminYoutubeUrl")?.value.trim();
-  const title = $("#adminYoutubeTitle")?.value.trim();
-
-  if (!url) {
-    toast("Unesite YouTube link", "error");
-    return;
-  }
-
-  try {
-    const { error } = await supabaseClient.from("music_tracks").insert({
-      youtube_music_id: url,
-      title: title || "Pjesma",
-      enabled: true,
-    });
-
-    if (error) {
-      toast(`Greška: ${error.message}`, "error");
-      return;
-    }
-
-    $("#adminYoutubeUrl").value = "";
-    $("#adminYoutubeTitle").value = "";
-    toast("Pjesma dodana u playlistu ✅", "success");
-    await loadMusicSettings();
-  } catch (error) {
-    console.error("Add music track error:", error);
-    toast("Greška pri dodavanju pjesme", "error");
-  }
+  const home = $('matchHome')?.value;
+  const away = $('matchAway')?.value;
+  if (!home || !away || home === away) return toast('Izaberite validne ekipe.', 'error');
+  window.medjasi.matches.push({
+    id: Date.now(),
+    home_team_id: Number(home),
+    away_team_id: Number(away),
+    home_score: 0,
+    away_score: 0,
+    status: 'scheduled',
+    round: Number($('matchRound')?.value || 1),
+    match_datetime: $('matchDate')?.value || new Date().toISOString()
+  });
+  renderMatches();
+  renderTable();
+  toast('Utakmica dodana.', 'success');
 }
 
-function renderSeasons() {
-  const box = $("#v7SeasonList");
-  if (!box) return;
-
-  const seasons = window.medjasi.seasons || [];
-  box.innerHTML = seasons
-    .map(
-      (season) => `
-        <div class="admin-match">
-          <span>${escape(season.name)}</span>
-          <button onclick="activateSeason('${season.id}')">${season.is_active ? "Aktivna" : "Aktiviraj"}</button>
-        </div>
-      `
-    )
-    .join("");
+function populateAdminSelects() {
+  const teamSelects = ['playerTeam', 'matchHome', 'matchAway'];
+  teamSelects.forEach((id) => {
+    const el = $(id);
+    if (!el) return;
+    el.innerHTML = '<option value="">Izaberi ekipu</option>' + (window.medjasi.teams || []).map((team) => `<option value="${team.id}">${escapeHtml(team.name)}</option>`).join('');
+  });
 }
 
-async function loadSeasons() {
-  try {
-    const { data, error } = await supabaseClient.from("seasons").select("*").order("created_at", { ascending: false });
-    if (!error) {
-      window.medjasi.seasons = data || [];
-      renderSeasons();
-    }
-  } catch (error) {
-    console.error("Load seasons error:", error);
-  }
-}
-
-async function loadMusicSettings() {
-  try {
-    const { data, error } = await supabaseClient.from("site_settings").select("youtube_music_enabled").eq("id", 1).maybeSingle();
-    if (!error) {
-      window.medjasi.musicEnabled = data?.youtube_music_enabled ?? false;
-    }
-  } catch (error) {
-    console.error("Load music settings error:", error);
-  }
-}
-
-async function toggleMusicPlaylist(enabled) {
-  if (!requireAdmin()) return;
-
-  try {
-    const { error } = await supabaseClient.from("site_settings").update({ youtube_music_enabled: enabled }).eq("id", 1);
-
-    if (error) {
-      toast(`Greška: ${error.message}`, "error");
-      return;
-    }
-
-    window.medjasi.musicEnabled = enabled;
-    toast(enabled ? "Playlist aktiviran ✅" : "Playlist deaktiviran", "success");
-  } catch (error) {
-    console.error("Toggle music error:", error);
-    toast("Greška pri izmjeni playlista", "error");
-  }
-}
-
-window.addSeason = addSeason;
-window.activateSeason = activateSeason;
-window.addMusicTrack = addMusicTrack;
-window.toggleMusicPlaylist = toggleMusicPlaylist;
-window.loadSeasons = loadSeasons;
-window.renderSeasons = renderSeasons;
-window.loadMusicSettings = loadMusicSettings;
+window.addTeam = addTeam;
+window.addPlayer = addPlayer;
+window.addMatch = addMatch;
+window.renderAdmin = renderAdmin;
+window.populateAdminSelects = populateAdminSelects;
