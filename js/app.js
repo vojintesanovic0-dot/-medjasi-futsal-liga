@@ -1321,7 +1321,21 @@ function updateAuthUI(){const logged=!!currentUser;const username=currentProfile
    LOAD ALL DATA
 ========================================================= */
 
+let loadAllPromise = null;
+let loadAllTimer = null;
+
+function scheduleDataRefresh(delay=250){
+  clearTimeout(loadAllTimer);
+  loadAllTimer = setTimeout(()=>{
+    loadAll().catch(error=>console.error("Scheduled refresh:",error));
+  }, delay);
+}
+
 async function loadAll(){
+  if(loadAllPromise) return loadAllPromise;
+  loadAllPromise = (async()=>{
+    try{
+
 
   try{
 
@@ -1456,9 +1470,16 @@ async function loadAll(){
       error
     );
   }
+    }catch(error){
+      console.error("Greška pri učitavanju:",error);
+    }
+  })();
+  try{
+    return await loadAllPromise;
+  }finally{
+    loadAllPromise = null;
+  }
 }
-
-
 /* =========================================================
    RENDER ALL
 ========================================================= */
@@ -7355,8 +7376,7 @@ function subscribeRealtime(){
             schema:"public",
             table:"matches"
           },
-          () =>
-            loadAll()
+          () => scheduleDataRefresh()
         )
 
 
@@ -7367,8 +7387,7 @@ function subscribeRealtime(){
             schema:"public",
             table:"goals"
           },
-          () =>
-            loadAll()
+          () => scheduleDataRefresh()
         )
 
 
@@ -7379,8 +7398,7 @@ function subscribeRealtime(){
             schema:"public",
             table:"cards"
           },
-          () =>
-            loadAll()
+          () => scheduleDataRefresh()
         )
 
 
@@ -7391,8 +7409,7 @@ function subscribeRealtime(){
             schema:"public",
             table:"match_players"
           },
-          () =>
-            loadAll()
+          () => scheduleDataRefresh()
         )
 
 
@@ -7403,8 +7420,7 @@ function subscribeRealtime(){
             schema:"public",
             table:"comments"
           },
-          () =>
-            loadAll()
+          () => scheduleDataRefresh()
         )
 
 
@@ -7415,8 +7431,7 @@ function subscribeRealtime(){
             schema:"public",
             table:"messages"
           },
-          () =>
-            loadAll()
+          () => scheduleDataRefresh()
         )
 
 
@@ -7427,8 +7442,7 @@ function subscribeRealtime(){
             schema:"public",
             table:"gallery"
           },
-          () =>
-            loadAll()
+          () => scheduleDataRefresh()
         )
 
 
@@ -7487,10 +7501,10 @@ async function init(){
   */
 
   setInterval(
-    async()=>{
+    ()=>{
 
-      await loadAll();
-      await loadMusicSettings();
+      scheduleDataRefresh();
+      loadMusicSettings();
 
     },
     30000
