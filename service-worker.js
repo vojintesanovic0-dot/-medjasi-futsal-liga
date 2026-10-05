@@ -1,12 +1,12 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v24";
+const CACHE_NAME = "medjasi-futsal-pwa-v25";
 
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
   "./css/app.css?v=20261005v19",
-  "./js/app.js?v=20261005v21",
-  "./css/production.css?v=20261005v20",
+  "./js/app.js?v=20261005v22",
+  "./css/production.css?v=20261005v21",
   "./js/production.js?v=20261005",
   "./images/icon-192.png",
   "./images/icon-512.png"
@@ -69,6 +69,23 @@ self.addEventListener("fetch", event => {
         })
     );
 
+    return;
+  }
+
+  // JS/CSS: uvijek prvo uzmi svježu verziju sa servera.
+  // Ovo sprečava da stari Service Worker zadrži pokvareni app.js nakon deploya.
+  if (url.pathname.endsWith(".js") || url.pathname.endsWith(".css") || url.pathname.endsWith(".html")) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
     return;
   }
 
