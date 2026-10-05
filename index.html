@@ -13492,7 +13492,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
 </script>
 <style id="medjasi-v11-final-polish">
 /* =========================================================
-   MEDJAŠI V11 — PROFILE / NEWS / COMMUNITY POLISH
+   MEDJAŠI V12 — FINAL PROFILE / NEWS / COMMUNITY POLISH
 ========================================================= */
 :root{--v11-green:#24e487;--v11-blue:#2d9cff;--v11-panel:rgba(8,20,33,.86)}
 .v10-trust-row{display:none!important}
@@ -13595,5 +13595,108 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   observer.observe(document.body,{childList:true,subtree:true});
 })();
 </script>
+
+<style id="medjasi-v12-final-css">
+/* V12 final polish: editorial news, profile identity, community polish */
+#comments{display:none!important}
+#news{animation:v12SectionIn .32s ease both}
+.v9-post,.v9-profile-card,.v9-community-hero,.v9-story{backdrop-filter:blur(10px)}
+.v9-post-head .v9-post-author{cursor:pointer}
+.v9-post-head .v9-post-author:hover{text-decoration:underline;text-underline-offset:3px}
+.v9-admin-badge,.account-admin{font-style:normal!important}
+@keyframes v12SectionIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@media(max-width:700px){
+  .v9-community-hero{padding:18px!important;border-radius:20px!important}
+  .v9-community-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important}
+  .v9-community-actions .btn{width:100%;min-height:44px}
+  .v9-post{border-radius:18px!important}
+  .v9-post-image{max-height:78vh;object-fit:cover}
+  .v11-profile-chip small{display:none!important}
+}
+</style>
+<script id="medjasi-v12-final-js">
+(function(){
+  'use strict';
+  const q=id=>document.getElementById(id);
+  const esc12=v=>typeof esc==='function'?esc(v??''):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  /* Local SVG fallback: no dependency on an external placeholder service. */
+  const fallback='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="32" fill="#0b1b2b"/><circle cx="80" cy="61" r="28" fill="#5f7487"/><path d="M31 139c6-31 25-47 49-47s43 16 49 47" fill="#5f7487"/></svg>');
+  const avatarFor=p=>p?.avatar_url||fallback;
+
+  function normalizeNav(){
+    document.querySelectorAll('#mainNav button,.mobile-more-grid button').forEach(b=>{
+      const oc=b.getAttribute('onclick')||'';
+      const txt=(b.textContent||'').trim();
+      if(oc.includes("showSection('comments')")||oc.includes("mobileMoreGo('comments')")||/Komentari/.test(txt)){
+        b.innerHTML=b.closest('#mainNav')?'<span>📰</span><span>Vijesti</span>':'<span>📰</span><b>Vijesti</b><small>Novosti lige</small>';
+        b.setAttribute('onclick',b.closest('#mainNav')?"showSection('news')":"mobileMoreGo('news')");
+      }
+    });
+  }
+
+  function redirectLegacyComments(){
+    const original=window.showSection;
+    if(!original||window.__V12_SHOW_PATCH__)return;
+    window.__V12_SHOW_PATCH__=true;
+    window.showSection=function(id){
+      if(id==='comments')id='news';
+      return original.call(this,id);
+    };
+  }
+
+  function patchAvatarImages(){
+    document.querySelectorAll('.v9-avatar,.v9-profile-avatar,.v9-avatar-big,.v11-header-avatar').forEach(img=>{
+      if(img.dataset.v12Fallback==='1')return;
+      img.dataset.v12Fallback='1';
+      img.addEventListener('error',function(){this.src=fallback;},{once:true});
+    });
+  }
+
+  function patchHeader(){
+    const account=q('headerAccount');
+    if(!account||!window.currentUser)return;
+    const p=window.currentProfile||{};
+    const name=esc12(p.username||window.currentUser.user_metadata?.username||window.currentUser.email?.split('@')[0]||'Korisnik');
+    const av=esc12(avatarFor(p));
+    const admin=p.role==='admin';
+    account.innerHTML=`<button class="account-btn v11-profile-chip" onclick="openV9Profile('${esc12(window.currentUser.id)}')" title="Otvori profil"><img class="v11-header-avatar" src="${av}" alt="Profil"><span><strong>${name}${admin?'<span class="account-admin">Admin</span>':''}</strong><small>Otvori profil</small></span></button><button class="account-btn" onclick="logout()" title="Odjava">↪</button>`;
+    patchAvatarImages();
+  }
+
+  function polishNews(){
+    const n=q('news');if(!n)return;
+    /* Vijesti are editorial. Remove any accidental legacy comment UI, but keep Chat sharing. */
+    n.querySelectorAll('.comment,.comment-form,.comments,.news-comments,#commentForm,#commentsList').forEach(x=>x.remove());
+  }
+
+  function polishCommunity(){
+    const c=q('community');if(!c)return;
+    c.querySelectorAll('.v9-post-author,.v9-avatar').forEach(el=>{
+      if(el.tagName==='IMG')el.title='Otvori profil';
+    });
+    patchAvatarImages();
+  }
+
+  function run(){
+    redirectLegacyComments();
+    normalizeNav();
+    patchHeader();
+    polishNews();
+    polishCommunity();
+  }
+
+  window.addEventListener('load',()=>{
+    run();
+    [300,900,1800,3200].forEach(ms=>setTimeout(run,ms));
+  });
+  const observer=new MutationObserver(()=>{
+    normalizeNav();
+    polishNews();
+    patchAvatarImages();
+  });
+  observer.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
 </body>
 </html>
