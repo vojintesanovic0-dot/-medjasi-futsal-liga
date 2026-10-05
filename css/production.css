@@ -501,3 +501,124 @@ img{max-width:100%}table{max-width:100%}pre{max-width:100%;overflow:auto}
   .v7-news-row-actions{grid-column:1/-1;justify-content:stretch}
   .v7-news-row-actions .btn{flex:1}
 }
+
+
+/* =========================================================
+   DESKTOP HEADER — AUTH TOP RIGHT
+   Login/profile stays in the top-right corner; no left sidebar.
+========================================================= */
+@media(min-width:1101px){
+  body{
+    padding-left:0!important;
+  }
+  .site-header{
+    position:sticky!important;
+    inset:auto!important;
+    top:0!important;
+    left:auto!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:76px!important;
+    border-right:0!important;
+    border-bottom:1px solid rgba(255,255,255,.08)!important;
+    background:rgba(6,16,27,.94)!important;
+    box-shadow:0 12px 40px rgba(0,0,0,.16)!important;
+    overflow:visible!important;
+  }
+  .site-header .header-inner{
+    width:100%!important;
+    max-width:1560px!important;
+    height:auto!important;
+    min-height:76px!important;
+    padding:0 30px!important;
+    margin:0 auto!important;
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:18px!important;
+  }
+  .logo{
+    width:auto!important;
+    min-width:230px!important;
+    padding:0!important;
+    border-bottom:0!important;
+  }
+  #mainNav{
+    display:flex!important;
+    flex:1 1 auto!important;
+    width:auto!important;
+    min-height:0!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:4px!important;
+    overflow:visible!important;
+    padding:0!important;
+  }
+  #mainNav .nav-group-title{
+    display:none!important;
+  }
+  #mainNav button{
+    width:auto!important;
+    min-height:42px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+    padding:9px 10px!important;
+    border-radius:10px!important;
+  }
+  #mainNav button span:first-child{
+    width:auto!important;
+    font-size:15px!important;
+  }
+  #mainNav button span:last-child{
+    font-size:12px!important;
+  }
+  .header-actions{
+    width:auto!important;
+    margin:0!important;
+    padding:0!important;
+    border-top:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:8px!important;
+    flex:0 0 auto!important;
+  }
+  .header-live{
+    display:none!important;
+  }
+  .notification-bell{
+    width:42px!important;
+    height:42px!important;
+  }
+  .header-account{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:7px!important;
+    flex-wrap:nowrap!important;
+    min-width:0!important;
+  }
+  .header-account .account-btn{
+    width:auto!important;
+    min-width:0!important;
+    min-height:42px!important;
+    padding:8px 12px!important;
+    border-radius:11px!important;
+    white-space:nowrap!important;
+  }
+  .mobile-menu-btn{display:none!important}
+  main{
+    max-width:1560px!important;
+    margin:0 auto!important;
+    padding:26px 30px 88px!important;
+  }
+}
+
+@media(max-width:1100px){
+  body{padding-left:0!important}
+  .site-header{position:sticky!important;inset:auto!important;width:100%!important;height:auto!important}
+}
