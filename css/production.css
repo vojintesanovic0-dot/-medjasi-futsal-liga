@@ -258,3 +258,188 @@ img{max-width:100%}table{max-width:100%}pre{max-width:100%;overflow:auto}
   .v10-orbit.orbit-a{width:235px;height:105px}
   .v10-orbit.orbit-b{width:195px;height:195px}
 }
+
+
+/* =========================================================
+   DESKTOP SIDEBAR + VISUAL MOTION V12
+========================================================= */
+@keyframes medjasiFadeUp{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes medjasiGlow{
+  0%,100%{box-shadow:0 0 0 0 rgba(32,212,123,0)}
+  50%{box-shadow:0 0 32px 2px rgba(32,212,123,.10)}
+}
+@keyframes medjasiFloat{
+  0%,100%{transform:translate3d(0,0,0)}
+  50%{transform:translate3d(0,-6px,0)}
+}
+@media(min-width:1101px){
+  body{
+    padding-left:252px!important;
+    background:
+      radial-gradient(circle at 22% 8%,rgba(32,212,123,.055),transparent 26%),
+      radial-gradient(circle at 82% 30%,rgba(44,156,255,.045),transparent 30%),
+      var(--bg);
+  }
+  .site-header{
+    position:fixed!important;
+    inset:0 auto 0 0!important;
+    width:252px!important;
+    height:100vh!important;
+    border-right:1px solid rgba(255,255,255,.08)!important;
+    border-bottom:0!important;
+    background:linear-gradient(180deg,rgba(5,12,20,.98),rgba(6,17,28,.94))!important;
+    backdrop-filter:blur(18px);
+    box-shadow:18px 0 50px rgba(0,0,0,.20);
+    overflow:hidden;
+  }
+  .site-header:before{
+    content:"";
+    position:absolute;
+    width:170px;height:170px;
+    left:-80px;top:-70px;
+    border-radius:50%;
+    background:rgba(32,212,123,.10);
+    filter:blur(35px);
+    pointer-events:none;
+  }
+  .site-header .header-inner{
+    width:100%!important;
+    height:100%!important;
+    min-height:100%!important;
+    max-width:none!important;
+    padding:24px 16px 18px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+    gap:18px!important;
+    box-sizing:border-box;
+  }
+  .logo{
+    min-width:0!important;
+    width:100%!important;
+    padding:4px 5px 16px;
+    border-bottom:1px solid rgba(255,255,255,.07);
+  }
+  .logo-ball{
+    width:42px;height:42px;border-radius:13px;
+    animation:medjasiGlow 4s ease-in-out infinite;
+  }
+  #mainNav{
+    display:flex!important;
+    flex:1!important;
+    min-height:0;
+    width:100%;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+    gap:5px!important;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding-right:2px;
+  }
+  #mainNav .nav-group-title{
+    display:block!important;
+    padding:13px 11px 5px;
+    color:#5f7589;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.16em;
+  }
+  #mainNav button{
+    width:100%;
+    min-height:44px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    text-align:left;
+    padding:10px 12px;
+    border-radius:13px;
+    color:#8fa4b7;
+    transition:transform .22s ease,background .22s ease,color .22s ease,box-shadow .22s ease;
+  }
+  #mainNav button span:first-child{
+    width:22px;
+    margin-right:0!important;
+    text-align:center;
+    font-size:17px;
+  }
+  #mainNav button:hover{
+    transform:translateX(3px);
+    background:rgba(255,255,255,.055);
+    color:#fff;
+  }
+  #mainNav button.active{
+    background:linear-gradient(135deg,rgba(32,212,123,.16),rgba(44,156,255,.08));
+    color:#fff;
+    box-shadow:inset 0 0 0 1px rgba(32,212,123,.13),0 8px 22px rgba(0,0,0,.12);
+  }
+  #mainNav button.active:after{
+    left:auto!important;
+    right:7px!important;
+    top:10px!important;
+    bottom:10px!important;
+    width:3px!important;
+    height:auto!important;
+  }
+  .header-actions{
+    width:100%;
+    margin-top:auto;
+    padding-top:14px;
+    border-top:1px solid rgba(255,255,255,.07);
+    display:grid!important;
+    grid-template-columns:auto 1fr;
+    gap:8px!important;
+  }
+  .header-live{
+    grid-column:1/-1;
+    padding:3px 4px 7px;
+  }
+  .notification-bell{width:42px;height:42px}
+  .header-account{
+    min-width:0;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    flex-wrap:wrap;
+  }
+  .header-account .account-btn{
+    min-height:38px;
+    padding:8px 9px;
+    border-radius:11px;
+    max-width:100%;
+  }
+  .mobile-menu-btn{display:none!important}
+  main{
+    max-width:1560px!important;
+    margin:0 auto!important;
+    padding:26px 34px 88px 30px!important;
+  }
+  .section.active{
+    animation:medjasiFadeUp .32s ease both;
+  }
+  .v10-hero{
+    animation:medjasiFadeUp .42s ease both;
+  }
+  .v10-ball-wrap{animation:medjasiFloat 5s ease-in-out infinite}
+  .card,.v10-next-card,.v10-quick-card,.v10-media-card{
+    transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;
+  }
+  .card:hover,.v10-next-card:hover,.v10-quick-card:hover,.v10-media-card:hover{
+    transform:translateY(-3px);
+    border-color:rgba(32,212,123,.16);
+    box-shadow:0 16px 40px rgba(0,0,0,.14);
+  }
+  .player-card,.team-cover,.match-row,.rank-row{transition:transform .2s ease,background .2s ease}
+  .player-card:hover,.match-row:hover,.rank-row:hover{
+    transform:translateY(-2px);
+    background-color:rgba(255,255,255,.025);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .v10-ball-wrap,.logo-ball{animation:none!important}
+  .card,.player-card,.match-row,.rank-row,#mainNav button{transition:none!important}
+}
