@@ -7764,6 +7764,30 @@ function injectModeratorPanel(){
 const _baseUpdateAuthUI = updateAuthUI;
 updateAuthUI=function(){
   _baseUpdateAuthUI();
+
+  const account=document.getElementById("headerAccount");
+  if(account && currentUser){
+    const username=esc(currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik");
+    account.innerHTML='<button class="account-btn" type="button" onclick="openV9Profile(\''+currentUser.id+'\')">👤 '+username+'</button><button class="account-btn" type="button" onclick="openV9EditProfile()">✏️ Uredi</button>'+(isAdmin()?'<button class="account-btn account-admin-btn" type="button" onclick="showSection(\'admin\')">⚙️ Admin</button>':'')+'<button class="account-btn" type="button" onclick="logout()">↪</button>';
+  }
+
+  const nav=document.getElementById("mainNav");
+  if(nav){
+    let adminBtn=nav.querySelector(".nav-admin-btn");
+    if(isAdmin()){
+      if(!adminBtn){
+        adminBtn=document.createElement("button");
+        adminBtn.type="button";
+        adminBtn.className="nav-admin-btn";
+        adminBtn.innerHTML="<span>⚙️</span><span>Admin</span>";
+        adminBtn.onclick=()=>showSection("admin");
+        nav.appendChild(adminBtn);
+      }
+    }else{
+      adminBtn?.remove();
+    }
+  }
+
   if(isAdmin()) injectModeratorPanel();
   setupCommentImageUI();
   setupChatImageUI();
