@@ -495,27 +495,43 @@
 <div class="muted" id="musicAdminStatus" style="margin-top:10px"></div><div class="admin-playlist" id="adminMusicPlaylist"></div>
 </div>
 </section>
-<!-- ================= COMMUNITY V9 ================= -->
+<!-- ================= COMMUNITY V10 ================= -->
 <section class="section v9-community-section" id="community">
-<div class="v9-community-hero">
-<div>
-<span class="v9-kicker">MEDJAŠI COMMUNITY</span>
-<h1>Zajednica lige</h1>
-<p>Fotografije, priče i trenutci sa Medjaši lige — na jednom mjestu.</p>
-</div>
-<div class="v9-community-actions">
-<button class="btn btn-green" onclick="openV9PostComposer()">＋ Objavi fotografiju</button>
-<button class="btn btn-blue" onclick="openV9StoryComposer()">＋ Moja priča</button>
-</div>
-</div>
-<div class="v9-stories-wrap" id="v9Stories"></div>
-<div class="v9-community-grid">
-<div>
-<div class="v9-section-head"><div><span class="v9-kicker">FEED</span><h2>Najnovije objave</h2></div><button class="btn btn-small" onclick="loadV9Community()">↻ Osvježi</button></div>
-<div class="v9-feed" id="v9Feed"></div>
-</div>
-<aside class="v9-profile-card" id="v9MyProfileCard"></aside>
-</div>
+  <div class="v9-community-hero">
+    <div>
+      <span class="v9-kicker">MEDJAŠI COMMUNITY</span>
+      <h1>Zajednica lige</h1>
+      <p>Fotografije, priče i trenutci sa Medjaši lige — na jednom mjestu.</p>
+    </div>
+    <div class="v9-community-actions">
+      <button class="btn btn-green" type="button" onclick="openV9PostComposer()">＋ Nova objava</button>
+      <button class="btn btn-blue" type="button" onclick="openV9StoryComposer()">＋ Nova priča</button>
+    </div>
+  </div>
+  <div class="v9-community-grid">
+    <aside class="v9-community-side">
+      <div class="v9-profile-card" id="v9MyProfileCard"></div>
+      <div class="card v9-community-help">
+        <h3>Kako objaviti?</h3>
+        <p class="muted">Klikni <b>Nova objava</b>, izaberi fotografiju, dodaj opis i pritisni <b>Objavi fotografiju</b>.</p>
+        <p class="muted">Priča traje 24 sata. Objave imaju reakcije i komentare.</p>
+      </div>
+    </aside>
+    <div class="v9-community-main">
+      <div class="card v9-stories-card">
+        <div class="v9-section-head">
+          <div><span class="v9-kicker">24 SATA</span><h2>🔵 Priče</h2></div>
+          <button class="btn btn-small btn-blue" type="button" onclick="openV9StoryComposer()">＋ Dodaj</button>
+        </div>
+        <div class="v9-stories-wrap" id="v9Stories"></div>
+      </div>
+      <div class="v9-section-head" style="margin-top:20px">
+        <div><span class="v9-kicker">FEED</span><h2>Najnovije objave</h2></div>
+        <button class="btn btn-small" type="button" onclick="loadV9Community()">↻ Osvježi</button>
+      </div>
+      <div class="v9-feed" id="v9Feed"></div>
+    </div>
+  </div>
 </section>
 <!-- ================= V9 PROFILE / POST / STORY MODAL HOST ================= -->
 <div id="v9ProfileHost"></div>
