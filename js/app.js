@@ -6493,141 +6493,6 @@ function openGoalControl(
    ADD GOAL
 ========================================================= */
 
-async function addGoal(
-  matchId
-){
-
-  if(!canManageMatch()) return;
-
-
-  const match =
-    getMatch(matchId);
-
-
-  const player_id =
-    document.getElementById(
-      "goalPlayer"
-    )?.value;
-
-
-  const minute =
-    Number(
-      document.getElementById(
-        "goalMinute"
-      )?.value
-    ) || 0;
-
-  const second=Math.max(0,Math.min(59,Number(document.getElementById("goalSecond")?.value)||0));
-
-
-  const player =
-    getPlayer(player_id);
-
-
-  if(!player){
-
-    alert(
-      "Izaberi igrača."
-    );
-
-    return;
-  }
-
-
-  if(
-    player.team_id !==
-      match.home_team_id &&
-    player.team_id !==
-      match.away_team_id
-  ){
-
-    alert(
-      "Igrač ne pripada ekipama u ovoj utakmici."
-    );
-
-    return;
-  }
-
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("goals")
-      .insert({
-        match_id:matchId,
-        player_id,
-         minute,
-         second
-       });
-
-
-  if(error){
-
-    alert(error.message);
-
-    return;
-  }
-
-
-  const update = {};
-
-
-  if(
-    player.team_id ===
-    match.home_team_id
-  ){
-
-    update.home_score =
-      Number(
-        match.home_score || 0
-      ) + 1;
-
-  }else if(
-    player.team_id ===
-    match.away_team_id
-  ){
-
-    update.away_score =
-      Number(
-        match.away_score || 0
-      ) + 1;
-  }
-
-
-  const {
-    error:updateError
-  } =
-    await supabaseClient
-      .from("matches")
-      .update(update)
-      .eq("id",matchId);
-
-
-  if(updateError){
-
-    alert(
-      updateError.message
-    );
-
-    return;
-  }
-
-
-  hideModal();
-
-
-  toast(
-    "Gol je evidentiran."
-  );
-
-
-  await loadAll();
-
-
-  openMatch(matchId);
-}
-
 
 /* =========================================================
    CARD CONTROL
@@ -9091,13 +8956,13 @@ if ("serviceWorker" in navigator) {
     }
   }
 
-  function showModal() {
+  function showInstallPrompt() {
     if (modal) {
       modal.classList.add("show");
     }
   }
 
-  function hideModal() {
+  function hideInstallPrompt() {
     if (modal) {
       modal.classList.remove("show");
     }
@@ -9143,7 +9008,7 @@ if ("serviceWorker" in navigator) {
       /*
        * iPhone / Safari
        */
-      showModal();
+      showInstallPrompt();
     });
 
   }
@@ -9175,7 +9040,7 @@ if ("serviceWorker" in navigator) {
     modal.addEventListener("click", event => {
 
       if (event.target === modal) {
-        hideModal();
+        hideInstallPrompt();
       }
 
     });
@@ -10063,7 +9928,75 @@ async function openFinished(matchId){const m=matches.find(x=>String(x.id)===Stri
 async function finishAndSave(matchId){if(!isAdm())return;const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;await saveRatings(matchId);const {error}=await supabaseClient.from('matches').update({status:'finished'}).eq('id',matchId);if(error)return toastV(error.message,'error');await notifyPush('finish',`🏁 ${teamV(m.home_team_id)?.name} ${m.home_score||0}:${m.away_score||0} ${teamV(m.away_team_id)?.name}`,'Utakmica je završena.');await loadAll();hideModal();toastV('Utakmica je završena i statistika je sačuvana.');}
 async function saveRatings(matchId){const ids=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)).map(mp=>mp.player_id);for(const pid of ids){const gs=goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.player_id)===String(pid)).length;const as=goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.assist_player_id)===String(pid)).length;const st=V7.stats.find(s=>String(s.match_id)===String(matchId)&&String(s.player_id)===String(pid));const rating=matchRating(matchId,pid);const {error}=await supabaseClient.from('match_player_stats').upsert({match_id:matchId,player_id:pid,goals:gs,assists:as,saves:+st?.saves||0,rating,is_mvp:false,updated_at:new Date().toISOString()},{onConflict:'match_id,player_id'});if(error)console.warn(error)}const all=ids.map(pid=>({pid,r:matchRating(matchId,pid)})).sort((a,b)=>b.r-a.r);if(all[0])await supabaseClient.from('match_player_stats').update({is_mvp:true}).eq('match_id',matchId).eq('player_id',all[0].pid)}
 function openGoal(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const reg=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)).map(mp=>playerV(mp.player_id)).filter(Boolean);const opts=reg.map(p=>`<option value="${p.id}">${escV(teamV(p.team_id)?.name||'')} · #${p.jersey_number??'-'} · ${escV(p.name)}</option>`).join('');showModal(`<div class="modal-title"><h2>⚽ Dodaj gol</h2><p class="muted">Možeš odmah odabrati asistenta.</p></div><div class="form"><div class="form-group"><label>Strijelac</label><select id="v7GoalPlayer">${opts}</select></div><div class="form-group"><label>Minuta</label><input id="v7GoalMinute" type="number" min="0" value="${m.current_minute||0}"></div><div class="form-group"><label>Asistencija?</label><select id="v7GoalAssist"><option value="">Bez asistencije</option>${opts}</select></div><button class="btn btn-green" onclick="medjasiV7.addGoal('${matchId}')">⚽ Evidentiraj gol</button></div>`)}
-async function addGoal(matchId){const m=matches.find(x=>String(x.id)===String(matchId));const pid=$('v7GoalPlayer')?.value,aid=$('v7GoalAssist')?.value||null,min=+($('v7GoalMinute')?.value||0);const p=playerV(pid),a=playerV(aid);if(!p||!m)return;if(aid&&pid===aid)return toastV('Strijelac ne može biti sam sebi asistent.','error');if(aid&&(!a||a.team_id!==p.team_id))return toastV('Asistent mora biti iz iste ekipe.','error');const {error}=await supabaseClient.from('goals').insert({match_id:matchId,player_id:pid,assist_player_id:aid,minute:min});if(error)return toastV(error.message,'error');const update=p.team_id===m.home_team_id?{home_score:(+m.home_score||0)+1}:{away_score:(+m.away_score||0)+1};const {error:e2}=await supabaseClient.from('matches').update(update).eq('id',matchId);if(e2)return toastV(e2.message,'error');await notifyPush('goal',`⚽ GOL! ${teamV(p.team_id)?.name}` ,`${p.name}${a?` · asistencija ${a.name}`:''} · ${min}'`);hideModal();await loadAll();openMatch(matchId)}
+async function addGoal(matchId){
+  if(!canManageMatch()) return;
+
+  const match = getMatch(matchId) || matches.find(x => String(x.id) === String(matchId));
+  if(!match) return;
+
+  const playerId =
+    document.getElementById("v7GoalPlayer")?.value ||
+    document.getElementById("goalPlayer")?.value;
+  const assistId = document.getElementById("v7GoalAssist")?.value || null;
+  const minute = Math.max(0, Number(
+    document.getElementById("v7GoalMinute")?.value ??
+    document.getElementById("goalMinute")?.value
+  ) || 0);
+  const second = Math.max(0, Math.min(59, Number(document.getElementById("goalSecond")?.value) || 0));
+
+  const player = getPlayer(playerId) || playerV(playerId);
+  const assist = assistId ? (getPlayer(assistId) || playerV(assistId)) : null;
+
+  if(!player){
+    alert("Izaberi igrača.");
+    return;
+  }
+  if(player.team_id !== match.home_team_id && player.team_id !== match.away_team_id){
+    alert("Igrač ne pripada ekipama u ovoj utakmici.");
+    return;
+  }
+  if(assistId){
+    if(!assist || String(assist.id) === String(player.id)){
+      return toastV("Strijelac ne može biti sam sebi asistent.", "error");
+    }
+    if(assist.team_id !== player.team_id){
+      return toastV("Asistent mora biti iz iste ekipe.", "error");
+    }
+  }
+
+  const payload = {match_id:matchId, player_id:player.id, minute, second};
+  if(assistId) payload.assist_player_id = assist.id;
+
+  const {error} = await supabaseClient.from("goals").insert(payload);
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  const update = player.team_id === match.home_team_id
+    ? {home_score:Number(match.home_score || 0)+1}
+    : {away_score:Number(match.away_score || 0)+1};
+
+  const {error:updateError} = await supabaseClient.from("matches").update(update).eq("id",matchId);
+  if(updateError){
+    alert(updateError.message);
+    return;
+  }
+
+  if(typeof notifyPush === "function" && document.getElementById("v7GoalPlayer")){
+    await notifyPush(
+      "goal",
+      "⚽ GOL! " + (teamV(player.team_id)?.name || ""),
+      player.name + (assist ? " · asistencija " + assist.name : "") + " · " + minute + "'"
+    );
+  }
+
+  hideModal();
+  toast("Gol je evidentiran.");
+  await loadAll();
+  openMatch(matchId);
+}
+
 function decorateCourtRatings(matchId){document.querySelectorAll('.player-on-court').forEach(el=>{const nameEl=el.querySelector('.player-court-name');if(!nameEl)return;const text=nameEl.textContent.trim();const p=players.find(x=>text.includes(String(x.name||'')));if(!p)return;const old=el.querySelector('.v7-player-rating-bubble');if(old)old.remove();const bubble=document.createElement('span');bubble.className='v7-player-rating-bubble';bubble.textContent=matchRating(matchId,p.id).toFixed(1);el.querySelector('.player-circle')?.parentElement?.classList.add('v7-player-circle-wrap');el.appendChild(bubble)})}
 function addSaveButtonToLive(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const regs=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&mp.is_active).map(mp=>playerV(mp.player_id)).filter(p=>p&&p.position&&String(p.position).toLowerCase().includes('golman'));if(!regs.length)return;const host=$('modalContent');if(!host)return;const old=host.querySelector('.v7-live-actions');if(old)old.remove();const el=document.createElement('div');el.className='v7-live-actions';el.innerHTML=regs.map(p=>`<button class="btn btn-blue btn-small" onclick="medjasiV7.addSave('${matchId}','${p.id}')">🧤 Odbrana · ${escV(p.name)}</button>`).join('')+`<button class="btn btn-green btn-small" onclick="medjasiV7.openGoal('${matchId}')">⚽ Gol + asistencija</button><button class="btn btn-yellow btn-small" onclick="openCardControl('${matchId}')">🟨 Karton</button><button class="btn btn-small" onclick="openSubstitutionControl('${matchId}')">🔄 Izmjena</button>`;host.querySelector('.live-scoreboard')?.after(el)}
 
