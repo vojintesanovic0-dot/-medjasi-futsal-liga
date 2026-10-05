@@ -10211,62 +10211,6 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
 
 
 
-(function(){
-  'use strict';
-  const q=id=>document.getElementById(id);
-  const esc11=v=>typeof esc==='function'?esc(v??''):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  const fallback='https://via.placeholder.com/160?text=%F0%9F%91%A4';
-  const getAvatar=()=>currentProfile?.avatar_url||currentUser?.user_metadata?.avatar_url||fallback;
-
-  function patchHeader(){
-    const account=q('headerAccount');
-    if(!account || typeof currentUser==='undefined' || !currentUser) return;
-    const name=esc11(currentProfile?.username||currentUser.user_metadata?.username||currentUser.email?.split('@')[0]||'Korisnik');
-    const avatar=esc11(getAvatar());
-    const admin=currentProfile?.role==='admin';
-    account.innerHTML=`<button class="account-btn v11-profile-chip" onclick="openV9Profile('${esc11(currentUser.id)}')" title="Otvori profil"><img class="v11-header-avatar" src="${avatar}" alt=""><span><strong>${name}${admin?'<span class="account-admin">Admin</span>':''}</strong><small>Otvori profil</small></span></button><button class="account-btn" onclick="logout()" title="Odjava">↪</button>`;
-  }
-
-  async function refreshProfileEverywhere(){
-    patchHeader();
-    if(typeof renderMyProfile==='function') try{await renderMyProfile()}catch(e){}
-  }
-
-  // If the older updater fires later, restore the profile presentation immediately.
-  const oldUpdate=window.updateAuthUI;
-  if(!window.__V11_UPDATE_PATCH__){
-    window.__V11_UPDATE_PATCH__=true;
-    window.updateAuthUI=function(){
-      try{oldUpdate?.apply(this,arguments)}catch(e){}
-      setTimeout(refreshProfileEverywhere,0);
-    };
-  }
-
-  // Retire the legacy comments navigation even if an older bootstrap recreates it.
-  function normalizeNewsNav(){
-    document.querySelectorAll('#mainNav button,.mobile-more-grid button').forEach(b=>{
-      if((b.getAttribute('onclick')||'').includes("showSection('comments')") || (b.getAttribute('onclick')||'').includes("mobileMoreGo('comments')") || /Komentari/.test(b.textContent||'')){
-        b.innerHTML=b.closest('#mainNav')?'<span>📰</span><span>Vijesti</span>':'<span>📰</span><b>Vijesti</b><small>Novosti lige</small>';
-        b.setAttribute('onclick',b.closest('#mainNav')?"showSection('news')":"mobileMoreGo('news')");
-      }
-    });
-  }
-
-  // News is intentionally shareable to chat, but never has a comment control.
-  function polishNews(){
-    const n=q('news');if(!n)return;
-    n.querySelectorAll('.comment,.comment-form,.comments,.news-comments').forEach(x=>x.remove());
-  }
-
-  window.addEventListener('load',()=>{
-    setTimeout(()=>{normalizeNewsNav();patchHeader();polishNews()},250);
-    setTimeout(()=>{normalizeNewsNav();patchHeader();polishNews()},1200);
-    setTimeout(()=>{normalizeNewsNav();polishNews()},2600);
-  });
-  const observer=new MutationObserver(()=>{normalizeNewsNav();});
-  observer.observe(document.body,{childList:true,subtree:true});
-})();
-
 
 
 (function(){
