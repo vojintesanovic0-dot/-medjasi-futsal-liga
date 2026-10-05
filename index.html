@@ -1,33 +1,27 @@
 <!DOCTYPE html>
+
 <html lang="bs">
 <head>
-  <link rel="icon" type="image/png" sizes="192x192" href="images/icon-192.png">
-<link rel="apple-touch-icon" sizes="192x192" href="images/icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="images/icon-512.png">
-  <!-- PWA / Mobile App -->
-<meta name="theme-color" content="#07111f">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Međasi Futsal">
-
-<link rel="manifest" href="./manifest.json">
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-<meta name="description" content="Medjaši Futsal Liga – rezultati, tabela, utakmice, ekipe, igrači i statistika.">
-<meta name="keywords" content="Medjaši Futsal Liga, futsal, mali fudbal, Medjaši, liga, utakmice, rezultati">
-<meta name="author" content="Medjaši Futsal Liga">
-<meta name="theme-color" content="#06101b">
-
-<meta property="og:title" content="Medjaši Futsal Liga">
-<meta property="og:description" content="Rezultati, tabela, ekipe, igrači i live dešavanja Medjaši Futsal Lige.">
-<meta property="og:type" content="website">
-
+<link href="images/icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
+<link href="images/icon-192.png" rel="apple-touch-icon" sizes="192x192"/>
+<link href="images/icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
+<!-- PWA / Mobile App -->
+<meta content="#07111f" name="theme-color"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="Međasi Futsal" name="apple-mobile-web-app-title"/>
+<link href="./manifest.json" rel="manifest"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1.0" name="viewport"/>
+<meta content="Medjaši Futsal Liga – rezultati, tabela, utakmice, ekipe, igrači i statistika." name="description"/>
+<meta content="Medjaši Futsal Liga, futsal, mali fudbal, Medjaši, liga, utakmice, rezultati" name="keywords"/>
+<meta content="Medjaši Futsal Liga" name="author"/>
+<meta content="#06101b" name="theme-color"/>
+<meta content="Medjaši Futsal Liga" property="og:title"/>
+<meta content="Rezultati, tabela, ekipe, igrači i live dešavanja Medjaši Futsal Lige." property="og:description"/>
+<meta content="website" property="og:type"/>
 <title>Medjaši Futsal Liga</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 :root{
   --bg:#06101b;
@@ -2138,7 +2132,6 @@ body{overflow-x:hidden}
 @media(max-width:780px){.v7-news-grid{grid-template-columns:1fr}.v7-news-row{grid-template-columns:105px 1fr}.v7-news-feature .v7-news-title{font-size:22px}.v7-admin-news-form{grid-template-columns:1fr}.v7-admin-news-form .wide{grid-column:auto}.v7-live-layout{grid-template-columns:1fr}.v7-finished-grid{grid-template-columns:1fr}.v7-search-wrap{min-width:0;width:100%}.v7-player-rating-bubble{right:-10px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
-
 <style id="medjasi-v8-premium">
 :root{--v8-accent:#25e487;--v8-blue:#299cff;--v8-gold:#f4c542;--v8-red:#ff4d5d;--v8-glow:rgba(37,228,135,.24)}
 html{scroll-behavior:smooth} body{background:radial-gradient(900px 500px at 85% -10%,rgba(41,156,255,.10),transparent 65%),radial-gradient(700px 450px at 15% 0%,rgba(37,228,135,.07),transparent 65%),var(--bg,#06101a)}
@@ -2159,944 +2152,580 @@ input,select,textarea{transition:border-color .2s ease,box-shadow .2s ease,backg
 @media(max-width:780px){body:before{background-size:30px 30px}.card:hover,.match-row:hover,.team-card:hover,.player-card:hover,.stat-card:hover,.news-card:hover{transform:none;box-shadow:none}.section.active{animation-duration:.3s}.v7-live-layout:before{top:-6px;font-size:8px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
-</head>
+<style id="v10-community-home-css">
+/* =========================================================
+   MEDJAŠI V10 — HOME + COMMUNITY VISUAL SYSTEM
+========================================================= */
+:root{--v10-green:#24e487;--v10-blue:#2d9cff;--v10-bg:#050c14;--v10-card:rgba(10,22,36,.78);--v10-line:rgba(255,255,255,.08)}
+body{background:radial-gradient(circle at 12% 0%,rgba(36,228,135,.10),transparent 28%),radial-gradient(circle at 88% 12%,rgba(45,156,255,.12),transparent 30%),linear-gradient(145deg,#040a11 0%,#071522 52%,#03070c 100%) fixed!important}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.20;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,#000,transparent 88%)}
+.site-header{backdrop-filter:blur(18px);background:rgba(4,10,17,.82)!important;border-bottom:1px solid rgba(255,255,255,.07)!important;box-shadow:0 10px 40px rgba(0,0,0,.20)}
+.logo-ball{box-shadow:0 0 30px rgba(36,228,135,.18);animation:v10Pulse 3.2s ease-in-out infinite}.header-live{box-shadow:0 0 0 1px rgba(36,228,135,.10),0 0 22px rgba(36,228,135,.08)}
+#mainNav button{transition:transform .2s ease,background .2s ease,border-color .2s ease}.site-header #mainNav button:hover{transform:translateX(3px)}
+.section{animation:v10SectionIn .42s ease both}.card,.hero-card,.match-card,.team-card,.player-card,.stat{transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}.card:hover,.match-card:hover,.team-card:hover,.player-card:hover{transform:translateY(-3px);box-shadow:0 18px 50px rgba(0,0,0,.22);border-color:rgba(36,228,135,.18)}
+.btn{transition:transform .18s ease,box-shadow .18s ease,filter .18s ease}.btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
 
+.v10-home{position:relative;max-width:1240px!important;margin:0 auto;overflow:visible}.v10-home-bg{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:-1}.v10-home-bg span{position:absolute;width:260px;height:260px;border-radius:50%;filter:blur(80px);opacity:.10}.v10-home-bg span:nth-child(1){background:#24e487;left:-100px;top:180px;animation:v10Float 9s ease-in-out infinite}.v10-home-bg span:nth-child(2){background:#2d9cff;right:-90px;top:420px;animation:v10Float 11s ease-in-out infinite reverse}.v10-home-bg span:nth-child(3){background:#8b5cf6;left:42%;bottom:-140px;animation:v10Float 13s ease-in-out infinite}.v10-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:60px 60px;mask-image:linear-gradient(to bottom,black,transparent 72%)}
+.v10-hero{min-height:520px;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(320px,.92fr);gap:25px;align-items:center;padding:42px 18px 30px;position:relative}.v10-hero-copy{position:relative;z-index:2}.v10-eyebrow{display:inline-flex;align-items:center;gap:9px;padding:8px 11px;border:1px solid rgba(36,228,135,.16);border-radius:999px;background:rgba(36,228,135,.055);color:#9ab2c4;font-size:9px;font-weight:950;letter-spacing:1.6px}.v10-eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--v10-green);box-shadow:0 0 0 5px rgba(36,228,135,.09);animation:v10Blink 1.8s infinite}.v10-eyebrow b{color:#fff;font-size:9px}.v10-hero h1{font-size:clamp(48px,7vw,88px);line-height:.9;letter-spacing:-4px;margin:22px 0 20px;text-shadow:0 18px 50px rgba(0,0,0,.35)}.v10-hero h1 em{font-style:normal;background:linear-gradient(90deg,#fff,var(--v10-green),#9be7ff);-webkit-background-clip:text;background-clip:text;color:transparent}.v10-hero p{max-width:610px;color:#9bb0c0;font-size:16px;line-height:1.65;margin:0}.v10-hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}.v10-main-cta{padding:13px 17px;box-shadow:0 12px 35px rgba(36,228,135,.12)}.v10-main-cta span{margin-left:8px}.v10-ghost-cta{border-color:rgba(255,255,255,.10)}.v10-trust-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;color:#6f8495;font-size:10px}.v10-trust-row span:first-child{color:#a8bfce}
+.v10-hero-visual{height:430px;position:relative;display:grid;place-items:center}.v10-ball-wrap{position:relative;width:250px;height:250px;display:grid;place-items:center}.v10-ball-glow{position:absolute;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(36,228,135,.26),transparent 68%);filter:blur(10px);animation:v10Glow 3s ease-in-out infinite}.v10-ball{width:154px;height:154px;border-radius:50%;display:grid;place-items:center;font-size:90px;background:radial-gradient(circle at 35% 25%,#fff,rgba(255,255,255,.88) 40%,#8fa4b2 100%);box-shadow:0 25px 70px rgba(0,0,0,.4),inset -15px -20px 30px rgba(0,0,0,.13);animation:v10Ball 6s ease-in-out infinite}.v10-orbit{position:absolute;border:1px solid rgba(255,255,255,.07);border-radius:50%;transform:rotate(-22deg)}.orbit-a{width:360px;height:150px}.orbit-b{width:290px;height:290px;border-color:rgba(36,228,135,.09);animation:v10Orbit 15s linear infinite}.v10-floating-card{position:absolute;padding:11px 13px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(7,17,28,.76);backdrop-filter:blur(14px);box-shadow:0 16px 45px rgba(0,0,0,.25)}.v10-fc-top{right:6%;top:16%;display:flex;flex-direction:column;gap:4px}.v10-fc-top small,.v10-fc-bottom span{font-size:8px;letter-spacing:1.5px;color:#6f8798}.v10-fc-top strong{font-size:11px}.v10-fc-top i{display:inline-block;width:6px;height:6px;background:var(--v10-green);border-radius:50%;margin-right:5px}.v10-fc-bottom{left:4%;bottom:14%;display:flex;gap:9px;align-items:center}.v10-fc-bottom b{color:#fff;font-size:12px}
+.v10-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 18px 24px}.v10-kpi{display:flex;align-items:center;gap:12px;padding:17px;border:1px solid rgba(255,255,255,.07);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.018));box-shadow:0 15px 35px rgba(0,0,0,.13)}.v10-kpi-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:rgba(36,228,135,.07);font-size:18px}.v10-kpi strong{display:block;font-size:25px;line-height:1}.v10-kpi small{display:block;color:#718899;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-top:5px}
+.v10-feature-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:16px;padding:0 18px}.v10-next-card,.v10-quick-card{border-radius:22px;background:linear-gradient(145deg,rgba(11,29,46,.88),rgba(6,15,24,.82));border:1px solid rgba(255,255,255,.07)}.v10-card-head,.v10-section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:15px}.v10-card-head h2,.v10-section-heading h2{margin:5px 0 0}.v10-mini-label{font-size:9px;font-weight:950;letter-spacing:1.8px;color:var(--v10-green)}.v10-live-chip{font-size:8px;padding:6px 8px;border-radius:999px;background:rgba(45,156,255,.08);border:1px solid rgba(45,156,255,.16);color:#82c7ff}.v10-quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:17px}.v10-quick-grid button{min-height:82px;text-align:left;padding:12px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(255,255,255,.025);color:#dce8ef;cursor:pointer;transition:.2s}.v10-quick-grid button:hover{background:rgba(36,228,135,.07);transform:translateY(-2px);border-color:rgba(36,228,135,.16)}.v10-quick-grid b{display:block;font-size:20px;margin-bottom:8px}.v10-quick-grid span{font-size:10px;color:#849aaa}
+.v10-live-section,.v10-results-section,.v10-bottom-grid{padding:30px 18px 0}.v10-section-heading{margin-bottom:14px}.v10-home-list{margin-top:12px}.v10-community-banner{margin:30px 18px 0;padding:26px;border-radius:22px;border:1px solid rgba(36,228,135,.13);background:radial-gradient(circle at 80% 10%,rgba(45,156,255,.13),transparent 35%),linear-gradient(135deg,rgba(36,228,135,.09),rgba(255,255,255,.018));display:flex;align-items:center;justify-content:space-between;gap:20px}.v10-community-banner h2{margin:5px 0}.v10-community-banner p{margin:0;color:#8398a8;max-width:650px}.v10-bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.v10-rank-card{display:grid;gap:8px}.v10-rank-item{display:flex;gap:12px;align-items:center;padding:13px;border-radius:14px;background:rgba(255,255,255,.025)}.v10-rank-item>span{font-size:21px}.v10-rank-item small{font-size:8px;color:#6f8798;letter-spacing:1.5px}.v10-media-strip{margin:30px 18px 0;display:flex;align-items:center;justify-content:space-between;gap:18px;background:linear-gradient(135deg,rgba(45,156,255,.08),rgba(255,255,255,.025))}.v10-media-strip h2{margin:5px 0}.v10-media-strip p{margin:0;color:#8297a8}.v10-music-card{margin:16px 18px 30px}
+
+/* Community */
+.v10-community-section{max-width:1200px;margin:auto}.v10-community-section .v9-community-hero{background:linear-gradient(135deg,rgba(36,228,135,.10),rgba(45,156,255,.08)),rgba(7,18,30,.82)}.v10-community-section .v9-post{border-radius:22px}.v10-community-section .v9-profile-card{box-shadow:0 20px 55px rgba(0,0,0,.25)}
+@keyframes v10SectionIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes v10Float{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(25px,-18px,0)}}@keyframes v10Pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}@keyframes v10Blink{50%{opacity:.45}}@keyframes v10Glow{50%{transform:scale(1.14);opacity:.75}}@keyframes v10Ball{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-12px) rotate(5deg)}}@keyframes v10Orbit{to{transform:rotate(338deg)}}
+@media(max-width:950px){.v10-hero{grid-template-columns:1fr;min-height:auto;padding-top:30px}.v10-hero-visual{height:300px}.v10-hero h1{font-size:clamp(48px,13vw,76px)}.v10-kpi-grid{grid-template-columns:repeat(2,1fr)}.v10-feature-grid,.v10-bottom-grid{grid-template-columns:1fr}.v10-community-banner,.v10-media-strip{align-items:flex-start;flex-direction:column}.v10-community-banner .btn,.v10-media-strip .btn{width:100%}}
+@media(max-width:600px){.v10-hero{padding:22px 4px 15px}.v10-hero-visual{height:245px}.v10-ball{width:115px;height:115px;font-size:66px}.v10-ball-wrap{width:190px;height:190px}.orbit-a{width:260px;height:110px}.orbit-b{width:210px;height:210px}.v10-floating-card{transform:scale(.88)}.v10-fc-top{right:0;top:4%}.v10-fc-bottom{left:0;bottom:3%}.v10-kpi-grid,.v10-feature-grid,.v10-live-section,.v10-results-section,.v10-bottom-grid{padding-left:4px;padding-right:4px}.v10-kpi{padding:13px}.v10-kpi strong{font-size:21px}.v10-trust-row{font-size:9px}.v10-card-head,.v10-section-heading{align-items:flex-start;flex-direction:column}.v10-section-heading .btn{width:100%}.v10-community-banner,.v10-media-strip,.v10-music-card{margin-left:4px;margin-right:4px}.v10-community-banner,.v10-media-strip{padding:20px}.v10-home{padding-bottom:15px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+</style></head>
 <body>
-
 <header class="site-header">
-  <div class="header-inner">
-    <button class="logo logo-home" type="button" onclick="showSection('home')" aria-label="Medjaši Futsal Liga - Početna"><div class="logo-ball">⚽</div><div><span>Medjaši Futsal Liga</span><small>Zvanična stranica lige</small></div></button>
-    <nav id="mainNav" aria-label="Glavna navigacija">
-      <div class="nav-group-title">LIGA</div>
-      <button onclick="showSection('home')" class="active"><span>⌂</span><span>Početna</span></button>
-      <button onclick="showSection('matches')"><span>⚽</span><span>Utakmice</span></button>
-      <button onclick="showSection('table')"><span>🏆</span><span>Tabela</span></button>
-      <button onclick="showSection('teams')"><span>🛡️</span><span>Ekipe</span></button>
-      <button onclick="showSection('players')"><span>👤</span><span>Igrači</span></button>
-      <button onclick="showSection('stats')"><span>📊</span><span>Statistika</span></button>
-      <div class="nav-group-title">ZAJEDNICA</div>
-      <button onclick="showSection('gallery')"><span>📸</span><span>Galerija</span></button>
-      <button onclick="showSection('community')"><span>✨</span><span>Community</span></button>
-      <button onclick="showSection('chat')"><span>💬</span><span>Chat</span></button>
-      <button onclick="showSection('comments')"><span>💭</span><span>Komentari</span></button>
-    </nav>
-    <div class="header-actions"><span class="header-live"><i></i> Liga online</span><button class="notification-bell" id="notificationBell" type="button" onclick="openNotifications()" aria-label="Obavještenja" title="Obavještenja"><span>🔔</span><b id="notificationBadge" class="notification-badge" hidden>0</b></button><div id="headerAccount" class="header-account"></div><button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Otvori meni" aria-expanded="false">☰</button></div>
-  </div>
+<div class="header-inner">
+<button aria-label="Medjaši Futsal Liga - Početna" class="logo logo-home" onclick="showSection('home')" type="button"><div class="logo-ball">⚽</div><div><span>Medjaši Futsal Liga</span><small>Zvanična stranica lige</small></div></button>
+<nav aria-label="Glavna navigacija" id="mainNav">
+<div class="nav-group-title">LIGA</div>
+<button class="active" onclick="showSection('home')"><span>⌂</span><span>Početna</span></button>
+<button onclick="showSection('matches')"><span>⚽</span><span>Utakmice</span></button>
+<button onclick="showSection('table')"><span>🏆</span><span>Tabela</span></button>
+<button onclick="showSection('teams')"><span>🛡️</span><span>Ekipe</span></button>
+<button onclick="showSection('players')"><span>👤</span><span>Igrači</span></button>
+<button onclick="showSection('stats')"><span>📊</span><span>Statistika</span></button>
+<div class="nav-group-title">ZAJEDNICA</div>
+<button onclick="showSection('gallery')"><span>📸</span><span>Galerija</span></button>
+<button onclick="showSection('community')"><span>✨</span><span>Community</span></button>
+<button onclick="showSection('chat')"><span>💬</span><span>Chat</span></button>
+<button onclick="showSection('comments')"><span>💭</span><span>Komentari</span></button>
+</nav>
+<div class="header-actions"><span class="header-live"><i></i> Liga online</span><button aria-label="Obavještenja" class="notification-bell" id="notificationBell" onclick="openNotifications()" title="Obavještenja" type="button"><span>🔔</span><b class="notification-badge" hidden="" id="notificationBadge">0</b></button><div class="header-account" id="headerAccount"></div><button aria-expanded="false" aria-label="Otvori meni" class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">☰</button></div>
+</div>
 </header>
-
-
 <main>
-
 <!-- ================= HOME ================= -->
-
-<section id="home" class="section active">
-
-  <div class="hero">
-
-    <div class="hero-content">
-
-      <div class="hero-kicker">Zvanična stranica lige</div>
-
-      <h1>
-        Medjaši<br>
-        <span>Futsal Liga</span>
-      </h1>
-
-      <p>
-        Sve na jednom mjestu — rezultati, tabela, ekipe,
-        igrači, statistika i live dešavanja utakmica.
-      </p>
-
-      <div class="hero-buttons">
-        <button class="btn btn-green"
-                onclick="showSection('matches')">
-          ⚽ Utakmice
-        </button>
-
-        <button class="btn"
-                onclick="showSection('table')">
-          🏆 Pogledaj tabelu
-        </button>
-
-        <button class="btn btn-blue" onclick="showSection('gallery')">📸 Pogledaj galeriju</button>
-      </div>
-
-    </div>
-
-    <div class="hero-card hero-card-premium">
-      <div class="hero-card-top"><span>SEZONA UŽIVO</span><b><i></i> ONLINE</b></div>
-      <div class="hero-score-orb">⚽</div>
-      <div class="hero-mini-grid"><div><strong id="heroTeamsMini">0</strong><small>EKIPA</small></div><div><strong id="heroMatchesMini">0</strong><small>UTAKMICA</small></div><div><strong id="heroPlayersMini">0</strong><small>IGRAČA</small></div></div>
-    </div>
-
-  </div>
-
-
-  <div class="card announcement">
-
-    <h3 style="margin-bottom:13px">
-      📣 Naredna utakmica
-    </h3>
-
-    <div id="homeAnnouncement">
-      <div class="empty compact">
-        Učitavanje...
-      </div>
-    </div>
-
-  </div>
-
-
-  <div class="card music-card">
-
-    <h3>🎵 Liga muzika</h3>
-
-    <p class="muted" style="margin:5px 0 12px">
-      Muzika lige svira u pozadini dok pregledavaš stranicu. Početak je bez zvuka zbog pravila browsera — zvuk možeš uključiti jednim klikom.
-    </p>
-
-    <div id="musicPlayerWrap" class="music-player"></div>
-
-    <div class="music-actions">
-      <button id="musicUnmute"
-              class="btn btn-green btn-small"
-              onclick="unmuteMusic()"
-              style="display:none">
-        🔊 Uključi zvuk
-      </button>
-
-      <span id="musicHint" class="muted"></span>
-    </div>
-
-  </div>
-
-
-  <div class="stat-grid">
-
-    <div class="card stat">
-      <div id="statTeams" class="stat-number">0</div>
-      <div class="stat-label">Ekipa</div>
-    </div>
-
-    <div class="card stat">
-      <div id="statPlayers" class="stat-number">0</div>
-      <div class="stat-label">Igrača</div>
-    </div>
-
-    <div class="card stat">
-      <div id="statMatches" class="stat-number">0</div>
-      <div class="stat-label">Utakmica</div>
-    </div>
-
-    <div class="card stat">
-      <div id="statGoals" class="stat-number">0</div>
-      <div class="stat-label">Golova</div>
-    </div>
-
-  </div>
-
-
-  <div style="display:flex;justify-content:space-between;align-items:center;margin:25px 0 12px">
-    <h2 class="section-title" style="margin:0">
-      🔴 Uživo
-    </h2>
-    <span id="liveCount" class="muted">
-      Trenutno nema live utakmica
-    </span>
-  </div>
-
-  <div id="homeLive"></div>
-
-
-  <h2 class="section-title" style="margin-top:30px">
-    📅 Naredne utakmice
-  </h2>
-
-  <div id="homeNext"></div>
-
-
-  <h2 class="section-title" style="margin-top:30px">
-    🏁 Posljednji rezultati
-  </h2>
-
-  <div id="homeResults"></div>
-
-
-  <div class="card gallery-home-card" style="margin-top:30px">
-    <div>
-      <span class="hero-kicker">FOTO ARHIVA</span>
-      <h3 style="margin:4px 0 6px">📸 Trenuci iz lige</h3>
-      <p class="muted">Pogledaj fotografije utakmica, ekipa i atmosfere iz Medjaši Futsal Lige.</p>
-    </div>
-    <button class="btn btn-green" onclick="showSection('gallery')">Otvori galeriju →</button>
-  </div>
-
-
-  <div class="grid grid-2" style="margin-top:30px">
-
-    <div class="card">
-
-      <h3 style="margin-bottom:12px">
-        🏆 Lider
-      </h3>
-
-      <div id="homeLeader"></div>
-
-    </div>
-
-    <div class="card">
-
-      <h3 style="margin-bottom:12px">
-        ⚽ Najbolji strijelac
-      </h3>
-
-      <div id="homeTopScorer"></div>
-
-    </div>
-
-  </div>
-
-
-  <div class="card" style="margin-top:18px">
-
-    <h3 style="margin-bottom:12px">
-      📈 Forma ekipa
-    </h3>
-
-    <div id="homeForm"></div>
-
-  </div>
-
+<section class="section active v10-home" id="home">
+<div class="v10-home-bg"><span></span><span></span><span></span><div class="v10-grid"></div></div>
+<section class="v10-hero">
+<div class="v10-hero-copy">
+<div class="v10-eyebrow"><i></i> ZVANIČNA STRANICA LIGE <b>2026/27</b></div>
+<h1>Medjaši<br/><em>Futsal Liga</em></h1>
+<p>Rezultati, tabela, ekipe, igrači i atmosfera lige — brzo, moderno i na jednom mjestu.</p>
+<div class="v10-hero-actions">
+<button class="btn btn-green v10-main-cta" onclick="showSection('matches')">⚽ Pogledaj utakmice <span>→</span></button>
+<button class="btn v10-ghost-cta" onclick="showSection('community')">✨ Uđi u Community</button>
+</div>
+<div class="v10-trust-row"><span>● LIVE rezultati</span><span>•</span><span>⚡ Brzo osvježavanje</span><span>•</span><span>📱 Mobile first</span></div>
+</div>
+<div class="v10-hero-visual">
+<div class="v10-orbit orbit-a"></div><div class="v10-orbit orbit-b"></div>
+<div class="v10-ball-wrap"><div class="v10-ball-glow"></div><div class="v10-ball">⚽</div></div>
+<div class="v10-floating-card v10-fc-top"><small>STATUS LIGE</small><strong><i></i> ONLINE</strong></div>
+<div class="v10-floating-card v10-fc-bottom"><span>SEZONA</span><b>2026/27</b></div>
+</div>
 </section>
-
-
+<section class="v10-kpi-grid">
+<div class="v10-kpi"><span class="v10-kpi-icon">🛡️</span><div><strong id="statTeams">0</strong><small>Ekipa</small></div></div>
+<div class="v10-kpi"><span class="v10-kpi-icon">👤</span><div><strong id="statPlayers">0</strong><small>Igrača</small></div></div>
+<div class="v10-kpi"><span class="v10-kpi-icon">⚽</span><div><strong id="statMatches">0</strong><small>Utakmica</small></div></div>
+<div class="v10-kpi"><span class="v10-kpi-icon">🔥</span><div><strong id="statGoals">0</strong><small>Golova</small></div></div>
+</section>
+<section class="v10-feature-grid">
+<div class="v10-next-card card">
+<div class="v10-card-head"><div><span class="v10-mini-label">SLJEDEĆE</span><h2>📣 Naredna utakmica</h2></div><span class="v10-live-chip">SCHEDULE</span></div>
+<div id="homeAnnouncement"><div class="empty compact">Učitavanje...</div></div>
+</div>
+<div class="v10-quick-card card">
+<div><span class="v10-mini-label">BRZI PRISTUP</span><h2>Otvori ligu</h2></div>
+<div class="v10-quick-grid">
+<button onclick="showSection('table')"><b>🏆</b><span>Tabela</span></button>
+<button onclick="showSection('teams')"><b>🛡️</b><span>Ekipe</span></button>
+<button onclick="showSection('players')"><b>👤</b><span>Igrači</span></button>
+<button onclick="showSection('stats')"><b>📊</b><span>Statistika</span></button>
+</div>
+</div>
+</section>
+<section class="v10-live-section">
+<div class="v10-section-heading"><div><span class="v10-mini-label">UTAKMICE</span><h2>🔴 Uživo i uskoro</h2></div><button class="btn btn-small" onclick="showSection('matches')">Sve utakmice →</button></div>
+<div id="homeLive"></div>
+<div class="v10-home-list" id="homeNext"></div>
+</section>
+<section class="v10-results-section">
+<div class="v10-section-heading"><div><span class="v10-mini-label">REZULTATI</span><h2>🏁 Posljednje utakmice</h2></div><button class="btn btn-small" onclick="showSection('table')">Tabela →</button></div>
+<div id="homeResults"></div>
+</section>
+<section class="v10-community-banner">
+<div><span class="v10-mini-label">NOVA ZONA</span><h2>✨ Community</h2><p>Objavi fotografiju, podijeli priču i upoznaj ljude koji prate Medjaši ligu.</p></div>
+<button class="btn btn-green" onclick="showSection('community')">Otvori Community →</button>
+</section>
+<section class="v10-bottom-grid">
+<div class="card v10-form-card"><div class="v10-section-heading"><div><span class="v10-mini-label">FORMA</span><h2>📈 Forma ekipa</h2></div></div><div id="homeForm"></div></div>
+<div class="card v10-rank-card"><div class="v10-rank-item"><span>🏆</span><div><small>LIDER</small><div id="homeLeader"></div></div></div><div class="v10-rank-item"><span>⚽</span><div><small>NAJBOLJI STRIJELAC</small><div id="homeTopScorer"></div></div></div></div>
+</section>
+<section class="v10-media-strip card"><div><span class="v10-mini-label">FOTO ARHIVA</span><h2>📸 Trenuci iz lige</h2><p>Najbolje fotografije utakmica, ekipa i atmosfere.</p></div><button class="btn btn-green" onclick="showSection('gallery')">Otvori galeriju →</button></section>
+<section class="card music-card v10-music-card"><div class="v10-card-head"><div><span class="v10-mini-label">SOUNDTRACK</span><h2>🎵 Liga muzika</h2></div></div><p class="muted">Muzika lige može svirati u pozadini dok pregledavaš stranicu. Browser pokreće zvuk tek nakon tvoje interakcije.</p><div class="music-player" id="musicPlayerWrap"></div><div class="music-actions"><button class="btn btn-green btn-small" id="musicUnmute" onclick="unmuteMusic()" style="display:none">🔊 Uključi zvuk</button><span class="muted" id="musicHint"></span></div></section>
+</section>
 <!-- ================= TABLE ================= -->
-
-<section id="table" class="section">
-
-  <h2 class="section-title">
+<section class="section" id="table">
+<h2 class="section-title">
     🏆 Tabela
   </h2>
-
-  <div class="card table-wrap">
-
-    <table>
-
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Ekipa</th>
-          <th>Forma</th>
-          <th>U</th>
-          <th>P</th>
-          <th>N</th>
-          <th>I</th>
-          <th>DG</th>
-          <th>PG</th>
-          <th>GR</th>
-          <th>Bod</th>
-        </tr>
-      </thead>
-
-      <tbody id="tableBody"></tbody>
-
-    </table>
-
-  </div>
-
+<div class="card table-wrap">
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Ekipa</th>
+<th>Forma</th>
+<th>U</th>
+<th>P</th>
+<th>N</th>
+<th>I</th>
+<th>DG</th>
+<th>PG</th>
+<th>GR</th>
+<th>Bod</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
 </section>
-
-
 <!-- ================= MATCHES ================= -->
-
-<section id="matches" class="section">
-
-  <h2 class="section-title">
+<section class="section" id="matches">
+<h2 class="section-title">
     ⚽ Utakmice
   </h2>
-
-  <div class="filters">
-
-    <input id="matchSearch"
-           placeholder="🔎 Pretraži ekipu..."
-           oninput="renderMatches()">
-
-    <select id="matchRoundFilter"
-            onchange="renderMatches()">
-      <option value="">Sva kola</option>
-    </select>
-
-    <select id="matchStatusFilter"
-            onchange="renderMatches()">
-      <option value="">Svi statusi</option>
-      <option value="scheduled">Zakazane</option>
-      <option value="live">Uživo</option>
-      <option value="finished">Završene</option>
-    </select>
-
-  </div>
-
-  <div id="matchesList"></div>
-
+<div class="filters">
+<input id="matchSearch" oninput="renderMatches()" placeholder="🔎 Pretraži ekipu..."/>
+<select id="matchRoundFilter" onchange="renderMatches()">
+<option value="">Sva kola</option>
+</select>
+<select id="matchStatusFilter" onchange="renderMatches()">
+<option value="">Svi statusi</option>
+<option value="scheduled">Zakazane</option>
+<option value="live">Uživo</option>
+<option value="finished">Završene</option>
+</select>
+</div>
+<div id="matchesList"></div>
 </section>
-
-
 <!-- ================= TEAMS ================= -->
-
-<section id="teams" class="section">
-
-  <h2 class="section-title">
+<section class="section" id="teams">
+<h2 class="section-title">
     🛡️ Ekipe
   </h2>
-
-  <input id="teamSearch"
-         placeholder="🔎 Pretraži ekipe..."
-         oninput="renderTeams()"
-         style="margin-bottom:17px">
-
-  <div id="teamsGrid" class="grid grid-3"></div>
-
+<input id="teamSearch" oninput="renderTeams()" placeholder="🔎 Pretraži ekipe..." style="margin-bottom:17px"/>
+<div class="grid grid-3" id="teamsGrid"></div>
 </section>
-
-
 <!-- ================= PLAYERS ================= -->
-
-<section id="players" class="section">
-
-  <h2 class="section-title">
+<section class="section" id="players">
+<h2 class="section-title">
     👟 Igrači
   </h2>
-
-  <div class="filters">
-
-    <input id="playerSearch"
-           placeholder="🔎 Pretraži igrača..."
-           oninput="renderPlayers()">
-
-    <select id="playerTeamFilter"
-            onchange="renderPlayers()">
-      <option value="">Sve ekipe</option>
-    </select>
-
-    <div></div>
-
-  </div>
-
-  <div id="playersGrid" class="grid grid-3"></div>
-
+<div class="filters">
+<input id="playerSearch" oninput="renderPlayers()" placeholder="🔎 Pretraži igrača..."/>
+<select id="playerTeamFilter" onchange="renderPlayers()">
+<option value="">Sve ekipe</option>
+</select>
+<div></div>
+</div>
+<div class="grid grid-3" id="playersGrid"></div>
 </section>
-
-
 <!-- ================= STATS ================= -->
-
-<section id="stats" class="section">
-
-  <h2 class="section-title">
+<section class="section" id="stats">
+<h2 class="section-title">
     📊 Statistika
   </h2>
-
-  <div class="grid grid-2">
-
-    <div class="card">
-      <h3 style="margin-bottom:13px">
+<div class="grid grid-2">
+<div class="card">
+<h3 style="margin-bottom:13px">
         ⚽ Strijelci
       </h3>
-      <div id="scorersList" class="rank-list"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-bottom:13px">
+<div class="rank-list" id="scorersList"></div>
+</div>
+<div class="card">
+<h3 style="margin-bottom:13px">
         🟨 Kartoni
       </h3>
-      <div id="cardsList" class="rank-list"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-bottom:13px">
+<div class="rank-list" id="cardsList"></div>
+</div>
+<div class="card">
+<h3 style="margin-bottom:13px">
         👟 Nastupi
       </h3>
-      <div id="appearancesList" class="rank-list"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-bottom:13px">
+<div class="rank-list" id="appearancesList"></div>
+</div>
+<div class="card">
+<h3 style="margin-bottom:13px">
         🎯 Asistencije
       </h3>
-      <div id="assistsList" class="rank-list"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-bottom:13px">
+<div class="rank-list" id="assistsList"></div>
+</div>
+<div class="card">
+<h3 style="margin-bottom:13px">
         🏆 Statistika ekipa
       </h3>
-      <div id="teamStatsList" class="rank-list"></div>
-    </div>
-
-  </div>
-
+<div class="rank-list" id="teamStatsList"></div>
+</div>
+</div>
 </section>
-
-
 <!-- ================= COMMENTS ================= -->
-
-<section id="comments" class="section">
-
-  <h2 class="section-title">
+<section class="section" id="comments">
+<h2 class="section-title">
     💬 Komentari
   </h2>
-
-  <div class="card">
-
-    <div id="commentsList"></div>
-
-
-    <div id="commentForm"
-         class="hidden"
-         style="margin-top:18px">
-
-      <textarea id="commentText"
-                maxlength="1000"
-                placeholder="Napiši komentar..."></textarea>
-
-      <div id="commentCounter"
-           class="comment-counter">
+<div class="card">
+<div id="commentsList"></div>
+<div class="hidden" id="commentForm" style="margin-top:18px">
+<textarea id="commentText" maxlength="1000" placeholder="Napiši komentar..."></textarea>
+<div class="comment-counter" id="commentCounter">
         0 / 1000
       </div>
-
-      <button class="btn btn-green"
-              onclick="addComment()"
-              style="margin-top:8px">
+<button class="btn btn-green" onclick="addComment()" style="margin-top:8px">
         💬 Objavi komentar
       </button>
-
-    </div>
-
-
-    <p id="commentLoginText"
-       class="muted"
-       style="margin-top:15px">
+</div>
+<p class="muted" id="commentLoginText" style="margin-top:15px">
       🔒 Prijavi se da bi mogao ostaviti komentar.
     </p>
-
-  </div>
-
+</div>
 </section>
-
-
 <!-- ================= CHAT ================= -->
-
-<section id="chat" class="section">
-
-  <h2 class="section-title">💬 Chat</h2>
-
-  <div class="card">
-
-    <div class="chat-header">
-      <div>
-        <strong>💬 Razgovor navijača</strong>
-        <span class="muted">Piši, šalji slike i prati šta se dešava u ligi.</span>
-      </div>
-      <span class="chat-online-dot">● AKTIVAN CHAT</span>
-    </div>
-
-    <div id="chatBox" class="chat-box"></div>
-
-    <div id="chatForm" class="hidden" style="margin-top:12px">
-      <div class="chat-composer">
-        <div class="chat-input-row">
-          <label class="chat-image-btn" title="Dodaj sliku">
+<section class="section" id="chat">
+<h2 class="section-title">💬 Chat</h2>
+<div class="card">
+<div class="chat-header">
+<div>
+<strong>💬 Razgovor navijača</strong>
+<span class="muted">Piši, šalji slike i prati šta se dešava u ligi.</span>
+</div>
+<span class="chat-online-dot">● AKTIVAN CHAT</span>
+</div>
+<div class="chat-box" id="chatBox"></div>
+<div class="hidden" id="chatForm" style="margin-top:12px">
+<div class="chat-composer">
+<div class="chat-input-row">
+<label class="chat-image-btn" title="Dodaj sliku">
             📷
-            <input id="chatImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
-          </label>
-
-          <input id="chatText" placeholder="Napiši poruku..."
-                 onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendChat()}">
-
-          <button class="btn btn-green" onclick="sendChat()">Pošalji</button>
-        </div>
-        <div id="chatImagePreview" class="chat-image-preview hidden"></div>
-        <div id="chatImageMeta" class="chat-image-meta muted">Možeš poslati sliku uz poruku.</div>
-      </div>
-    </div>
-
-    <p id="chatLoginText" class="muted" style="margin-top:12px">
+            <input accept="image/png,image/jpeg,image/webp,image/gif" hidden="" id="chatImageFile" type="file"/>
+</label>
+<input id="chatText" onkeydown="if(event.key==='Enter' &amp;&amp; !event.shiftKey){event.preventDefault();sendChat()}" placeholder="Napiši poruku..."/>
+<button class="btn btn-green" onclick="sendChat()">Pošalji</button>
+</div>
+<div class="chat-image-preview hidden" id="chatImagePreview"></div>
+<div class="chat-image-meta muted" id="chatImageMeta">Možeš poslati sliku uz poruku.</div>
+</div>
+</div>
+<p class="muted" id="chatLoginText" style="margin-top:12px">
       🔒 Prijavi se da bi koristio chat.
     </p>
-
-  </div>
-
+</div>
 </section>
-
-
 <!-- ================= GALLERY ================= -->
-
-<section id="gallery" class="section">
-
-  <div class="gallery-hero">
-    <div>
-      <span class="hero-kicker">FOTO ARHIVA LIGE</span>
-      <h2 class="section-title" style="margin:4px 0 6px">📸 Galerija</h2>
-      <p class="muted">Najbolji trenuci, utakmice i atmosfera Medjaši Futsal Lige.</p>
-    </div>
-    <div class="gallery-count" id="galleryCount">0 fotografija</div>
-  </div>
-
-  <div id="galleryGrid" class="gallery-grid"></div>
-
+<section class="section" id="gallery">
+<div class="gallery-hero">
+<div>
+<span class="hero-kicker">FOTO ARHIVA LIGE</span>
+<h2 class="section-title" style="margin:4px 0 6px">📸 Galerija</h2>
+<p class="muted">Najbolji trenuci, utakmice i atmosfera Medjaši Futsal Lige.</p>
+</div>
+<div class="gallery-count" id="galleryCount">0 fotografija</div>
+</div>
+<div class="gallery-grid" id="galleryGrid"></div>
 </section>
-
-
 <!-- ================= LOGIN / REGISTER ================= -->
-
-<section id="login" class="section">
-
-  <div class="grid grid-2"
-       style="max-width:900px;margin:30px auto">
-
-    <div class="card">
-
-      <h2 style="margin-bottom:8px">
+<section class="section" id="login">
+<div class="grid grid-2" style="max-width:900px;margin:30px auto">
+<div class="card">
+<h2 style="margin-bottom:8px">
         🔐 Prijava
       </h2>
-
-      <p class="muted" style="margin-bottom:18px">
+<p class="muted" style="margin-bottom:18px">
         Prijavi se za komentare, chat i sadržaj namijenjen članovima zajednice.
       </p>
-
-      <div class="form">
-
-        <div class="form-group">
-          <label>Email</label>
-          <input id="loginEmail"
-                 type="email"
-                 placeholder="Email">
-        </div>
-
-        <div class="form-group">
-          <label>Lozinka</label>
-          <input id="loginPassword"
-                 type="password"
-                 placeholder="Lozinka"
-                 onkeydown="if(event.key==='Enter')login()">
-        </div>
-
-        <button class="btn btn-green"
-                onclick="login()">
+<div class="form">
+<div class="form-group">
+<label>Email</label>
+<input id="loginEmail" placeholder="Email" type="email"/>
+</div>
+<div class="form-group">
+<label>Lozinka</label>
+<input id="loginPassword" onkeydown="if(event.key==='Enter')login()" placeholder="Lozinka" type="password"/>
+</div>
+<button class="btn btn-green" onclick="login()">
           🔐 Prijavi se
         </button>
-
-        <button type="button" class="btn" onclick="resetPassword()">
+<button class="btn" onclick="resetPassword()" type="button">
           🔑 Zaboravljena lozinka?
         </button>
-
-        <p id="loginMessage" class="muted"></p>
-
-      </div>
-
-    </div>
-
-
-    <div class="card">
-
-      <h2 style="margin-bottom:8px">
+<p class="muted" id="loginMessage"></p>
+</div>
+</div>
+<div class="card">
+<h2 style="margin-bottom:8px">
         👤 Registracija
       </h2>
-
-      <p class="muted" style="margin-bottom:18px">
+<p class="muted" style="margin-bottom:18px">
         Napravi nalog i učestvuj u komentarima i chatu.
       </p>
-
-      <div class="form">
-
-        <div class="form-group">
-          <label>Korisničko ime</label>
-          <input id="registerUsername"
-                 maxlength="30"
-                 placeholder="npr. MedjasiFan">
-        </div>
-
-        <div class="form-group">
-          <label>Email</label>
-          <input id="registerEmail"
-                 type="email"
-                 placeholder="Email">
-        </div>
-
-        <div class="form-group">
-          <label>Lozinka</label>
-          <input id="registerPassword"
-                 type="password"
-                 placeholder="Najmanje 6 znakova">
-        </div>
-
-        <div class="form-group">
-          <label>Ponovi lozinku</label>
-          <input id="registerPasswordConfirm"
-                 type="password"
-                 placeholder="Ponovi lozinku">
-        </div>
-
-        <button class="btn btn-green"
-                onclick="register()">
+<div class="form">
+<div class="form-group">
+<label>Korisničko ime</label>
+<input id="registerUsername" maxlength="30" placeholder="npr. MedjasiFan"/>
+</div>
+<div class="form-group">
+<label>Email</label>
+<input id="registerEmail" placeholder="Email" type="email"/>
+</div>
+<div class="form-group">
+<label>Lozinka</label>
+<input id="registerPassword" placeholder="Najmanje 6 znakova" type="password"/>
+</div>
+<div class="form-group">
+<label>Ponovi lozinku</label>
+<input id="registerPasswordConfirm" placeholder="Ponovi lozinku" type="password"/>
+</div>
+<button class="btn btn-green" onclick="register()">
           Registruj se
         </button>
-
-        <p id="registerMessage" class="muted"></p>
-
-      </div>
-
-    </div>
-
-  </div>
-
+<p class="muted" id="registerMessage"></p>
+</div>
+</div>
+</div>
 </section>
-
-
 <!-- ================= ADMIN ================= -->
-
-<section id="admin" class="section">
-
-  <h2 class="section-title">
+<section class="section" id="admin">
+<h2 class="section-title">
     ⚙️ Admin panel
   </h2>
-
-  <div id="adminContent">
-
-    <div class="admin-grid">
-
-      <!-- TEAM -->
-
-      <div class="card">
-
-        <h3>🛡️ Dodaj ekipu</h3>
-
-        <p class="muted"
-           style="margin:5px 0 15px">
+<div id="adminContent">
+<div class="admin-grid">
+<!-- TEAM -->
+<div class="card">
+<h3>🛡️ Dodaj ekipu</h3>
+<p class="muted" style="margin:5px 0 15px">
           Kreiraj novu ekipu.
         </p>
-
-        <div class="form">
-
-          <div class="form-group">
-            <label>Naziv ekipe</label>
-            <input id="teamName"
-                   placeholder="Naziv ekipe">
-          </div>
-
-          <div class="form-group">
-            <label>Logo ekipe</label>
-            <input id="teamLogoFile"
-                   type="file"
-                   accept="image/*">
-          </div>
-
-          <button class="btn btn-green"
-                  onclick="addTeam()">
+<div class="form">
+<div class="form-group">
+<label>Naziv ekipe</label>
+<input id="teamName" placeholder="Naziv ekipe"/>
+</div>
+<div class="form-group">
+<label>Logo ekipe</label>
+<input accept="image/*" id="teamLogoFile" type="file"/>
+</div>
+<button class="btn btn-green" onclick="addTeam()">
             Dodaj ekipu
           </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- PLAYER -->
-
-      <div class="card">
-
-        <h3>👟 Dodaj igrača</h3>
-
-        <p class="muted"
-           style="margin:5px 0 15px">
+</div>
+</div>
+<!-- PLAYER -->
+<div class="card">
+<h3>👟 Dodaj igrača</h3>
+<p class="muted" style="margin:5px 0 15px">
           Dodaj igrača u ekipu.
         </p>
-
-        <div class="form">
-
-          <div class="form-group">
-            <label>Ime i prezime</label>
-            <input id="playerName"
-                   placeholder="Ime igrača">
-          </div>
-
-          <div class="form-group">
-            <label>Ekipa</label>
-            <select id="playerTeam">
-              <option value="">Izaberi ekipu</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Broj</label>
-            <input id="playerNumber"
-                   type="number"
-                   min="0"
-                   placeholder="10">
-          </div>
-
-          <div class="form-group">
-            <label>Pozicija</label>
-            <select id="playerPosition">
-              <option value="Golman">Golman</option>
-              <option value="Pivot">Pivot</option>
-              <option value="Bek">Bek</option>
-              <option value="Krilo">Krilo</option>
-            </select>
-          </div>
-
-          <label style="display:flex;gap:8px;align-items:center">
-            <input id="playerCaptain"
-                   type="checkbox"
-                   style="width:auto">
+<div class="form">
+<div class="form-group">
+<label>Ime i prezime</label>
+<input id="playerName" placeholder="Ime igrača"/>
+</div>
+<div class="form-group">
+<label>Ekipa</label>
+<select id="playerTeam">
+<option value="">Izaberi ekipu</option>
+</select>
+</div>
+<div class="form-group">
+<label>Broj</label>
+<input id="playerNumber" min="0" placeholder="10" type="number"/>
+</div>
+<div class="form-group">
+<label>Pozicija</label>
+<select id="playerPosition">
+<option value="Golman">Golman</option>
+<option value="Pivot">Pivot</option>
+<option value="Bek">Bek</option>
+<option value="Krilo">Krilo</option>
+</select>
+</div>
+<label style="display:flex;gap:8px;align-items:center">
+<input id="playerCaptain" style="width:auto" type="checkbox"/>
             Kapiten
           </label>
-
-          <div class="form-group">
-            <label>Fotografija</label>
-            <input id="playerPhotoFile"
-                   type="file"
-                   accept="image/*">
-          </div>
-
-          <button class="btn btn-green"
-                  onclick="addPlayer()">
+<div class="form-group">
+<label>Fotografija</label>
+<input accept="image/*" id="playerPhotoFile" type="file"/>
+</div>
+<button class="btn btn-green" onclick="addPlayer()">
             Dodaj igrača
           </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- MATCH -->
-
-      <div class="card">
-
-        <h3>⚽ Dodaj utakmicu</h3>
-
-        <p class="muted"
-           style="margin:5px 0 15px">
+</div>
+</div>
+<!-- MATCH -->
+<div class="card">
+<h3>⚽ Dodaj utakmicu</h3>
+<p class="muted" style="margin:5px 0 15px">
           Kreiraj narednu utakmicu.
         </p>
-
-        <div class="form">
-
-          <div class="form-group">
-            <label>Domaćin</label>
-            <select id="matchHome">
-              <option value="">Izaberi ekipu</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Gost</label>
-            <select id="matchAway">
-              <option value="">Izaberi ekipu</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Datum i vrijeme</label>
-            <input id="matchDate"
-                   type="datetime-local">
-          </div>
-
-          <div class="form-group">
-            <label>Kolo</label>
-            <input id="matchRound"
-                   type="number"
-                   min="1"
-                   placeholder="1">
-          </div>
-
-          <button class="btn btn-green"
-                  onclick="addMatch()">
+<div class="form">
+<div class="form-group">
+<label>Domaćin</label>
+<select id="matchHome">
+<option value="">Izaberi ekipu</option>
+</select>
+</div>
+<div class="form-group">
+<label>Gost</label>
+<select id="matchAway">
+<option value="">Izaberi ekipu</option>
+</select>
+</div>
+<div class="form-group">
+<label>Datum i vrijeme</label>
+<input id="matchDate" type="datetime-local"/>
+</div>
+<div class="form-group">
+<label>Kolo</label>
+<input id="matchRound" min="1" placeholder="1" type="number"/>
+</div>
+<button class="btn btn-green" onclick="addMatch()">
             Dodaj utakmicu
           </button>
-
-          <button class="btn btn-blue"
-                  onclick="postNextMatchAnnouncement()">
+<button class="btn btn-blue" onclick="postNextMatchAnnouncement()">
             📣 Objavi najavu u chat
           </button>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <div class="card" style="margin-top:20px">
-
-      <h3 style="margin-bottom:14px">
+</div>
+</div>
+</div>
+<div class="card" style="margin-top:20px">
+<h3 style="margin-bottom:14px">
         🎛️ Upravljanje utakmicama
       </h3>
-
-      <div id="adminMatches"></div>
-
-    </div>
-
-  </div>
+<div id="adminMatches"></div>
+</div>
+</div>
 <!-- GALERIJA -->
 <div class="card" style="margin-top:20px;">
-  <div class="admin-card-head">
-    <div>
-      <h3>📸 Galerija</h3>
-      <p class="muted">Postavi fotografije koje će svi posjetioci moći pregledati u galeriji.</p>
-    </div>
-    <span class="admin-pill">SAMO ADMIN</span>
-  </div>
-
-  <div class="gallery-upload-grid">
-    <div class="form-group">
-      <label>Fotografija</label>
-      <input id="galleryImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
-    </div>
-
-    <div class="form-group">
-      <label>Naslov</label>
-      <input id="galleryTitle" maxlength="100" placeholder="npr. Finale lige">
-    </div>
-
-    <div class="form-group gallery-upload-wide">
-      <label>Opis</label>
-      <input id="galleryDescription" maxlength="250" placeholder="Kratak opis fotografije (opcionalno)">
-    </div>
-  </div>
-
-  <button class="btn btn-green" onclick="adminAddGalleryImage()">📤 Objavi u galeriju</button>
-  <div id="adminGalleryList" class="admin-gallery-list"></div>
+<div class="admin-card-head">
+<div>
+<h3>📸 Galerija</h3>
+<p class="muted">Postavi fotografije koje će svi posjetioci moći pregledati u galeriji.</p>
 </div>
-
-
+<span class="admin-pill">SAMO ADMIN</span>
+</div>
+<div class="gallery-upload-grid">
+<div class="form-group">
+<label>Fotografija</label>
+<input accept="image/png,image/jpeg,image/webp,image/gif" id="galleryImageFile" type="file"/>
+</div>
+<div class="form-group">
+<label>Naslov</label>
+<input id="galleryTitle" maxlength="100" placeholder="npr. Finale lige"/>
+</div>
+<div class="form-group gallery-upload-wide">
+<label>Opis</label>
+<input id="galleryDescription" maxlength="250" placeholder="Kratak opis fotografije (opcionalno)"/>
+</div>
+</div>
+<button class="btn btn-green" onclick="adminAddGalleryImage()">📤 Objavi u galeriju</button>
+<div class="admin-gallery-list" id="adminGalleryList"></div>
+</div>
 <!-- PLAYLIST MUZIKA -->
 <div class="card admin-music-card" style="margin-top:20px;">
-  <div class="admin-card-head"><div><span class="hero-kicker">SOUNDTRACK LIGE</span><h3>🎵 Playlist muzika</h3><p class="muted">Dodaj više YouTube pjesama. Redaju se automatski jedna za drugom i ostaju aktivne dok je posjetilac na stranici.</p></div><span class="admin-pill">SAMO ADMIN</span></div>
-  <div class="playlist-add-grid"><input id="adminYoutubeUrl" type="text" placeholder="YouTube link pjesme"><input id="adminYoutubeTitle" type="text" maxlength="100" placeholder="Naziv pjesme (opcionalno)"><button class="btn btn-green" onclick="addMusicTrack()">＋ Dodaj pjesmu</button></div>
-  <div class="actions" style="margin-top:12px"><button class="btn btn-blue" onclick="toggleMusicPlaylist(true)">▶️ Uključi playlistu</button><button class="btn btn-red" onclick="toggleMusicPlaylist(false)">⏹️ Zaustavi muziku</button></div>
-  <div id="musicAdminStatus" class="muted" style="margin-top:10px"></div><div id="adminMusicPlaylist" class="admin-playlist"></div>
+<div class="admin-card-head"><div><span class="hero-kicker">SOUNDTRACK LIGE</span><h3>🎵 Playlist muzika</h3><p class="muted">Dodaj više YouTube pjesama. Redaju se automatski jedna za drugom i ostaju aktivne dok je posjetilac na stranici.</p></div><span class="admin-pill">SAMO ADMIN</span></div>
+<div class="playlist-add-grid"><input id="adminYoutubeUrl" placeholder="YouTube link pjesme" type="text"/><input id="adminYoutubeTitle" maxlength="100" placeholder="Naziv pjesme (opcionalno)" type="text"/><button class="btn btn-green" onclick="addMusicTrack()">＋ Dodaj pjesmu</button></div>
+<div class="actions" style="margin-top:12px"><button class="btn btn-blue" onclick="toggleMusicPlaylist(true)">▶️ Uključi playlistu</button><button class="btn btn-red" onclick="toggleMusicPlaylist(false)">⏹️ Zaustavi muziku</button></div>
+<div class="muted" id="musicAdminStatus" style="margin-top:10px"></div><div class="admin-playlist" id="adminMusicPlaylist"></div>
 </div>
 </section>
-
-
-
 <!-- ================= COMMUNITY V9 ================= -->
-<section id="community" class="section v9-community-section">
-  <div class="v9-community-hero">
-    <div>
-      <span class="v9-kicker">MEDJAŠI COMMUNITY</span>
-      <h1>Zajednica lige</h1>
-      <p>Fotografije, priče i trenutci sa Medjaši lige — na jednom mjestu.</p>
-    </div>
-    <div class="v9-community-actions">
-      <button class="btn btn-green" onclick="openV9PostComposer()">＋ Objavi fotografiju</button>
-      <button class="btn btn-blue" onclick="openV9StoryComposer()">＋ Moja priča</button>
-    </div>
-  </div>
-  <div id="v9Stories" class="v9-stories-wrap"></div>
-  <div class="v9-community-grid">
-    <div>
-      <div class="v9-section-head"><div><span class="v9-kicker">FEED</span><h2>Najnovije objave</h2></div><button class="btn btn-small" onclick="loadV9Community()">↻ Osvježi</button></div>
-      <div id="v9Feed" class="v9-feed"></div>
-    </div>
-    <aside id="v9MyProfileCard" class="v9-profile-card"></aside>
-  </div>
+<section class="section v9-community-section" id="community">
+<div class="v9-community-hero">
+<div>
+<span class="v9-kicker">MEDJAŠI COMMUNITY</span>
+<h1>Zajednica lige</h1>
+<p>Fotografije, priče i trenutci sa Medjaši lige — na jednom mjestu.</p>
+</div>
+<div class="v9-community-actions">
+<button class="btn btn-green" onclick="openV9PostComposer()">＋ Objavi fotografiju</button>
+<button class="btn btn-blue" onclick="openV9StoryComposer()">＋ Moja priča</button>
+</div>
+</div>
+<div class="v9-stories-wrap" id="v9Stories"></div>
+<div class="v9-community-grid">
+<div>
+<div class="v9-section-head"><div><span class="v9-kicker">FEED</span><h2>Najnovije objave</h2></div><button class="btn btn-small" onclick="loadV9Community()">↻ Osvježi</button></div>
+<div class="v9-feed" id="v9Feed"></div>
+</div>
+<aside class="v9-profile-card" id="v9MyProfileCard"></aside>
+</div>
 </section>
-
 <!-- ================= V9 PROFILE / POST / STORY MODAL HOST ================= -->
 <div id="v9ProfileHost"></div>
 </main>
-
-
 <footer class="footer">
-
-  <div>
+<div>
     © 2026 Medjaši Futsal Liga
   </div>
-
-  <div>
+<div>
     Rezultati • Tabela • Ekipe • Igrači • Statistika
   </div>
-
 </footer>
-
-
 <div class="mobile-bottom">
-
-  <button onclick="showSection('home')">
-    <span>⌂</span>
+<button onclick="showSection('home')">
+<span>⌂</span>
     Početna
   </button>
-
-  <button onclick="showSection('matches')">
-    <span>⚽</span>
+<button onclick="showSection('matches')">
+<span>⚽</span>
     Utakmice
   </button>
-
-  <button onclick="showSection('table')">
-    <span>🏆</span>
+<button onclick="showSection('table')">
+<span>🏆</span>
     Tabela
   </button>
-
-  <button onclick="showSection('gallery')">
-    <span>📸</span>
+<button onclick="showSection('gallery')">
+<span>📸</span>
     Galerija
   </button>
-
-  <button onclick="toggleMobileMore()" id="mobileMoreBtn">
-    <span>☰</span>
+<button id="mobileMoreBtn" onclick="toggleMobileMore()">
+<span>☰</span>
     Više
   </button>
-
 </div>
-
-
-<div id="mobileMoreDrawer" class="mobile-more-drawer" aria-hidden="true">
-  <div class="mobile-more-backdrop" onclick="closeMobileMore()"></div>
-  <div class="mobile-more-panel">
-    <div class="mobile-more-head">
-      <div>
-        <small>MEDJAŠI FUTSAL LIGA</small>
-        <strong>Meni</strong>
-      </div>
-      <button type="button" class="mobile-more-close" onclick="closeMobileMore()" aria-label="Zatvori meni">✕</button>
-    </div>
-    <div class="mobile-more-grid">
-      <button onclick="mobileMoreGo('home')"><span>⌂</span><b>Početna</b><small>Naslovna</small></button>
-      <button onclick="mobileMoreGo('matches')"><span>⚽</span><b>Utakmice</b><small>Raspored i rezultati</small></button>
-      <button onclick="mobileMoreGo('table')"><span>🏆</span><b>Tabela</b><small>Poredak lige</small></button>
-      <button onclick="mobileMoreGo('teams')"><span>🛡️</span><b>Ekipe</b><small>Timovi lige</small></button>
-      <button onclick="mobileMoreGo('players')"><span>👤</span><b>Igrači</b><small>Spisak igrača</small></button>
-      <button onclick="mobileMoreGo('stats')"><span>📊</span><b>Statistika</b><small>Najbolji igrači</small></button>
-      <button onclick="mobileMoreGo('gallery')"><span>📸</span><b>Galerija</b><small>Fotografije</small></button>
-      <button onclick="mobileMoreGo('chat')"><span>💬</span><b>Chat</b><small>Razgovor uživo</small></button>
-      <button onclick="mobileMoreGo('comments')"><span>💭</span><b>Komentari</b><small>Komentari zajednice</small></button>
-    </div>
-  </div>
+<div aria-hidden="true" class="mobile-more-drawer" id="mobileMoreDrawer">
+<div class="mobile-more-backdrop" onclick="closeMobileMore()"></div>
+<div class="mobile-more-panel">
+<div class="mobile-more-head">
+<div>
+<small>MEDJAŠI FUTSAL LIGA</small>
+<strong>Meni</strong>
 </div>
-
-<div id="toastWrap" class="toast-wrap"></div>
-
-
-<div id="modal"
-     class="modal"
-     onclick="closeModal(event)">
-
-  <div class="modal-box"
-       onclick="event.stopPropagation()">
-
-    <button class="close"
-            onclick="hideModal()">
+<button aria-label="Zatvori meni" class="mobile-more-close" onclick="closeMobileMore()" type="button">✕</button>
+</div>
+<div class="mobile-more-grid">
+<button onclick="mobileMoreGo('home')"><span>⌂</span><b>Početna</b><small>Naslovna</small></button>
+<button onclick="mobileMoreGo('matches')"><span>⚽</span><b>Utakmice</b><small>Raspored i rezultati</small></button>
+<button onclick="mobileMoreGo('table')"><span>🏆</span><b>Tabela</b><small>Poredak lige</small></button>
+<button onclick="mobileMoreGo('teams')"><span>🛡️</span><b>Ekipe</b><small>Timovi lige</small></button>
+<button onclick="mobileMoreGo('players')"><span>👤</span><b>Igrači</b><small>Spisak igrača</small></button>
+<button onclick="mobileMoreGo('stats')"><span>📊</span><b>Statistika</b><small>Najbolji igrači</small></button>
+<button onclick="mobileMoreGo('gallery')"><span>📸</span><b>Galerija</b><small>Fotografije</small></button>
+<button onclick="mobileMoreGo('community')"><span>✨</span><b>Community</b><small>Objave i priče</small></button><button onclick="mobileMoreGo('chat')"><span>💬</span><b>Chat</b><small>Razgovor uživo</small></button>
+<button onclick="mobileMoreGo('comments')"><span>💭</span><b>Komentari</b><small>Komentari zajednice</small></button>
+</div>
+</div>
+</div>
+<div class="toast-wrap" id="toastWrap"></div>
+<div class="modal" id="modal" onclick="closeModal(event)">
+<div class="modal-box" onclick="event.stopPropagation()">
+<button class="close" onclick="hideModal()">
       ✕
     </button>
-
-    <div id="modalContent"></div>
-
-  </div>
-
+<div id="modalContent"></div>
 </div>
-
-
+</div>
 <script>
 /* =========================================================
    SUPABASE
@@ -10850,7 +10479,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
 </script>
-
 <style>
 /* =========================================================
    MEĐASI ADMIN CRUD
@@ -11069,7 +10697,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
 }
 </style>
-
 <script>
 /* =========================================================
    MEĐASI ADMIN CRUD V4
@@ -12247,78 +11874,62 @@ if ("serviceWorker" in navigator) {
 }
 </script>
 <!-- PWA INSTALL -->
-<div id="pwaInstallBanner" class="pwa-install-banner">
-  <div class="pwa-install-icon">
+<div class="pwa-install-banner" id="pwaInstallBanner">
+<div class="pwa-install-icon">
     ⚽
   </div>
-
-  <div class="pwa-install-content">
-    <strong>Međasi Futsal Liga</strong>
-    <span>Dodaj aplikaciju na početni ekran</span>
-  </div>
-
-  <button id="pwaInstallButton" class="pwa-install-btn">
+<div class="pwa-install-content">
+<strong>Međasi Futsal Liga</strong>
+<span>Dodaj aplikaciju na početni ekran</span>
+</div>
+<button class="pwa-install-btn" id="pwaInstallButton">
     Instaliraj
   </button>
-
-  <button id="pwaInstallClose" class="pwa-install-close" aria-label="Zatvori">
+<button aria-label="Zatvori" class="pwa-install-close" id="pwaInstallClose">
     ×
   </button>
 </div>
-
-<div id="pwaInstallModal" class="pwa-modal">
-  <div class="pwa-modal-box">
-
-    <button id="pwaModalClose" class="pwa-modal-close">
+<div class="pwa-modal" id="pwaInstallModal">
+<div class="pwa-modal-box">
+<button class="pwa-modal-close" id="pwaModalClose">
       ×
     </button>
-
-    <div class="pwa-modal-logo">
+<div class="pwa-modal-logo">
       ⚽
     </div>
-
-    <h2>Instaliraj Međasi</h2>
-
-    <p class="pwa-modal-subtitle">
+<h2>Instaliraj Međasi</h2>
+<p class="pwa-modal-subtitle">
       Dodaj Međasi Futsal Ligu na početni ekran telefona
       i koristi je kao aplikaciju.
     </p>
-
-    <div class="pwa-ios-steps">
-
-      <div class="pwa-step">
-        <div class="pwa-step-number">1</div>
-        <div>
-          <strong>Otvori Safari</strong>
-          <span>Otvori Međasi stranicu u Safari browseru.</span>
-        </div>
-      </div>
-
-      <div class="pwa-step">
-        <div class="pwa-step-number">2</div>
-        <div>
-          <strong>Pritisni Share</strong>
-          <span>Na dnu ekrana pritisni dugme za dijeljenje.</span>
-        </div>
-      </div>
-
-      <div class="pwa-step">
-        <div class="pwa-step-number">3</div>
-        <div>
-          <strong>Dodaj na početni ekran</strong>
-          <span>Izaberi „Add to Home Screen“ / „Dodaj na početni ekran“.</span>
-        </div>
-      </div>
-
-    </div>
-
-    <button id="pwaModalDone" class="pwa-modal-done">
+<div class="pwa-ios-steps">
+<div class="pwa-step">
+<div class="pwa-step-number">1</div>
+<div>
+<strong>Otvori Safari</strong>
+<span>Otvori Međasi stranicu u Safari browseru.</span>
+</div>
+</div>
+<div class="pwa-step">
+<div class="pwa-step-number">2</div>
+<div>
+<strong>Pritisni Share</strong>
+<span>Na dnu ekrana pritisni dugme za dijeljenje.</span>
+</div>
+</div>
+<div class="pwa-step">
+<div class="pwa-step-number">3</div>
+<div>
+<strong>Dodaj na početni ekran</strong>
+<span>Izaberi „Add to Home Screen“ / „Dodaj na početni ekran“.</span>
+</div>
+</div>
+</div>
+<button class="pwa-modal-done" id="pwaModalDone">
       Razumijem
     </button>
-
-  </div>
 </div>
-
+</div>
 <style>
 /* =========================
    MEĐASI PWA INSTALL
@@ -12634,7 +12245,6 @@ if ("serviceWorker" in navigator) {
   }
 }
 </style>
-
 <script>
 (function () {
 
@@ -13062,8 +12672,6 @@ if ("serviceWorker" in navigator) {
   `; document.head.appendChild(style);
 })();
 </script>
-
-
 <script>
 /* =========================================================
    MEDJASI MATCH CENTER 2.0
@@ -13172,8 +12780,6 @@ if ("serviceWorker" in navigator) {
   `; document.head.appendChild(style);
 })();
 </script>
-
-
 <!-- =========================================================
      MEDJASI V3 - ADMIN COMMUNITY + MOBILE/POLISH LAYER
      Ova nadogradnja čuva postojeći sistem i dodaje:
@@ -13292,7 +12898,6 @@ if ("serviceWorker" in navigator) {
   .v3-admin-badge{font-size:8px;padding:4px 7px}
 }
 </style>
-
 <script id="medjasi-v3-community-js">
 (function(){
   "use strict";
@@ -13317,7 +12922,7 @@ if ("serviceWorker" in navigator) {
   };
 
   V3.badge = function(){
-    return `<span class="v3-admin-badge">👑 ADMIN</span>`;
+    return `<span class="v3-admin-badge">Admin</span>`;
   };
 
   V3.reactionKey = "medjasi_v3_chat_reactions_v1";
@@ -13391,7 +12996,7 @@ if ("serviceWorker" in navigator) {
 
       return `
         <div class="chat-message ${admin?"v3-admin-message":""}">
-          <div class="chat-avatar">${admin?"👑":"💬"}</div>
+          <div class="chat-avatar">${admin?"A":"💬"}</div>
           <div class="chat-message-body">
             <div class="chat-message-top">
               <strong class="${admin?"v3-admin-name":""}">
@@ -13511,7 +13116,7 @@ if ("serviceWorker" in navigator) {
         const notice=document.createElement("div");
         notice.id="v3AdminChatNotice";
         notice.className="v3-admin-compose";
-        notice.innerHTML=`<label><input type="checkbox" checked disabled> 👑 Poruka će biti objavljena kao <strong>ADMIN</strong></label>`;
+        notice.innerHTML=`<label><input type="checkbox" checked disabled> Poruka će biti objavljena kao <strong>ADMIN</strong></label>`;
         parent.parentElement?.insertBefore(notice,parent);
       }
     }
@@ -13523,7 +13128,7 @@ if ("serviceWorker" in navigator) {
         const notice=document.createElement("div");
         notice.id="v3AdminCommentNotice";
         notice.className="v3-admin-compose";
-        notice.innerHTML=`<label><input type="checkbox" checked disabled> 👑 Komentar će biti objavljen kao <strong>ADMIN</strong></label>`;
+        notice.innerHTML=`<label><input type="checkbox" checked disabled> Komentar će biti objavljen kao <strong>ADMIN</strong></label>`;
         parent.insertBefore(notice,commentsInput);
       }
     }
@@ -13539,7 +13144,7 @@ if ("serviceWorker" in navigator) {
       if(!host) return;
       const notice=document.createElement("div");
       notice.className="v3-admin-tools";
-      notice.innerHTML=`<span class="v3-admin-live"><i></i> ADMIN način rada</span><span class="muted">Tvoje objave se prikazuju kao 👑 ADMIN</span>`;
+      notice.innerHTML=`<span class="v3-admin-live"><i></i> ADMIN način rada</span><span class="muted">Tvoje objave se prikazuju kao Admin</span>`;
       host.insertBefore(notice,host.firstChild);
     });
   };
@@ -13564,8 +13169,6 @@ if ("serviceWorker" in navigator) {
 
 })();
 </script>
-
-
 <style id="medjasi-v3-push-css">
 .v3-push-card{margin-top:16px;padding:14px;border:1px solid rgba(44,156,255,.2);border-radius:16px;background:rgba(44,156,255,.045)}
 .v3-push-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -13677,8 +13280,6 @@ if ("serviceWorker" in navigator) {
   setInterval(addPushUI,3000);
 })();
 </script>
-
-
 <script id="medjasi-v7-final">
 (function(){
 "use strict";
@@ -13798,7 +13399,6 @@ setTimeout(async()=>{try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();en
 window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();ensureSeasonAdmin();renderPushUI()},600));
 })();
 </script>
-
 <script id="medjasi-v8-final-polish">
 (function(){
   document.addEventListener('click',function(e){
@@ -13809,95 +13409,85 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
 })();
 </script>
 
-<style id="v9-community-css">
-:root{--v9-green:#25e487;--v9-blue:#1598ff;--v9-bg:#06111d;--v9-card:rgba(10,23,38,.78);--v9-line:rgba(255,255,255,.08)}
-body{background:radial-gradient(circle at 15% 5%,rgba(37,228,135,.08),transparent 30%),radial-gradient(circle at 85% 20%,rgba(21,152,255,.10),transparent 28%),linear-gradient(135deg,#06111d 0%,#081726 45%,#050c14 100%) fixed!important}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,black,transparent 85%);z-index:-1}
-.v9-community-section{max-width:1200px;margin:auto}.v9-community-hero{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:28px;border:1px solid var(--v9-line);border-radius:24px;background:linear-gradient(135deg,rgba(37,228,135,.10),rgba(21,152,255,.08)),rgba(7,18,30,.82);box-shadow:0 20px 70px rgba(0,0,0,.24);overflow:hidden;position:relative}.v9-community-hero:after{content:"⚽";position:absolute;right:30px;bottom:-45px;font-size:180px;opacity:.035;transform:rotate(-14deg)}.v9-kicker{font-size:10px;letter-spacing:2px;font-weight:900;color:var(--v9-green)}.v9-community-hero h1{margin:7px 0 5px;font-size:clamp(28px,5vw,48px)}.v9-community-hero p{margin:0;color:#8ea3b5}.v9-community-actions{display:flex;gap:9px;flex-wrap:wrap;position:relative;z-index:1}.v9-stories-wrap{display:flex;gap:12px;overflow:auto;padding:20px 2px 12px;scrollbar-width:none}.v9-stories-wrap::-webkit-scrollbar{display:none}.v9-story{flex:0 0 76px;text-align:center;cursor:pointer}.v9-story-avatar{width:64px;height:64px;border-radius:50%;padding:3px;margin:auto;background:conic-gradient(var(--v9-green),var(--v9-blue),#8b5cf6,var(--v9-green));box-shadow:0 0 0 2px #07131f,0 0 22px rgba(37,228,135,.18);transition:.25s}.v9-story:hover .v9-story-avatar{transform:scale(1.06)}.v9-story-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;border:3px solid #07131f}.v9-story-name{display:block;margin-top:7px;font-size:10px;color:#b8c8d5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.v9-add-story .v9-story-avatar{display:grid;place-items:center;background:linear-gradient(135deg,var(--v9-green),var(--v9-blue));font-size:25px;color:#06111d}.v9-community-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px}.v9-section-head{display:flex;justify-content:space-between;align-items:end;margin:12px 0}.v9-section-head h2{margin:5px 0 0}.v9-feed{display:grid;gap:16px}.v9-post{border:1px solid var(--v9-line);background:var(--v9-card);border-radius:22px;overflow:hidden;box-shadow:0 15px 45px rgba(0,0,0,.18);animation:v9In .4s ease both}.v9-post-head{display:flex;align-items:center;gap:10px;padding:15px}.v9-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#122234;border:1px solid rgba(255,255,255,.12)}.v9-post-author{font-weight:850}.v9-post-meta{font-size:10px;color:#6f8495;margin-top:2px}.v9-post-menu{margin-left:auto}.v9-post-image{display:block;width:100%;max-height:650px;object-fit:cover;background:#050c14}.v9-post-body{padding:14px 15px 16px}.v9-post-caption{white-space:pre-wrap;color:#dce7ef;line-height:1.55}.v9-post-actions{display:flex;gap:8px;align-items:center;margin-top:12px}.v9-reaction{border:1px solid var(--v9-line);background:rgba(255,255,255,.035);color:#c8d5df;border-radius:999px;padding:7px 10px;cursor:pointer;transition:.2s}.v9-reaction:hover,.v9-reaction.active{background:rgba(37,228,135,.12);border-color:rgba(37,228,135,.28);color:#fff;transform:translateY(-1px)}.v9-comments{margin-top:12px;border-top:1px solid var(--v9-line);padding-top:11px}.v9-comment{font-size:12px;margin:7px 0;color:#b9c8d4}.v9-comment b{color:#fff}.v9-comment-form{display:flex;gap:7px;margin-top:10px}.v9-comment-form input{flex:1;min-width:0}.v9-profile-card{position:sticky;top:90px;height:max-content;border:1px solid var(--v9-line);border-radius:22px;background:linear-gradient(180deg,rgba(13,29,46,.9),rgba(7,18,30,.86));padding:18px;box-shadow:0 20px 55px rgba(0,0,0,.18)}.v9-profile-top{text-align:center}.v9-profile-avatar{width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid rgba(37,228,135,.55);box-shadow:0 0 30px rgba(37,228,135,.12)}.v9-profile-card h3{margin:10px 0 3px}.v9-profile-bio{color:#8fa4b7;font-size:12px;line-height:1.5;white-space:pre-wrap}.v9-profile-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:14px 0}.v9-profile-stat{padding:10px;border-radius:14px;background:rgba(255,255,255,.035);text-align:center}.v9-profile-stat b{display:block;font-size:18px}.v9-profile-stat span{font-size:9px;color:#70879a;text-transform:uppercase;letter-spacing:1px}.v9-empty{padding:35px 18px;text-align:center;border:1px dashed var(--v9-line);border-radius:20px;color:#70879a}.v9-modal-card{max-width:620px;margin:auto}.v9-modal-card textarea{min-height:100px}.v9-profile-full{max-width:900px;margin:auto}.v9-profile-cover{height:130px;border-radius:22px 22px 0 0;background:radial-gradient(circle at 20% 20%,rgba(37,228,135,.28),transparent 35%),linear-gradient(135deg,#0b2637,#07131f);position:relative}.v9-profile-full-inner{margin-top:-42px;position:relative;padding:0 22px 22px}.v9-profile-full .v9-avatar-big{width:88px;height:88px;border:4px solid #07131f;border-radius:50%;object-fit:cover;background:#102336}.v9-profile-full h2{margin:8px 0 3px}.v9-profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.v9-post-form-preview{width:100%;max-height:300px;object-fit:cover;border-radius:16px;margin-top:10px;display:none}.v9-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:1000;display:grid;place-items:center;padding:20px}.v9-lightbox img{max-width:min(100%,1100px);max-height:90vh;object-fit:contain;border-radius:14px}.v9-story-view{max-width:520px;width:100%;margin:auto}.v9-story-view img{width:100%;max-height:75vh;object-fit:contain;border-radius:20px;background:#02070c}.v9-story-caption{padding:12px;color:#fff;text-align:center}.v9-admin-badge{font-size:9px;font-weight:900;letter-spacing:1px;color:var(--v9-green);margin-left:5px}.v9-drop{border:1px dashed rgba(37,228,135,.28);border-radius:16px;padding:18px;text-align:center;color:#7990a3;cursor:pointer;background:rgba(37,228,135,.03)}
-@keyframes v9In{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@media(max-width:850px){.v9-community-grid{grid-template-columns:1fr}.v9-profile-card{position:static}.v9-community-hero{align-items:flex-start;flex-direction:column}.v9-community-actions{width:100%}.v9-community-actions .btn{flex:1}.v9-post-image{max-height:520px}}
-@media(prefers-reduced-motion:reduce){.v9-post{animation:none}.v9-story-avatar,.v9-reaction{transition:none}}
-</style>
 
-<script id="v9-community-js">
+<script id="v10-community-js">
 (function(){
-  const V9={posts:[],stories:[],comments:{},reactions:{},loaded:false};
-  const imgFallback='https://via.placeholder.com/160?text=%F0%9F%91%A4';
+  "use strict";
+  const V={posts:[],stories:[],profiles:{},loaded:false};
   const q=id=>document.getElementById(id);
-  const e=v=>typeof esc==='function'?esc(v??''):String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const avatar=p=>e(p?.avatar_url||imgFallback);
+  const escV=v=>typeof esc==='function'?esc(v??''):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const fallback='https://via.placeholder.com/160?text=%F0%9F%91%A4';
+  const avatar=p=>escV(p?.avatar_url||fallback);
   const fmt=d=>{try{return new Intl.DateTimeFormat('bs-BA',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(d))}catch{return ''}};
-  const logged=()=>!!currentUser;
-  function guard(){if(!logged()){showSection('login');toastV?.('Prijavi se da bi koristio Community.','error');return false}return true}
+  const logged=()=>typeof currentUser!=='undefined'&&!!currentUser;
+  const guard=()=>{if(!logged()){showSection('login');if(typeof toastV==='function')toastV('Prijavi se da bi koristio Community.','error');return false}return true};
+  async function loadProfiles(ids){
+    const unique=[...new Set((ids||[]).filter(Boolean).map(String))]; if(!unique.length)return;
+    const {data,error}=await supabaseClient.from('profiles').select('id,username,avatar_url,bio,role').in('id',unique);
+    if(error){console.warn('Community profiles:',error);return}
+    (data||[]).forEach(p=>V.profiles[String(p.id)]=p);
+  }
   async function load(){
-    const [{data:posts,error:pe},{data:stories,error:se}]=await Promise.all([
-      supabaseClient.from('community_posts').select('*, profiles:author_id(id,username,avatar_url,bio,role)').order('created_at',{ascending:false}).limit(50),
-      supabaseClient.from('community_stories').select('*, profiles:author_id(id,username,avatar_url,bio,role)').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(40)
-    ]);
-    if(pe){console.warn('Community posts:',pe); V9.posts=[]} else V9.posts=posts||[];
-    if(se){console.warn('Community stories:',se); V9.stories=[]} else V9.stories=stories||[];
-    await render(); V9.loaded=true;
+    try{
+      const [{data:posts,error:pe},{data:stories,error:se}]=await Promise.all([
+        supabaseClient.from('community_posts').select('id,user_id,image_url,caption,created_at').order('created_at',{ascending:false}).limit(50),
+        supabaseClient.from('community_stories').select('id,user_id,image_url,caption,created_at,expires_at').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(40)
+      ]);
+      if(pe)throw pe; V.posts=posts||[];
+      if(se)console.warn('Community stories:',se); V.stories=stories||[];
+      await loadProfiles([...V.posts,...V.stories].map(x=>x.user_id));
+      await render(); V.loaded=true;
+    }catch(err){console.warn('Community load:',err); V.posts=[];V.stories=[];render();}
   }
-  async function render(){
-    renderStories(); renderFeed(); await renderMyProfile();
-  }
+  async function render(){renderStories();await renderFeed();await renderMyProfile()}
   function renderStories(){
-    const host=q('v9Stories'); if(!host)return;
+    const host=q('v9Stories');if(!host)return;
     const mine=logged()?`<div class="v9-story v9-add-story" onclick="openV9StoryComposer()"><div class="v9-story-avatar">＋</div><span class="v9-story-name">Moja priča</span></div>`:'';
-    const seen=new Set(); const rows=[];
-    V9.stories.forEach(s=>{const p=s.profiles||{};if(seen.has(p.id))return;seen.add(p.id);rows.push(`<div class="v9-story" onclick="openV9Story('${e(s.id)}')"><div class="v9-story-avatar"><img src="${avatar(p)}" alt=""></div><span class="v9-story-name">${e(p.username||'Korisnik')}</span></div>`)});
+    const seen=new Set();const rows=[];
+    V.stories.forEach(s=>{const p=V.profiles[String(s.user_id)]||{};if(seen.has(String(s.user_id)))return;seen.add(String(s.user_id));rows.push(`<div class="v9-story" onclick="openV9Story('${escV(s.id)}')"><div class="v9-story-avatar"><img src="${avatar(p)}" alt=""></div><span class="v9-story-name">${escV(p.username||'Korisnik')}</span></div>`)});
     host.innerHTML=mine+rows.join('')||'<div class="v9-empty" style="width:100%">Još nema aktivnih priča.</div>';
   }
   async function renderFeed(){
-    const host=q('v9Feed'); if(!host)return;
-    if(!V9.posts.length){host.innerHTML='<div class="v9-empty">Još nema objava. Budi prvi koji će objaviti fotografiju. 📸</div>';return}
-    host.innerHTML=V9.posts.map((p,i)=>{const a=p.profiles||{};const own=logged()&&p.author_id===currentUser.id;return `<article class="v9-post" style="animation-delay:${Math.min(i,8)*35}ms">
-      <div class="v9-post-head"><img class="v9-avatar" src="${avatar(a)}" alt="" onclick="openV9Profile('${e(p.author_id)}')" style="cursor:pointer"><div><div class="v9-post-author" onclick="openV9Profile('${e(p.author_id)}')" style="cursor:pointer">${e(a.username||'Korisnik')}${a.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</div><div class="v9-post-meta">${fmt(p.created_at)}</div></div>${own?`<button class="btn btn-small v9-post-menu" onclick="deleteV9Post('${e(p.id)}')">Obriši</button>`:''}</div>
-      <img class="v9-post-image" src="${e(p.image_url)}" alt="${e(p.caption||'Fotografija')}" loading="lazy" onclick="openV9Lightbox('${e(p.image_url)}')">
-      <div class="v9-post-body">${p.caption?`<div class="v9-post-caption">${e(p.caption)}</div>`:''}<div class="v9-post-actions"><button id="v9r-${e(p.id)}" class="v9-reaction" onclick="toggleV9Reaction('${e(p.id)}','❤️')">❤️ <span>${p.reaction_count||0}</span></button><button class="v9-reaction" onclick="toggleV9Comments('${e(p.id)}')">💬 <span id="v9cnum-${e(p.id)}">...</span></button></div><div id="v9comments-${e(p.id)}" class="v9-comments" hidden></div></div></article>`}).join('');
-    for(const p of V9.posts) await refreshPostMeta(p.id);
+    const host=q('v9Feed');if(!host)return;
+    if(!V.posts.length){host.innerHTML='<div class="v9-empty">Još nema objava. Budi prvi koji će objaviti fotografiju. 📸</div>';return}
+    host.innerHTML=V.posts.map((p,i)=>{const a=V.profiles[String(p.user_id)]||{};const own=logged()&&String(p.user_id)===String(currentUser.id);return `<article class="v9-post" style="animation-delay:${Math.min(i,8)*35}ms"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(a)}" alt="" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer"><div><div class="v9-post-author" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer">${escV(a.username||'Korisnik')}${a.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</div><div class="v9-post-meta">${fmt(p.created_at)}</div></div>${own||typeof isAdmin==='function'&&isAdmin()?`<button class="btn btn-small v9-post-menu" onclick="deleteV9Post('${escV(p.id)}')">Obriši</button>`:''}</div><img class="v9-post-image" src="${escV(p.image_url)}" alt="${escV(p.caption||'Fotografija')}" loading="lazy" onclick="openV9Lightbox('${escV(p.image_url)}')"><div class="v9-post-body">${p.caption?`<div class="v9-post-caption">${escV(p.caption)}</div>`:''}<div class="v9-post-actions"><button id="v9r-${escV(p.id)}" class="v9-reaction" onclick="toggleV9Reaction('${escV(p.id)}','❤️')">❤️ <span>0</span></button><button class="v9-reaction" onclick="toggleV9Comments('${escV(p.id)}')">💬 <span id="v9cnum-${escV(p.id)}">0</span></button></div><div id="v9comments-${escV(p.id)}" class="v9-comments" hidden></div></div></article>`}).join('');
+    await Promise.all(V.posts.map(p=>refreshPostMeta(p.id)));
   }
   async function refreshPostMeta(id){
-    const [{data:r},{data:comments}]=await Promise.all([
-      supabaseClient.from('community_reactions').select('id,user_id').eq('post_id',id),
-      supabaseClient.from('community_comments').select('id').eq('post_id',id)
-    ]);
-    const b=q('v9r-'+id);if(b)b.querySelector('span').textContent=(r||[]).length;
-    const c=q('v9cnum-'+id);if(c)c.textContent=(comments||[]).length;
-    if(logged()&&r?.some(x=>x.user_id===currentUser.id))b?.classList.add('active');
+    const [{data:r,error:re},{data:c,error:ce}]=await Promise.all([supabaseClient.from('community_reactions').select('id,user_id,reaction').eq('post_id',id),supabaseClient.from('community_comments').select('id').eq('post_id',id)]);
+    if(re||ce)return;
+    const b=q('v9r-'+id);if(b){b.querySelector('span').textContent=(r||[]).length;if(logged()&&r?.some(x=>String(x.user_id)===String(currentUser.id)))b.classList.add('active');else b.classList.remove('active')}
+    const cnum=q('v9cnum-'+id);if(cnum)cnum.textContent=(c||[]).length;
   }
   async function renderMyProfile(){
     const host=q('v9MyProfileCard');if(!host)return;
-    if(!logged()){host.innerHTML='<div class="v9-profile-top"><img class="v9-profile-avatar" src="'+imgFallback+'"><h3>Pridruži se zajednici</h3><p class="v9-profile-bio">Registruj se ili prijavi da objavljuješ fotografije, priče i komentare.</p><button class="btn btn-green" onclick="showSection(\'login\')">Prijava</button></div>';return}
-    const p=currentProfile||{}; const postCount=V9.posts.filter(x=>x.author_id===currentUser.id).length; const storyCount=V9.stories.filter(x=>x.author_id===currentUser.id).length;
-    host.innerHTML=`<div class="v9-profile-top"><img class="v9-profile-avatar" src="${avatar(p)}" alt=""><h3>${e(p.username||'Korisnik')}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h3><div class="v9-profile-bio">${e(p.bio||'Dodaj kratak opis svog profila.')}</div></div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${postCount}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${storyCount}</b><span>Priče</span></div></div><button class="btn btn-blue" style="width:100%" onclick="openV9Profile('${e(currentUser.id)}')">Moj profil</button><button class="btn" style="width:100%;margin-top:7px" onclick="openV9EditProfile()">Uredi profil</button>`;
+    if(!logged()){host.innerHTML='<div class="v9-profile-top"><img class="v9-profile-avatar" src="'+fallback+'"><h3>Pridruži se zajednici</h3><p class="v9-profile-bio">Prijavi se da objavljuješ fotografije, priče i komentare.</p><button class="btn btn-green" onclick="showSection(\'login\')">Prijava</button></div>';return}
+    const p=currentProfile||{};const postCount=V.posts.filter(x=>String(x.user_id)===String(currentUser.id)).length;const storyCount=V.stories.filter(x=>String(x.user_id)===String(currentUser.id)).length;
+    host.innerHTML=`<div class="v9-profile-top"><img class="v9-profile-avatar" src="${avatar(p)}" alt=""><h3>${escV(p.username||'Korisnik')}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h3><div class="v9-profile-bio">${escV(p.bio||'Dodaj kratak opis svog profila.')}</div></div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${postCount}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${storyCount}</b><span>Priče</span></div></div><button class="btn btn-blue" style="width:100%" onclick="openV9Profile('${escV(currentUser.id)}')">Moj profil</button><button class="btn" style="width:100%;margin-top:7px" onclick="openV9EditProfile()">Uredi profil</button>`;
   }
-  window.loadV9Community=load;
-  window.openV9PostComposer=function(){if(!guard())return;showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>📸 Nova objava</h2><p class="muted">Dodaj fotografiju i napiši šta želiš podijeliti.</p></div><div class="form"><label class="v9-drop" for="v9PostFile">📷 Izaberi fotografiju<input id="v9PostFile" type="file" accept="image/*" hidden></label><img id="v9PostPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9PostCaption" maxlength="1000" placeholder="Napiši nešto..."></textarea></div><button class="btn btn-green" onclick="publishV9Post()">Objavi fotografiju</button></div></div>`);q('v9PostFile')?.addEventListener('change',()=>{const f=q('v9PostFile').files?.[0],im=q('v9PostPreview');if(f&&im){im.src=URL.createObjectURL(f);im.style.display='block'}})};
-  window.publishV9Post=async function(){if(!guard())return;const f=q('v9PostFile')?.files?.[0];if(!f)return toastV?.('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV?.('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV?.('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`community/${currentUser.id}`);const {error}=await supabaseClient.from('community_posts').insert({author_id:currentUser.id,image_url:url,caption:q('v9PostCaption')?.value.trim()||null});if(error)throw error;hideModal();await load();toastV?.('Objava je objavljena.')}catch(err){toastV?.(err.message||'Greška pri objavi.','error')}};
-  window.openV9StoryComposer=function(){if(!guard())return;showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/*" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div><button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>`);q('v9StoryFile')?.addEventListener('change',()=>{const f=q('v9StoryFile').files?.[0],im=q('v9StoryPreview');if(f&&im){im.src=URL.createObjectURL(f);im.style.display='block'}})};
-  window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV?.('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV?.('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV?.('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({author_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null});if(error)throw error;hideModal();await load();toastV?.('Priča je objavljena.')}catch(err){toastV?.(err.message||'Greška pri objavi.','error')}};
-  window.openV9Story=async function(id){const s=V9.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=s.profiles||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${e(p.username||'Korisnik')}</b><div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${e(s.image_url)}" alt=""><div class="v9-story-caption">${e(s.caption||'')}</div></div>`)};
+  function filePreview(fileId,imgId){q(fileId)?.addEventListener('change',()=>{const f=q(fileId)?.files?.[0],im=q(imgId);if(f&&im){im.src=URL.createObjectURL(f);im.style.display='block'}})}
+  window.openV9PostComposer=function(){if(!guard())return;showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>📸 Nova objava</h2><p class="muted">Dodaj fotografiju i napiši šta želiš podijeliti.</p></div><div class="form"><label class="v9-drop" for="v9PostFile">📷 Izaberi fotografiju<input id="v9PostFile" type="file" accept="image/*" hidden></label><img id="v9PostPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9PostCaption" maxlength="1000" placeholder="Napiši nešto..."></textarea></div><button class="btn btn-green" onclick="publishV9Post()">Objavi fotografiju</button></div></div>`);filePreview('v9PostFile','v9PostPreview')};
+  window.publishV9Post=async function(){if(!guard())return;const f=q('v9PostFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`community/${currentUser.id}`);const {error}=await supabaseClient.from('community_posts').insert({user_id:currentUser.id,image_url:url,caption:q('v9PostCaption')?.value.trim()||null});if(error)throw error;hideModal();await load();toastV('Objava je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
+  window.openV9StoryComposer=function(){if(!guard())return;showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/*" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div><button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>`);filePreview('v9StoryFile','v9StoryPreview')};
+  window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null});if(error)throw error;hideModal();await load();toastV('Priča je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
+  window.openV9Story=function(id){const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=V.profiles[String(s.user_id)]||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${escV(p.username||'Korisnik')}</b>${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}<div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${escV(s.image_url)}" alt=""><div class="v9-story-caption">${escV(s.caption||'')}</div>${logged()&&(String(s.user_id)===String(currentUser.id)||typeof isAdmin==='function'&&isAdmin())?`<button class="btn btn-small" onclick="deleteV9Story('${escV(s.id)}')">Obriši priču</button>`:''}</div>`) };
+  window.deleteV9Story=async function(id){if(!guard())return;const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;if(String(s.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu priču?'))return;const {error}=await supabaseClient.from('community_stories').delete().eq('id',id);if(error)return toastV(error.message,'error');hideModal();await load();toastV('Priča je obrisana.')};
   window.openV9Profile=async function(id){
-    const {data:p,error}=await supabaseClient.from('profiles').select('*').eq('id',id).maybeSingle();if(error||!p)return toastV?.('Profil nije pronađen.','error');
-    const [{data:posts},{data:stories}]=await Promise.all([supabaseClient.from('community_posts').select('*').eq('author_id',id).order('created_at',{ascending:false}).limit(30),supabaseClient.from('community_stories').select('*').eq('author_id',id).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false})]);
-    showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${e(p.username||'Korisnik')}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${e(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&id===currentUser.id?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<img class="v9-post-image" style="border-radius:16px" src="${e(x.image_url)}" alt="${e(x.caption||'')}" onclick="openV9Lightbox('${e(x.image_url)}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${e(x.caption)}</div>`:''}`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
+    const {data:p,error}=await supabaseClient.from('profiles').select('id,username,avatar_url,bio,role').eq('id',id).maybeSingle();if(error||!p)return toastV('Profil nije pronađen.','error');
+    const [{data:posts},{data:stories}]=await Promise.all([supabaseClient.from('community_posts').select('id,user_id,image_url,caption,created_at').eq('user_id',id).order('created_at',{ascending:false}).limit(30),supabaseClient.from('community_stories').select('id,user_id,image_url,caption,created_at,expires_at').eq('user_id',id).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false})]);
+    showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${escV(p.username||'Korisnik')}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${escV(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&String(id)===String(currentUser.id)?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<div><img class="v9-post-image" style="border-radius:16px" src="${escV(x.image_url)}" alt="${escV(x.caption||'')}" onclick="openV9Lightbox('${escV(x.image_url)}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${escV(x.caption)}</div>`:''}</div>`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
   };
-  window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/*" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${e(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${e(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);q('v9AvatarFile')?.addEventListener('change',()=>{const f=q('v9AvatarFile').files?.[0],im=q('v9AvatarPreview');if(f&&im)im.src=URL.createObjectURL(f)})};
-  window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV?.('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!f.type.startsWith('image/'))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await supabaseClient.from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV?.('Profil je ažuriran.')}catch(err){toastV?.(err.message||'Greška pri čuvanju profila.','error')}};
-  window.deleteV9Post=async function(id){if(!guard())return;const p=V9.posts.find(x=>String(x.id)===String(id));if(!p||p.author_id!==currentUser.id&&!isAdmin())return toastV?.('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);if(error)return toastV?.(error.message,'error');await load();toastV?.('Objava je obrisana.')};
-  window.toggleV9Reaction=async function(postId,type){if(!guard())return;const {data:existing}=await supabaseClient.from('community_reactions').select('id').eq('post_id',postId).eq('user_id',currentUser.id).eq('reaction',type).maybeSingle();let error;if(existing){({error}=await supabaseClient.from('community_reactions').delete().eq('id',existing.id))}else{({error}=await supabaseClient.from('community_reactions').insert({post_id:postId,user_id:currentUser.id,reaction:type}))}if(error)return toastV?.(error.message,'error');await refreshPostMeta(postId)};
-  window.toggleV9Comments=async function(postId){const box=q('v9comments-'+postId);if(!box)return;if(!box.hidden){box.hidden=true;return}const {data,error}=await supabaseClient.from('community_comments').select('*, profiles:author_id(username,avatar_url,role)').eq('post_id',postId).order('created_at',{ascending:true});if(error)return toastV?.(error.message,'error');box.innerHTML=(data||[]).map(c=>`<div class="v9-comment"><b>${e(c.profiles?.username||'Korisnik')}</b>${c.profiles?.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}: ${e(c.content)}</div>`).join('')+`<div class="v9-comment-form"><input id="v9ci-${e(postId)}" maxlength="500" placeholder="Napiši komentar..." ${logged()?'':'disabled'}><button class="btn btn-small btn-green" onclick="addV9Comment('${e(postId)}')">Pošalji</button></div>`;box.hidden=false};
-  window.addV9Comment=async function(postId){if(!guard())return;const input=q('v9ci-'+postId);const content=input?.value.trim();if(!content)return;const {error}=await supabaseClient.from('community_comments').insert({post_id:postId,author_id:currentUser.id,content});if(error)return toastV?.(error.message,'error');input.value='';await toggleV9Comments(postId);await refreshPostMeta(postId)};
-  window.openV9Lightbox=function(url){showModal(`<div class="v9-lightbox" onclick="hideModal()"><img src="${e(url)}" alt="" onclick="event.stopPropagation()"></div>`) };
-  function patchAuth(){
-    const old=window.updateAuthUI;
-    window.updateAuthUI=function(){old?.();const account=q('headerAccount');if(account&&currentUser){const name=e(currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik');account.innerHTML=`<button class="account-btn" onclick="openV9Profile('${e(currentUser.id)}')"><span class="account-name">👤 ${name}${currentProfile?.role==='admin'?'<span class="account-admin">Admin</span>':''}</span></button><button class="account-btn" onclick="logout()">↪</button>`}renderMyProfile()};
-  }
-  function patchNavigation(){const nav=q('mainNav');if(nav&&!nav.querySelector('[data-v9-community]')){const b=document.createElement('button');b.dataset.v9Community='1';b.onclick=()=>showSection('community');b.innerHTML='<span>✨</span><span>Community</span>';const ref=[...nav.querySelectorAll('button')].find(x=>x.getAttribute('onclick')?.includes("showSection('gallery')"));ref?.after(b)} }
-  window.addEventListener('load',()=>{setTimeout(()=>{patchAuth();patchNavigation();load();},1000)});
+  window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/*" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${escV(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${escV(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);filePreview('v9AvatarFile','v9AvatarPreview')};
+  window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!f.type.startsWith('image/'))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await supabaseClient.from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV('Profil je ažuriran.')}catch(err){toastV(err.message||'Greška pri čuvanju profila.','error')}};
+  window.deleteV9Post=async function(id){if(!guard())return;const p=V.posts.find(x=>String(x.id)===String(id));if(!p||String(p.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);if(error)return toastV(error.message,'error');await load();toastV('Objava je obrisana.')};
+  window.toggleV9Reaction=async function(postId,type){if(!guard())return;const {data:existing,error:ee}=await supabaseClient.from('community_reactions').select('id').eq('post_id',postId).eq('user_id',currentUser.id).eq('reaction',type).maybeSingle();if(ee)return toastV(ee.message,'error');let error;if(existing){({error}=await supabaseClient.from('community_reactions').delete().eq('id',existing.id))}else{({error}=await supabaseClient.from('community_reactions').insert({post_id:postId,user_id:currentUser.id,reaction:type}))}if(error)return toastV(error.message,'error');await refreshPostMeta(postId)};
+  window.toggleV9Comments=async function(postId){const box=q('v9comments-'+postId);if(!box)return;if(!box.hidden){box.hidden=true;return}const {data,error}=await supabaseClient.from('community_comments').select('id,user_id,content,created_at').eq('post_id',postId).order('created_at',{ascending:true});if(error)return toastV(error.message,'error');await loadProfiles((data||[]).map(c=>c.user_id));box.innerHTML=(data||[]).map(c=>{const p=V.profiles[String(c.user_id)]||{};return `<div class="v9-comment"><b>${escV(p.username||'Korisnik')}</b>${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}: ${escV(c.content)}</div>`}).join('')+`<div class="v9-comment-form"><input id="v9ci-${escV(postId)}" maxlength="500" placeholder="Napiši komentar..." ${logged()?'':'disabled'}><button class="btn btn-small btn-green" onclick="addV9Comment('${escV(postId)}')">Pošalji</button></div>`;box.hidden=false};
+  window.addV9Comment=async function(postId){if(!guard())return;const input=q('v9ci-'+postId);const content=input?.value.trim();if(!content)return;const {error}=await supabaseClient.from('community_comments').insert({post_id:postId,user_id:currentUser.id,content});if(error)return toastV(error.message,'error');input.value='';const box=q('v9comments-'+postId);if(box)box.hidden=true;await toggleV9Comments(postId);await refreshPostMeta(postId)};
+  window.openV9Lightbox=function(url){showModal(`<div class="v9-lightbox" onclick="hideModal()"><img src="${escV(url)}" alt="" onclick="event.stopPropagation()"></div>`) };
+  function patchAuth(){const old=window.updateAuthUI;if(window.__V10_AUTH_PATCH__)return;window.__V10_AUTH_PATCH__=true;window.updateAuthUI=function(){old?.();const account=q('headerAccount');if(account&&logged()){const name=escV(currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik');account.innerHTML=`<button class="account-btn" onclick="openV9Profile('${escV(currentUser.id)}')"><span class="account-name">👤 ${name}${currentProfile?.role==='admin'?'<span class="account-admin">Admin</span>':''}</span></button><button class="account-btn" onclick="logout()">↪</button>`}if(q('community'))renderMyProfile()}}
   const originalShowSection=window.showSection;window.showSection=function(id){originalShowSection?.(id);if(id==='community')setTimeout(load,30)};
+  window.addEventListener('load',()=>setTimeout(()=>{patchAuth();load()},450));
+  setTimeout(()=>{patchAuth()},900);
 })();
-</script>
-</body>
+</script></body>
 </html>
