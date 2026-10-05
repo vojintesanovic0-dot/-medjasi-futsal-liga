@@ -140,6 +140,11 @@ function playerPhoto(player){
 
 function showSection(id){
 
+  if(id === "admin" && !isAdmin()){
+    if(typeof toast === "function") toast("Admin panel je dostupan samo administratoru.","error");
+    id = "home";
+  }
+
   document.querySelectorAll(".section")
     .forEach(section =>
       section.classList.remove("active")
@@ -170,6 +175,22 @@ function showSection(id){
 
   navButton?.classList.add("active");
 
+  if(id === "admin" && isAdmin()){
+    try{
+      renderAdminMatches();
+      renderAdminGallery();
+      renderAdminNews?.();
+      renderMusicAdmin?.();
+      fillTeamSelects();
+      injectModeratorPanel?.();
+    }catch(error){
+      console.error("Admin dashboard:",error);
+    }
+  }
+
+  if(id === "community"){
+    setTimeout(()=>window.loadV9Community?.(),30);
+  }
 
   /* MOBILE BOTTOM NAV */
 
@@ -964,6 +985,10 @@ async function checkAuth(){
 
 
   updateAuthUI();
+
+  if(currentUser && document.getElementById("login")?.classList.contains("active")){
+    showSection("home");
+  }
 }
 
 
@@ -7447,6 +7472,12 @@ async function init(){
 
         await loadAll();
 
+        if(currentUser){
+          showSection("home");
+        }else{
+          showSection("home");
+        }
+
       }
     );
 
@@ -9950,9 +9981,12 @@ function ensureAdminNews(){
 }
 async function loadNews(){
   ensureNewsUI();
-  const {data,error}=await supabaseClient.from('news').select('*').eq('published',true).order('created_at',{ascending:false}).limit(50);
+  const query=supabaseClient.from('news').select('*').order('created_at',{ascending:false}).limit(100);
+  const {data,error}=isAdm()?await query:await query.eq('published',true);
   if(error){console.warn('News:',error);return}
-  V7.news=data||[];renderNews();renderAdminNews();
+  V7.news=data||[];
+  renderNews();
+  renderAdminNews();
 }
 function renderNews(){
   ensureNewsUI();const count=$('newsCount');if(count)count.textContent=`${V7.news.length} ${V7.news.length===1?'vijest':'vijesti'}`;
@@ -9966,7 +10000,28 @@ function openNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n)r
 async function shareNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n||!currentUser){showSection('login');toastV('Prijavi se da bi podijelio vijest.','error');return}const text=`📰 ${n.title}\n${n.lead||''}`.trim();const {error}=await supabaseClient.from('messages').insert({user_id:currentUser.id,username:currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik',content:text,image_url:n.media_type==='image'?(n.media_url||n.image_url):null});if(error){toastV(error.message,'error');return}hideModal();showSection('chat');await loadAll();toastV('Vijest je podijeljena u chat.');}
 async function publishNews(){if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');const title=$('v7NewsTitle')?.value.trim(),lead=$('v7NewsLead')?.value.trim(),body=$('v7NewsBody')?.value.trim(),kicker=$('v7NewsKicker')?.value.trim()||'VIJEST',published=$('v7NewsPublished')?.value==='true',file=$('v7NewsFile')?.files?.[0];if(!title||!body){toastV('Unesi naslov i sadržaj vijesti.','error');return}let media_url=null,media_type=null;if(file){if(file.size>50*1024*1024){toastV('Fajl je prevelik. Maksimum je 50 MB.','error');return}media_url=await uploadFile(file,'news');media_type=file.type.startsWith('video/')?'video':'image'}const {error}=await supabaseClient.from('news').insert({title,lead,body,kicker,author_id:currentUser.id,author_name:currentProfile?.username||currentUser.email?.split('@')[0]||'Admin',media_url,media_type,published});if(error){toastV(error.message,'error');return}if(published) await notifyPush('news',`📰 ${title}`,lead||'Nova vijest na sajtu.');['v7NewsTitle','v7NewsLead','v7NewsBody','v7NewsKicker'].forEach(id=>{if($(id))$(id).value=''});if($('v7NewsFile'))$('v7NewsFile').value='';await loadNews();toastV('Vijest je objavljena.');}
 async function deleteNews(id){if(!isAdm())return; if(!confirm('Obrisati ovu vijest?'))return;const {error}=await supabaseClient.from('news').delete().eq('id',id);if(error)return toastV(error.message,'error');await loadNews();toastV('Vijest je obrisana.');}
-function renderAdminNews(){const box=$('v7NewsAdminList');if(!box||!isAdm())return;box.innerHTML=V7.news.length?V7.news.map(n=>`<div class="v7-admin-news-row"><div class="v7-news-row-media">${n.media_url?mediaHtml(n.media_url,n.media_type,n.title):''}</div><div><strong>${escV(n.title)}</strong><small class="muted">${formatV(n.created_at)}</small></div><button class="btn btn-red btn-small" onclick="medjasiV7.deleteNews('${n.id}')">🗑️</button></div>`).join(''):'<div class="muted">Nema objavljenih vijesti.</div>'}
+function renderAdminNews(){
+  const box=$('v7NewsAdminList');
+  if(!box||!isAdm())return;
+  box.innerHTML=V7.news.length?V7.news.map(n=>`<div class="v7-admin-news-row">
+    <div class="v7-news-row-media">${n.media_url?mediaHtml(n.media_url,n.media_type,n.title):''}</div>
+    <div class="v7-news-row-main">
+      <strong>${escV(n.title)}</strong>
+      <small class="muted">${formatV(n.created_at)} · ${n.published?'JAVNO':'SKICA'}</small>
+    </div>
+    <div class="v7-news-row-actions">
+      <button class="btn btn-small ${n.published?'btn-yellow':'btn-green'}" onclick="medjasiV7.setNewsPublished('${n.id}',${!n.published})">${n.published?'Sakrij':'Objavi'}</button>
+      <button class="btn btn-red btn-small" onclick="medjasiV7.deleteNews('${n.id}')">🗑️</button>
+    </div>
+  </div>`).join(''):'<div class="muted">Nema vijesti.</div>';
+}
+async function setNewsPublished(id,published){
+  if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');
+  const {error}=await supabaseClient.from('news').update({published,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error)return toastV(error.message,'error');
+  await loadNews();
+  toastV(published?'Vijest je objavljena.':'Vijest je sklonjena iz javnosti.');
+}
 
 function ratingClass(r){return r>=7.5?'good':r>=6?'mid':'low'}
 function matchRating(matchId,pid){const p=playerV(pid),m=matches.find(x=>String(x.id)===String(matchId));if(!p||!m)return 6;const gs=goals.filter(g=>String(g.match_id)===String(matchId));const cs=cards.filter(c=>String(c.match_id)===String(matchId));const g=gs.filter(x=>String(x.player_id)===String(pid)).length;const a=gs.filter(x=>String(x.assist_player_id)===String(pid)).length;const yc=cs.filter(x=>String(x.player_id)===String(pid)&&String(x.card_type).toLowerCase().includes('yellow')).length;const rc=cs.filter(x=>String(x.player_id)===String(pid)&&String(x.card_type).toLowerCase().includes('red')).length;const side=p.team_id===m.home_team_id?'home':p.team_id===m.away_team_id?'away':null;let r=6+g*1.0+a*.7-yc*.35-rc*2;if(side){const hs=+m.home_score||0,as=+m.away_score||0;if(hs!==as)r+=(side==='home'?(hs>as?.35:-.2):(as>hs?.35:-.2))}const st=V7.stats.find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(pid));if(st)r+=Math.min(2,(+st.saves||0)*.12);return Math.max(3,Math.min(10,Math.round(r*10)/10))}
@@ -10014,7 +10069,7 @@ window.loadAll=async function(...args){const r=await originalLoadAll.apply(this,
 // Realtime safety wrapper; original subscription remains but news/stats refresh independently.
 const originalOpenGoal=window.openGoalControl;window.openGoalControl=V7.openGoal;
 V7.openGoal=V7.openGoal.bind(V7); // expose bound function
-V7.loadNews=loadNews;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoal;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
+V7.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoal;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
 window.openGoalControl=function(id){return openGoal(id)};
 window.adminAddGalleryImage=adminAddMedia;
 window.renderAdminGallery=function(){const box=$('adminGalleryList');if(!box||!isAdm())return;box.innerHTML=`<div class="admin-gallery-title">Objavljeni mediji (${(gallery||[]).length})</div><div class="admin-gallery-items">${(gallery||[]).map(x=>{const url=x.media_url||x.image_url;return `<div class="admin-gallery-item"><div class="v7-news-row-media">${url?mediaHtml(url,x.media_type||'image',x.title):''}</div><div><strong>${escV(x.title||'Bez naslova')}</strong><small class="muted">${formatV(x.created_at)}</small></div><button class="btn btn-red btn-small" onclick="adminDeleteGalleryImage('${x.id}')">🗑️</button></div>`}).join('')||'<div class="muted">Još nema medija.</div>'}</div>`};
@@ -10119,6 +10174,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   window.addV9Comment=async function(postId){if(!guard())return;const input=q('v9ci-'+postId);const content=input?.value.trim();if(!content)return;const {error}=await supabaseClient.from('community_comments').insert({post_id:postId,user_id:currentUser.id,content});if(error)return toastV(error.message,'error');input.value='';const box=q('v9comments-'+postId);if(box)box.hidden=true;await toggleV9Comments(postId);await refreshPostMeta(postId)};
   window.openV9Lightbox=function(url){showModal(`<div class="v9-lightbox" onclick="hideModal()"><img src="${escV(url)}" alt="" onclick="event.stopPropagation()"></div>`) };
   function patchAuth(){const old=window.updateAuthUI;if(window.__V10_AUTH_PATCH__)return;window.__V10_AUTH_PATCH__=true;window.updateAuthUI=function(){old?.();const account=q('headerAccount');if(account&&logged()){const name=escV(currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik');account.innerHTML=`<button class="account-btn" onclick="openV9Profile('${escV(currentUser.id)}')"><span class="account-name">👤 ${name}${currentProfile?.role==='admin'?'<span class="account-admin">Admin</span>':''}</span></button><button class="account-btn" onclick="logout()">↪</button>`}if(q('community'))renderMyProfile()}}
+  window.loadV9Community=load;
   const originalShowSection=window.showSection;window.showSection=function(id){originalShowSection?.(id);if(id==='community')setTimeout(load,30)};
   window.addEventListener('load',()=>setTimeout(()=>{patchAuth();load()},450));
   setTimeout(()=>{patchAuth()},900);
