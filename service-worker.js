@@ -4,6 +4,8 @@ const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
+  "./css/app.css?v=20261005",
+  "./js/app.js?v=20261005",
   "./css/production.css?v=20261005",
   "./js/production.js?v=20261005",
   "./images/icon-192.png",
