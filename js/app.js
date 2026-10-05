@@ -10392,3 +10392,12 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     };
   }
 })();
+
+
+/* FINAL PUBLIC UI API — keep inline buttons reliable */
+window.login=login;
+window.logout=logout;
+window.showSection=showSection;
+window.updateAuthUI=updateAuthUI;
+window.isAdmin=isAdmin;
+window.isModerator=isModerator;
