@@ -7821,14 +7821,14 @@ updateAuthUI=function(){
 
   if(isAdmin()) injectModeratorPanel();
 
-  /* AUTH ACTIONS MUST EXIST IN BOTH DESKTOP SIDEBAR AND MOBILE DRAWER */
-  const nav=document.getElementById("mainNav");
-  if(nav){
-    let authGroup=nav.querySelector(".nav-auth-group");
+  /* AUTH ACTIONS — shared desktop/mobile navigation */
+  const authNav=document.getElementById("mainNav");
+  if(authNav){
+    let authGroup=authNav.querySelector(".nav-auth-group");
     if(!authGroup){
       authGroup=document.createElement("div");
       authGroup.className="nav-auth-group";
-      nav.appendChild(authGroup);
+      authNav.appendChild(authGroup);
     }
     authGroup.innerHTML=currentUser
       ? '<button type="button" class="nav-auth-profile" onclick="openV9Profile(\''+currentUser.id+'\')"><span>👤</span><span>Moj profil</span></button><button type="button" class="nav-auth-logout" onclick="logout()"><span>↪</span><span>Odjava</span></button>'
