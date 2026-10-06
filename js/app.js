@@ -160,7 +160,7 @@ function fanEmojiBarHTML(inputId){
   const id=currentUser?.id;
   if(!id) return "";
   const emojis=fanEmojiListForUser(id);
-  if(!emojis.length) return '<div class="fan-emoji-hint">😀 Kupi emoji paket u Fan Shopu za brze reakcije.</div>';
+  if(!emojis.length) return '<div class="fan-emoji-hint"><span class="m-icon" data-icon="gift" aria-hidden="true"></span> Kupi emoji paket u Fan Shopu za brze reakcije.</div>';
   return '<div class="fan-emoji-bar">'+emojis.map(e=>'<button type="button" title="Dodaj '+esc(e)+'" onclick="insertFanEmoji(\''+escJs(e)+'\',\''+escJs(inputId)+'\')">'+esc(e)+'</button>').join("")+'</div>';
 }
 
