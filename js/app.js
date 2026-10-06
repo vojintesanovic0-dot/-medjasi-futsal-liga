@@ -880,7 +880,7 @@ function renderNotifications(){
           class="notification-item ${n.read ? "" : "unread"}"
           onclick="readSingleNotification('${esc(n.id)}')"
           style="text-align:left;color:inherit;width:100%;cursor:pointer">
-          <span class="notification-icon">${window.medjasiIcon?.safe?.(n.icon || "<span class="m-icon" data-icon="bell" aria-hidden="true"></span>") || esc(n.icon || "")}</span>
+          <span class="notification-icon">${window.medjasiIcon?.safe?.(n.icon || '<span class="m-icon" data-icon="bell" aria-hidden="true"></span>') || esc(n.icon || "")}</span>
           <span>
             <span class="notification-title">${window.medjasiIcon?.safe?.(n.title) || esc(n.title)}</span>
             ${n.text ? `<span class="notification-text">${esc(n.text)}</span>` : ""}
@@ -3537,7 +3537,7 @@ function renderChat(){
 
         return `
           <div class="chat-message">
-            <div class="chat-avatar" style="${avatarStyle}">${esc(style.badge||"<span class="m-icon" data-icon="community" aria-hidden="true"></span>")}</div>
+            <div class="chat-avatar" style="${avatarStyle}">${esc(style.badge||'<span class="m-icon" data-icon="community" aria-hidden="true"></span>')}</div>
             <div class="chat-message-body">
               <div class="chat-message-top">
                 <strong ${nameStyle}>${badge}${esc(username)}</strong>
@@ -9912,7 +9912,7 @@ if ("serviceWorker" in navigator) {
 
       return `
         <div class="chat-message ${admin?"v3-admin-message":""}">
-          <div class="chat-avatar">${admin?"A":"<span class="m-icon" data-icon="community" aria-hidden="true"></span>"}</div>
+          <div class="chat-avatar">${admin?"A":'<span class="m-icon" data-icon="community" aria-hidden="true"></span>'}</div>
           <div class="chat-message-body">
             <div class="chat-message-top">
               <strong class="${admin?"v3-admin-name":""}">
@@ -10147,7 +10147,7 @@ if ("serviceWorker" in navigator) {
     if(error) throw error;
     localStorage.setItem("medjasi_push_enabled","1");
     updatePushUI();
-    if(typeof toast==="function") toast("<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.");
+    if(typeof toast==="function") toast('<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.');
   }
 
   async function disablePush(){
@@ -10168,9 +10168,9 @@ if ("serviceWorker" in navigator) {
     const btn=document.getElementById("v3PushButton");
     if(!status||!btn) return;
     const enabled=localStorage.getItem("medjasi_push_enabled")==="1";
-    status.textContent=enabled?"<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.":"Push obavještenja nisu uključena.";
+    status.textContent=enabled?'<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.':"Push obavještenja nisu uključena.";
     status.className="v3-push-status "+(enabled?"ok":"warn");
-    btn.textContent=enabled?"<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Isključi obavještenja":"<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Uključi obavještenja";
+    btn.textContent=enabled?'<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Isključi obavještenja':'<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Uključi obavještenja';
     btn.onclick=enabled?disablePush:subscribePush;
   }
 
