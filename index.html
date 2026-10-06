@@ -28,8 +28,8 @@
 
 
 
-<link rel="stylesheet" href="./css/app.css?v=20261006v20">
-<link rel="stylesheet" href="./css/production.css?v=20261006v22"><link rel="stylesheet" href="./css/effects.css?v=1"><link rel="stylesheet" href="./css/game.css?v=1">
+<link rel="stylesheet" href="./css/app.css?v=20261006v21">
+<link rel="stylesheet" href="./css/production.css?v=20261006v22"><link rel="stylesheet" href="./css/effects.css?v=1"><link rel="stylesheet" href="./css/game.css?v=2">
 </head>
 <body>
 <header class="site-header">
@@ -264,6 +264,7 @@
             <input accept="image/png,image/jpeg,image/webp,image/gif" hidden="" id="chatImageFile" type="file"/>
 </label>
 <input id="chatText" onkeydown="if(event.key==='Enter' &amp;&amp; !event.shiftKey){event.preventDefault();sendChat()}" placeholder="Napiši poruku..."/>
+<div id="chatFanEmojiBar" class="fan-chat-emoji-host"></div>
 <button class="btn btn-green" onclick="sendChat()">Pošalji</button>
 </div>
 <div class="chat-image-preview hidden" id="chatImagePreview"></div>
@@ -697,7 +698,7 @@
 
 
 
-<script src="./js/app.js?v=20261006v01" defer></script>
-<script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=1" defer></script><script src="./js/growth.js?v=1" defer></script>
+<script src="./js/app.js?v=20261006v02" defer></script>
+<script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=2" defer></script><script src="./js/growth.js?v=1" defer></script>
 </body>
 </html>
