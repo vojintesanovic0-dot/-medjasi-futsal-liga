@@ -36,9 +36,9 @@
     if(id==="adminGalleryList"||has(el,"#adminGalleryList")||has(el,"#galleryImageFile"))return"sadrzaj";
     if(id==="adminMusicPlaylist"||has(el,"#adminMusicPlaylist")||cls.contains("admin-music-card"))return"sadrzaj";
     if(id==="v7PushCard"||id==="v3PushCard"||has(el,"#v7PushCard")||has(el,"#v3PushCard"))return"sadrzaj";
-    if(id==="adminCrudContentV4"||has(el,"#adminCrudContentV4"))return"sadrzaj";
+    if(id==="adminCrudGalleryV4"||has(el,"#adminCrudGalleryV4"))return"sadrzaj";
 
-    if(id==="communityModerationCard"||has(el,"#communityModerationCard"))return"zajednica";
+    if(id==="adminCrudCommunityV4"||has(el,"#adminCrudCommunityV4")||id==="communityModerationCard"||has(el,"#communityModerationCard"))return"zajednica";
 
     if(id==="moderatorManagement"||has(el,"#moderatorManagement"))return"korisnici";
 
