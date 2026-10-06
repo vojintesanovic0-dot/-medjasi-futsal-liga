@@ -880,9 +880,9 @@ function renderNotifications(){
           class="notification-item ${n.read ? "" : "unread"}"
           onclick="readSingleNotification('${esc(n.id)}')"
           style="text-align:left;color:inherit;width:100%;cursor:pointer">
-          <span class="notification-icon">${n.icon || "<span class="m-icon" data-icon="bell" aria-hidden="true"></span>"}</span>
+          <span class="notification-icon">${window.medjasiIcon?.safe?.(n.icon || "<span class="m-icon" data-icon="bell" aria-hidden="true"></span>") || esc(n.icon || "")}</span>
           <span>
-            <span class="notification-title">${esc(n.title)}</span>
+            <span class="notification-title">${window.medjasiIcon?.safe?.(n.title) || esc(n.title)}</span>
             ${n.text ? `<span class="notification-text">${esc(n.text)}</span>` : ""}
           </span>
           <span class="notification-time">${esc(notificationTime(n.created_at))}</span>
