@@ -185,9 +185,9 @@ function patchCommentModeration(){
   window.__COMMENT_MODERATION_PATCH__=true;
   window.toggleV9Comments=async function(postId){
     const r=await old.apply(this,arguments);const box=q("v9comments-"+postId);if(!box||box.hidden)return r;
-    const {data}=await client().from("community_comments").select("id,user_id").eq("post_id",postId).order("created_at",{ascending:true});
+    const {data}=await client().from("community_comments").select("id,user_id").eq("post_id",postId).order("created_at",{ascending:true});const blocked=new Set(await getBlocked());
     const rows=[...(data||[])],comments=[...box.querySelectorAll(".v9-comment")];
-    comments.forEach((el,i)=>{const row=rows[i];if(!row||el.querySelector(".community-comment-tools"))return;const tools=document.createElement("span");tools.className="community-comment-tools";tools.innerHTML=(String(row.user_id)!==String(uid())?'<button type="button" class="btn btn-small">🚫</button>':'')+'<button type="button" class="btn btn-small">⚑</button>';const bs=tools.querySelectorAll("button");if(bs[0])bs[0].onclick=()=>blockUser(row.user_id);bs[bs.length-1].onclick=()=>reportTarget("comment",row.id);el.appendChild(tools)});
+    comments.forEach((el,i)=>{const row=rows[i];if(row&&blocked.has(String(row.user_id))){el.remove();return}if(!row||el.querySelector(".community-comment-tools"))return;const tools=document.createElement("span");tools.className="community-comment-tools";tools.innerHTML=(String(row.user_id)!==String(uid())?'<button type="button" class="btn btn-small">🚫</button>':'')+'<button type="button" class="btn btn-small">⚑</button>';const bs=tools.querySelectorAll("button");if(bs[0])bs[0].onclick=()=>blockUser(row.user_id);bs[bs.length-1].onclick=()=>reportTarget("comment",row.id);el.appendChild(tools)});
     return r;
   };
 }
