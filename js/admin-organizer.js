@@ -12,7 +12,7 @@
   const groups=[
     {id:"liga",icon:"<span class="m-icon" data-icon="ball" aria-hidden="true"></span>",title:"Liga",desc:"Ekipe • igrači • utakmice • sezone"},
     {id:"sadrzaj",icon:"<span class="m-icon" data-icon="news" aria-hidden="true"></span>",title:"Sadržaj",desc:"Vijesti • galerija • playlist • push • community"},
-    {id:"dizajn",icon:"🎨",title:"Graphic Studio",desc:"Player cards • MVP • grafike"}
+    {id:"dizajn",icon:"<span class="m-icon" data-icon="star" aria-hidden="true"></span>",title:"Graphic Studio",desc:"Player cards • MVP • grafike"}
   ];
 
   let active="liga",moving=false;
@@ -98,7 +98,7 @@
     contentCard.dataset.adminCrudContent="1";
     contentCard.style.marginTop="20px";
     contentCard.innerHTML=
-      '<div class="admin-card-head"><div><span class="hero-kicker">SADRŽAJ</span><h3>🧰 Upravljanje sadržajem</h3><p class="muted">Komentari, chat i galerija iz postojećeg Admin CRUD-a.</p></div><span class="admin-pill">SAMO ADMIN</span></div>';
+      '<div class="admin-card-head"><div><span class="hero-kicker">SADRŽAJ</span><h3><span class="m-icon" data-icon="settings" aria-hidden="true"></span> Upravljanje sadržajem</h3><p class="muted">Komentari, chat i galerija iz postojećeg Admin CRUD-a.</p></div><span class="admin-pill">SAMO ADMIN</span></div>';
 
     contentSections.forEach(section=>contentCard.appendChild(section));
     bodies.sadrzaj?.appendChild(contentCard);
