@@ -1,176 +1,160 @@
-/* MEĐASI ADMIN ORGANIZER — full admin inventory grouping
-   Organizes existing admin functions into exclusive areas.
-   No admin feature is deleted, cloned, disabled, or renamed here.
+/* MEĐASI ADMIN ORGANIZER
+   Physical grouping: every admin card belongs to ONE group.
+   Existing functions/cards are moved, never cloned or deleted.
 */
 (function(){
-  "use strict";
-  if(window.__MEDJASI_ADMIN_ORGANIZER_V2__) return;
-  window.__MEDJASI_ADMIN_ORGANIZER_V2__ = true;
+  if(window.__MEDJASI_ADMIN_ORGANIZER__) return;
+  window.__MEDJASI_ADMIN_ORGANIZER__=true;
 
   const root=()=>document.getElementById("adminContent");
   const isAdmin=()=>typeof window.isAdmin==="function"&&window.isAdmin();
 
   const groups=[
-    {id:"liga",icon:"⚽",title:"Liga",desc:"Ekipe, igrači, utakmice, statistika i sezone"},
-    {id:"sadrzaj",icon:"📰",title:"Sadržaj",desc:"Vijesti, galerija, playlist i push"},
-    {id:"zajednica",icon:"👥",title:"Zajednica",desc:"Komentari, chat i community moderacija"},
-    {id:"korisnici",icon:"🛡️",title:"Korisnici & sistem",desc:"Uloge, administracija i sistemske kontrole"},
-    {id:"grafika",icon:"🎨",title:"Graphic Studio",desc:"Grafike, player cards i objave"}
+    {id:"liga",icon:"⚽",title:"Liga",desc:"Ekipe • igrači • utakmice • sezone"},
+    {id:"sadrzaj",icon:"📰",title:"Sadržaj",desc:"Vijesti • galerija • playlist • push • community"},
+    {id:"dizajn",icon:"🎨",title:"Graphic Studio",desc:"Player cards • MVP • grafike"}
   ];
 
-  let active="liga",syncing=false,observer=null;
-
-  const has=(el,selector)=>!!el?.querySelector?.(selector);
+  let active="liga",moving=false;
 
   function classify(el){
-    if(!el||el.id==="adminOrganizer"||el.dataset.adminOrganizerGroupContainer)return null;
-    const id=String(el.id||"");
-    const cls=el.classList||{contains:()=>false};
+    if(!el || el.id==="adminOrganizer" || el.dataset.adminOrganizerGroupContainer) return null;
+    const id=el.id||"", cls=el.classList||{contains:()=>false};
+    const has=s=>!!el.querySelector?.(s);
 
-    if(cls.contains("admin-grid"))return"liga";
-    if(id==="adminMatches"||has(el,"#adminMatches"))return"liga";
-    if(id==="adminCrudV4"||has(el,"#adminCrudV4"))return"liga";
-    if(id==="v7SeasonCard"||has(el,"#v7SeasonCard"))return"liga";
+    // SADRŽAJ — ove kartice pripadaju ISKLJUČIVO ovoj kategoriji.
+    // Provjera ide prije Lige da sadržaj nikad ne završi u pogrešnoj grupi.
+    if(id==="v7NewsAdmin" || has("#v7NewsAdmin")) return "sadrzaj";
+    if(id==="adminGalleryList" || has("#adminGalleryList") || has("#galleryImageFile")) return "sadrzaj";
+    if(id==="communityAlbumAdmin" || has("#communityAlbumAdmin")) return "sadrzaj";
+    if(id==="adminMusicPlaylist" || has("#adminMusicPlaylist") || cls.contains("admin-music-card")) return "sadrzaj";
+    if(id==="v7PushCard" || has("#v7PushCard")) return "sadrzaj";
+    if(id==="communityModerationCard" || has("#communityModerationCard")) return "sadrzaj";
+    if(id==="moderatorManagement" || has("#moderatorManagement")) return "sadrzaj";
 
-    if(id==="v7NewsAdmin"||has(el,"#v7NewsAdmin"))return"sadrzaj";
-    if(id==="adminGalleryList"||has(el,"#adminGalleryList")||has(el,"#galleryImageFile"))return"sadrzaj";
-    if(id==="adminMusicPlaylist"||has(el,"#adminMusicPlaylist")||cls.contains("admin-music-card"))return"sadrzaj";
-    if(id==="v7PushCard"||id==="v3PushCard"||has(el,"#v7PushCard")||has(el,"#v3PushCard"))return"sadrzaj";
-    if(id==="adminCrudGalleryV4"||has(el,"#adminCrudGalleryV4"))return"sadrzaj";
+    // GRAPHIC STUDIO — isključivo ovdje.
+    if(id==="graphicEngineCard" || has("#graphicEngineCard")) return "dizajn";
 
-    if(id==="adminCrudCommunityV4"||has(el,"#adminCrudCommunityV4")||id==="communityModerationCard"||has(el,"#communityModerationCard"))return"zajednica";
-
-    if(id==="moderatorManagement"||has(el,"#moderatorManagement"))return"korisnici";
-
-    if(id==="graphicEngineCard"||has(el,"#graphicEngineCard"))return"grafika";
+    // LIGA — samo originalne ligaške kartice.
+    if(cls.contains("admin-grid") && (has("#teamName") || has("#playerName") || has("#matchHome"))) return "liga";
+    if(id==="adminMatches" || has("#adminMatches")) return "liga";
+    if(id==="adminCrudV4" || has("#adminCrudV4")) return "liga";
+    if(id==="v7SeasonCard" || has("#v7SeasonCard")) return "liga";
 
     return null;
   }
 
-  function buildOrganizer(host){
+  function buildShell(host){
     let organizer=document.getElementById("adminOrganizer");
-    if(organizer)return organizer;
+    if(organizer) return organizer;
 
     organizer=document.createElement("div");
     organizer.id="adminOrganizer";
     organizer.className="admin-organizer";
     organizer.innerHTML=
-      '<div class="admin-organizer-head"><div><span class="admin-organizer-kicker">ADMIN CENTAR</span><strong>Sve administratorske funkcije na jednom mjestu</strong><p>Funkcije su raspoređene prema stvarnoj namjeni. Ništa se ne briše niti kopira.</p></div></div>'+
-      '<div class="admin-organizer-tabs"></div>'+
-      '<div id="adminOrganizerStatus" class="admin-organizer-status"><i></i><span></span></div>'+
+      '<div class="admin-organizer-head"><div><span class="admin-organizer-kicker">ADMIN CENTAR</span><strong>Sve funkcije organizovane po područjima</strong><p>Tri kategorije. Ništa nije uklonjeno niti kopirano.</p></div></div>'+
+      '<div class="admin-organizer-tabs">'+
+        groups.map((g,i)=>'<button type="button" class="admin-organizer-tab '+(i===0?"active":"")+'" data-admin-filter="'+g.id+'"><b>'+g.icon+'</b><span>'+g.title+'</span><small>'+g.desc+'</small></button>').join("")+
+      '</div>'+
+      '<div id="adminOrganizerStatus" class="admin-organizer-status"><i></i><span>Prikaz: <strong>Liga</strong></span></div>'+
       '<div class="admin-organizer-groups"></div>';
+    host.prepend(organizer);
 
-    const tabs=organizer.querySelector(".admin-organizer-tabs");
     const wrap=organizer.querySelector(".admin-organizer-groups");
-
-    groups.forEach((g,i)=>{
-      const tab=document.createElement("button");
-      tab.type="button";
-      tab.className="admin-organizer-tab"+(i===0?" active":"");
-      tab.dataset.adminFilter=g.id;
-      tab.innerHTML='<b>'+g.icon+'</b><span>'+g.title+'</span><small>'+g.desc+'</small>';
-      tab.addEventListener("click",()=>{
-        active=g.id;
-        organizer.querySelectorAll(".admin-organizer-tab").forEach(b=>b.classList.toggle("active",b===tab));
-        render();
-      });
-      tabs.appendChild(tab);
-
+    groups.forEach(g=>{
       const section=document.createElement("section");
       section.className="admin-organizer-group";
       section.dataset.adminOrganizerGroupContainer=g.id;
-      section.innerHTML=
-        '<div class="admin-organizer-group-head"><div><span>'+g.icon+'</span><div><strong>'+g.title+'</strong><small>'+g.desc+'</small></div></div></div>'+
-        '<div class="admin-organizer-group-body" data-admin-group-body="'+g.id+'"></div>';
+      section.innerHTML='<div class="admin-organizer-group-head"><div><span>'+g.icon+'</span><div><strong>'+g.title+'</strong><small>'+g.desc+'</small></div></div></div><div class="admin-organizer-group-body" data-admin-group-body="'+g.id+'"></div>';
       wrap.appendChild(section);
     });
 
-    host.prepend(organizer);
+    organizer.querySelectorAll("[data-admin-filter]").forEach(btn=>{
+      btn.addEventListener("click",()=>{active=btn.dataset.adminFilter||"liga";organizer.querySelectorAll(".admin-organizer-tab").forEach(b=>b.classList.toggle("active",b===btn));render();});
+    });
     return organizer;
   }
 
-  function getBodies(organizer){
-    const bodies={};
-    groups.forEach(g=>bodies[g.id]=organizer.querySelector('[data-admin-group-body="'+g.id+'"]'));
-    return bodies;
+  function crudSectionTitle(section){
+    return (section?.querySelector(".crud-title span")?.textContent||"").trim().toLowerCase();
+  }
+
+  function splitCrudContent(card,bodies){
+    if(!card || card.id!=="adminCrudV4" || card.dataset.adminOrganizerCrudSplit==="1") return;
+
+    // Admin CRUD je jedna stara kartica, ali sadrži funkcije iz dvije kategorije.
+    // Ne brišemo ništa: fizički premještamo postojeće sekcije u odgovarajuću grupu.
+    const contentSections=[...card.querySelectorAll(".crud-section")].filter(section=>{
+      const title=crudSectionTitle(section);
+      return title.includes("komentari") || title.includes("chat") || title.includes("galerija");
+    });
+    if(!contentSections.length) return;
+
+    // Pri novom renderu CRUD-a ukloni samo prethodni pomoćni sadržajni omotač.
+    bodies.sadrzaj?.querySelectorAll('[data-admin-crud-content="1"]').forEach(x=>x.remove());
+
+    const contentCard=document.createElement("div");
+    contentCard.className="card admin-crud-content";
+    contentCard.dataset.adminCrudContent="1";
+    contentCard.style.marginTop="20px";
+    contentCard.innerHTML=
+      '<div class="admin-card-head"><div><span class="hero-kicker">SADRŽAJ</span><h3>🧰 Upravljanje sadržajem</h3><p class="muted">Komentari, chat i galerija iz postojećeg Admin CRUD-a.</p></div><span class="admin-pill">SAMO ADMIN</span></div>';
+
+    contentSections.forEach(section=>contentCard.appendChild(section));
+    bodies.sadrzaj?.appendChild(contentCard);
+
+    card.dataset.adminOrganizerCrudSplit="1";
   }
 
   function moveCards(host,organizer){
-    if(!host||syncing)return;
-    syncing=true;
+    if(moving) return;
+    moving=true;
     try{
-      const bodies=getBodies(organizer);
+      const bodies={}; groups.forEach(g=>bodies[g.id]=organizer.querySelector('[data-admin-group-body="'+g.id+'"]'));
       [...host.children].forEach(el=>{
-        if(el===organizer||el.dataset.adminOrganizerGroupContainer||el.dataset.adminOrganizerManaged==="1")return;
+        if(el===organizer || el.dataset.adminOrganizerManaged==="1") return;
         const group=classify(el);
-        if(!group||!bodies[group])return;
+        if(!group || !bodies[group]) return;
+
+        if(el.id==="adminCrudV4"){
+          splitCrudContent(el,bodies);
+        }
+
         el.dataset.adminOrganizerManaged="1";
         el.dataset.adminOrganizerGroup=group;
         bodies[group].appendChild(el);
       });
-    }finally{syncing=false;}
-  }
-
-  function moveLegacyAdminCards(adminRoot,host,organizer){
-    if(!adminRoot||!host)return;
-    const bodies=getBodies(organizer);
-    [...adminRoot.children].forEach(el=>{
-      if(el===host||el===organizer||el.dataset.adminOrganizerManaged==="1")return;
-      if(!el.classList?.contains("card"))return;
-      const group=classify(el);
-      if(!group||!bodies[group])return;
-      el.dataset.adminOrganizerManaged="1";
-      el.dataset.adminOrganizerGroup=group;
-      bodies[group].appendChild(el);
-    });
+    }finally{moving=false;}
   }
 
   function render(){
-    const host=root();
-    if(!host||!isAdmin())return;
-    const organizer=buildOrganizer(host);
+    const host=root(); if(!host||!isAdmin()) return;
+    const organizer=buildShell(host);
     moveCards(host,organizer);
-    moveLegacyAdminCards(document.getElementById("admin"),host,organizer);
-
     organizer.querySelectorAll(".admin-organizer-group").forEach(section=>{
-      const activeNow=section.dataset.adminOrganizerGroupContainer===active;
-      section.hidden=!activeNow;
-      section.style.display=activeNow?"":"none";
+      const isActive=section.dataset.adminOrganizerGroupContainer===active;
+      section.hidden=!isActive;
+      section.classList.toggle("is-active",isActive);
+      section.style.display=isActive?"":"none";
     });
-
     const label=groups.find(g=>g.id===active)?.title||"Liga";
-    const body=organizer.querySelector('[data-admin-group-body="'+active+'"]');
-    const count=body?body.children.length:0;
-    const status=organizer.querySelector("#adminOrganizerStatus span");
-    if(status)status.textContent="Prikaz: "+label+" · "+count+" administrativnih cjelina";
+    const status=organizer.querySelector("#adminOrganizerStatus");
+    if(status) status.innerHTML='<i></i><span>Prikaz: <strong>'+label+'</strong> · svaka funkcija je samo u jednoj grupi.</span>';
   }
 
+  const oldShow=window.showSection;
+  if(oldShow&&!window.__MEDJASI_ADMIN_ORGANIZER_SHOW_PATCH__){
+    window.__MEDJASI_ADMIN_ORGANIZER_SHOW_PATCH__=true;
+    window.showSection=function(id){const result=oldShow.apply(this,arguments);if(id==="admin")setTimeout(render,100);return result;};
+  }
+
+  window.addEventListener("load",()=>setTimeout(render,700));
+  let observer=null;
   function watch(){
-    const adminRoot=document.getElementById("admin");
-    if(!adminRoot||observer)return;
-    observer=new MutationObserver(()=>{if(!syncing&&isAdmin())render()});
-    observer.observe(adminRoot,{childList:true,subtree:true});
+    const host=root(); if(!host||observer)return;
+    observer=new MutationObserver(()=>{if(!moving&&isAdmin())render();});
+    observer.observe(host,{childList:true});
   }
-
-  const oldShowSection=window.showSection;
-  if(oldShowSection&&!window.__MEDJASI_ADMIN_ORGANIZER_SHOW_PATCH_V2__){
-    window.__MEDJASI_ADMIN_ORGANIZER_SHOW_PATCH_V2__=true;
-    window.showSection=function(id){
-      const result=oldShowSection.apply(this,arguments);
-      if(id==="admin")setTimeout(render,80);
-      return result;
-    };
-  }
-
-  window.addEventListener("load",()=>setTimeout(()=>{watch();render()},250));
-  document.addEventListener("DOMContentLoaded",()=>setTimeout(()=>{watch();render()},150));
-
-  setInterval(()=>{
-    if(document.getElementById("admin")?.classList.contains("active")){
-      watch();
-      render();
-    }
-  },1200);
-
+  setInterval(()=>{if(document.getElementById("admin")?.classList.contains("active")){render();watch();}},800);
   window.__MEDJASI_ADMIN_ORGANIZER_APPLY__=render;
 })();
