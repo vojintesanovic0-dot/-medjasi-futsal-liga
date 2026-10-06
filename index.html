@@ -465,6 +465,48 @@
 <div id="adminMatches"></div>
 </div>
 </div>
+<!-- GALERIJA -->
+<div class="card" style="margin-top:20px;">
+<div class="admin-card-head">
+<div>
+<h3>📸 Galerija</h3>
+<p class="muted">Postavi fotografije koje će svi posjetioci moći pregledati u galeriji.</p>
+</div>
+<span class="admin-pill">SAMO ADMIN</span>
+</div>
+<div class="gallery-upload-grid">
+<div class="form-group">
+<label>Fotografija</label>
+<input accept="image/png,image/jpeg,image/webp,image/gif" id="galleryImageFile" type="file"/>
+</div>
+<div class="form-group">
+<label>Naslov</label>
+<input id="galleryTitle" maxlength="100" placeholder="npr. Finale lige"/>
+</div>
+<div class="form-group gallery-upload-wide">
+<label>Opis</label>
+<input id="galleryDescription" maxlength="250" placeholder="Kratak opis fotografije (opcionalno)"/>
+</div>
+</div>
+<button class="btn btn-green" onclick="adminAddGalleryImage()">📤 Objavi u galeriju</button>
+<div class="admin-gallery-list" id="adminGalleryList"></div>
+</div>
+<!-- PLAYLIST MUZIKA -->
+<div class="card admin-music-card" style="margin-top:20px;">
+<div class="admin-card-head"><div><span class="hero-kicker">SOUNDTRACK LIGE</span><h3>🎵 Playlist muzika</h3><p class="muted">Dodaj više YouTube pjesama. Redaju se automatski jedna za drugom i ostaju aktivne dok je posjetilac na stranici.</p></div><span class="admin-pill">SAMO ADMIN</span></div>
+<div class="playlist-add-grid"><select id="adminMusicProvider" aria-label="Izvor muzike"><option value="youtube">YouTube</option><option value="spotify">Spotify</option></select><input id="adminYoutubeUrl" placeholder="YouTube ili Spotify link" type="text"/><input id="adminYoutubeTitle" maxlength="100" placeholder="Naziv pjesme (opcionalno)" type="text"/><button class="btn btn-green" onclick="addMusicTrack()">＋ Dodaj pjesmu</button></div>
+<div class="actions" style="margin-top:12px"><button class="btn btn-blue" onclick="toggleMusicPlaylist(true)">▶️ Uključi playlistu</button><button class="btn btn-red" onclick="toggleMusicPlaylist(false)">⏹️ Zaustavi muziku</button></div>
+<div class="muted" id="musicAdminStatus" style="margin-top:10px"></div><div class="admin-playlist" id="adminMusicPlaylist"></div>
+</div>
+
+<!-- PLAYLIST MUZIKA -->
+<div class="card admin-music-card" style="margin-top:20px;">
+<div class="admin-card-head"><div><span class="hero-kicker">SOUNDTRACK LIGE</span><h3>🎵 Playlist muzika</h3><p class="muted">Dodaj više YouTube pjesama. Redaju se automatski jedna za drugom i ostaju aktivne dok je posjetilac na stranici.</p></div><span class="admin-pill">SAMO ADMIN</span></div>
+<div class="playlist-add-grid"><select id="adminMusicProvider" aria-label="Izvor muzike"><option value="youtube">YouTube</option><option value="spotify">Spotify</option></select><input id="adminYoutubeUrl" placeholder="YouTube ili Spotify link" type="text"/><input id="adminYoutubeTitle" maxlength="100" placeholder="Naziv pjesme (opcionalno)" type="text"/><button class="btn btn-green" onclick="addMusicTrack()">＋ Dodaj pjesmu</button></div>
+<div class="actions" style="margin-top:12px"><button class="btn btn-blue" onclick="toggleMusicPlaylist(true)">▶️ Uključi playlistu</button><button class="btn btn-red" onclick="toggleMusicPlaylist(false)">⏹️ Zaustavi muziku</button></div>
+<div class="muted" id="musicAdminStatus" style="margin-top:10px"></div><div class="admin-playlist" id="adminMusicPlaylist"></div>
+</div>
+
 </section>
 <!-- ================= COMMUNITY V10 ================= -->
 <section class="section v9-community-section" id="community">
@@ -666,6 +708,6 @@
 
 
 <script src="./js/app.js?v=20261006v07" defer></script>
-<script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=2" defer></script><script src="./js/growth.js?v=1" defer></script><script src="./js/community-features.js?v=1" defer></script><script src="./js/ui-compat.js?v=1" defer></script><script src="./js/admin-organizer.js?v=6" defer></script>\n<script src="./js/graphic-engine.js?v=1" defer></script>
+<script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=2" defer></script><script src="./js/growth.js?v=1" defer></script><script src="./js/community-features.js?v=1" defer></script><script src="./js/ui-compat.js?v=1" defer></script><script src="./js/admin-organizer.js?v=7" defer></script>\n<script src="./js/graphic-engine.js?v=1" defer></script>
 </body>
 </html>
