@@ -238,11 +238,11 @@
       scorer:   {kicker:"TOP STRIJELAC", tag:"<span class="m-icon" data-icon="ball" aria-hidden="true"></span> GOAL"},
       matchday: {kicker:"MATCHDAY", tag:"<span class="m-icon" data-icon="live" aria-hidden="true"></span> MATCHDAY"},
       winner:   {kicker:"WINNER", tag:"<span class="m-icon" data-icon="trophy" aria-hidden="true"></span> POBJEDNIK"},
-      lineup:   {kicker:"STARTING FIVE", tag:"👕 POSTAVA"},
+      lineup:   {kicker:"STARTING FIVE", tag:"<span class="m-icon" data-icon="player" aria-hidden="true"></span> POSTAVA"},
       transfer: {kicker:"PLAYER ANNOUNCEMENT", tag:"<span class="m-icon" data-icon="news" aria-hidden="true"></span> NOVO"},
-      birthday: {kicker:"SRETAN ROĐENDAN", tag:"🎂 BIRTHDAY"},
+      birthday: {kicker:"SRETAN ROĐENDAN", tag:"<span class="m-icon" data-icon="star" aria-hidden="true"></span> BIRTHDAY"},
       spotlight:{kicker:"U FOKUSU", tag:"<span class="m-icon" data-icon="target" aria-hidden="true"></span> FOCUS"},
-      fan:      {kicker:"IGRAČ TRIBINE", tag:"💚 FAN FAVORITE"},
+      fan:      {kicker:"IGRAČ TRIBINE", tag:"<span class="m-icon" data-icon="star" aria-hidden="true"></span> FAN FAVORITE"},
       captain:  {kicker:"KAPITEN", tag:"© KAPITEN"},
       legend:   {kicker:"LEGENDA LIGE", tag:"<span class="m-icon" data-icon="mvp" aria-hidden="true"></span> LEGENDA"}
     };
@@ -392,7 +392,7 @@
       console.error("Graphic Engine publish:",error);
       toast(error?.message || "Greška pri objavi grafike.","error");
     }finally{
-      if(btn){btn.disabled=false;btn.textContent="🚀 Objavi grafiku";}
+      if(btn){btn.disabled=false;btn.textContent="<span class="m-icon" data-icon="upload" aria-hidden="true"></span> Objavi grafiku";}
     }
   }
 
@@ -432,7 +432,7 @@
       <div class="graphic-engine-head">
         <div>
           <span class="hero-kicker">MEDJAŠI GRAPHIC ENGINE</span>
-          <h3>🎨 Napravi grafiku iz jedne fotografije</h3>
+          <h3><span class="m-icon" data-icon="star" aria-hidden="true"></span> Napravi grafiku iz jedne fotografije</h3>
           <p class="muted">Original ostaje netaknut. Napravi PNG bez pozadine i objavi ga direktno u Community, Chat ili Vijesti.</p>
         </div>
         <span class="admin-pill">SAMO ADMIN</span>
@@ -465,11 +465,11 @@
               <option value="scorer"><span class="m-icon" data-icon="ball" aria-hidden="true"></span> Top Strijelac</option>
               <option value="matchday"><span class="m-icon" data-icon="live" aria-hidden="true"></span> Matchday</option>
               <option value="winner"><span class="m-icon" data-icon="trophy" aria-hidden="true"></span> Winner</option>
-              <option value="lineup">👕 Starting Five</option>
+              <option value="lineup"><span class="m-icon" data-icon="player" aria-hidden="true"></span> Starting Five</option>
               <option value="transfer"><span class="m-icon" data-icon="news" aria-hidden="true"></span> Player Announcement</option>
-              <option value="birthday">🎂 Sretan rođendan</option>
+              <option value="birthday"><span class="m-icon" data-icon="star" aria-hidden="true"></span> Sretan rođendan</option>
               <option value="spotlight"><span class="m-icon" data-icon="target" aria-hidden="true"></span> U fokusu</option>
-              <option value="fan">💚 Fan Favorite</option>
+              <option value="fan"><span class="m-icon" data-icon="star" aria-hidden="true"></span> Fan Favorite</option>
               <option value="captain">© Kapiten</option>
               <option value="legend"><span class="m-icon" data-icon="mvp" aria-hidden="true"></span> Legenda lige</option>
             </select>
@@ -501,8 +501,8 @@
           </div>
 
           <div class="graphic-engine-actions">
-            <button id="graphicGenerateBtn" type="button" class="btn btn-green" disabled>🎨 Generiši grafiku</button>
-            <button id="graphicPublishBtn" type="button" class="btn btn-blue" disabled>🚀 Objavi grafiku</button>
+            <button id="graphicGenerateBtn" type="button" class="btn btn-green" disabled><span class="m-icon" data-icon="star" aria-hidden="true"></span> Generiši grafiku</button>
+            <button id="graphicPublishBtn" type="button" class="btn btn-blue" disabled><span class="m-icon" data-icon="upload" aria-hidden="true"></span> Objavi grafiku</button>
           </div>
 
           <div id="graphicStatus" class="muted" aria-live="polite"></div>
