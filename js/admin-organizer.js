@@ -11,9 +11,10 @@
 
   const groups=[
     {id:"all",icon:"▦",title:"Sve funkcije",desc:"Prikaži cijeli Admin"},
-    {id:"liga",icon:"⚽",title:"Liga",desc:"Ekipe • igrači • utakmice"},
-    {id:"sadrzaj",icon:"📰",title:"Sadržaj",desc:"Vijesti • galerija • grafike"},
-    {id:"moderacija",icon:"🛡️",title:"Moderacija",desc:"Community • CRUD • pregled"},
+    {id:"liga",icon:"⚽",title:"Liga",desc:"Ekipe • igrači • utakmice • CRUD"},
+    {id:"sadrzaj",icon:"📰",title:"Sadržaj",desc:"Vijesti • galerija • objave"},
+    {id:"dizajn",icon:"🎨",title:"Graphic Studio",desc:"Player cards • MVP • grafike"},
+    {id:"moderacija",icon:"🛡️",title:"Moderacija",desc:"Community • prijave • pregled"},
     {id:"sistem",icon:"⚙️",title:"Sistem",desc:"Sezone • muzika • push • uloge"}
   ];
 
@@ -27,10 +28,11 @@
     if(!el || !el.id) return "other";
     const id=el.id;
     if(id==="adminContent" || id==="adminOrganizer") return "ui";
-    if(id==="adminCrudV4" || id==="communityModerationCard") return "moderacija";
+    if(id==="adminCrudV4" || id==="adminMatches") return "liga";
+    if(id==="graphicEngineCard") return "dizajn";
     if(id==="v7NewsAdmin" || id==="adminGalleryList") return "sadrzaj";
+    if(id==="communityModerationCard") return "moderacija";
     if(id==="adminMusicPlaylist" || id==="v7SeasonCard" || id==="v7PushCard" || id==="moderatorManagement") return "sistem";
-    if(id==="adminMatches") return "liga";
     return "other";
   }
 
@@ -41,7 +43,10 @@
     [...host.children].forEach(el=>{
       if(el.id==="adminOrganizer") return;
       // Static creation forms are inside admin-grid.
-      const group=el.classList.contains("admin-grid") ? "liga" : classify(el);
+      let group=el.classList.contains("admin-grid") ? "liga" : classify(el);
+      // Some legacy cards have no id; classify them by a stable child/class.
+      if(group==="other" && el.querySelector("#adminGalleryList")) group="sadrzaj";
+      if(group==="other" && el.classList.contains("admin-music-card")) group="sistem";
       el.classList.toggle("admin-filter-hidden",active!=="all" && group!==active && group!=="other");
     });
 
