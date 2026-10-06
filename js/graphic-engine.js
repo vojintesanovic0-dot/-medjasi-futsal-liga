@@ -139,7 +139,7 @@
       }
 
       if($("graphicSourceName")){
-        $("graphicSourceName").textContent = "✓ Fotografija bez pozadine";
+        $("graphicSourceName").textContent = "<span class="m-icon" data-icon="result" aria-hidden="true"></span> Fotografija bez pozadine";
       }
 
       toast("Pozadina je uklonjena. Originalna fotografija ostaje sačuvana.");
@@ -149,7 +149,7 @@
     }finally{
       if(btn){
         btn.disabled = false;
-        btn.textContent = "✨ Ukloni pozadinu";
+        btn.textContent = "<span class="m-icon" data-icon="star" aria-hidden="true"></span> Ukloni pozadinu";
       }
     }
   }
@@ -233,18 +233,18 @@
     const position = player?.position || "";
 
     const presets = {
-      player:   {kicker:"PLAYER SPOTLIGHT", tag:"👤 IGRAČ"},
+      player:   {kicker:"PLAYER SPOTLIGHT", tag:"<span class="m-icon" data-icon="player" aria-hidden="true"></span> IGRAČ"},
       mvp:      {kicker:"MVP LIGE", tag:"⭐ MVP"},
-      scorer:   {kicker:"TOP STRIJELAC", tag:"⚽ GOAL"},
-      matchday: {kicker:"MATCHDAY", tag:"🔥 MATCHDAY"},
-      winner:   {kicker:"WINNER", tag:"🏆 POBJEDNIK"},
+      scorer:   {kicker:"TOP STRIJELAC", tag:"<span class="m-icon" data-icon="ball" aria-hidden="true"></span> GOAL"},
+      matchday: {kicker:"MATCHDAY", tag:"<span class="m-icon" data-icon="live" aria-hidden="true"></span> MATCHDAY"},
+      winner:   {kicker:"WINNER", tag:"<span class="m-icon" data-icon="trophy" aria-hidden="true"></span> POBJEDNIK"},
       lineup:   {kicker:"STARTING FIVE", tag:"👕 POSTAVA"},
-      transfer: {kicker:"PLAYER ANNOUNCEMENT", tag:"📣 NOVO"},
+      transfer: {kicker:"PLAYER ANNOUNCEMENT", tag:"<span class="m-icon" data-icon="news" aria-hidden="true"></span> NOVO"},
       birthday: {kicker:"SRETAN ROĐENDAN", tag:"🎂 BIRTHDAY"},
-      spotlight:{kicker:"U FOKUSU", tag:"🎯 FOCUS"},
+      spotlight:{kicker:"U FOKUSU", tag:"<span class="m-icon" data-icon="target" aria-hidden="true"></span> FOCUS"},
       fan:      {kicker:"IGRAČ TRIBINE", tag:"💚 FAN FAVORITE"},
       captain:  {kicker:"KAPITEN", tag:"© KAPITEN"},
-      legend:   {kicker:"LEGENDA LIGE", tag:"👑 LEGENDA"}
+      legend:   {kicker:"LEGENDA LIGE", tag:"<span class="m-icon" data-icon="mvp" aria-hidden="true"></span> LEGENDA"}
     };
     const preset=presets[template]||presets.player;
 
@@ -278,9 +278,9 @@
     if(template==="legend") sub="LEGENDA · "+teamName;
     if(template==="spotlight") sub="DANAS U FOKUSU · "+teamName;
     if(template==="mvp") sub="NAJBOLJI IGRAČ · "+teamName+"  ⭐";
-    if(template==="scorer") sub="STRIJELAC · "+teamName+"  ⚽";
-    if(template==="winner") sub="POBJEDNIK · "+teamName+"  🏆";
-    if(template==="matchday") sub="DAN UTAKMICE · "+teamName+"  ⚽";
+    if(template==="scorer") sub="STRIJELAC · "+teamName+"  <span class="m-icon" data-icon="ball" aria-hidden="true"></span>";
+    if(template==="winner") sub="POBJEDNIK · "+teamName+"  <span class="m-icon" data-icon="trophy" aria-hidden="true"></span>";
+    if(template==="matchday") sub="DAN UTAKMICE · "+teamName+"  <span class="m-icon" data-icon="ball" aria-hidden="true"></span>";
 
     drawText(ctx,headline,60,1180,58,"800");
     drawText(ctx,sub,60,1230,30,"600");
@@ -300,7 +300,7 @@
     if(result){result.src=generatedPreviewUrl;result.hidden=false;}
 
     const status=$("graphicStatus");
-    if(status) status.textContent="✓ Grafika je spremna za objavu.";
+    if(status) status.textContent="<span class="m-icon" data-icon="result" aria-hidden="true"></span> Grafika je spremna za objavu.";
 
     $("graphicPublishBtn")?.removeAttribute("disabled");
   }
@@ -339,7 +339,7 @@
         spotlight:"U fokusu",fan:"Fan Favorite",captain:"Kapiten",legend:"Legenda lige"
       }[state.template] || "Grafika lige";
 
-      const caption=state.caption.trim() || ("🔥 "+templateLabel+" · "+name+" · "+(team?.name||"Medjaši Futsal Liga"));
+      const caption=state.caption.trim() || ("<span class="m-icon" data-icon="live" aria-hidden="true"></span> "+templateLabel+" · "+name+" · "+(team?.name||"Medjaši Futsal Liga"));
 
       if(state.destination==="community"){
         const {error}=await window.supabaseClient.from("community_posts").insert({
@@ -453,34 +453,34 @@
           </div>
 
           <div class="graphic-engine-actions">
-            <button id="graphicLoadPlayer" type="button" class="btn btn-blue">📸 Uzmi sliku igrača</button>
-            <button id="graphicRemoveBgBtn" type="button" class="btn btn-green">✨ Ukloni pozadinu</button>
+            <button id="graphicLoadPlayer" type="button" class="btn btn-blue"><span class="m-icon" data-icon="gallery" aria-hidden="true"></span> Uzmi sliku igrača</button>
+            <button id="graphicRemoveBgBtn" type="button" class="btn btn-green"><span class="m-icon" data-icon="star" aria-hidden="true"></span> Ukloni pozadinu</button>
           </div>
 
           <div class="form-group">
             <label>Vrsta grafike</label>
             <select id="graphicTemplate">
-              <option value="player">👤 Player Spotlight</option>
+              <option value="player"><span class="m-icon" data-icon="player" aria-hidden="true"></span> Player Spotlight</option>
               <option value="mvp">⭐ MVP Lige</option>
-              <option value="scorer">⚽ Top Strijelac</option>
-              <option value="matchday">🔥 Matchday</option>
-              <option value="winner">🏆 Winner</option>
+              <option value="scorer"><span class="m-icon" data-icon="ball" aria-hidden="true"></span> Top Strijelac</option>
+              <option value="matchday"><span class="m-icon" data-icon="live" aria-hidden="true"></span> Matchday</option>
+              <option value="winner"><span class="m-icon" data-icon="trophy" aria-hidden="true"></span> Winner</option>
               <option value="lineup">👕 Starting Five</option>
-              <option value="transfer">📣 Player Announcement</option>
+              <option value="transfer"><span class="m-icon" data-icon="news" aria-hidden="true"></span> Player Announcement</option>
               <option value="birthday">🎂 Sretan rođendan</option>
-              <option value="spotlight">🎯 U fokusu</option>
+              <option value="spotlight"><span class="m-icon" data-icon="target" aria-hidden="true"></span> U fokusu</option>
               <option value="fan">💚 Fan Favorite</option>
               <option value="captain">© Kapiten</option>
-              <option value="legend">👑 Legenda lige</option>
+              <option value="legend"><span class="m-icon" data-icon="mvp" aria-hidden="true"></span> Legenda lige</option>
             </select>
           </div>
 
           <div class="form-group">
             <label>Objavi u</label>
             <select id="graphicDestination">
-              <option value="community">✨ Community</option>
-              <option value="news">📰 Vijesti</option>
-              <option value="chat">💬 Chat</option>
+              <option value="community"><span class="m-icon" data-icon="star" aria-hidden="true"></span> Community</option>
+              <option value="news"><span class="m-icon" data-icon="news" aria-hidden="true"></span> Vijesti</option>
+              <option value="chat"><span class="m-icon" data-icon="community" aria-hidden="true"></span> Chat</option>
             </select>
           </div>
 
