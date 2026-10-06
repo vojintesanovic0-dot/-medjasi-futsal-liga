@@ -288,6 +288,8 @@ function showSection(id){
       renderMusicAdmin?.();
       fillTeamSelects();
       injectModeratorPanel?.();
+      initGraphicEngine?.();
+      renderGraphicEnginePlayers?.();
     }catch(error){
       console.error("Admin dashboard:",error);
     }
