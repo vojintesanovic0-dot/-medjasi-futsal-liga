@@ -1560,7 +1560,7 @@ function initMusic(){
     wrap.innerHTML=src?'<iframe id="ytMusic" src="'+src+'" title="Medjaši Liga muzika" loading="eager" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>':"";
     currentMusicSignature=signature;musicUserStarted=false;
   }
-  if(hint)hint.innerHTML='<span class="music-live-badge">● MUZIKA LIGE</span> <span class="music-volume-note">'+(first.provider==="spotify"?"Spotify player je spreman. Pritisni Play na playeru.":musicTracks.every(t=>t.provider!=="spotify"?"Playlist svira redom. Klikni „Uključi zvuk“ ako želiš zvuk.":"Prva pjesma je spremna za puštanje."))+'</span>';
+  if(hint)hint.innerHTML='<span class="music-live-badge">● MUZIKA LIGE</span> <span class="music-volume-note">'+(first.provider==="spotify"?"Spotify player je spreman. Pritisni Play na playeru.":(musicTracks.every(t=>t.provider!=="spotify")?"Playlist svira redom. Klikni „Uključi zvuk“ ako želiš zvuk.":"Prva pjesma je spremna za puštanje."))+'</span>';
   if(btn){btn.style.display=first.provider==="spotify"?"none":"inline-flex";btn.textContent=musicUserStarted?"🔊 Zvuk uključen":"🔊 Uključi zvuk";}
 }
 function unmuteMusic(){
