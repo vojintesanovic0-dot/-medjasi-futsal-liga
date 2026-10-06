@@ -213,8 +213,14 @@ begin
   if not found or m.status <> 'open' then raise exception 'Ovaj pogodak više nije dostupan.'; end if;
   select * into mt from matches where id::text = m.match_id;
   if not found then raise exception 'Utakmica ne postoji.'; end if;
-  if mt.status is distinct from 'scheduled' or (mt.match_date is not null and mt.match_date <= now()) then
+  if mt.status not in ('scheduled','live') then
     raise exception 'Pogađanje za ovu utakmicu je zatvoreno.';
+  end if;
+  if mt.status = 'scheduled' and mt.match_date is not null and mt.match_date <= now() then
+    raise exception 'Utakmica je trebala početi. Čekaj da se otvore live kvote.';
+  end if;
+  if mt.status = 'live' and coalesce(mt.current_minute,0) >= 60 then
+    raise exception 'Utakmica je završila. Pogađanje je zatvoreno.';
   end if;
   if p_stake is null or p_stake < 1 or p_stake > 50 then
     raise exception 'Možeš uložiti od 1 do 50 poena po pogotku.';
@@ -278,10 +284,44 @@ begin
       values (p_match,'player_2plus', r.id::text, v_name||' daje 2+ gola', r.id::text, 7.00) on conflict do nothing;
   end loop;
 
+  perform public.fan_reprice_match_odds(p_match);
   select count(*) into n from fan_markets where match_id = p_match;
   return n;
 end $$;
 
+-- ------------------------------------------------ LIVE KVOTE
+create or replace function public.fan_reprice_match_odds(p_match text)
+returns void language plpgsql security definer set search_path = public as $
+declare mt record; mk record; home_avg numeric:=1.5; away_avg numeric:=1.5; home_def numeric:=1.5; away_def numeric:=1.5; home_strength numeric:=1; away_strength numeric:=1; ph numeric; pd numeric; pa numeric; total numeric; minute numeric; hs int; aw int; red_count int; red_home int; red_away int; score_adj numeric; p numeric; line numeric;
+begin
+  select * into mt from matches where id::text=p_match; if not found then return; end if;
+  hs:=coalesce(mt.home_score,0); aw:=coalesce(mt.away_score,0); minute:=greatest(0,least(60,coalesce(mt.current_minute,0)));
+  select coalesce(avg(case when home_team_id=mt.home_team_id then home_score end),1.5), coalesce(avg(case when away_team_id=mt.away_team_id then away_score end),1.5), coalesce(avg(case when home_team_id=mt.home_team_id then away_score end),1.5), coalesce(avg(case when away_team_id=mt.away_team_id then home_score end),1.5) into home_avg,away_avg,home_def,away_def from matches where status='finished' and (home_team_id=mt.home_team_id or away_team_id=mt.home_team_id or home_team_id=mt.away_team_id or away_team_id=mt.away_team_id);
+  home_strength:=greatest(.55,least(1.9,(home_avg+away_def)/3.0)); away_strength:=greatest(.55,least(1.9,(away_avg+home_def)/3.0));
+  ph:=.43*home_strength/greatest(.75,home_strength+away_strength)+.08; pa:=.43*away_strength/greatest(.75,home_strength+away_strength); pd:=greatest(.08,1-ph-pa);
+  if mt.status='live' then
+    score_adj:=(hs-aw)*.12+((minute-30)/60.0)*.03; ph:=greatest(.04,least(.92,ph+score_adj)); pa:=greatest(.04,least(.92,pa-score_adj)); pd:=greatest(.04,1-ph-pa);
+    select count(*) filter (where p.team_id::text=mt.home_team_id::text), count(*) filter (where p.team_id::text=mt.away_team_id::text) into red_home,red_away from cards c join players p on p.id=c.player_id where c.match_id::text=p_match and lower(c.card_type)='red';
+    if red_home>red_away then ph:=greatest(.03,ph-.10); pa:=least(.94,pa+.07); pd:=greatest(.03,1-ph-pa); elsif red_away>red_home then pa:=greatest(.03,pa-.10); ph:=least(.94,ph+.07); pd:=greatest(.03,1-ph-pa); end if;
+  end if;
+  total:=ph+pd+pa; ph:=ph/total; pd:=pd/total; pa:=pa/total;
+  for mk in select * from fan_markets where match_id=p_match and status='open' loop
+    p:=null;
+    if mk.kind='result' then p:=case mk.selection when '1' then ph when 'X' then pd when '2' then pa end;
+    elsif mk.kind='total' then line:=coalesce(mk.line,3.5); p:=case when mk.selection='over' then greatest(.12,least(.88,.50+((hs+aw)-line)*.12+minute*.002)) else greatest(.12,least(.88,.50-((hs+aw)-line)*.12-minute*.002)) end;
+    elsif mk.kind='red_card' then select count(*) into red_count from cards where match_id::text=p_match and lower(card_type)='red'; p:=case when mk.selection='yes' then greatest(.08,least(.90,.22+red_count*.30+minute*.003)) else greatest(.10,least(.92,.78-red_count*.30-minute*.003)) end;
+    elsif mk.kind='exact' then p:=case when mk.selection=hs||':'||aw then .08 else .015 end;
+    elsif mk.kind='scorer' then p:=greatest(.08,least(.75,.28-minute*.002+coalesce((select count(*) from goals where match_id::text=p_match and player_id::text=mk.player_id),0)*.20));
+    elsif mk.kind='player_2plus' then p:=greatest(.02,least(.35,.10-minute*.001+coalesce((select count(*) from goals where match_id::text=p_match and player_id::text=mk.player_id),0)*.10)); end if;
+    if p is not null then update fan_markets set odds=round(greatest(1.05,least(100,(1.0/p)*1.05))::numeric,2) where id=mk.id and status='open'; end if;
+  end loop;
+end $;
+
+create or replace function public.fan_market_event_reprice() returns trigger language plpgsql security definer set search_path=public as $ begin perform public.fan_reprice_match_odds(coalesce(new.match_id::text,old.match_id::text)); return coalesce(new,old); end $;
+drop trigger if exists fan_reprice_on_match on public.matches; create trigger fan_reprice_on_match after update of home_score,away_score,current_minute,status on public.matches for each row execute function public.fan_market_event_reprice();
+drop trigger if exists fan_reprice_on_goal on public.goals; create trigger fan_reprice_on_goal after insert or update or delete on public.goals for each row execute function public.fan_market_event_reprice();
+drop trigger if exists fan_reprice_on_card on public.cards; create trigger fan_reprice_on_card after insert or update or delete on public.cards for each row execute function public.fan_market_event_reprice();
+revoke all on function public.fan_reprice_match_odds(text),public.fan_market_event_reprice() from public,anon,authenticated;
 create or replace function public.fan_set_odds(p_market uuid, p_odds numeric) returns void
 language plpgsql security definer set search_path = public as $$
 begin
