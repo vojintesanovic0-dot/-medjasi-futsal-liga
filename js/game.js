@@ -71,7 +71,7 @@
   const ledgerPositive=S.ledger.filter(x=>Number(x.delta)>0).reduce((s,x)=>s+Number(x.delta||0),0);
   const picks=S.picks.length, wins=S.picks.filter(x=>x.status==="won").length;
   const xp=ledgerPositive+(picks*5)+(wins*15)+(S.inv.length*10)+(S.follows.length*5);
-  return {xp,level:Math.max(1,Math.floor(xp/100)+1,next:(Math.floor(xp/100)+1)*100}};
+  return {xp,level:Math.max(1,Math.floor(xp/100)+1,next:(Math.floor(xp/100)+1)*100};
 }
 function fanAchievements(){
   const a=[];const wins=S.picks.filter(x=>x.status==="won").length;
