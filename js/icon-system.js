@@ -41,11 +41,27 @@
       el.style.setProperty('--mi-size',size);
     });
   }
+  function escapeHtml(value){
+    return String(value ?? "").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
+  }
+  function safe(value){
+    const token="___MEDJASI_ICON_";
+    const stash=[];
+    const raw=String(value ?? "").replace(/<span class="m-icon" data-icon="([^"]+)" aria-hidden="true"><\\/span>/g,(_,key)=>{
+      stash.push(key);
+      return token+(stash.length-1)+"___";
+    });
+    let out=escapeHtml(raw);
+    stash.forEach((key,i)=>{
+      out=out.replace(token+i+"___",'<span class="m-icon" data-icon="'+key+'" aria-hidden="true"></span>');
+    });
+    return out;
+  }
   function html(emoji,size="1em"){
     const key=map[emoji]||"star";
     return '<span class="m-icon" data-icon="'+key+'" data-size="'+size+'" aria-hidden="true"></span>';
   }
-  window.medjasiIcon={map,html,hydrate};
+  window.medjasiIcon={map,html,safe,hydrate};
   const mo=new MutationObserver(()=>hydrate(document));
   function boot(){hydrate(document);mo.observe(document.body,{childList:true,subtree:true});}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
