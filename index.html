@@ -29,7 +29,7 @@
 
 
 <link rel="stylesheet" href="./css/app.css?v=20261005v19">
-<link rel="stylesheet" href="./css/production.css?v=20261005v21">
+<link rel="stylesheet" href="./css/production.css?v=20261005v21"><link rel="stylesheet" href="./css/effects.css?v=1">
 </head>
 <body>
 <header class="site-header">
@@ -75,10 +75,10 @@
 </div>
 </section>
 <section class="v10-kpi-grid">
-<div class="v10-kpi"><span class="v10-kpi-icon">🛡️</span><div><strong id="statTeams">0</strong><small>Ekipa</small></div></div>
-<div class="v10-kpi"><span class="v10-kpi-icon">👤</span><div><strong id="statPlayers">0</strong><small>Igrača</small></div></div>
-<div class="v10-kpi"><span class="v10-kpi-icon">⚽</span><div><strong id="statMatches">0</strong><small>Utakmica</small></div></div>
-<div class="v10-kpi"><span class="v10-kpi-icon">🔥</span><div><strong id="statGoals">0</strong><small>Golova</small></div></div>
+<div class="v10-kpi" role="button" tabindex="0" aria-label="Otvori ekipe" onclick="showSection('teams')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showSection('teams')}"><span class="v10-kpi-icon">🛡️</span><div><strong id="statTeams">0</strong><small>Ekipa</small></div></div>
+<div class="v10-kpi" role="button" tabindex="0" aria-label="Otvori igrače" onclick="showSection('players')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showSection('players')}"><span class="v10-kpi-icon">👤</span><div><strong id="statPlayers">0</strong><small>Igrača</small></div></div>
+<div class="v10-kpi" role="button" tabindex="0" aria-label="Otvori utakmice" onclick="showSection('matches')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showSection('matches')}"><span class="v10-kpi-icon">⚽</span><div><strong id="statMatches">0</strong><small>Utakmica</small></div></div>
+<div class="v10-kpi" role="button" tabindex="0" aria-label="Otvori statistiku golova" onclick="showSection('stats')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showSection('stats')}"><span class="v10-kpi-icon">🔥</span><div><strong id="statGoals">0</strong><small>Golova</small></div></div>
 </section>
 <section class="v10-feature-grid">
 <div class="v10-next-card card">
@@ -693,6 +693,6 @@
 
 
 <script src="./js/app.js?v=20261005v22" defer></script>
-<script src="./js/production.js?v=20261005" defer></script>
+<script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script>
 </body>
 </html>
