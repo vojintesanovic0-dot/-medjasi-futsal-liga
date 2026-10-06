@@ -1,6 +1,9 @@
--- Security hardening for Fan Game RPCs.
+-- Upgrade/repair hardening for Fan Game RPCs.
+-- Canonical fresh-install deployment is now included at the end of sql/01_fan_game.sql.
 -- Moves SECURITY DEFINER implementations out of public and exposes only
 -- SECURITY INVOKER wrappers through the public API.
+-- This file remains as an idempotent upgrade for databases created before
+-- the canonical install script was consolidated.
 -- Supabase Auth leaked-password protection is intentionally not handled here;
 -- that setting belongs to Authentication/Password Security in the dashboard.
 
