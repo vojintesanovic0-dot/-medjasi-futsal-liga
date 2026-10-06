@@ -45,15 +45,24 @@
     return String(value ?? "").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
   }
   function safe(value){
-    const token="___MEDJASI_ICON_";
+    const start='<span class="m-icon" data-icon="';
+    const end='" aria-hidden="true"></span>';
+    const raw=String(value ?? "");
     const stash=[];
-    const raw=String(value ?? "").replace(/<span class="m-icon" data-icon="([^"]+)" aria-hidden="true"><\\/span>/g,(_,key)=>{
+    let work=raw;
+    let pos=0;
+    while((pos=work.indexOf(start,pos))!==-1){
+      const endPos=work.indexOf(end,pos+start.length);
+      if(endPos===-1) break;
+      const key=work.slice(pos+start.length,endPos);
+      const token="___MEDJASI_ICON_"+stash.length+"___";
       stash.push(key);
-      return token+(stash.length-1)+"___";
-    });
-    let out=escapeHtml(raw);
+      work=work.slice(0,pos)+token+work.slice(endPos+end.length);
+      pos+=token.length;
+    }
+    let out=escapeHtml(work);
     stash.forEach((key,i)=>{
-      out=out.replace(token+i+"___",'<span class="m-icon" data-icon="'+key+'" aria-hidden="true"></span>');
+      out=out.replace("___MEDJASI_ICON_"+i+"___",'<span class="m-icon" data-icon="'+key+'" aria-hidden="true"></span>');
     });
     return out;
   }
