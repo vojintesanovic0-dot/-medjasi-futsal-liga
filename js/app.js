@@ -8751,8 +8751,11 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     const old =
       document.getElementById("adminCrudV4");
+    const oldContent =
+      document.getElementById("adminCrudContentV4");
 
     if (old) old.remove();
+    if (oldContent) oldContent.remove();
 
     if (!isAdmin()) return;
 
@@ -9198,7 +9201,28 @@ document.addEventListener("DOMContentLoaded",()=>{
       </div>
     `;
 
+    // Stari Admin CRUD je sadržavao i ligaške i sadržajne sekcije.
+    // Funkcije ostaju iste; samo ih fizički razdvajamo u dvije admin kartice.
+    const contentCard = document.createElement("div");
+    contentCard.id = "adminCrudContentV4";
+    contentCard.className = "card admin-crud-v4 admin-crud-content-v4";
+    contentCard.style.marginTop = "20px";
+
+    const contentSections = [...card.querySelectorAll(".crud-section")].filter(section => {
+      const title = (section.querySelector(".crud-title span")?.textContent || "").trim().toLowerCase();
+      return title.includes("komentari") || title.includes("chat") || title.includes("galerija");
+    });
+
+    contentCard.innerHTML = '<div class="admin-card-head">' +
+      '<div><span class="hero-kicker">SADRŽAJ</span>' +
+      '<h3><span class="m-icon" data-icon="community" aria-hidden="true"></span> Administracija sadržaja</h3>' +
+      '<p class="muted">Komentari, chat i pregled/brisanje medija iz postojećeg Admin CRUD-a.</p></div>' +
+      '<span class="admin-pill">SAMO ADMIN</span></div>';
+
+    contentSections.forEach(section => contentCard.appendChild(section));
+
     adminContent.appendChild(card);
+    if (contentSections.length) adminContent.appendChild(contentCard);
   };
 
 
