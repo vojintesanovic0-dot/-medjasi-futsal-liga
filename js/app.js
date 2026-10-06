@@ -10019,7 +10019,7 @@ if ("serviceWorker" in navigator) {
 (function(){
 "use strict";
 const V7={
-  news:[], stats:[], seasons:[], pushPublicKey:"BF31f9WUjYLlq_Ze7seoz7PgKgb3bZnFpAbBoQGHSsraWyt1UMcf2f5Bg3t3pnFVVRsF-nGssAlDNw9yyQLQbCI",
+  news:[], stats:[], seasons:[], pushPublicKey:"BFxGFdgbKlBwU9DwGrhbBbeOv9rrpizEJyHWdGHRuGfZiEuvCZfy5sYt_wSjOX2DSSOcNsUsFrob2pi4CJbVI2U",
   pushEndpoint:"https://mesryrrjnsnhadoahbux.supabase.co/functions/v1/send-push"
 };
 window.medjasiV7=V7;
