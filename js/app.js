@@ -127,6 +127,61 @@ function getMatch(id){
   return matches.find(m => String(m.id) === String(id));
 }
 
+/* =========================================================
+   FAN COSMETICS / EMOJI BRIDGE
+========================================================= */
+const fanPublicStyles = {};
+window.__fanPublicStyles = fanPublicStyles;
+
+async function loadFanPublicStyles(ids=[]){
+  const unique=[...new Set((ids||[]).filter(Boolean).map(String))];
+  const missing=unique.filter(id=>!fanPublicStyles[id]);
+  if(!missing.length) return fanPublicStyles;
+  const valid=missing.filter(id=>/^[0-9a-f-]{36}$/i.test(id));
+  if(!valid.length) return fanPublicStyles;
+  try{
+    const {data,error}=await supabaseClient.rpc("fan_public_cosmetics",{p_users:valid});
+    if(error){ console.warn("Fan cosmetics:",error); return fanPublicStyles; }
+    (data||[]).forEach(row=>{ fanPublicStyles[String(row.user_id)] = row; });
+  }catch(error){ console.warn("Fan cosmetics:",error); }
+  return fanPublicStyles;
+}
+
+window.loadFanPublicStyles=loadFanPublicStyles;
+window.getFanPublicStyle=id=>fanPublicStyles[String(id)]||{};
+
+function fanEmojiListForUser(id){
+  const raw=fanPublicStyles[String(id)]?.emoji_pack||"";
+  return String(raw).split(",").map(x=>x.trim()).filter(Boolean).slice(0,8);
+}
+window.getFanEmojiListForUser=fanEmojiListForUser;
+
+function fanEmojiBarHTML(inputId){
+  const id=currentUser?.id;
+  if(!id) return "";
+  const emojis=fanEmojiListForUser(id);
+  if(!emojis.length) return '<div class="fan-emoji-hint">😀 Kupi emoji paket u Fan Shopu za brze reakcije.</div>';
+  return '<div class="fan-emoji-bar">'+emojis.map(e=>'<button type="button" title="Dodaj '+esc(e)+'" onclick="insertFanEmoji(\''+escJs(e)+'\',\''+escJs(inputId)+'\')">'+esc(e)+'</button>').join("")+'</div>';
+}
+
+function insertFanEmoji(emoji,inputId){
+  const input=document.getElementById(inputId);
+  if(!input) return;
+  const value=input.value||"";
+  const sep=value && !/\s$/.test(value) ? " " : "";
+  input.value=value+sep+emoji;
+  input.focus();
+  input.dispatchEvent(new Event("input",{bubbles:true}));
+}
+window.insertFanEmoji=insertFanEmoji;
+window.fanEmojiBarHTML=fanEmojiBarHTML;
+
+function renderFanChatEmojiBar(){
+  const el=document.getElementById("chatFanEmojiBar");
+  if(!el) return;
+  el.innerHTML=fanEmojiBarHTML("chatText");
+}
+
 
 function teamName(id){
   return getTeam(id)?.name || "Nepoznata ekipa";
@@ -3390,20 +3445,34 @@ function renderChat(){
   const box=document.getElementById("chatBox");
   if(!box) return;
 
+  const ids=messages.map(m=>m.user_id).filter(Boolean);
+  const knownBefore=ids.every(id=>fanPublicStyles[String(id)]);
+  if(!knownBefore){
+    loadFanPublicStyles(ids).then(()=>renderChat());
+    renderFanChatEmojiBar();
+    return;
+  }
+
   box.innerHTML = messages.length
     ? messages.map(m => {
         const username = m.username ||
           (currentUser && m.user_id===currentUser.id ? currentProfile?.username : null) ||
           (m.user_id ? String(m.user_id).slice(0,8) : "Korisnik");
+        const style=fanPublicStyles[String(m.user_id)]||{};
+        const nameStyle=style.name_color ? 'style="color:'+esc(style.name_color)+'"' : "";
+        const avatarStyle=style.frame ? 'style="border:2px solid '+esc(style.frame)+';box-shadow:0 0 12px '+esc(style.frame)+'55"' : "";
+        const badge=style.badge ? '<span class="fan-inline-badge">'+esc(style.badge)+'</span>' : "";
+        const title=style.title ? '<span class="fan-inline-title">'+esc(style.title)+'</span>' : "";
 
         return `
           <div class="chat-message">
-            <div class="chat-avatar">💬</div>
+            <div class="chat-avatar" style="${avatarStyle}">${esc(style.badge||"💬")}</div>
             <div class="chat-message-body">
               <div class="chat-message-top">
-                <strong>${esc(username)}</strong>
+                <strong ${nameStyle}>${badge}${esc(username)}</strong>
                 <small class="muted">${formatDate(m.created_at)}</small>
               </div>
+              ${title}
               ${m.content ? `<div class="chat-message-text">${esc(m.content)}</div>` : ""}
               ${m.image_url ? `
                 <button class="chat-photo" type="button" onclick="openImagePreview('${escJs(m.image_url)}','${escJs(username)}')">
@@ -3416,6 +3485,7 @@ function renderChat(){
       }).join("")
     : `<div class="empty">Još nema poruka.<br>Budi prvi koji će započeti razgovor.</div>`;
 
+  renderFanChatEmojiBar();
   box.scrollTop=box.scrollHeight;
 }
 
@@ -10224,6 +10294,13 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   const escV=v=>typeof esc==='function'?esc(v??''):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const fallback='https://via.placeholder.com/160?text=%F0%9F%91%A4';
   const avatar=p=>escV(p?.avatar_url||fallback);
+  function fanCommunityIdentityHTML(p,id){
+    const s=window.getFanPublicStyle?.(id)||{};
+    const color=s.name_color?'style="color:'+escV(s.name_color)+'"':"";
+    const badge=s.badge?'<span class="fan-inline-badge">'+escV(s.badge)+'</span>':"";
+    const title=s.title?'<small class="fan-inline-title">'+escV(s.title)+'</small>':"";
+    return '<span class="fan-community-name" '+color+'>'+badge+escV(p?.username||'Korisnik')+'</span>'+title;
+  }
   const fmt=d=>{try{return new Intl.DateTimeFormat('bs-BA',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(d))}catch{return ''}};
   const logged=()=>typeof currentUser!=='undefined'&&!!currentUser;
   const guard=()=>{if(!logged()){showSection('login');if(typeof toastV==='function')toastV('Prijavi se da bi koristio Community.','error');return false}return true};
@@ -10232,6 +10309,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     const {data,error}=await supabaseClient.from('profiles').select('id,username,avatar_url,bio,role').in('id',unique);
     if(error){console.warn('Community profiles:',error);return}
     (data||[]).forEach(p=>V.profiles[String(p.id)]=p);
+    await loadFanPublicStyles(unique);
   }
   async function load(){
     try{
@@ -10254,13 +10332,13 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     const host=q('v9Stories');if(!host)return;
     const mine=logged()?`<div class="v9-story v9-add-story" onclick="openV9StoryComposer()"><div class="v9-story-avatar">＋</div><span class="v9-story-name">Moja priča</span></div>`:'';
     const seen=new Set();const rows=[];
-    V.stories.forEach(s=>{const p=V.profiles[String(s.user_id)]||{};if(seen.has(String(s.user_id)))return;seen.add(String(s.user_id));rows.push(`<div class="v9-story" onclick="openV9Story('${escV(s.id)}')"><div class="v9-story-avatar"><img src="${avatar(p)}" alt=""></div><span class="v9-story-name">${escV(p.username||'Korisnik')}</span></div>`)});
+    V.stories.forEach(s=>{const p=V.profiles[String(s.user_id)]||{};if(seen.has(String(s.user_id)))return;seen.add(String(s.user_id));rows.push(`<div class="v9-story" onclick="openV9Story('${escV(s.id)}')"><div class="v9-story-avatar"><img src="${avatar(p)}" alt=""></div><span class="v9-story-name">${fanCommunityIdentityHTML(p,String(s.user_id))}</span></div>`)});
     host.innerHTML=mine+rows.join('')||'<div class="v9-empty" style="width:100%">Još nema aktivnih priča.</div>';
   }
   async function renderFeed(){
     const host=q('v9Feed');if(!host)return;
     if(!V.posts.length){host.innerHTML='<div class="v9-empty">Još nema objava. Budi prvi koji će objaviti fotografiju. 📸</div>';return}
-    host.innerHTML=V.posts.map((p,i)=>{const a=V.profiles[String(p.user_id)]||{};const own=logged()&&String(p.user_id)===String(currentUser.id);return `<article class="v9-post" style="animation-delay:${Math.min(i,8)*35}ms"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(a)}" alt="" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer"><div><div class="v9-post-author" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer">${escV(a.username||'Korisnik')}${a.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</div><div class="v9-post-meta">${fmt(p.created_at)}</div></div>${own||typeof isAdmin==='function'&&isAdmin()?`<button class="btn btn-small v9-post-menu" onclick="deleteV9Post('${escV(p.id)}')">Obriši</button>`:''}</div><img class="v9-post-image" src="${escV(p.image_url)}" alt="${escV(p.caption||'Fotografija')}" loading="lazy" onclick="openV9Lightbox('${escV(p.image_url)}')"><div class="v9-post-body">${p.caption?`<div class="v9-post-caption">${escV(p.caption)}</div>`:''}${communityMusicChip(p.music_track_id)}<div class="v9-post-actions"><button id="v9r-${escV(p.id)}" class="v9-reaction" onclick="toggleV9Reaction('${escV(p.id)}','❤️')">❤️ <span>0</span></button><button class="v9-reaction" onclick="toggleV9Comments('${escV(p.id)}')">💬 <span id="v9cnum-${escV(p.id)}">0</span></button></div><div id="v9comments-${escV(p.id)}" class="v9-comments" hidden></div></div></article>`}).join('');
+    host.innerHTML=V.posts.map((p,i)=>{const a=V.profiles[String(p.user_id)]||{};const own=logged()&&String(p.user_id)===String(currentUser.id);return `<article class="v9-post" style="animation-delay:${Math.min(i,8)*35}ms"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(a)}" alt="" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer"><div><div class="v9-post-author" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer">${fanCommunityIdentityHTML(a,String(p.user_id))}</div><div class="v9-post-meta">${fmt(p.created_at)}</div></div>${own||typeof isAdmin==='function'&&isAdmin()?`<button class="btn btn-small v9-post-menu" onclick="deleteV9Post('${escV(p.id)}')">Obriši</button>`:''}</div><img class="v9-post-image" src="${escV(p.image_url)}" alt="${escV(p.caption||'Fotografija')}" loading="lazy" onclick="openV9Lightbox('${escV(p.image_url)}')"><div class="v9-post-body">${p.caption?`<div class="v9-post-caption">${escV(p.caption)}</div>`:''}${communityMusicChip(p.music_track_id)}<div class="v9-post-actions"><button id="v9r-${escV(p.id)}" class="v9-reaction" onclick="toggleV9Reaction('${escV(p.id)}','❤️')">❤️ <span>0</span></button><button class="v9-reaction" onclick="toggleV9Comments('${escV(p.id)}')">💬 <span id="v9cnum-${escV(p.id)}">0</span></button></div><div id="v9comments-${escV(p.id)}" class="v9-comments" hidden></div></div></article>`}).join('');
     await Promise.all(V.posts.map(p=>refreshPostMeta(p.id)));
   }
   async function refreshPostMeta(id){
@@ -10280,18 +10358,18 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   window.publishV9Post=async function(){if(!guard())return;const f=q('v9PostFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`community/${currentUser.id}`);const {error}=await supabaseClient.from('community_posts').insert({user_id:currentUser.id,image_url:url,caption:q('v9PostCaption')?.value.trim()||null,music_track_id:q('v9PostMusic')?.value?Number(q('v9PostMusic').value):null});if(error)throw error;hideModal();await load();toastV('Objava je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
   window.openV9StoryComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/*" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div>'+communityMusicPicker("v9StoryMusic")+'<button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>');filePreview('v9StoryFile','v9StoryPreview')};
   window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null,music_track_id:q('v9StoryMusic')?.value?Number(q('v9StoryMusic').value):null});if(error)throw error;hideModal();await load();toastV('Priča je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
-  window.openV9Story=function(id){const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=V.profiles[String(s.user_id)]||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${escV(p.username||'Korisnik')}</b>${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}<div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${escV(s.image_url)}" alt=""><div class="v9-story-caption">${escV(s.caption||'')}</div>${communityMusicChip(s.music_track_id)}${logged()&&(String(s.user_id)===String(currentUser.id)||typeof isAdmin==='function'&&isAdmin())?`<button class="btn btn-small" onclick="deleteV9Story('${escV(s.id)}')">Obriši priču</button>`:''}</div>`) };
+  window.openV9Story=function(id){const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=V.profiles[String(s.user_id)]||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${fanCommunityIdentityHTML(p,String(s.user_id))}</b><div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${escV(s.image_url)}" alt=""><div class="v9-story-caption">${escV(s.caption||'')}</div>${communityMusicChip(s.music_track_id)}${logged()&&(String(s.user_id)===String(currentUser.id)||typeof isAdmin==='function'&&isAdmin())?`<button class="btn btn-small" onclick="deleteV9Story('${escV(s.id)}')">Obriši priču</button>`:''}</div>`) };
   window.deleteV9Story=async function(id){if(!guard())return;const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;if(String(s.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu priču?'))return;const {error}=await supabaseClient.from('community_stories').delete().eq('id',id);if(error)return toastV(error.message,'error');hideModal();await load();toastV('Priča je obrisana.')};
   window.openV9Profile=async function(id){
     const {data:p,error}=await supabaseClient.from('profiles').select('id,username,avatar_url,bio,role').eq('id',id).maybeSingle();if(error||!p)return toastV('Profil nije pronađen.','error');
     const [{data:posts},{data:stories}]=await Promise.all([supabaseClient.from('community_posts').select('id,user_id,image_url,caption,created_at').eq('user_id',id).order('created_at',{ascending:false}).limit(30),supabaseClient.from('community_stories').select('id,user_id,image_url,caption,created_at,expires_at').eq('user_id',id).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false})]);
-    showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${escV(p.username||'Korisnik')}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${escV(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&String(id)===String(currentUser.id)?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<div><img class="v9-post-image" style="border-radius:16px" src="${escV(x.image_url)}" alt="${escV(x.caption||'')}" onclick="openV9Lightbox('${escV(x.image_url)}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${escV(x.caption)}</div>`:''}</div>`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
+    showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${escV(p.username||'Korisnik')}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${escV(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&String(id)===String(currentUser.id)?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button><button class="btn" onclick="window.openFanTickets?.()">🎟️ Moji tiketi</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<div><img class="v9-post-image" style="border-radius:16px" src="${escV(x.image_url)}" alt="${escV(x.caption||'')}" onclick="openV9Lightbox('${escV(x.image_url)}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${escV(x.caption)}</div>`:''}</div>`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
   };
   window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/*" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${escV(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${escV(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);filePreview('v9AvatarFile','v9AvatarPreview')};
   window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!f.type.startsWith('image/'))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await supabaseClient.from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV('Profil je ažuriran.')}catch(err){toastV(err.message||'Greška pri čuvanju profila.','error')}};
   window.deleteV9Post=async function(id){if(!guard())return;const p=V.posts.find(x=>String(x.id)===String(id));if(!p||String(p.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);if(error)return toastV(error.message,'error');await load();toastV('Objava je obrisana.')};
   window.toggleV9Reaction=async function(postId,type){if(!guard())return;const {data:existing,error:ee}=await supabaseClient.from('community_reactions').select('id').eq('post_id',postId).eq('user_id',currentUser.id).eq('reaction',type).maybeSingle();if(ee)return toastV(ee.message,'error');let error;if(existing){({error}=await supabaseClient.from('community_reactions').delete().eq('id',existing.id))}else{({error}=await supabaseClient.from('community_reactions').insert({post_id:postId,user_id:currentUser.id,reaction:type}))}if(error)return toastV(error.message,'error');await refreshPostMeta(postId)};
-  window.toggleV9Comments=async function(postId){const box=q('v9comments-'+postId);if(!box)return;if(!box.hidden){box.hidden=true;return}const {data,error}=await supabaseClient.from('community_comments').select('id,user_id,content,created_at').eq('post_id',postId).order('created_at',{ascending:true});if(error)return toastV(error.message,'error');await loadProfiles((data||[]).map(c=>c.user_id));box.innerHTML=(data||[]).map(c=>{const p=V.profiles[String(c.user_id)]||{};return `<div class="v9-comment"><b>${escV(p.username||'Korisnik')}</b>${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}: ${escV(c.content)}</div>`}).join('')+`<div class="v9-comment-form"><input id="v9ci-${escV(postId)}" maxlength="500" placeholder="Napiši komentar..." ${logged()?'':'disabled'}><button class="btn btn-small btn-green" onclick="addV9Comment('${escV(postId)}')">Pošalji</button></div>`;box.hidden=false};
+  window.toggleV9Comments=async function(postId){const box=q('v9comments-'+postId);if(!box)return;if(!box.hidden){box.hidden=true;return}const {data,error}=await supabaseClient.from('community_comments').select('id,user_id,content,created_at').eq('post_id',postId).order('created_at',{ascending:true});if(error)return toastV(error.message,'error');await loadProfiles((data||[]).map(c=>c.user_id));box.innerHTML=(data||[]).map(c=>{const p=V.profiles[String(c.user_id)]||{};return `<div class="v9-comment"><b>${escV(p.username||'Korisnik')}</b>${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}: ${escV(c.content)}</div>`}).join('')+`<div class="v9-comment-form"><input id="v9ci-${escV(postId)}" maxlength="500" placeholder="Napiši komentar..." ${logged()?'':'disabled'}><button class="btn btn-small btn-green" onclick="addV9Comment('${escV(postId)}')">Pošalji</button></div><div class="fan-community-emoji-wrap">${logged()?fanEmojiBarHTML('v9ci-'+escV(postId)):''}</div>`;box.hidden=false};
   window.addV9Comment=async function(postId){if(!guard())return;const input=q('v9ci-'+postId);const content=input?.value.trim();if(!content)return;const {error}=await supabaseClient.from('community_comments').insert({post_id:postId,user_id:currentUser.id,content});if(error)return toastV(error.message,'error');input.value='';const box=q('v9comments-'+postId);if(box)box.hidden=true;await toggleV9Comments(postId);await refreshPostMeta(postId)};
   window.openV9Lightbox=function(url){showModal(`<div class="v9-lightbox" onclick="hideModal()"><img src="${escV(url)}" alt="" onclick="event.stopPropagation()"></div>`) };
   function patchAuth(){const old=window.updateAuthUI;if(window.__V10_AUTH_PATCH__)return;window.__V10_AUTH_PATCH__=true;window.updateAuthUI=function(){old?.();const account=q('headerAccount');if(account&&logged()){const name=escV(currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik');account.innerHTML=`<button class="account-btn" onclick="openV9Profile('${escV(currentUser.id)}')"><span class="account-name">👤 ${name}${currentProfile?.role==='admin'?'<span class="account-admin">Admin</span>':''}</span></button><button class="account-btn" onclick="logout()">↪</button>`}if(q('community'))renderMyProfile()}}
