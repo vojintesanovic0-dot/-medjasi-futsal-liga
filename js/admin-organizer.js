@@ -65,10 +65,9 @@
         '<div><span class="admin-organizer-kicker">ADMIN CENTAR</span><strong>Sve funkcije organizovane po područjima</strong><p>Svaka funkcija nalazi se samo u jednoj grupi. Ništa nije uklonjeno.</p></div>'+
       '</div>'+
       '<div class="admin-organizer-tabs">'+
-        '<button type="button" class="admin-organizer-tab active" data-admin-filter="all"><b>▦</b><span>Sve funkcije</span><small>Prikaži sve grupe</small></button>'+
-        groups.map(g=>'<button type="button" class="admin-organizer-tab" data-admin-filter="'+g.id+'"><b>'+g.icon+'</b><span>'+g.title+'</span><small>'+g.desc+'</small></button>').join("")+
+        groups.map((g,i)=>'<button type="button" class="admin-organizer-tab '+(i===0?'active':'')+'" data-admin-filter="'+g.id+'"><b>'+g.icon+'</b><span>'+g.title+'</span><small>'+g.desc+'</small></button>').join("")+
       '</div>'+
-      '<div id="adminOrganizerStatus" class="admin-organizer-status"><i></i><span>Prikaz: <strong>Sve funkcije</strong></span></div>'+
+      '<div id="adminOrganizerStatus" class="admin-organizer-status"><i></i><span>Prikaz: <strong>Liga</strong></span></div>'+
       '<div class="admin-organizer-groups"></div>';
 
     host.prepend(organizer);
@@ -93,6 +92,21 @@
     });
 
     return organizer;
+  }
+
+  function removeUnwanted(host){
+    [...host.children].forEach(el=>{
+      if(el.id==="adminOrganizer") return;
+      const id=el.id||"";
+      const has=(selector)=>!!el.querySelector?.(selector);
+      const unwanted =
+        id==="adminGalleryList" || has("#adminGalleryList") ||
+        id==="adminMusicPlaylist" || has("#adminMusicPlaylist") || el.classList?.contains("admin-music-card") ||
+        id==="v7PushCard" || has("#v7PushCard") ||
+        id==="communityModerationCard" || has("#communityModerationCard") ||
+        id==="moderatorManagement" || has("#moderatorManagement");
+      if(unwanted) el.remove();
+    });
   }
 
   function moveCards(host,organizer){
@@ -129,15 +143,16 @@
     if(!host || !isAdmin()) return;
 
     const organizer=buildShell(host);
+    removeUnwanted(host);
     moveCards(host,organizer);
 
     const sections=organizer.querySelectorAll(".admin-organizer-group");
     sections.forEach(section=>{
-      const show=active==="all" || section.dataset.adminOrganizerGroupContainer===active;
+      const show=section.dataset.adminOrganizerGroupContainer===active;
       section.hidden=!show;
     });
 
-    const label=active==="all"?"Sve funkcije":(groups.find(g=>g.id===active)?.title||"Sve funkcije");
+    const label=groups.find(g=>g.id===active)?.title||"Liga";
     const status=organizer.querySelector("#adminOrganizerStatus");
     if(status) status.innerHTML='<i></i><span>Prikaz: <strong>'+label+'</strong> · svaka funkcija je samo u svojoj grupi.</span>';
   }
@@ -165,7 +180,7 @@
     if(!host || observer) return;
     observer=new MutationObserver(()=>{
       if(moving || !isAdmin()) return;
-      // Dynamic admin cards (news, push, seasons, graphic engine, moderation)
+      // Dynamic admin cards are inserted later; unwanted admin cards are removed.
       // are inserted later. Re-run grouping so each lands in exactly one place.
       render();
     });
