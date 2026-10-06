@@ -35,7 +35,7 @@
     if(id==="v7NewsAdmin"||has(el,"#v7NewsAdmin"))return"sadrzaj";
     if(id==="adminGalleryList"||has(el,"#adminGalleryList")||has(el,"#galleryImageFile"))return"sadrzaj";
     if(id==="adminMusicPlaylist"||has(el,"#adminMusicPlaylist")||cls.contains("admin-music-card"))return"sadrzaj";
-    if(id==="v7PushCard"||has(el,"#v7PushCard"))return"sadrzaj";
+    if(id==="v7PushCard"||id==="v3PushCard"||has(el,"#v7PushCard")||has(el,"#v3PushCard"))return"sadrzaj";
     if(id==="adminCrudContentV4"||has(el,"#adminCrudContentV4"))return"sadrzaj";
 
     if(id==="communityModerationCard"||has(el,"#communityModerationCard"))return"zajednica";
@@ -89,12 +89,17 @@
     return organizer;
   }
 
+  function getBodies(organizer){
+    const bodies={};
+    groups.forEach(g=>bodies[g.id]=organizer.querySelector('[data-admin-group-body="'+g.id+'"]'));
+    return bodies;
+  }
+
   function moveCards(host,organizer){
-    if(syncing)return;
+    if(!host||syncing)return;
     syncing=true;
     try{
-      const bodies={};
-      groups.forEach(g=>bodies[g.id]=organizer.querySelector('[data-admin-group-body="'+g.id+'"]'));
+      const bodies=getBodies(organizer);
       [...host.children].forEach(el=>{
         if(el===organizer||el.dataset.adminOrganizerGroupContainer||el.dataset.adminOrganizerManaged==="1")return;
         const group=classify(el);
@@ -106,11 +111,26 @@
     }finally{syncing=false;}
   }
 
+  function moveLegacyAdminCards(adminRoot,host,organizer){
+    if(!adminRoot||!host)return;
+    const bodies=getBodies(organizer);
+    [...adminRoot.children].forEach(el=>{
+      if(el===host||el===organizer||el.dataset.adminOrganizerManaged==="1")return;
+      if(!el.classList?.contains("card"))return;
+      const group=classify(el);
+      if(!group||!bodies[group])return;
+      el.dataset.adminOrganizerManaged="1";
+      el.dataset.adminOrganizerGroup=group;
+      bodies[group].appendChild(el);
+    });
+  }
+
   function render(){
     const host=root();
     if(!host||!isAdmin())return;
     const organizer=buildOrganizer(host);
     moveCards(host,organizer);
+    moveLegacyAdminCards(document.getElementById("admin"),host,organizer);
 
     organizer.querySelectorAll(".admin-organizer-group").forEach(section=>{
       const activeNow=section.dataset.adminOrganizerGroupContainer===active;
@@ -126,10 +146,10 @@
   }
 
   function watch(){
-    const host=root();
-    if(!host||observer)return;
+    const adminRoot=document.getElementById("admin");
+    if(!adminRoot||observer)return;
     observer=new MutationObserver(()=>{if(!syncing&&isAdmin())render()});
-    observer.observe(host,{childList:true});
+    observer.observe(adminRoot,{childList:true,subtree:true});
   }
 
   const oldShowSection=window.showSection;
