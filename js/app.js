@@ -52,6 +52,8 @@ let musicSettings={youtube_music_enabled:false};
 let musicTracks=[];
 let currentMusicSignature="";
 let musicUserStarted=false;
+let chatPreviewObjectUrl=null;
+let commentPreviewObjectUrl=null;
 
 /* =========================================================
    GLOBAL STATE BRIDGE
@@ -95,6 +97,19 @@ function esc(value){
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
+}
+
+/* Escape values that are embedded inside inline JavaScript string literals. */
+function escJs(value){
+  return String(value ?? "")
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\x27")
+    .replace(/"/g,"\\x22")
+    .replace(/\r/g,"\\r")
+    .replace(/\n/g,"\\n")
+    .replace(/</g,"\\x3c")
+    .replace(/>/g,"\\x3e")
+    .replace(/&/g,"\\x26");
 }
 
 
@@ -3391,7 +3406,7 @@ function renderChat(){
               </div>
               ${m.content ? `<div class="chat-message-text">${esc(m.content)}</div>` : ""}
               ${m.image_url ? `
-                <button class="chat-photo" type="button" onclick="openImagePreview('${esc(m.image_url)}','${esc(username)}')">
+                <button class="chat-photo" type="button" onclick="openImagePreview('${escJs(m.image_url)}','${escJs(username)}')">
                   <img src="${esc(m.image_url)}" alt="Slika u chatu" loading="lazy">
                 </button>` : ""}
               ${currentUser && (m.user_id===currentUser.id || isAdmin())
@@ -3423,8 +3438,9 @@ function setupChatImageUI(){
 
     if(meta) meta.textContent=`Odabrano: ${file.name}`;
     if(preview){
-      const url=URL.createObjectURL(file);
-      preview.innerHTML=`<img src="${url}" alt="Pregled slike"><button type="button" class="btn btn-red btn-small" onclick="clearChatImage()">✕ Ukloni</button>`;
+      if(chatPreviewObjectUrl) URL.revokeObjectURL(chatPreviewObjectUrl);
+      chatPreviewObjectUrl=URL.createObjectURL(file);
+      preview.innerHTML=`<img src="${chatPreviewObjectUrl}" alt="Pregled slike"><button type="button" class="btn btn-red btn-small" onclick="clearChatImage()">✕ Ukloni</button>`;
       preview.classList.remove("hidden");
     }
   });
@@ -3435,6 +3451,7 @@ function clearChatImage(){
   const preview=document.getElementById("chatImagePreview");
   const meta=document.getElementById("chatImageMeta");
   if(input) input.value="";
+  if(chatPreviewObjectUrl){URL.revokeObjectURL(chatPreviewObjectUrl);chatPreviewObjectUrl=null;}
   if(preview){preview.innerHTML="";preview.classList.add("hidden");}
   if(meta) meta.textContent="Možeš poslati sliku uz poruku.";
 }
@@ -3542,7 +3559,7 @@ function renderGallery(){
 
   grid.innerHTML=gallery.map(item=>`
     <article class="gallery-item">
-      <button class="gallery-photo" type="button" onclick="openImagePreview('${esc(item.image_url)}','${esc(item.title || "Galerija")}')">
+      <button class="gallery-photo" type="button" onclick="openImagePreview('${escJs(item.image_url)}','${escJs(item.title || "Galerija")}')">
         <img src="${esc(item.image_url)}" alt="${esc(item.title || "Fotografija")}" loading="lazy">
         <span class="gallery-overlay">🔍 Pregledaj</span>
       </button>
@@ -7757,8 +7774,9 @@ function setupCommentImageUI(){
     remove.classList.remove("hidden");
 
     const preview=row.querySelector("#commentImagePreview");
-    const url=URL.createObjectURL(file);
-    preview.innerHTML=`<img src="${url}" alt="Pregled slike">`;
+    if(commentPreviewObjectUrl) URL.revokeObjectURL(commentPreviewObjectUrl);
+    commentPreviewObjectUrl=URL.createObjectURL(file);
+    preview.innerHTML=`<img src="${commentPreviewObjectUrl}" alt="Pregled slike">`;
     preview.classList.remove("hidden");
     selectedCommentImage=file;
   });
@@ -7775,6 +7793,7 @@ function removeCommentImage(){
   selectedCommentImage=null;
   if(input) input.value="";
   if(name) name.textContent="Nije odabrana slika";
+  if(commentPreviewObjectUrl){URL.revokeObjectURL(commentPreviewObjectUrl);commentPreviewObjectUrl=null;}
   if(preview){
     preview.innerHTML="";
     preview.classList.add("hidden");
