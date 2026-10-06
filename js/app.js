@@ -243,6 +243,30 @@ function playerPhoto(player){
    NAVIGATION
 ========================================================= */
 
+const SECTION_STATE_KEY = "medjasi_active_section_v1";
+
+function rememberActiveSection(id){
+  try{
+    if(id) sessionStorage.setItem(SECTION_STATE_KEY,String(id));
+  }catch(error){
+    console.warn("Aktivna sekcija nije sačuvana:",error);
+  }
+}
+
+function restoreRememberedSection(){
+  try{
+    const saved=sessionStorage.getItem(SECTION_STATE_KEY);
+    if(!saved || saved==="login") return false;
+    const section=document.getElementById(saved);
+    if(!section || !section.classList.contains("section")) return false;
+    showSection(saved);
+    return true;
+  }catch(error){
+    console.warn("Aktivna sekcija nije mogla biti vraćena:",error);
+    return false;
+  }
+}
+
 function showSection(id){
 
   if(id === "admin" && !isAdmin()){
@@ -261,6 +285,8 @@ function showSection(id){
   if(section){
     section.classList.add("active");
   }
+
+  rememberActiveSection(id);
 
 
   /* DESKTOP / SIDEBAR NAV */
@@ -7601,6 +7627,8 @@ async function init(){
   await loadMusicSettings();
 
   await loadAll();
+
+  restoreRememberedSection();
 
   subscribeRealtime();
 
