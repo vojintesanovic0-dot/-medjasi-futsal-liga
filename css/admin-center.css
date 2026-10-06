@@ -1,0 +1,30 @@
+/* =========================================================
+   MEĐASI ADMIN CENTER
+   Samo admin panel. Ne mijenja javni sajt.
+========================================================= */
+.admin-center-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:16px;padding:18px 20px;border:1px solid var(--border);border-radius:18px;background:linear-gradient(135deg,rgba(36,228,135,.08),rgba(45,156,255,.06)),var(--card)}
+.admin-center-head h2{margin:3px 0 4px;font-size:24px}
+.admin-center-head p{margin:0;color:var(--muted);font-size:12px}
+.admin-center-kicker{font-size:9px;letter-spacing:1.8px;font-weight:900;color:var(--accent)}
+.admin-center-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.admin-center-tabs button{border:1px solid var(--border);background:rgba(255,255,255,.035);color:#dbe8f2;border-radius:11px;padding:10px 13px;font-weight:850;cursor:pointer}
+.admin-center-tabs button.active{background:rgba(37,228,135,.11);border-color:rgba(37,228,135,.32);color:var(--accent)}
+.admin-center-tools{display:flex;gap:8px;flex-wrap:wrap}
+.admin-center-tools .btn{white-space:nowrap}
+.admin-center-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.admin-center-stat{padding:14px 15px;border:1px solid var(--border);border-radius:15px;background:rgba(255,255,255,.025)}
+.admin-center-stat b{display:block;font-size:22px}
+.admin-center-stat span{display:block;margin-top:3px;color:var(--muted);font-size:10px;font-weight:800}
+.admin-center-section{display:none}
+.admin-center-section.active{display:block}
+.admin-center-section>.card,.admin-center-section>.admin-grid{margin-bottom:16px}
+.admin-center-section .admin-grid{margin-bottom:16px}
+.admin-center-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.admin-center-quick button{text-align:left;padding:14px;border:1px solid var(--border);border-radius:15px;background:rgba(255,255,255,.025);color:#fff;cursor:pointer}
+.admin-center-quick button:hover{background:rgba(255,255,255,.045)}
+.admin-center-quick b{display:block;font-size:20px;margin-bottom:6px}
+.admin-center-quick span{display:block;font-weight:850}
+.admin-center-quick small{display:block;color:var(--muted);margin-top:3px}
+.admin-center-note{padding:12px 14px;border:1px dashed rgba(37,228,135,.2);border-radius:13px;color:var(--muted);font-size:11px;margin-bottom:16px}
+@media(max-width:900px){.admin-center-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-center-quick{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.admin-center-head{align-items:flex-start;flex-direction:column}.admin-center-tabs{display:grid;grid-template-columns:1fr 1fr}.admin-center-tabs button{width:100%}.admin-center-overview{grid-template-columns:1fr 1fr}.admin-center-quick{grid-template-columns:1fr}.admin-center-tools{width:100%}.admin-center-tools .btn{flex:1}}
