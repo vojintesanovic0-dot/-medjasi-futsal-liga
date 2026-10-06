@@ -1551,8 +1551,16 @@ function initMusic(){
   const wrap=document.getElementById("musicPlayerWrap"),hint=document.getElementById("musicHint"),btn=document.getElementById("musicUnmute");if(!wrap)return;
   const enabled=!!musicSettings?.youtube_music_enabled,first=musicTracks[0],signature=musicTracks.map(musicTrackKey).join(",")+"|"+enabled;
   if(!enabled||!first){wrap.innerHTML='<div class="music-placeholder"><div><span style="font-size:28px">🎵</span><br>Trenutno nema aktivne muzike lige.</div></div>';currentMusicSignature="";musicUserStarted=false;if(hint)hint.textContent="Admin može uključiti playlistu iz Admin panela.";if(btn)btn.style.display="none";return;}
-  if(currentMusicSignature!==signature){const src=musicEmbedUrl(first,true);wrap.innerHTML=src?'<iframe id="ytMusic" src="'+src+'" title="Medjaši Liga muzika" loading="eager" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>':"";currentMusicSignature=signature;musicUserStarted=false;}
-  if(hint)hint.innerHTML='<span class="music-live-badge">● MUZIKA LIGE</span> <span class="music-volume-note">'+(first.provider==="spotify"?"Spotify player je spreman. Pritisni Play na playeru.":"Playlist svira redom. Klikni „Uključi zvuk“ ako želiš zvuk.")+'</span>';
+  if(currentMusicSignature!==signature){
+    let src=musicEmbedUrl(first,true);
+    if(first.provider!=="spotify"&&musicTracks.every(t=>t.provider!=="spotify")){
+      const ids=musicTracks.map(t=>t.youtube_music_id).filter(Boolean);
+      if(ids.length)src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(ids[0])+"?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&modestbranding=1&loop=1&playlist="+encodeURIComponent(ids.join(","));
+    }
+    wrap.innerHTML=src?'<iframe id="ytMusic" src="'+src+'" title="Medjaši Liga muzika" loading="eager" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>':"";
+    currentMusicSignature=signature;musicUserStarted=false;
+  }
+  if(hint)hint.innerHTML='<span class="music-live-badge">● MUZIKA LIGE</span> <span class="music-volume-note">'+(first.provider==="spotify"?"Spotify player je spreman. Pritisni Play na playeru.":musicTracks.every(t=>t.provider!=="spotify"?"Playlist svira redom. Klikni „Uključi zvuk“ ako želiš zvuk.":"Prva pjesma je spremna za puštanje."))+'</span>';
   if(btn){btn.style.display=first.provider==="spotify"?"none":"inline-flex";btn.textContent=musicUserStarted?"🔊 Zvuk uključen":"🔊 Uključi zvuk";}
 }
 function unmuteMusic(){
