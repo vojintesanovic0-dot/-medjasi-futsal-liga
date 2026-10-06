@@ -116,12 +116,15 @@
        * Ne ulazi u početni bundle aplikacije.
        */
       const mod = await import("https://esm.sh/@imgly/background-removal@1.7.0");
-      const removeBackground = mod.removeBackground || mod.default;
+      const removeBackground = mod.removeBackground;
       if(typeof removeBackground !== "function"){
         throw new Error("AI alat za uklanjanje pozadine nije dostupan.");
       }
 
       cutoutBlob = await removeBackground(sourceFile, {
+        model: "isnet_quint8",
+        device: "gpu",
+        proxyToWorker: false,
         output: {format:"image/png"}
       });
 
