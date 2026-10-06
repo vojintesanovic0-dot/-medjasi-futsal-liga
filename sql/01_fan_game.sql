@@ -442,8 +442,14 @@ begin
   end if;
   select balance into v_bal from fan_wallets where user_id = v_uid for update;
   if v_bal < it.price then raise exception 'Nemaš dovoljno poena.'; end if;
+
+  update fan_inventory i
+  set equipped=false
+  from fan_shop_items s
+  where i.user_id=v_uid and s.id=i.item_id and s.kind=it.kind;
+
   update fan_wallets set balance = balance - it.price where user_id = v_uid;
-  insert into fan_inventory(user_id, item_id) values (v_uid, p_item);
+  insert into fan_inventory(user_id, item_id, equipped) values (v_uid, p_item, true);
   insert into fan_ledger(user_id, delta, reason, ref) values (v_uid, -it.price, 'Kupovina: ' || it.name, 'shop');
   return v_bal - it.price;
 end $$;
