@@ -41,7 +41,11 @@
       el.style.setProperty('--mi-size',size);
     });
   }
-  window.medjasiIcon={map,hydrate};
+  function html(emoji,size="1em"){
+    const key=map[emoji]||"star";
+    return '<span class="m-icon" data-icon="'+key+'" data-size="'+size+'" aria-hidden="true"></span>';
+  }
+  window.medjasiIcon={map,html,hydrate};
   const mo=new MutationObserver(()=>hydrate(document));
   function boot(){hydrate(document);mo.observe(document.body,{childList:true,subtree:true});}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
