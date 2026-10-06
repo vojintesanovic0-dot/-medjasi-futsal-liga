@@ -481,7 +481,7 @@ function notificationTime(value){
 function addLeagueNotification({
   title,
   text="",
-  icon="🔔",
+  icon="<span class="m-icon" data-icon="bell" aria-hidden="true"></span>",
   type="info",
   key="",
   browser=true
@@ -715,9 +715,9 @@ function processLeagueNotifications(){
     const team = player ? teamName(player.team_id) : "";
 
     addLeagueNotification({
-      title:`⚽ Gol – ${notificationMatchLabel(match)}`,
+      title:`<span class="m-icon" data-icon="ball" aria-hidden="true"></span> Gol – ${notificationMatchLabel(match)}`,
       text:`${playerName}${team ? ` (${team})` : ""} • ${g.minute || 0}' • rezultat ${notificationMatchScore(match)}`,
-      icon:"⚽",
+      icon:"<span class="m-icon" data-icon="ball" aria-hidden="true"></span>",
       type:"goal",
       key:`goal:${g.id}`
     });
@@ -738,9 +738,9 @@ function processLeagueNotifications(){
     const isRed = String(c.card_type).toLowerCase() === "red";
 
     addLeagueNotification({
-      title:`${isRed ? "🟥 Crveni" : "🟨 Žuti"} karton – ${notificationMatchLabel(match)}`,
+      title:`${isRed ? "<span class="m-icon" data-icon="red" aria-hidden="true"></span> Crveni" : "<span class="m-icon" data-icon="yellow" aria-hidden="true"></span> Žuti"} karton – ${notificationMatchLabel(match)}`,
       text:`${playerName} • ${c.minute || 0}'`,
-      icon:isRed ? "🟥" : "🟨",
+      icon:isRed ? "<span class="m-icon" data-icon="red" aria-hidden="true"></span>" : "<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>",
       type:isRed ? "red-card" : "yellow-card",
       key:`card:${c.id}`
     });
@@ -760,9 +760,9 @@ function processLeagueNotifications(){
       current.status === "live"
     ){
       addLeagueNotification({
-        title:`🔴 Počela utakmica`,
+        title:`<span class="m-icon" data-icon="live" aria-hidden="true"></span> Počela utakmica`,
         text:`${notificationMatchLabel(match)} je sada uživo.`,
-        icon:"🔴",
+        icon:"<span class="m-icon" data-icon="live" aria-hidden="true"></span>",
         type:"live",
         key:`live:${match.id}:${current.status}`
       });
@@ -773,9 +773,9 @@ function processLeagueNotifications(){
       current.status === "finished"
     ){
       addLeagueNotification({
-        title:`🏁 Završena utakmica`,
+        title:`<span class="m-icon" data-icon="result" aria-hidden="true"></span> Završena utakmica`,
         text:`${notificationMatchLabel(match)} • rezultat ${notificationMatchScore(match)}`,
-        icon:"🏁",
+        icon:"<span class="m-icon" data-icon="result" aria-hidden="true"></span>",
         type:"finished",
         key:`finished:${match.id}`
       });
@@ -790,9 +790,9 @@ function processLeagueNotifications(){
       !newGoalMatchIds.has(String(match.id))
     ){
       addLeagueNotification({
-        title:`📊 Promjena rezultata`,
+        title:`<span class="m-icon" data-icon="stats" aria-hidden="true"></span> Promjena rezultata`,
         text:`${notificationMatchLabel(match)} • ${notificationMatchScore(match)}`,
-        icon:"📊",
+        icon:"<span class="m-icon" data-icon="stats" aria-hidden="true"></span>",
         type:"score",
         key:`score:${match.id}:${current.home_score}:${current.away_score}`
       });
@@ -805,14 +805,14 @@ function processLeagueNotifications(){
 
     const content = message.content.trim();
 
-    if(!content.startsWith("📣")) return;
+    if(!content.startsWith("<span class="m-icon" data-icon="news" aria-hidden="true"></span>")) return;
 
-    const clean = content.replace(/^📣\s*/,"").trim();
+    const clean = content.replace(/^<span class="m-icon" data-icon="news" aria-hidden="true"></span>\s*/,"").trim();
 
     addLeagueNotification({
-      title:"📣 Nova najava lige",
+      title:"<span class="m-icon" data-icon="news" aria-hidden="true"></span> Nova najava lige",
       text:clean,
-      icon:"📣",
+      icon:"<span class="m-icon" data-icon="news" aria-hidden="true"></span>",
       type:"announcement",
       key:`announcement:${message.id}`
     });
@@ -880,7 +880,7 @@ function renderNotifications(){
           class="notification-item ${n.read ? "" : "unread"}"
           onclick="readSingleNotification('${esc(n.id)}')"
           style="text-align:left;color:inherit;width:100%;cursor:pointer">
-          <span class="notification-icon">${n.icon || "🔔"}</span>
+          <span class="notification-icon">${n.icon || "<span class="m-icon" data-icon="bell" aria-hidden="true"></span>"}</span>
           <span>
             <span class="notification-title">${esc(n.title)}</span>
             ${n.text ? `<span class="notification-text">${esc(n.text)}</span>` : ""}
@@ -893,13 +893,13 @@ function renderNotifications(){
   return `
     <div class="notification-modal-head">
       <div>
-        <h2 style="margin:0">🔔 Obavještenja</h2>
+        <h2 style="margin:0"><span class="m-icon" data-icon="bell" aria-hidden="true"></span> Obavještenja</h2>
         <div class="muted" style="margin-top:4px">
           ${unread ? `${unread} nepročitano` : "Sve je pročitano"}
         </div>
       </div>
       <button class="btn btn-small" type="button" onclick="markAllNotificationsRead()">
-        ✓ Pročitaj sve
+        <span class="m-icon" data-icon="result" aria-hidden="true"></span> Pročitaj sve
       </button>
     </div>
 
@@ -914,7 +914,7 @@ function renderNotifications(){
 
       ${
         ("Notification" in window && Notification.permission !== "granted")
-          ? `<button class="btn btn-green btn-small notification-setting-btn" type="button" onclick="enableLeagueNotifications()">🔔 Uključi obavještenja</button>`
+          ? `<button class="btn btn-green btn-small notification-setting-btn" type="button" onclick="enableLeagueNotifications()"><span class="m-icon" data-icon="bell" aria-hidden="true"></span> Uključi obavještenja</button>`
           : ""
       }
 
@@ -1490,7 +1490,7 @@ async function logout(){
    AUTH UI
 ========================================================= */
 
-function updateAuthUI(){const logged=!!currentUser;const username=currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik";const account=document.getElementById("headerAccount");if(account)account.innerHTML=logged?`<button class="account-btn" onclick="openV9Profile('${currentUser.id}')"><span class="account-name">👤 ${esc(username)}</span>${isAdmin()?'<span class="account-admin">Admin</span>':''}</button><button class="account-btn" onclick="logout()">↪</button>`:`<button class="account-btn" onclick="showSection('login')">🔐 Prijava</button>`;document.getElementById("commentForm")?.classList.toggle("hidden",!logged);renderHome();renderTable();renderMatches();renderTeams();renderPlayers();renderStats();renderComments();renderChat();renderAdminMatches();fillTeamSelects();}
+function updateAuthUI(){const logged=!!currentUser;const username=currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik";const account=document.getElementById("headerAccount");if(account)account.innerHTML=logged?`<button class="account-btn" onclick="openV9Profile('${currentUser.id}')"><span class="account-name"><span class="m-icon" data-icon="player" aria-hidden="true"></span> ${esc(username)}</span>${isAdmin()?'<span class="account-admin">Admin</span>':''}</button><button class="account-btn" onclick="logout()">↪</button>`:`<button class="account-btn" onclick="showSection('login')"><span class="m-icon" data-icon="shield" aria-hidden="true"></span> Prijava</button>`;document.getElementById("commentForm")?.classList.toggle("hidden",!logged);renderHome();renderTable();renderMatches();renderTeams();renderPlayers();renderStats();renderComments();renderChat();renderAdminMatches();fillTeamSelects();}
 
 /* =========================================================
    LOAD ALL DATA
@@ -1691,7 +1691,7 @@ function musicEmbedUrl(t,muted){
 function initMusic(){
   const wrap=document.getElementById("musicPlayerWrap"),hint=document.getElementById("musicHint"),btn=document.getElementById("musicUnmute");if(!wrap)return;
   const enabled=!!musicSettings?.youtube_music_enabled,first=musicTracks[0],signature=musicTracks.map(musicTrackKey).join(",")+"|"+enabled;
-  if(!enabled||!first){wrap.innerHTML='<div class="music-placeholder"><div><span style="font-size:28px">🎵</span><br>Trenutno nema aktivne muzike lige.</div></div>';currentMusicSignature="";musicUserStarted=false;if(hint)hint.textContent="Admin može uključiti playlistu iz Admin panela.";if(btn)btn.style.display="none";return;}
+  if(!enabled||!first){wrap.innerHTML='<div class="music-placeholder"><div><span style="font-size:28px"><span class="m-icon" data-icon="music" aria-hidden="true"></span></span><br>Trenutno nema aktivne muzike lige.</div></div>';currentMusicSignature="";musicUserStarted=false;if(hint)hint.textContent="Admin može uključiti playlistu iz Admin panela.";if(btn)btn.style.display="none";return;}
   if(currentMusicSignature!==signature){
     let src=musicEmbedUrl(first,true);
     if(first.provider!=="spotify"&&musicTracks.every(t=>t.provider!=="spotify")){
@@ -1702,7 +1702,7 @@ function initMusic(){
     currentMusicSignature=signature;musicUserStarted=false;
   }
   if(hint)hint.innerHTML='<span class="music-live-badge">● MUZIKA LIGE</span> <span class="music-volume-note">'+(first.provider==="spotify"?"Spotify player je spreman. Pritisni Play na playeru.":(musicTracks.every(t=>t.provider!=="spotify")?"Playlist svira redom. Klikni „Uključi zvuk“ ako želiš zvuk.":"Prva pjesma je spremna za puštanje."))+'</span>';
-  if(btn){btn.style.display=first.provider==="spotify"?"none":"inline-flex";btn.textContent=musicUserStarted?"🔊 Zvuk uključen":"🔊 Uključi zvuk";}
+  if(btn){btn.style.display=first.provider==="spotify"?"none":"inline-flex";btn.textContent=musicUserStarted?"<span class="m-icon" data-icon="music" aria-hidden="true"></span> Zvuk uključen":"<span class="m-icon" data-icon="music" aria-hidden="true"></span> Uključi zvuk";}
 }
 function unmuteMusic(){
   const frame=document.getElementById("ytMusic"),first=musicTracks[0];if(!frame||!first)return;
@@ -1712,7 +1712,7 @@ function unmuteMusic(){
     const ids=musicTracks.map(t=>t.youtube_music_id).filter(Boolean);
     if(ids.length)src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(ids[0])+"?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&modestbranding=1&loop=1&playlist="+encodeURIComponent(ids.join(","));
   }
-  if(src)frame.src=src;musicUserStarted=true;const btn=document.getElementById("musicUnmute");if(btn)btn.textContent="🔊 Zvuk uključen";
+  if(src)frame.src=src;musicUserStarted=true;const btn=document.getElementById("musicUnmute");if(btn)btn.textContent="<span class="m-icon" data-icon="music" aria-hidden="true"></span> Zvuk uključen";
 }
 
 function renderAnnouncement(){
@@ -1833,7 +1833,7 @@ async function postNextMatchAnnouncement(){
 
 
   const content =
-    `📣 NAJAVA UTAKMICE: ${
+    `<span class="m-icon" data-icon="news" aria-hidden="true"></span> NAJAVA UTAKMICE: ${
       home?.name || "Domaćin"
     } 🆚 ${
       away?.name || "Gost"
@@ -2029,7 +2029,7 @@ function renderHome(){
              style="cursor:pointer">
 
           <div class="rank-num">
-            ⚽
+            <span class="m-icon" data-icon="ball" aria-hidden="true"></span>
           </div>
 
           <div class="rank-avatar">
@@ -2394,7 +2394,7 @@ function enhancedMatchHTML(m){
           ${
             live
               ? `<div class="match-meta">
-                   🔴 Utakmica uživo
+                   <span class="m-icon" data-icon="live" aria-hidden="true"></span> Utakmica uživo
                  </div>`
               : ""
           }
@@ -2761,7 +2761,7 @@ function renderTeams(){
                         <button
                           class="btn btn-small"
                           onclick="openTeam('${t.id}')">
-                          👁️ Otvori
+                          <span class="m-icon" data-icon="player" aria-hidden="true"></span>️ Otvori
                         </button>
 
                         <button
@@ -2957,11 +2957,11 @@ function renderPlayers(){
                     class="match-meta"
                     style="margin-top:8px">
 
-                    ⚽ ${g}
+                    <span class="m-icon" data-icon="ball" aria-hidden="true"></span> ${g}
                     &nbsp;
-                    🟨 ${c}
+                    <span class="m-icon" data-icon="yellow" aria-hidden="true"></span> ${c}
                     &nbsp;
-                    👟 ${apps}
+                    <span class="m-icon" data-icon="player" aria-hidden="true"></span> ${apps}
 
                   </div>
 
@@ -3113,7 +3113,7 @@ function renderStats(){
           sub:teamName(
             getPlayer(id)?.team_id
           ),
-          value:`🟨 ${v}`
+          value:`<span class="m-icon" data-icon="yellow" aria-hidden="true"></span> ${v}`
         })
       );
 
@@ -3537,7 +3537,7 @@ function renderChat(){
 
         return `
           <div class="chat-message">
-            <div class="chat-avatar" style="${avatarStyle}">${esc(style.badge||"💬")}</div>
+            <div class="chat-avatar" style="${avatarStyle}">${esc(style.badge||"<span class="m-icon" data-icon="community" aria-hidden="true"></span>")}</div>
             <div class="chat-message-body">
               <div class="chat-message-top">
                 <strong ${nameStyle}>${badge}${esc(username)}</strong>
@@ -3581,7 +3581,7 @@ function setupChatImageUI(){
     if(preview){
       if(chatPreviewObjectUrl) URL.revokeObjectURL(chatPreviewObjectUrl);
       chatPreviewObjectUrl=URL.createObjectURL(file);
-      preview.innerHTML=`<img src="${chatPreviewObjectUrl}" alt="Pregled slike"><button type="button" class="btn btn-red btn-small" onclick="clearChatImage()">✕ Ukloni</button>`;
+      preview.innerHTML=`<img src="${chatPreviewObjectUrl}" alt="Pregled slike"><button type="button" class="btn btn-red btn-small" onclick="clearChatImage()"><span class="m-icon" data-icon="settings" aria-hidden="true"></span> Ukloni</button>`;
       preview.classList.remove("hidden");
     }
   });
@@ -3694,7 +3694,7 @@ function renderGallery(){
   if(!grid) return;
 
   if(!gallery.length){
-    grid.innerHTML=`<div class="empty gallery-empty">📸 Galerija je trenutno prazna.</div>`;
+    grid.innerHTML=`<div class="empty gallery-empty"><span class="m-icon" data-icon="gallery" aria-hidden="true"></span> Galerija je trenutno prazna.</div>`;
     return;
   }
 
@@ -3702,7 +3702,7 @@ function renderGallery(){
     <article class="gallery-item">
       <button class="gallery-photo" type="button" onclick="openImagePreview('${escJs(item.image_url)}','${escJs(item.title || "Galerija")}')">
         <img src="${esc(item.image_url)}" alt="${esc(item.title || "Fotografija")}" loading="lazy">
-        <span class="gallery-overlay">🔍 Pregledaj</span>
+        <span class="gallery-overlay"><span class="m-icon" data-icon="search" aria-hidden="true"></span> Pregledaj</span>
       </button>
       <div class="gallery-caption">
         <strong>${esc(item.title || "Fotografija lige")}</strong>
@@ -4319,7 +4319,7 @@ function renderAdminMatches(){
                       '${m.id}'
                     )
                   ">
-                  ⚽ Gol
+                  <span class="m-icon" data-icon="ball" aria-hidden="true"></span> Gol
                 </button>
 
 
@@ -4330,7 +4330,7 @@ function renderAdminMatches(){
                       '${m.id}'
                     )
                   ">
-                  🟨 Karton
+                  <span class="m-icon" data-icon="yellow" aria-hidden="true"></span> Karton
                 </button>
 
 
@@ -4355,7 +4355,7 @@ function renderAdminMatches(){
                             '${m.id}'
                           )
                         ">
-                        🔄 Izmjena
+                        <span class="m-icon" data-icon="live" aria-hidden="true"></span> Izmjena
                       </button>
                     `
                     : ""
@@ -4369,7 +4369,7 @@ function renderAdminMatches(){
                       '${m.id}'
                     )
                   ">
-                  👁️ Pogledaj
+                  <span class="m-icon" data-icon="player" aria-hidden="true"></span>️ Pogledaj
                 </button>
 
               </div>
@@ -4574,8 +4574,8 @@ async function openLineupControl(
               ${
                 p.position ===
                 "Golman"
-                  ? "🧤"
-                  : "⚽"
+                  ? "<span class="m-icon" data-icon="player" aria-hidden="true"></span>"
+                  : "<span class="m-icon" data-icon="ball" aria-hidden="true"></span>"
               }
             </span>
 
@@ -4655,7 +4655,7 @@ async function openLineupControl(
 
       <p class="muted">
 
-        ✓ Prijavljen = igrač može biti na klupi.
+        <span class="m-icon" data-icon="result" aria-hidden="true"></span> Prijavljen = igrač može biti na klupi.
         <br>
         ⭐ Početna = jedan od prvih 5.
 
@@ -4674,7 +4674,7 @@ async function openLineupControl(
             '${matchId}'
           )
         ">
-        💾 Sačuvaj postavu
+        <span class="m-icon" data-icon="result" aria-hidden="true"></span> Sačuvaj postavu
       </button>
 
       <button
@@ -4997,7 +4997,7 @@ async function openSubstitutionControl(
     <div class="modal-title">
 
       <h2>
-        🔄 Izmjena igrača
+        <span class="m-icon" data-icon="live" aria-hidden="true"></span> Izmjena igrača
       </h2>
 
       <p class="muted">
@@ -5069,7 +5069,7 @@ async function openSubstitutionControl(
                 'home'
               )
             ">
-            🔄 Potvrdi izmjenu
+            <span class="m-icon" data-icon="live" aria-hidden="true"></span> Potvrdi izmjenu
           </button>
 
         </div>
@@ -5136,7 +5136,7 @@ async function openSubstitutionControl(
                 'away'
               )
             ">
-            🔄 Potvrdi izmjenu
+            <span class="m-icon" data-icon="live" aria-hidden="true"></span> Potvrdi izmjenu
           </button>
 
         </div>
@@ -5658,11 +5658,11 @@ function getMatchEvents(id){
         minute:Number(
           g.minute || 0
         ),
-        icon:"⚽",
+        icon:"<span class="m-icon" data-icon="ball" aria-hidden="true"></span>",
         text:
           `${playerName(
             g.player_id
-          )}${g.assist_player_id ? ` · 🎯 asistencija: ${playerName(g.assist_player_id)}` : ""} · Gol`,
+          )}${g.assist_player_id ? ` · <span class="m-icon" data-icon="target" aria-hidden="true"></span> asistencija: ${playerName(g.assist_player_id)}` : ""} · Gol`,
         type:"goal"
       });
 
@@ -5683,8 +5683,8 @@ function getMatchEvents(id){
         ),
         icon:
           c.card_type === "red"
-            ? "🟥"
-            : "🟨",
+            ? "<span class="m-icon" data-icon="red" aria-hidden="true"></span>"
+            : "<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>",
         text:
           `${playerName(
             c.player_id
@@ -6070,7 +6070,7 @@ function openMatch(id){
             class="muted"
             style="margin-top:5px">
 
-            ⚽ Golovi:
+            <span class="m-icon" data-icon="ball" aria-hidden="true"></span> Golovi:
             ${hGoals}
             —
             ${aGoals}
@@ -6100,7 +6100,7 @@ function openMatch(id){
             class="muted"
             style="margin-top:6px">
 
-            🏆
+            <span class="m-icon" data-icon="trophy" aria-hidden="true"></span>
             ${
               match.round
                 ? `${match.round}. kolo`
@@ -6118,7 +6118,7 @@ function openMatch(id){
         class="timeline">
 
         <h3 style="margin-bottom:8px">
-          📋 Posljednja dešavanja
+          <span class="m-icon" data-icon="result" aria-hidden="true"></span> Posljednja dešavanja
         </h3>
 
         ${
@@ -6396,7 +6396,7 @@ function openMatch(id){
           </div>
 
           <div class="muted">
-            🟨 + 🟥
+            <span class="m-icon" data-icon="yellow" aria-hidden="true"></span> + <span class="m-icon" data-icon="red" aria-hidden="true"></span>
           </div>
 
         </div>
@@ -6407,7 +6407,7 @@ function openMatch(id){
 
         <div class="card stat">
           <div class="stat-number">${hAssists} — ${aAssists}</div>
-          <div class="stat-label">🎯 Asistencije</div>
+          <div class="stat-label"><span class="m-icon" data-icon="target" aria-hidden="true"></span> Asistencije</div>
         </div>
 
         <div class="card stat">
@@ -6417,7 +6417,7 @@ function openMatch(id){
 
         <div class="card stat">
           <div class="stat-number">${events.length}</div>
-          <div class="stat-label">📋 Ukupno događaja</div>
+          <div class="stat-label"><span class="m-icon" data-icon="result" aria-hidden="true"></span> Ukupno događaja</div>
         </div>
 
         </div>
@@ -6459,7 +6459,7 @@ function openMatch(id){
                         '${id}'
                       )
                     ">
-                    🔄 Izmjena
+                    <span class="m-icon" data-icon="live" aria-hidden="true"></span> Izmjena
                   </button>
                 `
                 : ""
@@ -6473,7 +6473,7 @@ function openMatch(id){
                   '${id}'
                 )
               ">
-              ⚽ Gol
+              <span class="m-icon" data-icon="ball" aria-hidden="true"></span> Gol
             </button>
 
 
@@ -6484,7 +6484,7 @@ function openMatch(id){
                   '${id}'
                 )
               ">
-              🟨 Karton
+              <span class="m-icon" data-icon="yellow" aria-hidden="true"></span> Karton
             </button>
 
           </div>
@@ -6640,7 +6640,7 @@ function openGoalControl(
     <div class="modal-title">
 
       <h2>
-        ⚽ Dodaj gol
+        <span class="m-icon" data-icon="ball" aria-hidden="true"></span> Dodaj gol
       </h2>
 
     </div>
@@ -6703,7 +6703,7 @@ function openGoalControl(
             '${matchId}'
           )
         ">
-        ⚽ Dodaj gol
+        <span class="m-icon" data-icon="ball" aria-hidden="true"></span> Dodaj gol
       </button>
 
     </div>
@@ -6860,7 +6860,7 @@ function openCardControl(
     <div class="modal-title">
 
       <h2>
-        🟨 Dodaj karton
+        <span class="m-icon" data-icon="yellow" aria-hidden="true"></span> Dodaj karton
       </h2>
 
     </div>
@@ -6916,11 +6916,11 @@ function openCardControl(
         <select id="cardType">
 
           <option value="yellow">
-            🟨 Žuti
+            <span class="m-icon" data-icon="yellow" aria-hidden="true"></span> Žuti
           </option>
 
           <option value="red">
-            🟥 Crveni
+            <span class="m-icon" data-icon="red" aria-hidden="true"></span> Crveni
           </option>
 
         </select>
@@ -7245,7 +7245,7 @@ function openPlayer(
           const m = getMatch(g.match_id);
           return `
             <div class="rank-row">
-              <div class="rank-num">⚽</div>
+              <div class="rank-num"><span class="m-icon" data-icon="ball" aria-hidden="true"></span></div>
               <div class="rank-avatar">
                 <div>
                   <strong>${m ? `${esc(teamName(m.home_team_id))} – ${esc(teamName(m.away_team_id))}` : "Utakmica"}</strong>
@@ -7266,7 +7266,7 @@ function openPlayer(
           const scorer = getPlayer(g.player_id);
           return `
             <div class="rank-row">
-              <div class="rank-num">🎯</div>
+              <div class="rank-num"><span class="m-icon" data-icon="target" aria-hidden="true"></span></div>
               <div class="rank-avatar">
                 <div>
                   <strong>${scorer ? esc(scorer.name) : "Strijelac"}</strong>
@@ -7284,7 +7284,7 @@ function openPlayer(
         .sort((a,b) => Number(a.minute || 0) - Number(b.minute || 0))
         .map(c => {
           const m = getMatch(c.match_id);
-          const icon = c.card_type === "red" ? "🟥" : "🟨";
+          const icon = c.card_type === "red" ? "<span class="m-icon" data-icon="red" aria-hidden="true"></span>" : "<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>";
           return `
             <div class="rank-row">
               <div class="rank-num">${icon}</div>
@@ -7325,22 +7325,22 @@ function openPlayer(
 
     <div class="grid grid-2" style="margin-top:18px">
       <div class="card">
-        <h3 style="margin-bottom:13px">📈 Forma – posljednjih 5 nastupa</h3>
+        <h3 style="margin-bottom:13px"><span class="m-icon" data-icon="stats" aria-hidden="true"></span> Forma – posljednjih 5 nastupa</h3>
         ${formHTML}
       </div>
 
       <div class="card">
-        <h3 style="margin-bottom:13px">⚽ Golovi</h3>
+        <h3 style="margin-bottom:13px"><span class="m-icon" data-icon="ball" aria-hidden="true"></span> Golovi</h3>
         <div class="rank-list">${goalRows}</div>
       </div>
 
       <div class="card">
-        <h3 style="margin-bottom:13px">🎯 Asistencije</h3>
+        <h3 style="margin-bottom:13px"><span class="m-icon" data-icon="target" aria-hidden="true"></span> Asistencije</h3>
         <div class="rank-list">${assistRows}</div>
       </div>
 
       <div class="card">
-        <h3 style="margin-bottom:13px">🟨 Kartoni</h3>
+        <h3 style="margin-bottom:13px"><span class="m-icon" data-icon="yellow" aria-hidden="true"></span> Kartoni</h3>
         <div class="rank-list">${cardRows}</div>
       </div>
     </div>
@@ -7523,7 +7523,7 @@ document.addEventListener(
 function handleLeagueEvent(event){
   const e=event?.new;
   if(!e?.event_type) return;
-  addLeagueNotification({title:e.title||"Novo dešavanje",text:e.body||"",icon:e.event_type==="goal"?"⚽":"🏁",type:e.event_type,key:"league-event:"+e.id,browser:true});
+  addLeagueNotification({title:e.title||"Novo dešavanje",text:e.body||"",icon:e.event_type==="goal"?"<span class="m-icon" data-icon="ball" aria-hidden="true"></span>":"<span class="m-icon" data-icon="result" aria-hidden="true"></span>",type:e.event_type,key:"league-event:"+e.id,browser:true});
   if(currentUser) notifyPush(e.event_type,e.title||"Novo dešavanje",e.body||"",e.match_id||null).catch(()=>{});
   loadAll();
 }
@@ -7797,7 +7797,7 @@ async function loadMusicSettings(){const {data:settings,error:se}=await supabase
    PRIKAŽI POSTAVKE U ADMIN PANELU
 ----------------------------------------- */
 
-function renderMusicAdmin(){const box=document.getElementById("adminMusicPlaylist"),status=document.getElementById("musicAdminStatus");if(!box)return;if(!isAdmin()){box.innerHTML="";return;}if(!musicTracks.length)box.innerHTML='<div class="empty compact">Playlist je prazna. Dodaj YouTube ili Spotify pjesmu.</div>';else box.innerHTML=musicTracks.map((t,i)=>'<div class="playlist-row"><div class="playlist-num">'+(i+1)+'</div><div><strong>'+esc(t.title||"Pjesma")+'</strong><small>🎵 '+esc(t.provider==="spotify"?"Spotify":"YouTube")+' · '+esc(t.provider==="spotify"?t.spotify_url:t.youtube_music_id)+'</small></div><div class="playlist-actions"><button class="btn btn-small" onclick="moveMusicTrack('+t.id+',-1)">↑</button><button class="btn btn-small" onclick="moveMusicTrack('+t.id+',1)">↓</button></div><button class="btn btn-red btn-small" onclick="deleteMusicTrack('+t.id+')">Obriši</button></div>').join("");if(status)status.textContent=musicSettings.youtube_music_enabled?"▶️ Playlist aktivna • "+musicTracks.length+" pjesama":"⏸️ Playlist zaustavljena • "+musicTracks.length+" pjesama";}
+function renderMusicAdmin(){const box=document.getElementById("adminMusicPlaylist"),status=document.getElementById("musicAdminStatus");if(!box)return;if(!isAdmin()){box.innerHTML="";return;}if(!musicTracks.length)box.innerHTML='<div class="empty compact">Playlist je prazna. Dodaj YouTube ili Spotify pjesmu.</div>';else box.innerHTML=musicTracks.map((t,i)=>'<div class="playlist-row"><div class="playlist-num">'+(i+1)+'</div><div><strong>'+esc(t.title||"Pjesma")+'</strong><small><span class="m-icon" data-icon="music" aria-hidden="true"></span> '+esc(t.provider==="spotify"?"Spotify":"YouTube")+' · '+esc(t.provider==="spotify"?t.spotify_url:t.youtube_music_id)+'</small></div><div class="playlist-actions"><button class="btn btn-small" onclick="moveMusicTrack('+t.id+',-1)">↑</button><button class="btn btn-small" onclick="moveMusicTrack('+t.id+',1)">↓</button></div><button class="btn btn-red btn-small" onclick="deleteMusicTrack('+t.id+')">Obriši</button></div>').join("");if(status)status.textContent=musicSettings.youtube_music_enabled?"▶️ Playlist aktivna • "+musicTracks.length+" pjesama":"⏸️ Playlist zaustavljena • "+musicTracks.length+" pjesama";}
 
 
 /* -----------------------------------------
@@ -7830,7 +7830,7 @@ function toggleMobileMenu(){
   const nav=document.getElementById("mainNav");
   const btn=document.getElementById("mobileMenuBtn");
   nav?.classList.toggle("mobile-open",mobileMenuOpen);
-  if(btn){btn.textContent=mobileMenuOpen ? "✕" : "☰";btn.setAttribute("aria-expanded",String(mobileMenuOpen));}
+  if(btn){btn.textContent=mobileMenuOpen ? "<span class="m-icon" data-icon="settings" aria-hidden="true"></span>" : "<span class="m-icon" data-icon="settings" aria-hidden="true"></span>";btn.setAttribute("aria-expanded",String(mobileMenuOpen));}
 }
 
 
@@ -7841,7 +7841,7 @@ function openMobileMore(){
   document.getElementById("mainNav")?.classList.remove("mobile-open");
   closeMobileMore();
   const topBtn=document.getElementById("mobileMenuBtn");
-  if(topBtn){topBtn.textContent="☰";topBtn.setAttribute("aria-expanded","false");}
+  if(topBtn){topBtn.textContent="<span class="m-icon" data-icon="settings" aria-hidden="true"></span>";topBtn.setAttribute("aria-expanded","false");}
   drawer.classList.add("open");
   drawer.setAttribute("aria-hidden","false");
   document.body.classList.add("mobile-more-open");
@@ -7876,7 +7876,7 @@ function setupCommentImageUI(){
   row.className="comment-image-row";
   row.innerHTML=`
     <label class="btn btn-small comment-image-btn">
-      🖼️ Dodaj sliku
+      <span class="m-icon" data-icon="gallery" aria-hidden="true"></span>️ Dodaj sliku
       <input id="commentImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
     </label>
     <span id="commentImageName" class="muted">Nije odabrana slika</span>
@@ -8006,7 +8006,7 @@ function injectModeratorPanel(){
   card.innerHTML=`
     <div class="moderator-head">
       <div>
-        <h3>🛡️ Korisnici i uloge</h3>
+        <h3><span class="m-icon" data-icon="shield" aria-hidden="true"></span>️ Korisnici i uloge</h3>
         <p class="muted">Administrator može dodijeliti ulogu korisniku. Admin panel i administrativne akcije ostaju zaštićeni.</p>
       </div>
       <button class="btn btn-small" onclick="loadModeratorUsers()">↻ Osvježi</button>
@@ -8029,12 +8029,12 @@ updateAuthUI=function(){
       const username=esc(currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik");
       const admin=isAdmin();
       account.innerHTML=
-        '<button class="account-btn account-profile-btn" type="button" onclick="window.openV9Profile(\''+currentUser.id+'\')">👤 '+username+'</button>'+
-        '<button class="account-btn account-edit-btn" type="button" onclick="window.openV9EditProfile()">✏️ Uredi profil</button>'+
-        (admin?'<button class="account-btn account-admin-btn" type="button" onclick="window.showSection(\'admin\')">⚙️ Admin</button>':'')+
+        '<button class="account-btn account-profile-btn" type="button" onclick="window.openV9Profile(\''+currentUser.id+'\')"><span class="m-icon" data-icon="player" aria-hidden="true"></span> '+username+'</button>'+
+        '<button class="account-btn account-edit-btn" type="button" onclick="window.openV9EditProfile()"><span class="m-icon" data-icon="settings" aria-hidden="true"></span>️ Uredi profil</button>'+
+        (admin?'<button class="account-btn account-admin-btn" type="button" onclick="window.showSection(\'admin\')"><span class="m-icon" data-icon="settings" aria-hidden="true"></span>️ Admin</button>':'')+
         '<button class="account-btn account-logout-btn" type="button" onclick="window.logout()">↪ Odjava</button>';
     }else{
-      account.innerHTML='<button class="account-btn account-login-btn" type="button" onclick="window.showSection(\'login\')">🔐 Prijava / Registracija</button>';
+      account.innerHTML='<button class="account-btn account-login-btn" type="button" onclick="window.showSection(\'login\')"><span class="m-icon" data-icon="shield" aria-hidden="true"></span> Prijava / Registracija</button>';
     }
   }
 
@@ -8046,7 +8046,7 @@ updateAuthUI=function(){
         adminBtn=document.createElement("button");
         adminBtn.type="button";
         adminBtn.className="nav-admin-btn";
-        adminBtn.innerHTML="<span>⚙️</span><span>Admin</span>";
+        adminBtn.innerHTML="<span><span class="m-icon" data-icon="settings" aria-hidden="true"></span>️</span><span>Admin</span>";
         adminBtn.addEventListener("click",()=>window.showSection("admin"));
         nav.appendChild(adminBtn);
       }
@@ -8061,8 +8061,8 @@ updateAuthUI=function(){
       nav.appendChild(authGroup);
     }
     authGroup.innerHTML=currentUser
-      ? '<button type="button" class="nav-auth-profile" onclick="window.openV9Profile(\''+currentUser.id+'\')"><span>👤</span><span>Moj profil</span></button><button type="button" class="nav-auth-logout" onclick="window.logout()"><span>↪</span><span>Odjava</span></button>'
-      : '<button type="button" class="nav-auth-login" onclick="window.showSection(\'login\')"><span>🔐</span><span>Prijava / Registracija</span></button>';
+      ? '<button type="button" class="nav-auth-profile" onclick="window.openV9Profile(\''+currentUser.id+'\')"><span><span class="m-icon" data-icon="player" aria-hidden="true"></span></span><span>Moj profil</span></button><button type="button" class="nav-auth-logout" onclick="window.logout()"><span>↪</span><span>Odjava</span></button>'
+      : '<button type="button" class="nav-auth-login" onclick="window.showSection(\'login\')"><span><span class="m-icon" data-icon="shield" aria-hidden="true"></span></span><span>Prijava / Registracija</span></button>';
   }
 
   if(isAdmin()){
@@ -8086,7 +8086,7 @@ showSection=function(id){
   mobileMenuOpen=false;
   document.getElementById("mainNav")?.classList.remove("mobile-open");
   const btn=document.getElementById("mobileMenuBtn");
-  if(btn){btn.textContent="☰";btn.setAttribute("aria-expanded","false");}
+  if(btn){btn.textContent="<span class="m-icon" data-icon="settings" aria-hidden="true"></span>";btn.setAttribute("aria-expanded","false");}
   document.querySelectorAll('.mobile-bottom button').forEach(b=>b.classList.remove('active'));
   const bottomBtn=document.querySelector(`.mobile-bottom button[onclick*="showSection('${id}')"]`);
   if(bottomBtn) bottomBtn.classList.add('active');
@@ -8448,7 +8448,7 @@ document.addEventListener("DOMContentLoaded",()=>{
             class="btn btn-green btn-small"
             onclick="saveEditMatchV4('${esc4(match.id)}')"
           >
-            💾 Sačuvaj
+            <span class="m-icon" data-icon="result" aria-hidden="true"></span> Sačuvaj
           </button>
         </div>
 
@@ -8531,7 +8531,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     const html = `
       <div class="modal-title">
-        <h2 style="margin:0">✏️ Uredi igrača</h2>
+        <h2 style="margin:0"><span class="m-icon" data-icon="settings" aria-hidden="true"></span>️ Uredi igrača</h2>
         <p class="muted" style="margin-top:5px">Izmijeni podatke igrača i sačuvaj promjene.</p>
       </div>
 
@@ -8571,10 +8571,10 @@ document.addEventListener("DOMContentLoaded",()=>{
             alt="Slika igrača">
         </div>
         <div class="crud-player-photo-controls">
-          <strong>🖼️ Slika igrača</strong>
+          <strong><span class="m-icon" data-icon="gallery" aria-hidden="true"></span>️ Slika igrača</strong>
           <span class="muted">Trenutna slika se zadržava ako ne izabereš novu.</span>
           <label class="btn btn-small crud-photo-button">
-            📷 Izaberi novu sliku
+            <span class="m-icon" data-icon="camera" aria-hidden="true"></span> Izaberi novu sliku
             <input id="crudPlayerPhoto" type="file" accept="image/png,image/jpeg,image/webp" hidden>
           </label>
           <span id="crudPlayerPhotoName" class="muted">Nije odabrana nova slika</span>
@@ -8583,7 +8583,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap">
         <button id="crudPlayerCancel" type="button" class="btn btn-small">Otkaži</button>
-        <button id="crudPlayerSave" type="button" class="btn btn-green btn-small">💾 Sačuvaj promjene</button>
+        <button id="crudPlayerSave" type="button" class="btn btn-green btn-small"><span class="m-icon" data-icon="result" aria-hidden="true"></span> Sačuvaj promjene</button>
       </div>
     `;
 
@@ -8705,7 +8705,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       alert(error?.message || "Greška pri izmjeni igrača.");
       if (saveButton) {
         saveButton.disabled = false;
-        saveButton.textContent = "💾 Sačuvaj promjene";
+        saveButton.textContent = "<span class="m-icon" data-icon="result" aria-hidden="true"></span> Sačuvaj promjene";
       }
     }
   };
@@ -8790,7 +8790,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                 class="btn btn-blue crud-small crud-edit"
                 onclick="openEditMatchV4('${esc4(m.id)}')"
               >
-                ✏️ Uredi
+                <span class="m-icon" data-icon="settings" aria-hidden="true"></span>️ Uredi
               </button>
 
               <button
@@ -8827,7 +8827,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                 <div class="crud-info">
                   <div class="crud-name">
                     ${esc4(p.name)}
-                    ${p.is_captain ? " 👑" : ""}
+                    ${p.is_captain ? " <span class="m-icon" data-icon="mvp" aria-hidden="true"></span>" : ""}
                   </div>
 
                   <div class="crud-meta">
@@ -8848,7 +8848,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                     class="btn btn-blue crud-small crud-edit"
                     onclick="openEditPlayerV4('${esc4(p.id)}')"
                   >
-                    ✏️ Uredi
+                    <span class="m-icon" data-icon="settings" aria-hidden="true"></span>️ Uredi
                   </button>
 
                   <button
@@ -8887,7 +8887,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                 <div class="crud-info">
 
                   <div class="crud-name">
-                    ⚽ ${esc4(
+                    <span class="m-icon" data-icon="ball" aria-hidden="true"></span> ${esc4(
                       player?.name || "Nepoznat igrač"
                     )}
                   </div>
@@ -8942,7 +8942,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                 <div class="crud-info">
 
                   <div class="crud-name">
-                    ${c.card_type === "red" ? "🟥" : "🟨"}
+                    ${c.card_type === "red" ? "<span class="m-icon" data-icon="red" aria-hidden="true"></span>" : "<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>"}
                     ${esc4(
                       player?.name || "Nepoznat igrač"
                     )}
@@ -9092,7 +9092,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
     card.innerHTML = `
-      <h3>🛠️ Admin CRUD</h3>
+      <h3><span class="m-icon" data-icon="settings" aria-hidden="true"></span>️ Admin CRUD</h3>
 
       <div class="muted" style="margin-bottom:16px;">
         Upravljanje utakmicama, igračima, golovima,
@@ -9102,7 +9102,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       <div class="crud-section">
         <div class="crud-title">
-          <span>🏟️ Utakmice</span>
+          <span><span class="m-icon" data-icon="shield" aria-hidden="true"></span>️ Utakmice</span>
           <span class="muted">${matches.length}</span>
         </div>
 
@@ -9114,7 +9114,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       <div class="crud-section">
         <div class="crud-title">
-          <span>👤 Igrači</span>
+          <span><span class="m-icon" data-icon="player" aria-hidden="true"></span> Igrači</span>
           <span class="muted">${players.length}</span>
         </div>
 
@@ -9123,7 +9123,7 @@ document.addEventListener("DOMContentLoaded",()=>{
             id="adminPlayerSearch"
             type="search"
             autocomplete="off"
-            placeholder="🔎 Pretraži igrača, ekipu, broj ili poziciju..."
+            placeholder="<span class="m-icon" data-icon="search" aria-hidden="true"></span> Pretraži igrača, ekipu, broj ili poziciju..."
             oninput="filterAdminPlayersV4(this.value)">
           <span
             id="adminPlayerSearchCount"
@@ -9140,7 +9140,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       <div class="crud-section">
         <div class="crud-title">
-          <span>⚽ Golovi</span>
+          <span><span class="m-icon" data-icon="ball" aria-hidden="true"></span> Golovi</span>
           <span class="muted">${goals.length}</span>
         </div>
 
@@ -9152,7 +9152,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       <div class="crud-section">
         <div class="crud-title">
-          <span>🟨 Kartoni</span>
+          <span><span class="m-icon" data-icon="yellow" aria-hidden="true"></span> Kartoni</span>
           <span class="muted">${cards.length}</span>
         </div>
 
@@ -9164,7 +9164,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       <div class="crud-section">
         <div class="crud-title">
-          <span>💬 Komentari</span>
+          <span><span class="m-icon" data-icon="community" aria-hidden="true"></span> Komentari</span>
           <span class="muted">${comments.length}</span>
         </div>
 
@@ -9176,7 +9176,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       <div class="crud-section">
         <div class="crud-title">
-          <span>💬 Chat</span>
+          <span><span class="m-icon" data-icon="community" aria-hidden="true"></span> Chat</span>
           <span class="muted">${messages.length}</span>
         </div>
 
@@ -9188,7 +9188,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       <div class="crud-section">
         <div class="crud-title">
-          <span>🖼️ Galerija</span>
+          <span><span class="m-icon" data-icon="gallery" aria-hidden="true"></span>️ Galerija</span>
           <span class="muted">${gallery.length}</span>
         </div>
 
@@ -9521,7 +9521,7 @@ if ("serviceWorker" in navigator) {
           <div class="card stat"><div class="stat-number">${gs.length+assists}</div><div class="stat-label">Gol + asist.</div></div>
         </div>
         <div class="card v2-detail-card">
-          <h3>⚽ Učinak</h3>
+          <h3><span class="m-icon" data-icon="ball" aria-hidden="true"></span> Učinak</h3>
           <div class="v2-detail-grid">
             <div><span>Golovi</span><b>${gs.length}</b></div>
             <div><span>Asistencije</span><b>${assists}</b></div>
@@ -9530,7 +9530,7 @@ if ("serviceWorker" in navigator) {
           </div>
         </div>
         <div class="card v2-detail-card">
-          <h3>📈 Forma</h3>
+          <h3><span class="m-icon" data-icon="stats" aria-hidden="true"></span> Forma</h3>
           <div class="v2-form-strip">${recent.length ? recent.map(m=>{
             const home=String(m.home_team_id)===String(p.team_id), my=n(home?m.home_score:m.away_score), op=n(home?m.away_score:m.home_score);
             const result=my>op?'P':my===op?'N':'I';
@@ -9616,7 +9616,7 @@ if ("serviceWorker" in navigator) {
 
   function renderMatchMVP(matchId){
     const mvp=calculateMatchMVP(matchId); if(!mvp) return `<div class="empty compact">MVP se još ne može odrediti — nema dovoljno evidentiranih učinaka.</div>`;
-    return `<div class="v2-mvp-card"><div class="v2-mvp-crown">🏆</div><img src="${playerPhoto(mvp.p)}" alt=""><div class="v2-mvp-info"><div class="hero-kicker">IGRAČ UTAKMICE</div><button type="button" onclick="openPlayer('${mvp.p.id}')"><b>${esc2(mvp.p.name)}</b></button><small>${esc2(team(mvp.p.team_id)?.name||'')} · #${mvp.p.jersey_number??'-'}</small><div class="v2-mvp-stats"><span>⚽ ${mvp.pg} gol</span><span>🎯 ${mvp.pa} asist.</span><span>🟨 ${mvp.yellow}</span>${mvp.red?`<span>🟥 ${mvp.red}</span>`:''}</div></div></div>`;
+    return `<div class="v2-mvp-card"><div class="v2-mvp-crown"><span class="m-icon" data-icon="trophy" aria-hidden="true"></span></div><img src="${playerPhoto(mvp.p)}" alt=""><div class="v2-mvp-info"><div class="hero-kicker">IGRAČ UTAKMICE</div><button type="button" onclick="openPlayer('${mvp.p.id}')"><b>${esc2(mvp.p.name)}</b></button><small>${esc2(team(mvp.p.team_id)?.name||'')} · #${mvp.p.jersey_number??'-'}</small><div class="v2-mvp-stats"><span><span class="m-icon" data-icon="ball" aria-hidden="true"></span> ${mvp.pg} gol</span><span><span class="m-icon" data-icon="target" aria-hidden="true"></span> ${mvp.pa} asist.</span><span><span class="m-icon" data-icon="yellow" aria-hidden="true"></span> ${mvp.yellow}</span>${mvp.red?`<span><span class="m-icon" data-icon="red" aria-hidden="true"></span> ${mvp.red}</span>`:''}</div></div></div>`;
   }
 
   function enhanceCurrentMatch(){
@@ -9633,15 +9633,15 @@ if ("serviceWorker" in navigator) {
     const home=team(m.home_team_id), away=team(m.away_team_id);
     const mvpBox=document.createElement("div"); mvpBox.className="v2-match-mvp"; mvpBox.innerHTML=renderMatchMVP(m.id); panel.prepend(mvpBox);
     const card=document.createElement("div"); card.className="card v2-match-extra"; card.innerHTML=`
-      <h3>📊 Detaljna statistika</h3>
+      <h3><span class="m-icon" data-icon="stats" aria-hidden="true"></span> Detaljna statistika</h3>
       <div class="v2-match-stat-table">
         <div><b>${hg.length}</b><span>Golovi</span><b>${ag.length}</b></div>
         <div><b>${ha}</b><span>Asistencije</span><b>${aa}</b></div>
         <div><b>${hc.length}</b><span>Kartoni</span><b>${ac.length}</b></div>
       </div>
       <div class="v2-match-players">
-        <div><strong>${esc2(home?.name||"Domaćin")}</strong>${hg.length?hg.map(g=>`<span>⚽ ${esc2(player(g.player_id)?.name||"Igrač")} ${n(g.minute)}'</span>`).join(""):"<small class='muted'>Bez golova</small>"}</div>
-        <div><strong>${esc2(away?.name||"Gost")}</strong>${ag.length?ag.map(g=>`<span>⚽ ${esc2(player(g.player_id)?.name||"Igrač")} ${n(g.minute)}'</span>`).join(""):"<small class='muted'>Bez golova</small>"}</div>
+        <div><strong>${esc2(home?.name||"Domaćin")}</strong>${hg.length?hg.map(g=>`<span><span class="m-icon" data-icon="ball" aria-hidden="true"></span> ${esc2(player(g.player_id)?.name||"Igrač")} ${n(g.minute)}'</span>`).join(""):"<small class='muted'>Bez golova</small>"}</div>
+        <div><strong>${esc2(away?.name||"Gost")}</strong>${ag.length?ag.map(g=>`<span><span class="m-icon" data-icon="ball" aria-hidden="true"></span> ${esc2(player(g.player_id)?.name||"Igrač")} ${n(g.minute)}'</span>`).join(""):"<small class='muted'>Bez golova</small>"}</div>
       </div>`;
     panel.appendChild(card);
   }
@@ -9663,11 +9663,11 @@ if ("serviceWorker" in navigator) {
       const topAssist=Object.entries(assists).sort((a,b)=>b[1]-a[1]).slice(0,5);
       const teamAttack=(teams||[]).map(t=>{const own=gs.filter(g=>player(g.player_id)?.team_id===t.id).length;return {t,own};}).sort((a,b)=>b.own-a.own).slice(0,5);
       const block=document.createElement("div"); block.id="v2AdvancedStats"; block.className="v2-advanced-stats"; block.innerHTML=`
-        <div class="card"><div class="hero-kicker">LIGA PREGLED</div><h3>📈 Napredna statistika</h3><div class="grid grid-2 v2-kpi-grid">
+        <div class="card"><div class="hero-kicker">LIGA PREGLED</div><h3><span class="m-icon" data-icon="stats" aria-hidden="true"></span> Napredna statistika</h3><div class="grid grid-2 v2-kpi-grid">
           <div><b>${gs.length}</b><span>Ukupno golova</span></div><div><b>${avg}</b><span>Golova po utakmici</span></div><div><b>${yellows}</b><span>Žutih kartona</span></div><div><b>${reds}</b><span>Crvenih kartona</span></div>
         </div></div>
-        <div class="grid grid-2"><div class="card"><h3>🎯 Asistenti</h3>${topAssist.length?topAssist.map(([id,v],i)=>`<button type="button" class="v2-rank-line" onclick="openPlayer('${id}')"><span>${i+1}.</span><strong>${esc2(player(id)?.name||"Igrač")}</strong><b>${v}</b></button>`).join(""):`<div class="empty compact">Još nema asistencija.</div>`}</div>
-        <div class="card"><h3>🔥 Napad ekipa</h3>${teamAttack.length?teamAttack.map((x,i)=>`<div class="v2-rank-line"><span>${i+1}.</span><strong>${esc2(x.t.name)}</strong><b>${x.own}</b></div>`).join(""):`<div class="empty compact">Još nema golova.</div>`}</div></div>`;
+        <div class="grid grid-2"><div class="card"><h3><span class="m-icon" data-icon="target" aria-hidden="true"></span> Asistenti</h3>${topAssist.length?topAssist.map(([id,v],i)=>`<button type="button" class="v2-rank-line" onclick="openPlayer('${id}')"><span>${i+1}.</span><strong>${esc2(player(id)?.name||"Igrač")}</strong><b>${v}</b></button>`).join(""):`<div class="empty compact">Još nema asistencija.</div>`}</div>
+        <div class="card"><h3><span class="m-icon" data-icon="live" aria-hidden="true"></span> Napad ekipa</h3>${teamAttack.length?teamAttack.map((x,i)=>`<div class="v2-rank-line"><span>${i+1}.</span><strong>${esc2(x.t.name)}</strong><b>${x.own}</b></div>`).join(""):`<div class="empty compact">Još nema golova.</div>`}</div></div>`;
       sec.appendChild(block);
     };
   }
@@ -9739,14 +9739,14 @@ if ("serviceWorker" in navigator) {
     const red=c.filter(x=>String(x.card_type||'').toLowerCase()==='red').length;
     const yellow=c.length-red;
     const mp=(matchPlayers||[]).find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(id));
-    return `<button type="button" class="mc20-player-row" onclick="openPlayer('${id}')"><img src="${playerPhoto(p)}"><span><b>#${p.jersey_number??'-'} ${safe(p.name)}</b><small>${safe(p.position||'-')} ${mp?.is_active?'· 🟢 na terenu':'· prijavljen'}</small></span><em>${g?'⚽ '+g:''}${a?' 🎯 '+a:''}${yellow?' 🟨 '+yellow:''}${red?' 🟥 '+red:''}</em></button>`;
+    return `<button type="button" class="mc20-player-row" onclick="openPlayer('${id}')"><img src="${playerPhoto(p)}"><span><b>#${p.jersey_number??'-'} ${safe(p.name)}</b><small>${safe(p.position||'-')} ${mp?.is_active?'· 🟢 na terenu':'· prijavljen'}</small></span><em>${g?'<span class="m-icon" data-icon="ball" aria-hidden="true"></span> '+g:''}${a?' <span class="m-icon" data-icon="target" aria-hidden="true"></span> '+a:''}${yellow?' <span class="m-icon" data-icon="yellow" aria-hidden="true"></span> '+yellow:''}${red?' <span class="m-icon" data-icon="red" aria-hidden="true"></span> '+red:''}</em></button>`;
   }
   function eventText(e){
     const p=pget(e.player_id); const a=e.assist_player_id?pget(e.assist_player_id):null;
-    return `<div class="mc20-event"><strong>${num(e.minute)}'</strong><span>⚽</span><div><b>${safe(p?.name||'Igrač')}</b>${a?`<small>🎯 asistencija: ${safe(a.name)}</small>`:''}</div></div>`;
+    return `<div class="mc20-event"><strong>${num(e.minute)}'</strong><span><span class="m-icon" data-icon="ball" aria-hidden="true"></span></span><div><b>${safe(p?.name||'Igrač')}</b>${a?`<small><span class="m-icon" data-icon="target" aria-hidden="true"></span> asistencija: ${safe(a.name)}</small>`:''}</div></div>`;
   }
   function cardText(c){
-    const p=pget(c.player_id); const icon=String(c.card_type||'').toLowerCase()==='red'?'🟥':'🟨';
+    const p=pget(c.player_id); const icon=String(c.card_type||'').toLowerCase()==='red'?'<span class="m-icon" data-icon="red" aria-hidden="true"></span>':'<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>';
     return `<div class="mc20-event"><strong>${num(c.minute)}'</strong><span>${icon}</span><div><b>${safe(p?.name||'Igrač')}</b><small>${String(c.card_type||'Karton')}</small></div></div>`;
   }
   function makeBlock(title, html, cls=''){
@@ -9774,21 +9774,21 @@ if ("serviceWorker" in navigator) {
 
     const statsExtra=document.createElement('div'); statsExtra.className='mc20-extra'; statsExtra.innerHTML=`
       <div class="grid grid-2 mc20-grid">
-        ${makeBlock(`⚽ ${safe(ht?.name||'Domaćin')} — učinak`, hp.length?hp.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Nema evidentiranih igrača.</div>','mc20-roster')}
-        ${makeBlock(`⚽ ${safe(at?.name||'Gost')} — učinak`, ap.length?ap.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Nema evidentiranih igrača.</div>','mc20-roster')}
+        ${makeBlock(`<span class="m-icon" data-icon="ball" aria-hidden="true"></span> ${safe(ht?.name||'Domaćin')} — učinak`, hp.length?hp.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Nema evidentiranih igrača.</div>','mc20-roster')}
+        ${makeBlock(`<span class="m-icon" data-icon="ball" aria-hidden="true"></span> ${safe(at?.name||'Gost')} — učinak`, ap.length?ap.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Nema evidentiranih igrača.</div>','mc20-roster')}
       </div>
-      ${makeBlock('📊 Pregled utakmice',`<div class="mc20-compare"><div><b>${hg.length}</b><span>Golovi</span><b>${ag.length}</b></div><div><b>${hAs.length}</b><span>Asistencije</span><b>${aAs.length}</b></div><div><b>${hc.length}</b><span>Kartoni</span><b>${ac.length}</b></div><div><b>${hActive}</b><span>Trenutno na terenu</span><b>${aActive}</b></div><div><b>${hBench}</b><span>Na klupi</span><b>${aBench}</b></div><div><b>${hp.length}</b><span>Prijavljeni</span><b>${ap.length}</b></div></div>`)}
+      ${makeBlock('<span class="m-icon" data-icon="stats" aria-hidden="true"></span> Pregled utakmice',`<div class="mc20-compare"><div><b>${hg.length}</b><span>Golovi</span><b>${ag.length}</b></div><div><b>${hAs.length}</b><span>Asistencije</span><b>${aAs.length}</b></div><div><b>${hc.length}</b><span>Kartoni</span><b>${ac.length}</b></div><div><b>${hActive}</b><span>Trenutno na terenu</span><b>${aActive}</b></div><div><b>${hBench}</b><span>Na klupi</span><b>${aBench}</b></div><div><b>${hp.length}</b><span>Prijavljeni</span><b>${ap.length}</b></div></div>`)}
     `;
     stats.appendChild(statsExtra);
 
     const allEvents=[...hg.map(g=>({minute:num(g.minute),html:eventText(g),type:'goal'})),...ag.map(g=>({minute:num(g.minute),html:eventText(g),type:'goal'})),...hc.map(c=>({minute:num(c.minute),html:cardText(c),type:'card'})),...ac.map(c=>({minute:num(c.minute),html:cardText(c),type:'card'}))].sort((a,b)=>a.minute-b.minute);
     const ev=document.createElement('div'); ev.className='mc20-extra'; ev.innerHTML=`
       <div class="grid grid-2 mc20-grid">
-        ${makeBlock('⚽ Strijelci', `<div>${allEvents.filter(x=>x.type==='goal').length?allEvents.filter(x=>x.type==='goal').map(x=>x.html).join(''):'<div class="empty compact">Nema golova.</div>'}</div>`)}
-        ${makeBlock('🟨 Kartoni', `<div>${allEvents.filter(x=>x.type==='card').length?allEvents.filter(x=>x.type==='card').map(x=>x.html).join(''):'<div class="empty compact">Nema kartona.</div>'}</div>`)}
+        ${makeBlock('<span class="m-icon" data-icon="ball" aria-hidden="true"></span> Strijelci', `<div>${allEvents.filter(x=>x.type==='goal').length?allEvents.filter(x=>x.type==='goal').map(x=>x.html).join(''):'<div class="empty compact">Nema golova.</div>'}</div>`)}
+        ${makeBlock('<span class="m-icon" data-icon="yellow" aria-hidden="true"></span> Kartoni', `<div>${allEvents.filter(x=>x.type==='card').length?allEvents.filter(x=>x.type==='card').map(x=>x.html).join(''):'<div class="empty compact">Nema kartona.</div>'}</div>`)}
       </div>
-      ${makeBlock('🎯 Asistencije', `<div class="mc20-assists">${hAs.concat(aAs).length?hAs.concat(aAs).map(g=>`<div class="mc20-event"><strong>${num(g.minute)}'</strong><span>🎯</span><div><b>${safe(pget(g.assist_player_id)?.name||'Igrač')}</b><small>asistencija za ${safe(pget(g.player_id)?.name||'strijelca')}</small></div></div>`).join(''):'<div class="empty compact">Nema evidentiranih asistencija.</div>'}</div>`)}
-      ${makeBlock('📋 Hronologija', `<div>${allEvents.length?allEvents.map(x=>x.html).join(''):'<div class="empty compact">Nema događaja.</div>'}</div>`)}
+      ${makeBlock('<span class="m-icon" data-icon="target" aria-hidden="true"></span> Asistencije', `<div class="mc20-assists">${hAs.concat(aAs).length?hAs.concat(aAs).map(g=>`<div class="mc20-event"><strong>${num(g.minute)}'</strong><span><span class="m-icon" data-icon="target" aria-hidden="true"></span></span><div><b>${safe(pget(g.assist_player_id)?.name||'Igrač')}</b><small>asistencija za ${safe(pget(g.player_id)?.name||'strijelca')}</small></div></div>`).join(''):'<div class="empty compact">Nema evidentiranih asistencija.</div>'}</div>`)}
+      ${makeBlock('<span class="m-icon" data-icon="result" aria-hidden="true"></span> Hronologija', `<div>${allEvents.length?allEvents.map(x=>x.html).join(''):'<div class="empty compact">Nema događaja.</div>'}</div>`)}
     `;
     eventsPanel.appendChild(ev);
 
@@ -9797,7 +9797,7 @@ if ("serviceWorker" in navigator) {
         ${makeBlock(`👥 ${safe(ht?.name||'Domaćin')}`, `<div class="mc20-lineup-summary"><b>${hActive}</b><span>na terenu</span><b>${hBench}</b><span>klupa</span></div>${hp.length?hp.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Postava nije evidentirana.</div>'}`)}
         ${makeBlock(`👥 ${safe(at?.name||'Gost')}`, `<div class="mc20-lineup-summary"><b>${aActive}</b><span>na terenu</span><b>${aBench}</b><span>klupa</span></div>${ap.length?ap.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Postava nije evidentirana.</div>'}`)}
       </div>
-      ${makeBlock('🔄 Izmjene', `<div class="muted">Trenutna baza čuva samo stanje igrača (teren/klupa), ne istoriju minuta izmjena. Zato ovdje prikazujemo tačno trenutno stanje bez izmišljanja vremena izmjena.</div><div class="grid grid-2" style="margin-top:10px"><div><b>${safe(ht?.name||'Domaćin')}</b><p class="muted">${hActive} aktivnih · ${hBench} na klupi</p></div><div><b>${safe(at?.name||'Gost')}</b><p class="muted">${aActive} aktivnih · ${aBench} na klupi</p></div></div>`)}
+      ${makeBlock('<span class="m-icon" data-icon="live" aria-hidden="true"></span> Izmjene', `<div class="muted">Trenutna baza čuva samo stanje igrača (teren/klupa), ne istoriju minuta izmjena. Zato ovdje prikazujemo tačno trenutno stanje bez izmišljanja vremena izmjena.</div><div class="grid grid-2" style="margin-top:10px"><div><b>${safe(ht?.name||'Domaćin')}</b><p class="muted">${hActive} aktivnih · ${hBench} na klupi</p></div><div><b>${safe(at?.name||'Gost')}</b><p class="muted">${aActive} aktivnih · ${aBench} na klupi</p></div></div>`)}
     `;
     lineupPanel.appendChild(lp);
   }
@@ -9912,7 +9912,7 @@ if ("serviceWorker" in navigator) {
 
       return `
         <div class="chat-message ${admin?"v3-admin-message":""}">
-          <div class="chat-avatar">${admin?"A":"💬"}</div>
+          <div class="chat-avatar">${admin?"A":"<span class="m-icon" data-icon="community" aria-hidden="true"></span>"}</div>
           <div class="chat-message-body">
             <div class="chat-message-top">
               <strong class="${admin?"v3-admin-name":""}">
@@ -10147,7 +10147,7 @@ if ("serviceWorker" in navigator) {
     if(error) throw error;
     localStorage.setItem("medjasi_push_enabled","1");
     updatePushUI();
-    if(typeof toast==="function") toast("🔔 Push obavještenja su uključena.");
+    if(typeof toast==="function") toast("<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.");
   }
 
   async function disablePush(){
@@ -10168,9 +10168,9 @@ if ("serviceWorker" in navigator) {
     const btn=document.getElementById("v3PushButton");
     if(!status||!btn) return;
     const enabled=localStorage.getItem("medjasi_push_enabled")==="1";
-    status.textContent=enabled?"🔔 Push obavještenja su uključena.":"Push obavještenja nisu uključena.";
+    status.textContent=enabled?"<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.":"Push obavještenja nisu uključena.";
     status.className="v3-push-status "+(enabled?"ok":"warn");
-    btn.textContent=enabled?"🔕 Isključi obavještenja":"🔔 Uključi obavještenja";
+    btn.textContent=enabled?"🔕 Isključi obavještenja":"<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Uključi obavještenja";
     btn.onclick=enabled?disablePush:subscribePush;
   }
 
@@ -10181,8 +10181,8 @@ if ("serviceWorker" in navigator) {
     card.id="v3PushCard";
     card.className="card v3-push-card";
     card.innerHTML=`<div class="v3-push-row">
-      <div><strong>🔔 Push obavještenja</strong><div id="v3PushStatus" class="v3-push-status">Provjera...</div></div>
-      <button id="v3PushButton" class="btn btn-blue" type="button">🔔 Uključi obavještenja</button>
+      <div><strong><span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja</strong><div id="v3PushStatus" class="v3-push-status">Provjera...</div></div>
+      <button id="v3PushButton" class="btn btn-blue" type="button"><span class="m-icon" data-icon="bell" aria-hidden="true"></span> Uključi obavještenja</button>
     </div>`;
     admin.appendChild(card);
     updatePushUI();
@@ -10214,17 +10214,17 @@ function mediaHtml(url,type,title=""){if(!url)return "";return type==='video'?`<
 function ensureNewsUI(){
   if(!$('news')){
     const sec=document.createElement('section');sec.id='news';sec.className='section';
-    sec.innerHTML=`<div class="gallery-hero"><div><span class="hero-kicker">ZVANIČNE INFORMACIJE LIGE</span><h2 class="section-title" style="margin:4px 0 6px">📰 Vijesti</h2><p class="muted">Novosti, najave, rezultati i dešavanja iz Medjaši Futsal Lige.</p></div><div class="gallery-count" id="newsCount">0 vijesti</div></div><div id="newsFeature"></div><div id="newsGrid" class="v7-news-grid"></div>`;
+    sec.innerHTML=`<div class="gallery-hero"><div><span class="hero-kicker">ZVANIČNE INFORMACIJE LIGE</span><h2 class="section-title" style="margin:4px 0 6px"><span class="m-icon" data-icon="news" aria-hidden="true"></span> Vijesti</h2><p class="muted">Novosti, najave, rezultati i dešavanja iz Medjaši Futsal Lige.</p></div><div class="gallery-count" id="newsCount">0 vijesti</div></div><div id="newsFeature"></div><div id="newsGrid" class="v7-news-grid"></div>`;
     const comments=document.querySelector('#comments');comments?.parentNode.insertBefore(sec,comments);
   }
-  document.querySelectorAll('button[onclick*="showSection(\'comments\')"]').forEach(b=>{if(b.innerHTML.includes('Komentari')){b.innerHTML=b.innerHTML.replace('💭','📰').replace('Komentari','Vijesti');b.setAttribute('onclick',"showSection('news')")}});
-  document.querySelectorAll('.mobile-more-grid button').forEach(b=>{if(b.innerHTML.includes('Komentari')){b.innerHTML=b.innerHTML.replace('💭','📰').replace('Komentari','Vijesti').replace('Komentari zajednice','Novosti lige');b.setAttribute('onclick',"mobileMoreGo('news')")}});
-  const c=$('comments');if(c){const h=c.querySelector('.section-title');if(h)h.textContent='💬 Komentari zajednice';}
+  document.querySelectorAll('button[onclick*="showSection(\'comments\')"]').forEach(b=>{if(b.innerHTML.includes('Komentari')){b.innerHTML=b.innerHTML.replace('💭','<span class="m-icon" data-icon="news" aria-hidden="true"></span>').replace('Komentari','Vijesti');b.setAttribute('onclick',"showSection('news')")}});
+  document.querySelectorAll('.mobile-more-grid button').forEach(b=>{if(b.innerHTML.includes('Komentari')){b.innerHTML=b.innerHTML.replace('💭','<span class="m-icon" data-icon="news" aria-hidden="true"></span>').replace('Komentari','Vijesti').replace('Komentari zajednice','Novosti lige');b.setAttribute('onclick',"mobileMoreGo('news')")}});
+  const c=$('comments');if(c){const h=c.querySelector('.section-title');if(h)h.textContent='<span class="m-icon" data-icon="community" aria-hidden="true"></span> Komentari zajednice';}
   ensureAdminNews();
 }function ensureAdminNews(){
   const admin=$('adminContent');if(!admin||!isAdm()||$('v7NewsAdmin'))return;
   const card=document.createElement('div');card.id='v7NewsAdmin';card.className='card';card.style.marginTop='20px';
-  card.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SADRŽAJ LIGE</span><h3>📰 Upravljanje vijestima</h3><p class="muted">Objavi novost, dodaj sliku ili video i podijeli je direktno u chat.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="v7-admin-news-form"><div class="form-group"><label>Naslov</label><input id="v7NewsTitle" maxlength="150" placeholder="Naslov vijesti"></div><div class="form-group"><label>Autor / oznaka</label><input id="v7NewsKicker" maxlength="50" placeholder="npr. LIGA, NAJAVA, REZULTAT"></div><div class="form-group wide"><label>Kratki uvod</label><textarea id="v7NewsLead" maxlength="400" style="min-height:80px" placeholder="Kratak uvod koji se vidi na kartici"></textarea></div><div class="form-group wide"><label>Sadržaj vijesti</label><textarea id="v7NewsBody" maxlength="10000" placeholder="Tekst vijesti..."></textarea></div><div class="form-group"><label>Slika ili video</label><input id="v7NewsFile" type="file" accept="image/*,video/mp4,video/webm,video/ogg"></div><div class="form-group"><label>Objavi</label><select id="v7NewsPublished"><option value="true">Odmah javno</option><option value="false">Sačuvaj kao skicu</option></select></div></div><div class="actions" style="margin-top:12px"><button class="btn btn-green" onclick="medjasiV7.publishNews()">📰 Objavi vijest</button></div><div id="v7NewsAdminList" class="v7-admin-news-list"></div>`;
+  card.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SADRŽAJ LIGE</span><h3><span class="m-icon" data-icon="news" aria-hidden="true"></span> Upravljanje vijestima</h3><p class="muted">Objavi novost, dodaj sliku ili video i podijeli je direktno u chat.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="v7-admin-news-form"><div class="form-group"><label>Naslov</label><input id="v7NewsTitle" maxlength="150" placeholder="Naslov vijesti"></div><div class="form-group"><label>Autor / oznaka</label><input id="v7NewsKicker" maxlength="50" placeholder="npr. LIGA, NAJAVA, REZULTAT"></div><div class="form-group wide"><label>Kratki uvod</label><textarea id="v7NewsLead" maxlength="400" style="min-height:80px" placeholder="Kratak uvod koji se vidi na kartici"></textarea></div><div class="form-group wide"><label>Sadržaj vijesti</label><textarea id="v7NewsBody" maxlength="10000" placeholder="Tekst vijesti..."></textarea></div><div class="form-group"><label>Slika ili video</label><input id="v7NewsFile" type="file" accept="image/*,video/mp4,video/webm,video/ogg"></div><div class="form-group"><label>Objavi</label><select id="v7NewsPublished"><option value="true">Odmah javno</option><option value="false">Sačuvaj kao skicu</option></select></div></div><div class="actions" style="margin-top:12px"><button class="btn btn-green" onclick="medjasiV7.publishNews()"><span class="m-icon" data-icon="news" aria-hidden="true"></span> Objavi vijest</button></div><div id="v7NewsAdminList" class="v7-admin-news-list"></div>`;
   admin.appendChild(card);renderAdminNews();
 }
 async function loadNews(){
@@ -10240,14 +10240,14 @@ function renderNews(){
   const publicNews=V7.news.filter(n=>n.published===true);
   ensureNewsUI();const count=$('newsCount');if(count)count.textContent=`${publicNews.length} ${publicNews.length===1?'vijest':'vijesti'}`;
   const feature=$('newsFeature'),grid=$('newsGrid');if(!grid)return;
-  if(!publicNews.length){if(feature)feature.innerHTML='';grid.innerHTML='<div class="v7-news-empty" style="grid-column:1/-1">📰 Još nema objavljenih vijesti.</div>';return}
+  if(!publicNews.length){if(feature)feature.innerHTML='';grid.innerHTML='<div class="v7-news-empty" style="grid-column:1/-1"><span class="m-icon" data-icon="news" aria-hidden="true"></span> Još nema objavljenih vijesti.</div>';return}
   const f=publicNews[0];
   if(feature)feature.innerHTML=`<article class="v7-news-card card" style="margin-bottom:0"><div class="v7-news-media">${mediaHtml(f.media_url||f.image_url,f.media_type,f.title)}</div><div class="v7-news-body"><div class="v7-news-kicker">${escV(f.kicker||'VIJEST')}</div><div class="v7-news-title">${escV(f.title)}</div><div class="v7-news-lead">${escV(f.lead||'')}</div><div class="v7-news-meta"><span>${formatV(f.created_at)}</span><span>${escV(f.author_name||'Medjaši Futsal Liga')}</span></div><div class="v7-news-actions"><button class="btn btn-green btn-small" onclick="medjasiV7.openNews('${f.id}')">Otvori vijest →</button><button class="btn btn-small" onclick="medjasiV7.shareNews('${f.id}')">↗ Podijeli</button></div></div></article>`;
   grid.innerHTML=publicNews.slice(1).map(n=>`<article class="v7-news-card card"><div class="v7-news-media">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div class="v7-news-body"><div class="v7-news-kicker">${escV(n.kicker||'VIJEST')}</div><div class="v7-news-title">${escV(n.title)}</div><div class="v7-news-lead">${escV(n.lead||'')}</div><div class="v7-news-meta"><span>${formatV(n.created_at)}</span><span>${escV(n.author_name||'Liga')}</span></div><div class="v7-news-actions"><button class="btn btn-green btn-small" onclick="medjasiV7.openNews('${n.id}')">Otvori</button><button class="btn btn-small" onclick="medjasiV7.shareNews('${n.id}')">↗ Chat</button></div></div></article>`).join('');
 }
-function openNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n)return;showModal(`<div class="modal-title"><span class="hero-kicker">${escV(n.kicker||'VIJEST')}</span><h2>${escV(n.title)}</h2><p class="muted">${formatV(n.created_at)} · ${escV(n.author_name||'Medjaši Futsal Liga')}</p></div><div class="v7-news-media" style="border-radius:16px">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div style="white-space:pre-wrap;line-height:1.75;margin-top:18px">${escV(n.body||n.lead||'')}</div><div class="actions" style="margin-top:18px"><button class="btn btn-green" onclick="medjasiV7.shareNews('${n.id}')">💬 Podijeli u chat</button></div>`)}
-async function shareNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n||!currentUser){showSection('login');toastV('Prijavi se da bi podijelio vijest.','error');return}const text=`📰 ${n.title}\n${n.lead||''}`.trim();const {error}=await supabaseClient.from('messages').insert({user_id:currentUser.id,username:currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik',content:text,image_url:n.media_type==='image'?(n.media_url||n.image_url):null});if(error){toastV(error.message,'error');return}hideModal();showSection('chat');await loadAll();toastV('Vijest je podijeljena u chat.');}
-async function publishNews(){if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');const title=$('v7NewsTitle')?.value.trim(),lead=$('v7NewsLead')?.value.trim(),body=$('v7NewsBody')?.value.trim(),kicker=$('v7NewsKicker')?.value.trim()||'VIJEST',published=$('v7NewsPublished')?.value==='true',file=$('v7NewsFile')?.files?.[0];if(!title||!body){toastV('Unesi naslov i sadržaj vijesti.','error');return}let media_url=null,media_type=null;if(file){if(file.size>50*1024*1024){toastV('Fajl je prevelik. Maksimum je 50 MB.','error');return}media_url=await uploadFile(file,'news');media_type=file.type.startsWith('video/')?'video':'image'}const {error}=await supabaseClient.from('news').insert({title,lead,body,kicker,author_id:currentUser.id,author_name:currentProfile?.username||currentUser.email?.split('@')[0]||'Admin',media_url,media_type,published});if(error){toastV(error.message,'error');return}if(published) await notifyPush('news',`📰 ${title}`,lead||'Nova vijest na sajtu.');['v7NewsTitle','v7NewsLead','v7NewsBody','v7NewsKicker'].forEach(id=>{if($(id))$(id).value=''});if($('v7NewsFile'))$('v7NewsFile').value='';await loadNews();toastV('Vijest je objavljena.');}
+function openNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n)return;showModal(`<div class="modal-title"><span class="hero-kicker">${escV(n.kicker||'VIJEST')}</span><h2>${escV(n.title)}</h2><p class="muted">${formatV(n.created_at)} · ${escV(n.author_name||'Medjaši Futsal Liga')}</p></div><div class="v7-news-media" style="border-radius:16px">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div style="white-space:pre-wrap;line-height:1.75;margin-top:18px">${escV(n.body||n.lead||'')}</div><div class="actions" style="margin-top:18px"><button class="btn btn-green" onclick="medjasiV7.shareNews('${n.id}')"><span class="m-icon" data-icon="community" aria-hidden="true"></span> Podijeli u chat</button></div>`)}
+async function shareNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n||!currentUser){showSection('login');toastV('Prijavi se da bi podijelio vijest.','error');return}const text=`<span class="m-icon" data-icon="news" aria-hidden="true"></span> ${n.title}\n${n.lead||''}`.trim();const {error}=await supabaseClient.from('messages').insert({user_id:currentUser.id,username:currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik',content:text,image_url:n.media_type==='image'?(n.media_url||n.image_url):null});if(error){toastV(error.message,'error');return}hideModal();showSection('chat');await loadAll();toastV('Vijest je podijeljena u chat.');}
+async function publishNews(){if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');const title=$('v7NewsTitle')?.value.trim(),lead=$('v7NewsLead')?.value.trim(),body=$('v7NewsBody')?.value.trim(),kicker=$('v7NewsKicker')?.value.trim()||'VIJEST',published=$('v7NewsPublished')?.value==='true',file=$('v7NewsFile')?.files?.[0];if(!title||!body){toastV('Unesi naslov i sadržaj vijesti.','error');return}let media_url=null,media_type=null;if(file){if(file.size>50*1024*1024){toastV('Fajl je prevelik. Maksimum je 50 MB.','error');return}media_url=await uploadFile(file,'news');media_type=file.type.startsWith('video/')?'video':'image'}const {error}=await supabaseClient.from('news').insert({title,lead,body,kicker,author_id:currentUser.id,author_name:currentProfile?.username||currentUser.email?.split('@')[0]||'Admin',media_url,media_type,published});if(error){toastV(error.message,'error');return}if(published) await notifyPush('news',`<span class="m-icon" data-icon="news" aria-hidden="true"></span> ${title}`,lead||'Nova vijest na sajtu.');['v7NewsTitle','v7NewsLead','v7NewsBody','v7NewsKicker'].forEach(id=>{if($(id))$(id).value=''});if($('v7NewsFile'))$('v7NewsFile').value='';await loadNews();toastV('Vijest je objavljena.');}
 async function deleteNews(id){if(!isAdm())return; if(!confirm('Obrisati ovu vijest?'))return;const {error}=await supabaseClient.from('news').delete().eq('id',id);if(error)return toastV(error.message,'error');await loadNews();toastV('Vijest je obrisana.');}
 function renderAdminNews(){
   const box=$('v7NewsAdminList');
@@ -10279,38 +10279,38 @@ function ratingRows(matchId,teamId){const ids=matchPlayers.filter(mp=>String(mp.
 async function loadStats(){const {data,error}=await supabaseClient.from('match_player_stats').select('*');if(!error)V7.stats=data||[]}
 async function addSave(matchId,pid){if(!canManageMatch())return;const existing=V7.stats.find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(pid));const saves=(+existing?.saves||0)+1;const {error}=await supabaseClient.from('match_player_stats').upsert({match_id:matchId,player_id:pid,saves,updated_at:new Date().toISOString()},{onConflict:'match_id,player_id'});if(error)return toastV(error.message,'error');await loadStats();await renderEnhancedLive(matchId);}
 function renderEnhancedLive(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m||m.status!=='live')return;const host=$('modalContent');if(!host)return;host.querySelectorAll('.v7-live-rating-table').forEach(x=>x.remove());const h=teamV(m.home_team_id),a=teamV(m.away_team_id);const block=(team,label)=>`<div class="card v7-live-rating-table" style="margin-top:14px"><h3>${label} · ocjene</h3><div class="table-wrap" style="margin-top:10px"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Ocjena</th><th>G</th><th>A</th><th>O</th></tr></thead><tbody>${ratingRows(matchId,team.id)||'<tr><td colspan="5">Nema postave.</td></tr>'}</tbody></table></div></div>`;host.insertAdjacentHTML('beforeend',block(h,escV(h?.name||'Domaćin'))+block(a,escV(a?.name||'Gost')))}
-async function openFinished(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const hp=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.home_team_id);const ap=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.away_team_id);showModal(`<div class="modal-title"><h2>🏁 Završetak utakmice · statistika</h2><p class="muted">${escV(teamV(m.home_team_id)?.name)} ${m.home_score||0}:${m.away_score||0} ${escV(teamV(m.away_team_id)?.name)}</p></div><div class="v7-finished-grid"><div class="card"><h3>⚽ Golovi i asistencije</h3><p class="muted" style="margin:6px 0 12px">Ako statistiku unosiš naknadno, možeš evidentirati svaki gol i asistenta.</p><div class="actions"><button class="btn btn-green" onclick="medjasiV7.openGoal('${matchId}')">＋ Dodaj gol</button></div><div style="margin-top:12px">${goals.filter(g=>String(g.match_id)===String(matchId)).sort((x,y)=>(+x.minute||0)-(+y.minute||0)).map(g=>`<div class="event"><span class="event-minute">${g.minute||0}'</span><span class="event-icon">⚽</span><div><b>${escV(playerV(g.player_id)?.name||'Igrač')}</b>${g.assist_player_id?` <span class="muted">assist: ${escV(playerV(g.assist_player_id)?.name||'')}</span>`:''}</div></div>`).join('')||'<div class="empty compact">Nema golova.</div>'}</div></div><div class="card"><h3>📊 Ocjene igrača</h3><div class="table-wrap" style="margin-top:10px"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Ocjena</th><th>G</th><th>A</th><th>O</th></tr></thead><tbody>${ratingRows(matchId,m.home_team_id)}${ratingRows(matchId,m.away_team_id)}</tbody></table></div></div></div>${renderMvp(matchId)}<div class="actions" style="margin-top:16px"><button class="btn btn-blue" onclick="medjasiV7.finishAndSave('${matchId}')">💾 Sačuvaj statistiku i završi</button></div>`)}
-async function finishAndSave(matchId){if(!canManageMatch())return;const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;await saveRatings(matchId);const {error}=await supabaseClient.from('matches').update({status:'finished'}).eq('id',matchId);if(error)return toastV(error.message,'error');await notifyPush('finish',`🏁 ${teamV(m.home_team_id)?.name} ${m.home_score||0}:${m.away_score||0} ${teamV(m.away_team_id)?.name}`,'Utakmica je završena.');await loadAll();hideModal();toastV('Utakmica je završena i statistika je sačuvana.');}
+async function openFinished(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const hp=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.home_team_id);const ap=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.away_team_id);showModal(`<div class="modal-title"><h2><span class="m-icon" data-icon="result" aria-hidden="true"></span> Završetak utakmice · statistika</h2><p class="muted">${escV(teamV(m.home_team_id)?.name)} ${m.home_score||0}:${m.away_score||0} ${escV(teamV(m.away_team_id)?.name)}</p></div><div class="v7-finished-grid"><div class="card"><h3><span class="m-icon" data-icon="ball" aria-hidden="true"></span> Golovi i asistencije</h3><p class="muted" style="margin:6px 0 12px">Ako statistiku unosiš naknadno, možeš evidentirati svaki gol i asistenta.</p><div class="actions"><button class="btn btn-green" onclick="medjasiV7.openGoal('${matchId}')">＋ Dodaj gol</button></div><div style="margin-top:12px">${goals.filter(g=>String(g.match_id)===String(matchId)).sort((x,y)=>(+x.minute||0)-(+y.minute||0)).map(g=>`<div class="event"><span class="event-minute">${g.minute||0}'</span><span class="event-icon"><span class="m-icon" data-icon="ball" aria-hidden="true"></span></span><div><b>${escV(playerV(g.player_id)?.name||'Igrač')}</b>${g.assist_player_id?` <span class="muted">assist: ${escV(playerV(g.assist_player_id)?.name||'')}</span>`:''}</div></div>`).join('')||'<div class="empty compact">Nema golova.</div>'}</div></div><div class="card"><h3><span class="m-icon" data-icon="stats" aria-hidden="true"></span> Ocjene igrača</h3><div class="table-wrap" style="margin-top:10px"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Ocjena</th><th>G</th><th>A</th><th>O</th></tr></thead><tbody>${ratingRows(matchId,m.home_team_id)}${ratingRows(matchId,m.away_team_id)}</tbody></table></div></div></div>${renderMvp(matchId)}<div class="actions" style="margin-top:16px"><button class="btn btn-blue" onclick="medjasiV7.finishAndSave('${matchId}')"><span class="m-icon" data-icon="result" aria-hidden="true"></span> Sačuvaj statistiku i završi</button></div>`)}
+async function finishAndSave(matchId){if(!canManageMatch())return;const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;await saveRatings(matchId);const {error}=await supabaseClient.from('matches').update({status:'finished'}).eq('id',matchId);if(error)return toastV(error.message,'error');await notifyPush('finish',`<span class="m-icon" data-icon="result" aria-hidden="true"></span> ${teamV(m.home_team_id)?.name} ${m.home_score||0}:${m.away_score||0} ${teamV(m.away_team_id)?.name}`,'Utakmica je završena.');await loadAll();hideModal();toastV('Utakmica je završena i statistika je sačuvana.');}
 async function saveRatings(matchId){const ids=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)).map(mp=>mp.player_id);for(const pid of ids){const gs=goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.player_id)===String(pid)).length;const as=goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.assist_player_id)===String(pid)).length;const st=V7.stats.find(s=>String(s.match_id)===String(matchId)&&String(s.player_id)===String(pid));const rating=matchRating(matchId,pid);const {error}=await supabaseClient.from('match_player_stats').upsert({match_id:matchId,player_id:pid,goals:gs,assists:as,saves:+st?.saves||0,rating,is_mvp:false,updated_at:new Date().toISOString()},{onConflict:'match_id,player_id'});if(error)console.warn(error)}const all=ids.map(pid=>({pid,r:matchRating(matchId,pid)})).sort((a,b)=>b.r-a.r);if(all[0])await supabaseClient.from('match_player_stats').update({is_mvp:true}).eq('match_id',matchId).eq('player_id',all[0].pid)}
-function openGoal(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const reg=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)).map(mp=>playerV(mp.player_id)).filter(Boolean);const opts=reg.map(p=>`<option value="${p.id}">${escV(teamV(p.team_id)?.name||'')} · #${p.jersey_number??'-'} · ${escV(p.name)}</option>`).join('');showModal(`<div class="modal-title"><h2>⚽ Dodaj gol</h2><p class="muted">Možeš odmah odabrati asistenta.</p></div><div class="form"><div class="form-group"><label>Strijelac</label><select id="v7GoalPlayer">${opts}</select></div><div class="form-group"><label>Minuta</label><input id="v7GoalMinute" type="number" min="0" value="${m.current_minute||0}"></div><div class="form-group"><label>Asistencija?</label><select id="v7GoalAssist"><option value="">Bez asistencije</option>${opts}</select></div><button class="btn btn-green" onclick="medjasiV7.addGoal('${matchId}')">⚽ Evidentiraj gol</button></div>`)}
+function openGoal(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const reg=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)).map(mp=>playerV(mp.player_id)).filter(Boolean);const opts=reg.map(p=>`<option value="${p.id}">${escV(teamV(p.team_id)?.name||'')} · #${p.jersey_number??'-'} · ${escV(p.name)}</option>`).join('');showModal(`<div class="modal-title"><h2><span class="m-icon" data-icon="ball" aria-hidden="true"></span> Dodaj gol</h2><p class="muted">Možeš odmah odabrati asistenta.</p></div><div class="form"><div class="form-group"><label>Strijelac</label><select id="v7GoalPlayer">${opts}</select></div><div class="form-group"><label>Minuta</label><input id="v7GoalMinute" type="number" min="0" value="${m.current_minute||0}"></div><div class="form-group"><label>Asistencija?</label><select id="v7GoalAssist"><option value="">Bez asistencije</option>${opts}</select></div><button class="btn btn-green" onclick="medjasiV7.addGoal('${matchId}')"><span class="m-icon" data-icon="ball" aria-hidden="true"></span> Evidentiraj gol</button></div>`)}
 
 function decorateCourtRatings(matchId){document.querySelectorAll('.player-on-court').forEach(el=>{const nameEl=el.querySelector('.player-court-name');if(!nameEl)return;const text=nameEl.textContent.trim();const p=players.find(x=>text.includes(String(x.name||'')));if(!p)return;const old=el.querySelector('.v7-player-rating-bubble');if(old)old.remove();const bubble=document.createElement('span');bubble.className='v7-player-rating-bubble';bubble.textContent=matchRating(matchId,p.id).toFixed(1);el.querySelector('.player-circle')?.parentElement?.classList.add('v7-player-circle-wrap');el.appendChild(bubble)})}
-function addSaveButtonToLive(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const regs=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&mp.is_active).map(mp=>playerV(mp.player_id)).filter(p=>p&&p.position&&String(p.position).toLowerCase().includes('golman'));if(!regs.length)return;const host=$('modalContent');if(!host)return;const old=host.querySelector('.v7-live-actions');if(old)old.remove();const el=document.createElement('div');el.className='v7-live-actions';el.innerHTML=regs.map(p=>`<button class="btn btn-blue btn-small" onclick="medjasiV7.addSave('${matchId}','${p.id}')">🧤 Odbrana · ${escV(p.name)}</button>`).join('')+`<button class="btn btn-green btn-small" onclick="medjasiV7.openGoal('${matchId}')">⚽ Gol + asistencija</button><button class="btn btn-yellow btn-small" onclick="openCardControl('${matchId}')">🟨 Karton</button><button class="btn btn-small" onclick="openSubstitutionControl('${matchId}')">🔄 Izmjena</button>`;host.querySelector('.live-scoreboard')?.after(el)}
+function addSaveButtonToLive(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const regs=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&mp.is_active).map(mp=>playerV(mp.player_id)).filter(p=>p&&p.position&&String(p.position).toLowerCase().includes('golman'));if(!regs.length)return;const host=$('modalContent');if(!host)return;const old=host.querySelector('.v7-live-actions');if(old)old.remove();const el=document.createElement('div');el.className='v7-live-actions';el.innerHTML=regs.map(p=>`<button class="btn btn-blue btn-small" onclick="medjasiV7.addSave('${matchId}','${p.id}')"><span class="m-icon" data-icon="player" aria-hidden="true"></span> Odbrana · ${escV(p.name)}</button>`).join('')+`<button class="btn btn-green btn-small" onclick="medjasiV7.openGoal('${matchId}')"><span class="m-icon" data-icon="ball" aria-hidden="true"></span> Gol + asistencija</button><button class="btn btn-yellow btn-small" onclick="openCardControl('${matchId}')"><span class="m-icon" data-icon="yellow" aria-hidden="true"></span> Karton</button><button class="btn btn-small" onclick="openSubstitutionControl('${matchId}')"><span class="m-icon" data-icon="live" aria-hidden="true"></span> Izmjena</button>`;host.querySelector('.live-scoreboard')?.after(el)}
 
 async function finishMatchWithStats(id){openFinished(id)}
-function openSeasonStats(){const by={};(V7.stats||[]).forEach(s=>{const p=playerV(s.player_id);if(!p)return;(by[p.id]??={p,g:0,a:0,o:0,r:0,n:0}).g+=+s.goals||0;by[p.id].a+=+s.assists||0;by[p.id].o+=+s.saves||0;by[p.id].r+=+s.rating||0;by[p.id].n++});const rows=Object.values(by).sort((a,b)=>(b.g-b.a*0.1)-(a.g-a.a*0.1));showModal(`<div class="modal-title"><h2>📊 Statistika sezone</h2></div><div class="table-wrap"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Golovi</th><th>Asist.</th><th>Odbrane</th><th>Prosj. ocjena</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${escV(x.p.name)}</td><td>${x.g}</td><td>${x.a}</td><td>${x.o}</td><td>${(x.r/Math.max(1,x.n)).toFixed(1)}</td></tr>`).join('')}</tbody></table></div>`)}
+function openSeasonStats(){const by={};(V7.stats||[]).forEach(s=>{const p=playerV(s.player_id);if(!p)return;(by[p.id]??={p,g:0,a:0,o:0,r:0,n:0}).g+=+s.goals||0;by[p.id].a+=+s.assists||0;by[p.id].o+=+s.saves||0;by[p.id].r+=+s.rating||0;by[p.id].n++});const rows=Object.values(by).sort((a,b)=>(b.g-b.a*0.1)-(a.g-a.a*0.1));showModal(`<div class="modal-title"><h2><span class="m-icon" data-icon="stats" aria-hidden="true"></span> Statistika sezone</h2></div><div class="table-wrap"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Golovi</th><th>Asist.</th><th>Odbrane</th><th>Prosj. ocjena</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${escV(x.p.name)}</td><td>${x.g}</td><td>${x.a}</td><td>${x.o}</td><td>${(x.r/Math.max(1,x.n)).toFixed(1)}</td></tr>`).join('')}</tbody></table></div>`)}
 
 async function notifyPush(type,title,body,matchId=null){try{if(!currentUser)return;const sessionResult=await supabaseClient.auth.getSession();const token=sessionResult.data?.session?.access_token;if(!token)return;await fetch(V7.pushEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({type,title,body,match_id:matchId||currentMatchId||null})})}catch(e){console.warn('Push notify:',e)}}
 function b64ToBytes(s){const pad='='.repeat((4-s.length%4)%4),raw=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
-async function subscribeRealPush(){if(!currentUser)return toastV('Prvo se prijavi.','error');if(!('serviceWorker' in navigator)||!('PushManager' in window))return toastV('Ovaj browser ne podržava push.','error');const perm=await Notification.requestPermission();if(perm!=='granted')return toastV('Dozvola za obavještenja nije odobrena.','error');const reg=await navigator.serviceWorker.register('./service-worker.js',{scope:'./'});let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToBytes(V7.pushPublicKey)});const j=sub.toJSON();const {error}=await supabaseClient.from('push_subscriptions').upsert({user_id:currentUser.id,endpoint:sub.endpoint,p256dh:j.keys?.p256dh,auth:j.keys?.auth,user_agent:navigator.userAgent,updated_at:new Date().toISOString()},{onConflict:'endpoint'});if(error)return toastV(error.message,'error');localStorage.setItem('medjasi_push_enabled','1');renderPushUI();toastV('🔔 Push obavještenja su uključena.')}
+async function subscribeRealPush(){if(!currentUser)return toastV('Prvo se prijavi.','error');if(!('serviceWorker' in navigator)||!('PushManager' in window))return toastV('Ovaj browser ne podržava push.','error');const perm=await Notification.requestPermission();if(perm!=='granted')return toastV('Dozvola za obavještenja nije odobrena.','error');const reg=await navigator.serviceWorker.register('./service-worker.js',{scope:'./'});let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToBytes(V7.pushPublicKey)});const j=sub.toJSON();const {error}=await supabaseClient.from('push_subscriptions').upsert({user_id:currentUser.id,endpoint:sub.endpoint,p256dh:j.keys?.p256dh,auth:j.keys?.auth,user_agent:navigator.userAgent,updated_at:new Date().toISOString()},{onConflict:'endpoint'});if(error)return toastV(error.message,'error');localStorage.setItem('medjasi_push_enabled','1');renderPushUI();toastV('<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.')}
 async function disableRealPush(){try{const reg=await navigator.serviceWorker.getRegistration('./');const sub=await reg?.pushManager.getSubscription();if(sub){await supabaseClient.from('push_subscriptions').delete().eq('endpoint',sub.endpoint);await sub.unsubscribe()}}catch(e){console.warn(e)}localStorage.removeItem('medjasi_push_enabled');renderPushUI()}
-function renderPushUI(){if(!$('v7PushStatus')||!$('v7PushButton'))return;const on=localStorage.getItem('medjasi_push_enabled')==='1';$('v7PushStatus').textContent=on?'🔔 Push obavještenja su uključena.':'Push obavještenja nisu uključena.';$('v7PushStatus').className='v7-push-status '+(on?'ok':'');$('v7PushButton').textContent=on?'🔕 Isključi push':'🔔 Uključi push';$('v7PushButton').onclick=on?disableRealPush:subscribeRealPush}
-function ensureSeasonAdmin(){if(!$('adminContent')||!isAdm()||$('v7SeasonCard'))return;const c=document.createElement('div');c.id='v7SeasonCard';c.className='card';c.style.marginTop='20px';c.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SEZONE</span><h3>🏆 Upravljanje sezonama</h3><p class="muted">Aktivna sezona se automatski dodjeljuje novim utakmicama.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="actions"><input id="v7SeasonName" placeholder="npr. 2026/27" style="max-width:220px"><button class="btn btn-green" onclick="medjasiV7.addSeason()">＋ Nova sezona</button></div><div id="v7SeasonList" style="margin-top:12px"></div>`;$('adminContent').appendChild(c);renderSeasons()}
+function renderPushUI(){if(!$('v7PushStatus')||!$('v7PushButton'))return;const on=localStorage.getItem('medjasi_push_enabled')==='1';$('v7PushStatus').textContent=on?'<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.':'Push obavještenja nisu uključena.';$('v7PushStatus').className='v7-push-status '+(on?'ok':'');$('v7PushButton').textContent=on?'🔕 Isključi push':'<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Uključi push';$('v7PushButton').onclick=on?disableRealPush:subscribeRealPush}
+function ensureSeasonAdmin(){if(!$('adminContent')||!isAdm()||$('v7SeasonCard'))return;const c=document.createElement('div');c.id='v7SeasonCard';c.className='card';c.style.marginTop='20px';c.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SEZONE</span><h3><span class="m-icon" data-icon="trophy" aria-hidden="true"></span> Upravljanje sezonama</h3><p class="muted">Aktivna sezona se automatski dodjeljuje novim utakmicama.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="actions"><input id="v7SeasonName" placeholder="npr. 2026/27" style="max-width:220px"><button class="btn btn-green" onclick="medjasiV7.addSeason()">＋ Nova sezona</button></div><div id="v7SeasonList" style="margin-top:12px"></div>`;$('adminContent').appendChild(c);renderSeasons()}
 async function loadSeasons(){const {data,error}=await supabaseClient.from('seasons').select('*').order('created_at',{ascending:false});if(!error)V7.seasons=data||[];renderSeasons()}
 function renderSeasons(){const box=$('v7SeasonList');if(!box)return;box.innerHTML=(V7.seasons||[]).map(s=>`<div class="admin-match" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><strong>${escV(s.name)}</strong><small class="muted" style="display:block;margin-top:3px">${s.is_active?'AKTIVNA':'Arhiva'}</small></div>${s.is_active?'':'<button class="btn btn-small" onclick="medjasiV7.activateSeason(\''+s.id+'\')">Postavi aktivnu</button>'}</div>`).join('')||'<div class="muted">Nema sezona.</div>'}
 async function addSeason(){if(!isAdm())return;const name=$('v7SeasonName')?.value.trim();if(!name)return;const {error}=await supabaseClient.from('seasons').insert({name,is_active:false});if(error)return toastV(error.message,'error');$('v7SeasonName').value='';await loadSeasons()}
 async function activateSeason(id){if(!isAdm())return;await supabaseClient.from('seasons').update({is_active:false}).neq('id','00000000-0000-0000-0000-000000000000');const {error}=await supabaseClient.from('seasons').update({is_active:true}).eq('id',id);if(error)return toastV(error.message,'error');await loadSeasons();toastV('Aktivna sezona je promijenjena.')} 
-function ensurePushUI(){if(!$('adminContent')||!isAdm()||$('v7PushCard'))return;const c=document.createElement('div');c.id='v7PushCard';c.className='card v7-push-card';c.innerHTML=`<div class="v7-push-row"><div><strong>🔔 Push notifikacije</strong><div id="v7PushStatus" class="v7-push-status">Provjera...</div></div><button id="v7PushButton" class="btn btn-blue">🔔 Uključi push</button></div>`;$('adminContent').appendChild(c);renderPushUI()}
+function ensurePushUI(){if(!$('adminContent')||!isAdm()||$('v7PushCard'))return;const c=document.createElement('div');c.id='v7PushCard';c.className='card v7-push-card';c.innerHTML=`<div class="v7-push-row"><div><strong><span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push notifikacije</strong><div id="v7PushStatus" class="v7-push-status">Provjera...</div></div><button id="v7PushButton" class="btn btn-blue"><span class="m-icon" data-icon="bell" aria-hidden="true"></span> Uključi push</button></div>`;$('adminContent').appendChild(c);renderPushUI()}
 
 // Gallery: image + video compatibility layer. Existing image_url rows continue to work.
-function renderGalleryV7(){const grid=$('galleryGrid'),count=$('galleryCount');if(!grid)return;const arr=gallery||[];if(count)count.textContent=`${arr.length} ${arr.length===1?'medij':'medija'}`;if(!arr.length){grid.innerHTML='<div class="empty gallery-empty">📸 Galerija je trenutno prazna.</div>';return}grid.innerHTML=arr.map(x=>{const url=x.media_url||x.image_url,type=x.media_type||'image';return `<article class="gallery-item"><button class="gallery-photo" type="button" onclick="${type==='video'?`medjasiV7.openMedia('${escV(url)}','video','${escV(x.title||'Video')}')`:`openImagePreview('${escV(url)}','${escV(x.title||'Galerija')}')`}">${type==='video'?`<video muted playsinline preload="metadata" src="${escV(url)}"></video>`:`<img src="${escV(url)}" alt="${escV(x.title||'Fotografija')}" loading="lazy">`}<span class="gallery-overlay">${type==='video'?'▶️ Pusti video':'🔍 Pregledaj'}</span></button><div class="gallery-caption"><strong>${escV(x.title||'Medij lige')}</strong>${x.description?`<p>${escV(x.description)}</p>`:''}<small class="muted">${formatV(x.created_at)}</small></div></article>`}).join('')}
+function renderGalleryV7(){const grid=$('galleryGrid'),count=$('galleryCount');if(!grid)return;const arr=gallery||[];if(count)count.textContent=`${arr.length} ${arr.length===1?'medij':'medija'}`;if(!arr.length){grid.innerHTML='<div class="empty gallery-empty"><span class="m-icon" data-icon="gallery" aria-hidden="true"></span> Galerija je trenutno prazna.</div>';return}grid.innerHTML=arr.map(x=>{const url=x.media_url||x.image_url,type=x.media_type||'image';return `<article class="gallery-item"><button class="gallery-photo" type="button" onclick="${type==='video'?`medjasiV7.openMedia('${escV(url)}','video','${escV(x.title||'Video')}')`:`openImagePreview('${escV(url)}','${escV(x.title||'Galerija')}')`}">${type==='video'?`<video muted playsinline preload="metadata" src="${escV(url)}"></video>`:`<img src="${escV(url)}" alt="${escV(x.title||'Fotografija')}" loading="lazy">`}<span class="gallery-overlay">${type==='video'?'▶️ Pusti video':'<span class="m-icon" data-icon="search" aria-hidden="true"></span> Pregledaj'}</span></button><div class="gallery-caption"><strong>${escV(x.title||'Medij lige')}</strong>${x.description?`<p>${escV(x.description)}</p>`:''}<small class="muted">${formatV(x.created_at)}</small></div></article>`}).join('')}
 function openMedia(url,type,title){showModal(`<div class="modal-title"><h2>${escV(title)}</h2></div>${type==='video'?`<video controls autoplay playsinline style="display:block;width:100%;max-height:75vh;border-radius:14px;background:#000" src="${escV(url)}"></video>`:`<img src="${escV(url)}" style="display:block;max-width:100%;max-height:75vh;margin:auto;border-radius:14px">`}`)}
 async function adminAddMedia(){if(!isAdm())return;const file=$('galleryImageFile')?.files?.[0],title=$('galleryTitle')?.value.trim()||'',description=$('galleryDescription')?.value.trim()||'';if(!file)return toastV('Izaberi sliku ili video.','error');if(file.size>50*1024*1024)return toastV('Maksimum je 50 MB.','error');try{const media_url=await uploadFile(file,'gallery');const media_type=file.type.startsWith('video/')?'video':'image';const {error}=await supabaseClient.from('gallery').insert({image_url:media_type==='image'?media_url:null,media_url,media_type,title:title.slice(0,100)||'Medij lige',description:description.slice(0,250),created_by:currentUser.id});if(error)throw error;$('galleryImageFile').value='';$('galleryTitle').value='';$('galleryDescription').value='';await loadAll();toastV('Medij je objavljen.')}catch(e){toastV(e.message||'Greška pri uploadu.','error')}}
 function ensureGalleryVideoUI(){const input=$('galleryImageFile');if(!input)return;input.accept='image/*,video/mp4,video/webm,video/ogg';const label=input.closest('.form-group')?.querySelector('label');if(label)label.textContent='Fotografija ili video'}
 
 // Search: teams, players, matches and news.
-function ensureSearch(){if($('v7Search'))return;const actions=document.querySelector('.header-actions');if(!actions)return;const wrap=document.createElement('div');wrap.className='v7-search-wrap';wrap.innerHTML='<input id="v7Search" type="search" placeholder="🔎 Pretraži..." autocomplete="off"><div id="v7SearchResults" class="v7-search-results"></div>';actions.insertBefore(wrap,actions.firstChild);$('v7Search').addEventListener('input',renderSearch);document.addEventListener('click',e=>{if(!wrap.contains(e.target))$('v7SearchResults').classList.remove('open')})}
-function renderSearch(){const q=$('v7Search')?.value.trim().toLowerCase(),box=$('v7SearchResults');if(!box)return;if(q.length<2){box.classList.remove('open');return}const res=[];teams.filter(t=>String(t.name||'').toLowerCase().includes(q)).slice(0,5).forEach(t=>res.push({i:'🛡️',t:t.name,s:'Ekipa',fn:`showSection('teams')`}));players.filter(p=>String(p.name||'').toLowerCase().includes(q)).slice(0,5).forEach(p=>res.push({i:'👤',t:p.name,s:`Igrač · ${teamV(p.team_id)?.name||''}`,fn:`showSection('players')`}));V7.news.filter(n=>String(n.title||'').toLowerCase().includes(q)).slice(0,5).forEach(n=>res.push({i:'📰',t:n.title,s:'Vijest',fn:`medjasiV7.openNews('${n.id}')`}));box.innerHTML=res.length?res.map(x=>`<button class="v7-search-item" onclick="${x.fn};$('v7SearchResults').classList.remove('open')"><span>${x.i}</span><span><b>${escV(x.t)}</b><small class="muted" style="display:block;margin-top:2px">${escV(x.s)}</small></span></button>`).join(''):'<div class="v7-news-empty">Nema rezultata.</div>';box.classList.add('open')}
+function ensureSearch(){if($('v7Search'))return;const actions=document.querySelector('.header-actions');if(!actions)return;const wrap=document.createElement('div');wrap.className='v7-search-wrap';wrap.innerHTML='<input id="v7Search" type="search" placeholder="<span class="m-icon" data-icon="search" aria-hidden="true"></span> Pretraži..." autocomplete="off"><div id="v7SearchResults" class="v7-search-results"></div>';actions.insertBefore(wrap,actions.firstChild);$('v7Search').addEventListener('input',renderSearch);document.addEventListener('click',e=>{if(!wrap.contains(e.target))$('v7SearchResults').classList.remove('open')})}
+function renderSearch(){const q=$('v7Search')?.value.trim().toLowerCase(),box=$('v7SearchResults');if(!box)return;if(q.length<2){box.classList.remove('open');return}const res=[];teams.filter(t=>String(t.name||'').toLowerCase().includes(q)).slice(0,5).forEach(t=>res.push({i:'<span class="m-icon" data-icon="shield" aria-hidden="true"></span>️',t:t.name,s:'Ekipa',fn:`showSection('teams')`}));players.filter(p=>String(p.name||'').toLowerCase().includes(q)).slice(0,5).forEach(p=>res.push({i:'<span class="m-icon" data-icon="player" aria-hidden="true"></span>',t:p.name,s:`Igrač · ${teamV(p.team_id)?.name||''}`,fn:`showSection('players')`}));V7.news.filter(n=>String(n.title||'').toLowerCase().includes(q)).slice(0,5).forEach(n=>res.push({i:'<span class="m-icon" data-icon="news" aria-hidden="true"></span>',t:n.title,s:'Vijest',fn:`medjasiV7.openNews('${n.id}')`}));box.innerHTML=res.length?res.map(x=>`<button class="v7-search-item" onclick="${x.fn};$('v7SearchResults').classList.remove('open')"><span>${x.i}</span><span><b>${escV(x.t)}</b><small class="muted" style="display:block;margin-top:2px">${escV(x.s)}</small></span></button>`).join(''):'<div class="v7-news-empty">Nema rezultata.</div>';box.classList.add('open')}
 
 // Load wrappers
 const originalLoadAll=window.loadAll;
@@ -10325,8 +10325,8 @@ window.renderAdminGallery=function(){const box=$('adminGalleryList');if(!box||!i
 
 // Add finish button to admin match cards without replacing the existing manager.
 const oldMakeSubstitution=window.makeSubstitution;window.makeSubstitution=async function(matchId,side){const out=$(side==='home'?'subHomeOut':'subAwayOut')?.value,incoming=$(side==='home'?'subHomeIn':'subAwayIn')?.value;const m=matches.find(x=>String(x.id)===String(matchId));const teamId=side==='home'?m?.home_team_id:m?.away_team_id;const minute=Number(m?.current_minute||0);const result=await oldMakeSubstitution?.(matchId,side);if(out&&incoming&&m&&isAdm()){await supabaseClient.from('match_substitutions').insert({match_id:matchId,team_id:teamId,player_out_id:out,player_in_id:incoming,minute})}return result};
-function renderMvp(matchId){const ids=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)).map(mp=>mp.player_id);const top=ids.map(pid=>({pid,r:matchRating(matchId,pid)})).sort((a,b)=>b.r-a.r)[0];return top?`<div class="v7-mvp" style="margin-top:14px">🏅 <strong>MVP utakmice</strong><div style="margin-top:4px">${escV(playerV(top.pid)?.name||'Igrač')} · <span class="v7-rating good">${top.r.toFixed(1)}</span></div></div>`:''}
-const oldRenderAdminMatches=window.renderAdminMatches;window.renderAdminMatches=function(){oldRenderAdminMatches?.();document.querySelectorAll('#adminMatches .admin-match').forEach((el,i)=>{const m=matches[i];if(m&&!el.querySelector('.v7-finish-btn')){const b=document.createElement('button');b.className='btn btn-blue btn-small v7-finish-btn';b.textContent='🏁 Statistika / završi';b.onclick=()=>openFinished(m.id);el.querySelector('.admin-controls')?.appendChild(b)}})};
+function renderMvp(matchId){const ids=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)).map(mp=>mp.player_id);const top=ids.map(pid=>({pid,r:matchRating(matchId,pid)})).sort((a,b)=>b.r-a.r)[0];return top?`<div class="v7-mvp" style="margin-top:14px"><span class="m-icon" data-icon="mvp" aria-hidden="true"></span> <strong>MVP utakmice</strong><div style="margin-top:4px">${escV(playerV(top.pid)?.name||'Igrač')} · <span class="v7-rating good">${top.r.toFixed(1)}</span></div></div>`:''}
+const oldRenderAdminMatches=window.renderAdminMatches;window.renderAdminMatches=function(){oldRenderAdminMatches?.();document.querySelectorAll('#adminMatches .admin-match').forEach((el,i)=>{const m=matches[i];if(m&&!el.querySelector('.v7-finish-btn')){const b=document.createElement('button');b.className='btn btn-blue btn-small v7-finish-btn';b.textContent='<span class="m-icon" data-icon="result" aria-hidden="true"></span> Statistika / završi';b.onclick=()=>openFinished(m.id);el.querySelector('.admin-controls')?.appendChild(b)}})};
 
 // Patch openMatch after its definition: add save buttons/rating table for live matches.
 const oldOpenMatch=window.openMatch;window.openMatch=async function(id){const r=oldOpenMatch?.(id);setTimeout(async()=>{try{await loadStats();addSaveButtonToLive(id);decorateCourtRatings(id);renderEnhancedLive(id)}catch(e){console.warn(e)}},120);return r};
@@ -10387,9 +10387,9 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     }catch(err){console.warn('Community load:',err); V.posts=[];V.stories=[];render();}
   }
   function communityTrack(id){return musicTracks.find(t=>String(t.id)===String(id))||null;}
-  function communityMusicChip(id){const t=communityTrack(id);if(!t)return "";return `<button type="button" class="v9-music-chip" onclick="event.stopPropagation();playCommunityMusic('${escV(t.id)}')">🎵 ${escV(t.title||"Muzika")} <small>· ${t.provider==="spotify"?"Spotify":"YouTube"}</small><span>▶</span></button>`;}
-  function communityMusicPicker(id){if(!musicTracks.length)return '<div class="muted compact">🎵 Trenutno nema dostupnih pjesama.</div>';return '<div class="form-group"><label>🎵 Muzika <span class="muted">(opcionalno)</span></label><select id="'+id+'"><option value="">Bez muzike</option>'+musicTracks.map(t=>'<option value="'+t.id+'">'+(t.provider==="spotify"?"Spotify":"YouTube")+' · '+escV(t.title||"Pjesma")+'</option>').join("")+'</select></div>';}
-  window.playCommunityMusic=function(id){const t=communityTrack(id);if(!t)return;let dock=document.getElementById("communityMusicDock");if(!dock){dock=document.createElement("div");dock.id="communityMusicDock";dock.className="community-music-dock";document.body.appendChild(dock);}const src=musicEmbedUrl(t,true);dock.innerHTML='<div class="community-music-dock-head"><strong>🎵 '+escV(t.title||"Muzika")+'</strong><span>'+(t.provider==="spotify"?"Spotify":"YouTube")+'</span><button type="button" id="communityMusicClose">✕</button></div><iframe src="'+src+'" title="'+escV(t.title||"Muzika")+'" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';document.getElementById("communityMusicClose")?.addEventListener("click",()=>dock.remove());}
+  function communityMusicChip(id){const t=communityTrack(id);if(!t)return "";return `<button type="button" class="v9-music-chip" onclick="event.stopPropagation();playCommunityMusic('${escV(t.id)}')"><span class="m-icon" data-icon="music" aria-hidden="true"></span> ${escV(t.title||"Muzika")} <small>· ${t.provider==="spotify"?"Spotify":"YouTube"}</small><span>▶</span></button>`;}
+  function communityMusicPicker(id){if(!musicTracks.length)return '<div class="muted compact"><span class="m-icon" data-icon="music" aria-hidden="true"></span> Trenutno nema dostupnih pjesama.</div>';return '<div class="form-group"><label><span class="m-icon" data-icon="music" aria-hidden="true"></span> Muzika <span class="muted">(opcionalno)</span></label><select id="'+id+'"><option value="">Bez muzike</option>'+musicTracks.map(t=>'<option value="'+t.id+'">'+(t.provider==="spotify"?"Spotify":"YouTube")+' · '+escV(t.title||"Pjesma")+'</option>').join("")+'</select></div>';}
+  window.playCommunityMusic=function(id){const t=communityTrack(id);if(!t)return;let dock=document.getElementById("communityMusicDock");if(!dock){dock=document.createElement("div");dock.id="communityMusicDock";dock.className="community-music-dock";document.body.appendChild(dock);}const src=musicEmbedUrl(t,true);dock.innerHTML='<div class="community-music-dock-head"><strong><span class="m-icon" data-icon="music" aria-hidden="true"></span> '+escV(t.title||"Muzika")+'</strong><span>'+(t.provider==="spotify"?"Spotify":"YouTube")+'</span><button type="button" id="communityMusicClose"><span class="m-icon" data-icon="settings" aria-hidden="true"></span></button></div><iframe src="'+src+'" title="'+escV(t.title||"Muzika")+'" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';document.getElementById("communityMusicClose")?.addEventListener("click",()=>dock.remove());}
   async function render(){renderStories();await renderFeed();await renderMyProfile()}
   function renderStories(){
     const host=q('v9Stories');if(!host)return;
@@ -10400,8 +10400,8 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   }
   async function renderFeed(){
     const host=q('v9Feed');if(!host)return;
-    if(!V.posts.length){host.innerHTML='<div class="v9-empty">Još nema objava. Budi prvi koji će objaviti fotografiju. 📸</div>';return}
-    host.innerHTML=V.posts.map((p,i)=>{const a=V.profiles[String(p.user_id)]||{};const own=logged()&&String(p.user_id)===String(currentUser.id);return `<article class="v9-post" style="animation-delay:${Math.min(i,8)*35}ms"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(a)}" alt="" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer"><div><div class="v9-post-author" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer">${fanCommunityIdentityHTML(a,String(p.user_id))}</div><div class="v9-post-meta">${fmt(p.created_at)}</div></div>${own||typeof isAdmin==='function'&&isAdmin()?`<button class="btn btn-small v9-post-menu" onclick="deleteV9Post('${escV(p.id)}')">Obriši</button>`:''}</div><img class="v9-post-image" src="${escV(p.image_url)}" alt="${escV(p.caption||'Fotografija')}" loading="lazy" onclick="openV9Lightbox('${escV(p.image_url)}')"><div class="v9-post-body">${p.caption?`<div class="v9-post-caption">${escV(p.caption)}</div>`:''}${communityMusicChip(p.music_track_id)}<div class="v9-post-actions"><button id="v9r-${escV(p.id)}" class="v9-reaction" onclick="toggleV9Reaction('${escV(p.id)}','❤️')">❤️ <span>0</span></button><button class="v9-reaction" onclick="toggleV9Comments('${escV(p.id)}')">💬 <span id="v9cnum-${escV(p.id)}">0</span></button></div><div id="v9comments-${escV(p.id)}" class="v9-comments" hidden></div></div></article>`}).join('');
+    if(!V.posts.length){host.innerHTML='<div class="v9-empty">Još nema objava. Budi prvi koji će objaviti fotografiju. <span class="m-icon" data-icon="gallery" aria-hidden="true"></span></div>';return}
+    host.innerHTML=V.posts.map((p,i)=>{const a=V.profiles[String(p.user_id)]||{};const own=logged()&&String(p.user_id)===String(currentUser.id);return `<article class="v9-post" style="animation-delay:${Math.min(i,8)*35}ms"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(a)}" alt="" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer"><div><div class="v9-post-author" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer">${fanCommunityIdentityHTML(a,String(p.user_id))}</div><div class="v9-post-meta">${fmt(p.created_at)}</div></div>${own||typeof isAdmin==='function'&&isAdmin()?`<button class="btn btn-small v9-post-menu" onclick="deleteV9Post('${escV(p.id)}')">Obriši</button>`:''}</div><img class="v9-post-image" src="${escV(p.image_url)}" alt="${escV(p.caption||'Fotografija')}" loading="lazy" onclick="openV9Lightbox('${escV(p.image_url)}')"><div class="v9-post-body">${p.caption?`<div class="v9-post-caption">${escV(p.caption)}</div>`:''}${communityMusicChip(p.music_track_id)}<div class="v9-post-actions"><button id="v9r-${escV(p.id)}" class="v9-reaction" onclick="toggleV9Reaction('${escV(p.id)}','<span class="m-icon" data-icon="star" aria-hidden="true"></span>️')"><span class="m-icon" data-icon="star" aria-hidden="true"></span>️ <span>0</span></button><button class="v9-reaction" onclick="toggleV9Comments('${escV(p.id)}')"><span class="m-icon" data-icon="community" aria-hidden="true"></span> <span id="v9cnum-${escV(p.id)}">0</span></button></div><div id="v9comments-${escV(p.id)}" class="v9-comments" hidden></div></div></article>`}).join('');
     await Promise.all(V.posts.map(p=>refreshPostMeta(p.id)));
   }
   async function refreshPostMeta(id){
@@ -10417,9 +10417,9 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     host.innerHTML=`<div class="v9-profile-top"><img class="v9-profile-avatar" src="${avatar(p)}" alt=""><h3>${escV(p.username||'Korisnik')}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h3><div class="v9-profile-bio">${escV(p.bio||'Dodaj kratak opis svog profila.')}</div></div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${postCount}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${storyCount}</b><span>Priče</span></div></div><button class="btn btn-blue" style="width:100%" onclick="openV9Profile('${escV(currentUser.id)}')">Moj profil</button><button class="btn" style="width:100%;margin-top:7px" onclick="openV9EditProfile()">Uredi profil</button>`;
   }
   function filePreview(fileId,imgId){q(fileId)?.addEventListener('change',()=>{const f=q(fileId)?.files?.[0],im=q(imgId);if(f&&im){im.src=URL.createObjectURL(f);im.style.display='block'}})}
-  window.openV9PostComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>📸 Nova objava</h2><p class="muted">Dodaj fotografiju, opis i po želji muziku.</p></div><div class="form"><label class="v9-drop" for="v9PostFile">📷 Izaberi fotografiju<input id="v9PostFile" type="file" accept="image/*" hidden></label><img id="v9PostPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9PostCaption" maxlength="1000" placeholder="Napiši nešto..."></textarea></div>'+communityMusicPicker("v9PostMusic")+'<button class="btn btn-green" onclick="publishV9Post()">Objavi fotografiju</button></div></div>');filePreview('v9PostFile','v9PostPreview')};
+  window.openV9PostComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2><span class="m-icon" data-icon="gallery" aria-hidden="true"></span> Nova objava</h2><p class="muted">Dodaj fotografiju, opis i po želji muziku.</p></div><div class="form"><label class="v9-drop" for="v9PostFile"><span class="m-icon" data-icon="camera" aria-hidden="true"></span> Izaberi fotografiju<input id="v9PostFile" type="file" accept="image/*" hidden></label><img id="v9PostPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9PostCaption" maxlength="1000" placeholder="Napiši nešto..."></textarea></div>'+communityMusicPicker("v9PostMusic")+'<button class="btn btn-green" onclick="publishV9Post()">Objavi fotografiju</button></div></div>');filePreview('v9PostFile','v9PostPreview')};
   window.publishV9Post=async function(){if(!guard())return;const f=q('v9PostFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`community/${currentUser.id}`);const {error}=await supabaseClient.from('community_posts').insert({user_id:currentUser.id,image_url:url,caption:q('v9PostCaption')?.value.trim()||null,music_track_id:q('v9PostMusic')?.value?Number(q('v9PostMusic').value):null});if(error)throw error;hideModal();await load();toastV('Objava je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
-  window.openV9StoryComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/*" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div>'+communityMusicPicker("v9StoryMusic")+'<button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>');filePreview('v9StoryFile','v9StoryPreview')};
+  window.openV9StoryComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2><span class="m-icon" data-icon="live" aria-hidden="true"></span> Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile"><span class="m-icon" data-icon="camera" aria-hidden="true"></span> Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/*" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div>'+communityMusicPicker("v9StoryMusic")+'<button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>');filePreview('v9StoryFile','v9StoryPreview')};
   window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null,music_track_id:q('v9StoryMusic')?.value?Number(q('v9StoryMusic').value):null});if(error)throw error;hideModal();await load();toastV('Priča je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
   window.openV9Story=function(id){const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=V.profiles[String(s.user_id)]||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${fanCommunityIdentityHTML(p,String(s.user_id))}</b><div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${escV(s.image_url)}" alt=""><div class="v9-story-caption">${escV(s.caption||'')}</div>${communityMusicChip(s.music_track_id)}${logged()&&(String(s.user_id)===String(currentUser.id)||typeof isAdmin==='function'&&isAdmin())?`<button class="btn btn-small" onclick="deleteV9Story('${escV(s.id)}')">Obriši priču</button>`:''}</div>`) };
   window.deleteV9Story=async function(id){if(!guard())return;const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;if(String(s.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu priču?'))return;const {error}=await supabaseClient.from('community_stories').delete().eq('id',id);if(error)return toastV(error.message,'error');hideModal();await load();toastV('Priča je obrisana.')};
@@ -10427,16 +10427,16 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     await loadFanPublicStyles([id]);
     const {data:p,error}=await supabaseClient.from('profiles').select('id,username,avatar_url,bio,role').eq('id',id).maybeSingle();if(error||!p)return toastV('Profil nije pronađen.','error');
     const [{data:posts},{data:stories}]=await Promise.all([supabaseClient.from('community_posts').select('id,user_id,image_url,caption,created_at').eq('user_id',id).order('created_at',{ascending:false}).limit(30),supabaseClient.from('community_stories').select('id,user_id,image_url,caption,created_at,expires_at').eq('user_id',id).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false})]);
-    showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${fanCommunityIdentityHTML(p,String(id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${escV(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&String(id)===String(currentUser.id)?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button><button class="btn" onclick="window.openFanTickets?.()">🎟️ Moji tiketi</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<div><img class="v9-post-image" style="border-radius:16px" src="${escV(x.image_url)}" alt="${escV(x.caption||'')}" onclick="openV9Lightbox('${escV(x.image_url)}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${escV(x.caption)}</div>`:''}</div>`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
+    showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${fanCommunityIdentityHTML(p,String(id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${escV(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&String(id)===String(currentUser.id)?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button><button class="btn" onclick="window.openFanTickets?.()"><span class="m-icon" data-icon="gift" aria-hidden="true"></span>️ Moji tiketi</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<div><img class="v9-post-image" style="border-radius:16px" src="${escV(x.image_url)}" alt="${escV(x.caption||'')}" onclick="openV9Lightbox('${escV(x.image_url)}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${escV(x.caption)}</div>`:''}</div>`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
   };
-  window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/*" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${escV(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${escV(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);filePreview('v9AvatarFile','v9AvatarPreview')};
+  window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2><span class="m-icon" data-icon="player" aria-hidden="true"></span> Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile"><span class="m-icon" data-icon="camera" aria-hidden="true"></span> Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/*" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${escV(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${escV(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);filePreview('v9AvatarFile','v9AvatarPreview')};
   window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!f.type.startsWith('image/'))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await supabaseClient.from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV('Profil je ažuriran.')}catch(err){toastV(err.message||'Greška pri čuvanju profila.','error')}};
   window.deleteV9Post=async function(id){if(!guard())return;const p=V.posts.find(x=>String(x.id)===String(id));if(!p||String(p.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);if(error)return toastV(error.message,'error');await load();toastV('Objava je obrisana.')};
   window.toggleV9Reaction=async function(postId,type){if(!guard())return;const {data:existing,error:ee}=await supabaseClient.from('community_reactions').select('id').eq('post_id',postId).eq('user_id',currentUser.id).eq('reaction',type).maybeSingle();if(ee)return toastV(ee.message,'error');let error;if(existing){({error}=await supabaseClient.from('community_reactions').delete().eq('id',existing.id))}else{({error}=await supabaseClient.from('community_reactions').insert({post_id:postId,user_id:currentUser.id,reaction:type}))}if(error)return toastV(error.message,'error');await refreshPostMeta(postId)};
   window.toggleV9Comments=async function(postId){const box=q('v9comments-'+postId);if(!box)return;if(!box.hidden){box.hidden=true;return}const {data,error}=await supabaseClient.from('community_comments').select('id,user_id,content,created_at').eq('post_id',postId).order('created_at',{ascending:true});if(error)return toastV(error.message,'error');await loadProfiles((data||[]).map(c=>c.user_id));box.innerHTML=(data||[]).map(c=>{const p=V.profiles[String(c.user_id)]||{};return `<div class="v9-comment">${fanCommunityIdentityHTML(p,String(c.user_id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}: ${escV(c.content)}</div>`}).join('')+`<div class="v9-comment-form"><input id="v9ci-${escV(postId)}" maxlength="500" placeholder="Napiši komentar..." ${logged()?'':'disabled'}><button class="btn btn-small btn-green" onclick="addV9Comment('${escV(postId)}')">Pošalji</button></div><div class="fan-community-emoji-wrap">${logged()?fanEmojiBarHTML('v9ci-'+escV(postId)):''}</div>`;box.hidden=false};
   window.addV9Comment=async function(postId){if(!guard())return;const input=q('v9ci-'+postId);const content=input?.value.trim();if(!content)return;const {error}=await supabaseClient.from('community_comments').insert({post_id:postId,user_id:currentUser.id,content});if(error)return toastV(error.message,'error');input.value='';const box=q('v9comments-'+postId);if(box)box.hidden=true;await toggleV9Comments(postId);await refreshPostMeta(postId)};
   window.openV9Lightbox=function(url){showModal(`<div class="v9-lightbox" onclick="hideModal()"><img src="${escV(url)}" alt="" onclick="event.stopPropagation()"></div>`) };
-  function patchAuth(){const old=window.updateAuthUI;if(window.__V10_AUTH_PATCH__)return;window.__V10_AUTH_PATCH__=true;window.updateAuthUI=function(){old?.();const account=q('headerAccount');if(account&&logged()){const name=escV(currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik');account.innerHTML=`<button class="account-btn" onclick="openV9Profile('${escV(currentUser.id)}')"><span class="account-name">👤 ${name}${currentProfile?.role==='admin'?'<span class="account-admin">Admin</span>':''}</span></button><button class="account-btn" onclick="logout()">↪</button>`}if(q('community'))renderMyProfile()}}
+  function patchAuth(){const old=window.updateAuthUI;if(window.__V10_AUTH_PATCH__)return;window.__V10_AUTH_PATCH__=true;window.updateAuthUI=function(){old?.();const account=q('headerAccount');if(account&&logged()){const name=escV(currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik');account.innerHTML=`<button class="account-btn" onclick="openV9Profile('${escV(currentUser.id)}')"><span class="account-name"><span class="m-icon" data-icon="player" aria-hidden="true"></span> ${name}${currentProfile?.role==='admin'?'<span class="account-admin">Admin</span>':''}</span></button><button class="account-btn" onclick="logout()">↪</button>`}if(q('community'))renderMyProfile()}}
   window.loadV9Community=load;
   const originalShowSection=window.showSection;window.showSection=function(id){originalShowSection?.(id);if(id==='community')setTimeout(load,30)};
   window.addEventListener('load',()=>setTimeout(()=>{patchAuth();load()},450));
