@@ -192,7 +192,7 @@ as $
 $;
 
 revoke all on function public.fan_public_cosmetics(uuid[]) from public;
-grant execute on function public.fan_public_cosmetics(uuid[]) to anon, authenticated;
+grant execute on function public.fan_public_cosmetics(uuid[]) to authenticated;
 
 -- ------------------------------------------------------------- FUNKCIJE
 create or replace function public.fan_ensure_wallet() returns int
