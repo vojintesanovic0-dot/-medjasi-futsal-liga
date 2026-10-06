@@ -87,20 +87,26 @@
         <div class="admin-v2-advanced-body" hidden></div>
       </div>`;
 
-    // Hide current root children; move only the actual admin UI parts into our shell.
-    oldChildren.forEach(el=>{el.dataset.adminV2OriginalDisplay=el.style.display;el.style.display="none";});
+    // Hide only the original root children until they are moved, then restore their display.
+    oldChildren.forEach(el=>{el.dataset.adminV2OriginalDisplay=el.style.display||"";el.style.display="none";});
 
     root.appendChild(shell);
 
     const body=id=>shell.querySelector('[data-admin-body="'+id+'"]');
+    const move=(el,target)=>{
+      if(!el||!target)return;
+      target.appendChild(el);
+      el.style.display=el.dataset.adminV2OriginalDisplay||"";
+      delete el.dataset.adminV2OriginalDisplay;
+    };
 
-    if(legacyGrid) body("liga").appendChild(legacyGrid);
-    if(existing.matches) body("liga").appendChild(existing.matches);
-    if(existing.crud) body("liga").appendChild(existing.crud);
+    if(legacyGrid) move(legacyGrid,body("liga"));
+    if(existing.matches) move(existing.matches,body("liga"));
+    if(existing.crud) move(existing.crud,body("liga"));
 
-    if(existing.news) body("sadrzaj").appendChild(existing.news);
-    if(existing.gallery) body("sadrzaj").appendChild(existing.gallery);
-    if(existing.reports) body("sadrzaj").appendChild(existing.reports);
+    if(existing.news) move(existing.news,body("sadrzaj"));
+    if(existing.gallery) move(existing.gallery,body("sadrzaj"));
+    if(existing.reports) move(existing.reports,body("sadrzaj"));
 
     // Fan Game admin is already inside Pogodi. Provide a clean shortcut instead of duplicating its controls.
     body("fan").innerHTML=`
@@ -109,10 +115,10 @@
         <button type="button" class="btn btn-blue btn-small" data-admin-v2-open-game>Otvori Fan Game</button>
       </div>`;
 
-    if(existing.music) body("sistem").appendChild(existing.music);
-    if(existing.season) body("sistem").appendChild(existing.season);
-    if(existing.push) body("sistem").appendChild(existing.push);
-    if(existing.roles) body("sistem").appendChild(existing.roles);
+    if(existing.music) move(existing.music,body("sistem"));
+    if(existing.season) move(existing.season,body("sistem"));
+    if(existing.push) move(existing.push,body("sistem"));
+    if(existing.roles) move(existing.roles,body("sistem"));
 
     const advanced=shell.querySelector(".admin-v2-advanced-body");
     if(existing.crud){
@@ -132,7 +138,7 @@
       ];
       map.forEach(([id,g])=>{
         const el=document.getElementById(id), target=body(g);
-        if(el&&target&&!target.contains(el)) target.appendChild(el.closest(".card")||el);
+        if(el&&target&&!target.contains(el)) move(el.closest(".card")||el,target);
       });
     }
 
