@@ -6724,48 +6724,7 @@ async function addGoal(
   }
 
 
-  const update = {};
-
-
-  if(
-    player.team_id ===
-    match.home_team_id
-  ){
-
-    update.home_score =
-      Number(
-        match.home_score || 0
-      ) + 1;
-
-  }else if(
-    player.team_id ===
-    match.away_team_id
-  ){
-
-    update.away_score =
-      Number(
-        match.away_score || 0
-      ) + 1;
-  }
-
-
-  const {
-    error:updateError
-  } =
-    await supabaseClient
-      .from("matches")
-      .update(update)
-      .eq("id",matchId);
-
-
-  if(updateError){
-
-    alert(
-      updateError.message
-    );
-
-    return;
-  }
+  /* Score is now derived centrally by the database goal-event trigger. */
 
 
   hideModal();
@@ -7492,6 +7451,14 @@ document.addEventListener(
    REALTIME
 ========================================================= */
 
+function handleLeagueEvent(event){
+  const e=event?.new;
+  if(!e?.event_type) return;
+  addLeagueNotification({title:e.title||"Novo dešavanje",text:e.body||"",icon:e.event_type==="goal"?"⚽":"🏁",type:e.event_type,key:"league-event:"+e.id,browser:true});
+  if(currentUser) notifyPush(e.event_type,e.title||"Novo dešavanje",e.body||"").catch(()=>{});
+  loadAll();
+}
+
 function subscribeRealtime(){
 
   try{
@@ -7521,6 +7488,17 @@ function subscribeRealtime(){
           },
           () =>
             loadAll()
+        )
+
+
+        .on(
+          "postgres_changes",
+          {
+            event:"INSERT",
+            schema:"public",
+            table:"league_events"
+          },
+          payload => handleLeagueEvent(payload)
         )
 
 
