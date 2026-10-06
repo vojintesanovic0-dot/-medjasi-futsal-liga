@@ -8751,11 +8751,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     const old =
       document.getElementById("adminCrudV4");
-    const oldContent =
-      document.getElementById("adminCrudContentV4");
+    const oldCommunity =
+      document.getElementById("adminCrudCommunityV4");
+    const oldGallery =
+      document.getElementById("adminCrudGalleryV4");
 
     if (old) old.remove();
-    if (oldContent) oldContent.remove();
+    if (oldCommunity) oldCommunity.remove();
+    if (oldGallery) oldGallery.remove();
 
     if (!isAdmin()) return;
 
@@ -9201,28 +9204,46 @@ document.addEventListener("DOMContentLoaded",()=>{
       </div>
     `;
 
-    // Stari Admin CRUD je sadržavao i ligaške i sadržajne sekcije.
-    // Funkcije ostaju iste; samo ih fizički razdvajamo u dvije admin kartice.
-    const contentCard = document.createElement("div");
-    contentCard.id = "adminCrudContentV4";
-    contentCard.className = "card admin-crud-v4 admin-crud-content-v4";
-    contentCard.style.marginTop = "20px";
+    // Stari Admin CRUD je sadržavao ligaške, sadržajne i community sekcije.
+    // Funkcije ostaju iste; samo ih fizički razdvajamo po stvarnoj namjeni.
+    const communityCard = document.createElement("div");
+    communityCard.id = "adminCrudCommunityV4";
+    communityCard.className = "card admin-crud-v4 admin-crud-community-v4";
+    communityCard.style.marginTop = "20px";
 
-    const contentSections = [...card.querySelectorAll(".crud-section")].filter(section => {
+    const galleryCard = document.createElement("div");
+    galleryCard.id = "adminCrudGalleryV4";
+    galleryCard.className = "card admin-crud-v4 admin-crud-gallery-v4";
+    galleryCard.style.marginTop = "20px";
+
+    const communitySections = [...card.querySelectorAll(".crud-section")].filter(section => {
       const title = (section.querySelector(".crud-title span")?.textContent || "").trim().toLowerCase();
-      return title.includes("komentari") || title.includes("chat") || title.includes("galerija");
+      return title.includes("komentari") || title.includes("chat");
     });
 
-    contentCard.innerHTML = '<div class="admin-card-head">' +
-      '<div><span class="hero-kicker">SADRŽAJ</span>' +
-      '<h3><span class="m-icon" data-icon="community" aria-hidden="true"></span> Administracija sadržaja</h3>' +
-      '<p class="muted">Komentari, chat i pregled/brisanje medija iz postojećeg Admin CRUD-a.</p></div>' +
+    const gallerySections = [...card.querySelectorAll(".crud-section")].filter(section => {
+      const title = (section.querySelector(".crud-title span")?.textContent || "").trim().toLowerCase();
+      return title.includes("galerija");
+    });
+
+    communityCard.innerHTML = '<div class="admin-card-head">' +
+      '<div><span class="hero-kicker">ZAJEDNICA</span>' +
+      '<h3><span class="m-icon" data-icon="community" aria-hidden="true"></span> Administracija zajednice</h3>' +
+      '<p class="muted">Komentari i chat iz postojećeg Admin CRUD-a.</p></div>' +
       '<span class="admin-pill">SAMO ADMIN</span></div>';
 
-    contentSections.forEach(section => contentCard.appendChild(section));
+    galleryCard.innerHTML = '<div class="admin-card-head">' +
+      '<div><span class="hero-kicker">SADRŽAJ</span>' +
+      '<h3><span class="m-icon" data-icon="gallery" aria-hidden="true"></span> Gallery CRUD</h3>' +
+      '<p class="muted">Pregled i brisanje postojećih medija iz Admin CRUD-a.</p></div>' +
+      '<span class="admin-pill">SAMO ADMIN</span></div>';
+
+    communitySections.forEach(section => communityCard.appendChild(section));
+    gallerySections.forEach(section => galleryCard.appendChild(section));
 
     adminContent.appendChild(card);
-    if (contentSections.length) adminContent.appendChild(contentCard);
+    if (communitySections.length) adminContent.appendChild(communityCard);
+    if (gallerySections.length) adminContent.appendChild(galleryCard);
   };
 
 
