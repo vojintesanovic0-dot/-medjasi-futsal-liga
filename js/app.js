@@ -919,7 +919,7 @@ function renderNotifications(){
       }
 
       <button class="btn btn-small notification-setting-btn" type="button" onclick="clearLeagueNotifications()">
-        🗑️ Obriši
+        <span class="m-icon" data-icon="result" aria-hidden="true"></span>️ Obriši
       </button>
     </div>
   `;
@@ -1420,7 +1420,7 @@ async function register(){
   */
 
   message.innerHTML =
-    "Registracija je uspješna. Poslali smo ti potvrdu na email. Otvori poruku i potvrdi nalog.<br><button type=\"button\" class=\"btn btn-small btn-blue\" style=\"margin-top:10px\" onclick=\"resendConfirmation()\">📩 Pošalji potvrdu ponovo</button>";
+    "Registracija je uspješna. Poslali smo ti potvrdu na email. Otvori poruku i potvrdi nalog.<br><button type=\"button\" class=\"btn btn-small btn-blue\" style=\"margin-top:10px\" onclick=\"resendConfirmation()\"><span class="m-icon" data-icon="news" aria-hidden="true"></span> Pošalji potvrdu ponovo</button>";
 
   toast("Provjeri email radi potvrde naloga.");
 }
@@ -2767,7 +2767,7 @@ function renderTeams(){
                         <button
                           class="btn btn-red btn-small"
                           onclick="deleteTeam('${t.id}')">
-                          🗑️ Obriši ekipu
+                          <span class="m-icon" data-icon="result" aria-hidden="true"></span>️ Obriši ekipu
                         </button>
 
                       </div>
@@ -3315,7 +3315,7 @@ function renderComments(){
                         class="btn btn-red btn-small"
                         style="margin-top:8px"
                         onclick="deleteComment('${c.id}')">
-                        🗑️ Obriši
+                        <span class="m-icon" data-icon="result" aria-hidden="true"></span>️ Obriši
                       </button>
                     `
                     : ""
@@ -3550,7 +3550,7 @@ function renderChat(){
                   <img src="${esc(m.image_url)}" alt="Slika u chatu" loading="lazy">
                 </button>` : ""}
               ${currentUser && (m.user_id===currentUser.id || isAdmin())
-                ? `<button class="btn btn-red btn-small chat-delete" onclick="deleteChat('${m.id}')">🗑️</button>` : ""}
+                ? `<button class="btn btn-red btn-small chat-delete" onclick="deleteChat('${m.id}')"><span class="m-icon" data-icon="result" aria-hidden="true"></span>️</button>` : ""}
             </div>
           </div>`;
       }).join("")
@@ -3724,7 +3724,7 @@ function renderAdminGallery(){
         <div class="admin-gallery-item">
           <img src="${esc(item.image_url)}" alt="">
           <div><strong>${esc(item.title || "Bez naslova")}</strong><small class="muted">${formatDate(item.created_at)}</small></div>
-          <button class="btn btn-red btn-small" onclick="adminDeleteGalleryImage('${item.id}')">🗑️</button>
+          <button class="btn btn-red btn-small" onclick="adminDeleteGalleryImage('${item.id}')"><span class="m-icon" data-icon="result" aria-hidden="true"></span>️</button>
         </div>`).join("")}
     </div>` : `<div class="muted">Još nema fotografija.</div>`}`;
 }
@@ -4341,7 +4341,7 @@ function renderAdminMatches(){
                       '${m.id}'
                     )
                   ">
-                  👥 Postava
+                  <span class="m-icon" data-icon="player" aria-hidden="true"></span> Postava
                 </button>
 
 
@@ -4592,7 +4592,7 @@ async function openLineupControl(
     <div class="modal-title">
 
       <h2>
-        👥 Postava utakmice
+        <span class="m-icon" data-icon="player" aria-hidden="true"></span> Postava utakmice
       </h2>
 
       <p class="muted"
@@ -5616,7 +5616,7 @@ function benchHTML(
 
                     ${
                       isActive
-                        ? " · 🟢 Igra"
+                        ? " · <span class="m-icon" data-icon="live" aria-hidden="true"></span> Igra"
                         : " · Klupa"
                     }
 
@@ -6089,7 +6089,7 @@ function openMatch(id){
           <div
             style="margin-top:7px">
 
-            📅
+            <span class="m-icon" data-icon="calendar" aria-hidden="true"></span>
             ${formatDate(
               match.match_date
             )}
@@ -6261,7 +6261,7 @@ function openMatch(id){
                   font-size:35px;
                   margin-bottom:10px;
                 ">
-                👥
+                <span class="m-icon" data-icon="player" aria-hidden="true"></span>
               </div>
 
               <strong>
@@ -6412,7 +6412,7 @@ function openMatch(id){
 
         <div class="card stat">
           <div class="stat-number">${hPlayers} — ${aPlayers}</div>
-          <div class="stat-label">👥 Evidentirani igrači</div>
+          <div class="stat-label"><span class="m-icon" data-icon="player" aria-hidden="true"></span> Evidentirani igrači</div>
         </div>
 
         <div class="card stat">
@@ -6443,7 +6443,7 @@ function openMatch(id){
                   '${id}'
                 )
               ">
-              👥 Uredi postavu
+              <span class="m-icon" data-icon="player" aria-hidden="true"></span> Uredi postavu
             </button>
 
 
@@ -8797,7 +8797,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                 class="btn btn-red crud-small crud-danger"
                 onclick="adminDeleteMatch('${esc4(m.id)}')"
               >
-                🗑️ Obriši
+                <span class="m-icon" data-icon="result" aria-hidden="true"></span>️ Obriši
               </button>
 
             </div>
@@ -8856,7 +8856,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                     class="btn btn-red crud-small crud-danger"
                     onclick="adminDeletePlayer('${esc4(p.id)}')"
                   >
-                    🗑️ Obriši
+                    <span class="m-icon" data-icon="result" aria-hidden="true"></span>️ Obriši
                   </button>
 
                 </div>
@@ -8917,7 +8917,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                     class="btn btn-red crud-small crud-danger"
                     onclick="adminDeleteGoal('${esc4(g.id)}')"
                   >
-                    🗑️
+                    <span class="m-icon" data-icon="result" aria-hidden="true"></span>️
                   </button>
                 </div>
 
@@ -8963,7 +8963,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                     class="btn btn-red crud-small crud-danger"
                     onclick="adminDeleteCard('${esc4(c.id)}')"
                   >
-                    🗑️
+                    <span class="m-icon" data-icon="result" aria-hidden="true"></span>️
                   </button>
                 </div>
 
@@ -8998,7 +8998,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                   class="btn btn-red crud-small crud-danger"
                   onclick="adminDeleteCommentV4('${esc4(c.id)}')"
                 >
-                  🗑️
+                  <span class="m-icon" data-icon="result" aria-hidden="true"></span>️
                 </button>
               </div>
 
@@ -9032,7 +9032,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                   class="btn btn-red crud-small crud-danger"
                   onclick="adminDeleteMessageV4('${esc4(m.id)}')"
                 >
-                  🗑️
+                  <span class="m-icon" data-icon="result" aria-hidden="true"></span>️
                 </button>
               </div>
 
@@ -9080,7 +9080,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                   class="btn btn-red crud-small crud-danger"
                   onclick="adminDeleteGalleryV4('${esc4(g.id)}')"
                 >
-                  🗑️
+                  <span class="m-icon" data-icon="result" aria-hidden="true"></span>️
                 </button>
               </div>
 
@@ -9539,7 +9539,7 @@ if ("serviceWorker" in navigator) {
           <small class="muted">Posljednjih ${recent.length} evidentiranih nastupa</small>
         </div>
         <div class="card v2-detail-card">
-          <h3>📅 Posljednje utakmice</h3>
+          <h3><span class="m-icon" data-icon="calendar" aria-hidden="true"></span> Posljednje utakmice</h3>
           ${recent.length ? recent.map(m=>{
             const h=team(m.home_team_id), a=team(m.away_team_id);
             return `<button class="v2-recent-match" type="button" onclick="openMatch('${m.id}')">
@@ -9586,7 +9586,7 @@ if ("serviceWorker" in navigator) {
           <div class="card stat"><div class="stat-number">${teamGoals+teamAssists}</div><div class="stat-label">Gol + asist.</div></div>
         </div>
         <div class="card v2-detail-card">
-          <h3>👥 Igrači</h3>
+          <h3><span class="m-icon" data-icon="player" aria-hidden="true"></span> Igrači</h3>
           <div class="v2-roster-grid">${list.length?list.map(p=>`<button type="button" class="v2-roster" onclick="openPlayer('${p.id}')"><img src="${playerPhoto(p)}" alt=""><span><b>#${p.jersey_number??"-"} ${esc2(p.name)}</b><small>${esc2(p.position||"-")}</small></span></button>`).join(""):`<div class="empty compact">Ekipa još nema igrača.</div>`}</div>
         </div>
       `);
@@ -9739,7 +9739,7 @@ if ("serviceWorker" in navigator) {
     const red=c.filter(x=>String(x.card_type||'').toLowerCase()==='red').length;
     const yellow=c.length-red;
     const mp=(matchPlayers||[]).find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(id));
-    return `<button type="button" class="mc20-player-row" onclick="openPlayer('${id}')"><img src="${playerPhoto(p)}"><span><b>#${p.jersey_number??'-'} ${safe(p.name)}</b><small>${safe(p.position||'-')} ${mp?.is_active?'· 🟢 na terenu':'· prijavljen'}</small></span><em>${g?'<span class="m-icon" data-icon="ball" aria-hidden="true"></span> '+g:''}${a?' <span class="m-icon" data-icon="target" aria-hidden="true"></span> '+a:''}${yellow?' <span class="m-icon" data-icon="yellow" aria-hidden="true"></span> '+yellow:''}${red?' <span class="m-icon" data-icon="red" aria-hidden="true"></span> '+red:''}</em></button>`;
+    return `<button type="button" class="mc20-player-row" onclick="openPlayer('${id}')"><img src="${playerPhoto(p)}"><span><b>#${p.jersey_number??'-'} ${safe(p.name)}</b><small>${safe(p.position||'-')} ${mp?.is_active?'· <span class="m-icon" data-icon="live" aria-hidden="true"></span> na terenu':'· prijavljen'}</small></span><em>${g?'<span class="m-icon" data-icon="ball" aria-hidden="true"></span> '+g:''}${a?' <span class="m-icon" data-icon="target" aria-hidden="true"></span> '+a:''}${yellow?' <span class="m-icon" data-icon="yellow" aria-hidden="true"></span> '+yellow:''}${red?' <span class="m-icon" data-icon="red" aria-hidden="true"></span> '+red:''}</em></button>`;
   }
   function eventText(e){
     const p=pget(e.player_id); const a=e.assist_player_id?pget(e.assist_player_id):null;
@@ -9794,8 +9794,8 @@ if ("serviceWorker" in navigator) {
 
     const lp=document.createElement('div'); lp.className='mc20-extra'; lp.innerHTML=`
       <div class="grid grid-2 mc20-grid">
-        ${makeBlock(`👥 ${safe(ht?.name||'Domaćin')}`, `<div class="mc20-lineup-summary"><b>${hActive}</b><span>na terenu</span><b>${hBench}</b><span>klupa</span></div>${hp.length?hp.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Postava nije evidentirana.</div>'}`)}
-        ${makeBlock(`👥 ${safe(at?.name||'Gost')}`, `<div class="mc20-lineup-summary"><b>${aActive}</b><span>na terenu</span><b>${aBench}</b><span>klupa</span></div>${ap.length?ap.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Postava nije evidentirana.</div>'}`)}
+        ${makeBlock(`<span class="m-icon" data-icon="player" aria-hidden="true"></span> ${safe(ht?.name||'Domaćin')}`, `<div class="mc20-lineup-summary"><b>${hActive}</b><span>na terenu</span><b>${hBench}</b><span>klupa</span></div>${hp.length?hp.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Postava nije evidentirana.</div>'}`)}
+        ${makeBlock(`<span class="m-icon" data-icon="player" aria-hidden="true"></span> ${safe(at?.name||'Gost')}`, `<div class="mc20-lineup-summary"><b>${aActive}</b><span>na terenu</span><b>${aBench}</b><span>klupa</span></div>${ap.length?ap.map(x=>playerLine(x.player_id,id)).join(''):'<div class="empty compact">Postava nije evidentirana.</div>'}`)}
       </div>
       ${makeBlock('<span class="m-icon" data-icon="live" aria-hidden="true"></span> Izmjene', `<div class="muted">Trenutna baza čuva samo stanje igrača (teren/klupa), ne istoriju minuta izmjena. Zato ovdje prikazujemo tačno trenutno stanje bez izmišljanja vremena izmjena.</div><div class="grid grid-2" style="margin-top:10px"><div><b>${safe(ht?.name||'Domaćin')}</b><p class="muted">${hActive} aktivnih · ${hBench} na klupi</p></div><div><b>${safe(at?.name||'Gost')}</b><p class="muted">${aActive} aktivnih · ${aBench} na klupi</p></div></div>`)}
     `;
@@ -9865,7 +9865,7 @@ if ("serviceWorker" in navigator) {
   V3.reactionHTML = function(id){
     const data=V3.readReactions()[id]||{};
     return `<div class="v3-reaction-row">
-      ${["❤️","🔥","⚽","👏","😂"].map(e =>
+      ${__MEDJASI_REACTIONS__1__.map(e =>
         `<button type="button" class="v3-reaction ${data[e]?"active":""}"
           onclick="v3ToggleReaction('${V3.escape(id)}','${e}')">${e}</button>`
       ).join("")}
@@ -9928,7 +9928,7 @@ if ("serviceWorker" in navigator) {
               </button>` : ""}
             ${V3.reactionHTML(safeId)}
             ${window.currentUser && (m.user_id===window.currentUser.id || typeof isAdmin==="function" && isAdmin())
-              ? `<button class="btn btn-red btn-small chat-delete" onclick="deleteChat('${safeId}')">🗑️</button>` : ""}
+              ? `<button class="btn btn-red btn-small chat-delete" onclick="deleteChat('${safeId}')"><span class="m-icon" data-icon="result" aria-hidden="true"></span>️</button>` : ""}
           </div>
         </div>`;
     }).join("") :
@@ -10009,7 +10009,7 @@ if ("serviceWorker" in navigator) {
               </a>
             </div>` : ""}
           ${window.currentUser && (c.user_id===window.currentUser.id || typeof isAdmin==="function" && isAdmin())
-            ? `<button class="btn btn-red btn-small" style="margin-top:8px" onclick="deleteComment('${V3.escape(c.id)}')">🗑️ Obriši</button>` : ""}
+            ? `<button class="btn btn-red btn-small" style="margin-top:8px" onclick="deleteComment('${V3.escape(c.id)}')"><span class="m-icon" data-icon="result" aria-hidden="true"></span>️ Obriši</button>` : ""}
         </div>`;
     }).join("") :
       `<div class="empty">Nema komentara.<br>Budi prvi koji će nešto napisati.</div>`;
@@ -10170,7 +10170,7 @@ if ("serviceWorker" in navigator) {
     const enabled=localStorage.getItem("medjasi_push_enabled")==="1";
     status.textContent=enabled?"<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.":"Push obavještenja nisu uključena.";
     status.className="v3-push-status "+(enabled?"ok":"warn");
-    btn.textContent=enabled?"🔕 Isključi obavještenja":"<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Uključi obavještenja";
+    btn.textContent=enabled?"<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Isključi obavještenja":"<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Uključi obavještenja";
     btn.onclick=enabled?disablePush:subscribePush;
   }
 
@@ -10217,8 +10217,8 @@ function ensureNewsUI(){
     sec.innerHTML=`<div class="gallery-hero"><div><span class="hero-kicker">ZVANIČNE INFORMACIJE LIGE</span><h2 class="section-title" style="margin:4px 0 6px"><span class="m-icon" data-icon="news" aria-hidden="true"></span> Vijesti</h2><p class="muted">Novosti, najave, rezultati i dešavanja iz Medjaši Futsal Lige.</p></div><div class="gallery-count" id="newsCount">0 vijesti</div></div><div id="newsFeature"></div><div id="newsGrid" class="v7-news-grid"></div>`;
     const comments=document.querySelector('#comments');comments?.parentNode.insertBefore(sec,comments);
   }
-  document.querySelectorAll('button[onclick*="showSection(\'comments\')"]').forEach(b=>{if(b.innerHTML.includes('Komentari')){b.innerHTML=b.innerHTML.replace('💭','<span class="m-icon" data-icon="news" aria-hidden="true"></span>').replace('Komentari','Vijesti');b.setAttribute('onclick',"showSection('news')")}});
-  document.querySelectorAll('.mobile-more-grid button').forEach(b=>{if(b.innerHTML.includes('Komentari')){b.innerHTML=b.innerHTML.replace('💭','<span class="m-icon" data-icon="news" aria-hidden="true"></span>').replace('Komentari','Vijesti').replace('Komentari zajednice','Novosti lige');b.setAttribute('onclick',"mobileMoreGo('news')")}});
+  document.querySelectorAll('button[onclick*="showSection(\'comments\')"]').forEach(b=>{if(b.innerHTML.includes('Komentari')){b.innerHTML=b.innerHTML.replace('<span class="m-icon" data-icon="community" aria-hidden="true"></span>','<span class="m-icon" data-icon="news" aria-hidden="true"></span>').replace('Komentari','Vijesti');b.setAttribute('onclick',"showSection('news')")}});
+  document.querySelectorAll('.mobile-more-grid button').forEach(b=>{if(b.innerHTML.includes('Komentari')){b.innerHTML=b.innerHTML.replace('<span class="m-icon" data-icon="community" aria-hidden="true"></span>','<span class="m-icon" data-icon="news" aria-hidden="true"></span>').replace('Komentari','Vijesti').replace('Komentari zajednice','Novosti lige');b.setAttribute('onclick',"mobileMoreGo('news')")}});
   const c=$('comments');if(c){const h=c.querySelector('.section-title');if(h)h.textContent='<span class="m-icon" data-icon="community" aria-hidden="true"></span> Komentari zajednice';}
   ensureAdminNews();
 }function ensureAdminNews(){
@@ -10260,7 +10260,7 @@ function renderAdminNews(){
     </div>
     <div class="v7-news-row-actions">
       <button class="btn btn-small ${n.published?'btn-yellow':'btn-green'}" onclick="medjasiV7.setNewsPublished('${n.id}',${!n.published})">${n.published?'Sakrij':'Objavi'}</button>
-      <button class="btn btn-red btn-small" onclick="medjasiV7.deleteNews('${n.id}')">🗑️</button>
+      <button class="btn btn-red btn-small" onclick="medjasiV7.deleteNews('${n.id}')"><span class="m-icon" data-icon="result" aria-hidden="true"></span>️</button>
     </div>
   </div>`).join(''):'<div class="muted">Nema vijesti.</div>';
 }
@@ -10294,7 +10294,7 @@ async function notifyPush(type,title,body,matchId=null){try{if(!currentUser)retu
 function b64ToBytes(s){const pad='='.repeat((4-s.length%4)%4),raw=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
 async function subscribeRealPush(){if(!currentUser)return toastV('Prvo se prijavi.','error');if(!('serviceWorker' in navigator)||!('PushManager' in window))return toastV('Ovaj browser ne podržava push.','error');const perm=await Notification.requestPermission();if(perm!=='granted')return toastV('Dozvola za obavještenja nije odobrena.','error');const reg=await navigator.serviceWorker.register('./service-worker.js',{scope:'./'});let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToBytes(V7.pushPublicKey)});const j=sub.toJSON();const {error}=await supabaseClient.from('push_subscriptions').upsert({user_id:currentUser.id,endpoint:sub.endpoint,p256dh:j.keys?.p256dh,auth:j.keys?.auth,user_agent:navigator.userAgent,updated_at:new Date().toISOString()},{onConflict:'endpoint'});if(error)return toastV(error.message,'error');localStorage.setItem('medjasi_push_enabled','1');renderPushUI();toastV('<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.')}
 async function disableRealPush(){try{const reg=await navigator.serviceWorker.getRegistration('./');const sub=await reg?.pushManager.getSubscription();if(sub){await supabaseClient.from('push_subscriptions').delete().eq('endpoint',sub.endpoint);await sub.unsubscribe()}}catch(e){console.warn(e)}localStorage.removeItem('medjasi_push_enabled');renderPushUI()}
-function renderPushUI(){if(!$('v7PushStatus')||!$('v7PushButton'))return;const on=localStorage.getItem('medjasi_push_enabled')==='1';$('v7PushStatus').textContent=on?'<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.':'Push obavještenja nisu uključena.';$('v7PushStatus').className='v7-push-status '+(on?'ok':'');$('v7PushButton').textContent=on?'🔕 Isključi push':'<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Uključi push';$('v7PushButton').onclick=on?disableRealPush:subscribeRealPush}
+function renderPushUI(){if(!$('v7PushStatus')||!$('v7PushButton'))return;const on=localStorage.getItem('medjasi_push_enabled')==='1';$('v7PushStatus').textContent=on?'<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Push obavještenja su uključena.':'Push obavještenja nisu uključena.';$('v7PushStatus').className='v7-push-status '+(on?'ok':'');$('v7PushButton').textContent=on?'<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Isključi push':'<span class="m-icon" data-icon="bell" aria-hidden="true"></span> Uključi push';$('v7PushButton').onclick=on?disableRealPush:subscribeRealPush}
 function ensureSeasonAdmin(){if(!$('adminContent')||!isAdm()||$('v7SeasonCard'))return;const c=document.createElement('div');c.id='v7SeasonCard';c.className='card';c.style.marginTop='20px';c.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SEZONE</span><h3><span class="m-icon" data-icon="trophy" aria-hidden="true"></span> Upravljanje sezonama</h3><p class="muted">Aktivna sezona se automatski dodjeljuje novim utakmicama.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="actions"><input id="v7SeasonName" placeholder="npr. 2026/27" style="max-width:220px"><button class="btn btn-green" onclick="medjasiV7.addSeason()">＋ Nova sezona</button></div><div id="v7SeasonList" style="margin-top:12px"></div>`;$('adminContent').appendChild(c);renderSeasons()}
 async function loadSeasons(){const {data,error}=await supabaseClient.from('seasons').select('*').order('created_at',{ascending:false});if(!error)V7.seasons=data||[];renderSeasons()}
 function renderSeasons(){const box=$('v7SeasonList');if(!box)return;box.innerHTML=(V7.seasons||[]).map(s=>`<div class="admin-match" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><strong>${escV(s.name)}</strong><small class="muted" style="display:block;margin-top:3px">${s.is_active?'AKTIVNA':'Arhiva'}</small></div>${s.is_active?'':'<button class="btn btn-small" onclick="medjasiV7.activateSeason(\''+s.id+'\')">Postavi aktivnu</button>'}</div>`).join('')||'<div class="muted">Nema sezona.</div>'}
@@ -10320,7 +10320,7 @@ V7.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason
 window.openGoalControl=function(id){return openGoal(id)};
 window.adminAddGalleryImage=adminAddMedia;
 window.renderAdminNews=renderAdminNews;
-window.renderAdminGallery=function(){const box=$('adminGalleryList');if(!box||!isAdm())return;box.innerHTML=`<div class="admin-gallery-title">Objavljeni mediji (${(gallery||[]).length})</div><div class="admin-gallery-items">${(gallery||[]).map(x=>{const url=x.media_url||x.image_url;return `<div class="admin-gallery-item"><div class="v7-news-row-media">${url?mediaHtml(url,x.media_type||'image',x.title):''}</div><div><strong>${escV(x.title||'Bez naslova')}</strong><small class="muted">${formatV(x.created_at)}</small></div><button class="btn btn-red btn-small" onclick="adminDeleteGalleryImage('${x.id}')">🗑️</button></div>`}).join('')||'<div class="muted">Još nema medija.</div>'}</div>`};
+window.renderAdminGallery=function(){const box=$('adminGalleryList');if(!box||!isAdm())return;box.innerHTML=`<div class="admin-gallery-title">Objavljeni mediji (${(gallery||[]).length})</div><div class="admin-gallery-items">${(gallery||[]).map(x=>{const url=x.media_url||x.image_url;return `<div class="admin-gallery-item"><div class="v7-news-row-media">${url?mediaHtml(url,x.media_type||'image',x.title):''}</div><div><strong>${escV(x.title||'Bez naslova')}</strong><small class="muted">${formatV(x.created_at)}</small></div><button class="btn btn-red btn-small" onclick="adminDeleteGalleryImage('${x.id}')"><span class="m-icon" data-icon="result" aria-hidden="true"></span>️</button></div>`}).join('')||'<div class="muted">Još nema medija.</div>'}</div>`};
 
 
 // Add finish button to admin match cards without replacing the existing manager.
