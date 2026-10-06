@@ -7,7 +7,7 @@
   'use strict';
   const q=id=>document.getElementById(id);
   const esc11=v=>typeof esc==='function'?esc(v??''):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  const fallback='https://via.placeholder.com/160?text=%F0%9F%91%A4';
+  const fallback='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="32" fill="#0b1b2b"/><circle cx="80" cy="61" r="28" fill="#5f7487"/><path d="M31 139c6-31 25-47 49-47s43 16 49 47" fill="#5f7487"/></svg>');
   const getAvatar=()=>currentProfile?.avatar_url||currentUser?.user_metadata?.avatar_url||fallback;
 
   function patchHeader(){
@@ -171,12 +171,6 @@
     patch();
     [250,800,1600,3000].forEach(ms=>setTimeout(patch,ms));
   });
-  const observer=new MutationObserver(()=>{
-    const host=q('headerAccount');
-    if(host && !host.dataset.v13Ready) { host.dataset.v13Ready='1'; }
-  });
-  observer.observe(document.body,{childList:true,subtree:true});
-
   /* Re-render immediately whenever the existing auth UI finishes. */
   const old=window.updateAuthUI;
   if(old && !window.__V13_AUTH_WRAPPED__){
