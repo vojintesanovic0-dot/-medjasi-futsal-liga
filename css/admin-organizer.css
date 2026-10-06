@@ -1,65 +1,29 @@
-/* =========================================================
-   MEĐASI ADMIN ORGANIZER
-   Only organizes the existing admin panel.
-   Moves existing admin cards into one exclusive group. Never clones/deletes controls.
-========================================================= */
-#admin .admin-organizer{
-  margin:0 0 18px;
-  padding:14px;
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:18px;
-  background:linear-gradient(135deg,rgba(36,228,135,.06),rgba(45,156,255,.045)),rgba(9,22,35,.78);
-}
-#admin .admin-organizer-head{
-  display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:12px;
-}
-#admin .admin-organizer-kicker{
-  display:block;font-size:9px;letter-spacing:1.7px;font-weight:900;color:var(--accent);margin-bottom:3px;
-}
-#admin .admin-organizer-head strong{font-size:16px}
-#admin .admin-organizer-head p{margin:3px 0 0;color:var(--muted);font-size:11px}
-#admin .admin-organizer-tabs{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
-}
-#admin .admin-organizer-tab{
-  min-height:58px;padding:9px 10px;border:1px solid rgba(255,255,255,.08);border-radius:13px;
-  background:rgba(255,255,255,.025);color:#dbe8f2;cursor:pointer;text-align:left;
-  transition:background .18s ease,border-color .18s ease,transform .18s ease;
-}
+/* MEĐASI ADMIN ORGANIZER */
+#admin .admin-organizer{margin:0 0 20px;padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:linear-gradient(135deg,rgba(36,228,135,.06),rgba(45,156,255,.045)),rgba(9,22,35,.8)}
+#admin .admin-organizer-head{margin-bottom:14px}
+#admin .admin-organizer-kicker{display:block;margin-bottom:4px;color:var(--accent);font-size:9px;font-weight:900;letter-spacing:1.7px}
+#admin .admin-organizer-head strong{display:block;font-size:16px}
+#admin .admin-organizer-head p{margin:4px 0 0;color:var(--muted);font-size:11px}
+#admin .admin-organizer-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+#admin .admin-organizer-tab{min-height:74px;padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.025);color:#dbe8f2;cursor:pointer;text-align:left;transition:background .18s ease,border-color .18s ease,transform .18s ease}
 #admin .admin-organizer-tab:hover{background:rgba(255,255,255,.045);transform:translateY(-1px)}
-#admin .admin-organizer-tab.active{
-  border-color:rgba(37,228,135,.38);background:rgba(37,228,135,.09);box-shadow:0 8px 24px rgba(37,228,135,.06);
-}
-#admin .admin-organizer-tab b{display:block;font-size:16px;margin-bottom:3px}
+#admin .admin-organizer-tab.active{border-color:rgba(37,228,135,.38);background:rgba(37,228,135,.09);box-shadow:0 8px 24px rgba(37,228,135,.06)}
+#admin .admin-organizer-tab b{display:block;font-size:16px;margin-bottom:5px}
 #admin .admin-organizer-tab span{display:block;font-weight:850;font-size:11px}
-#admin .admin-organizer-tab small{display:block;color:var(--muted);font-size:9px;margin-top:2px}
-#admin .admin-organizer-status{
-  margin-top:10px;color:var(--muted);font-size:10px;display:flex;align-items:center;gap:7px;
-}
-#admin .admin-organizer-status i{
-  width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;
-  box-shadow:0 0 0 4px rgba(37,228,135,.08);
-}
-#admin .admin-filter-hidden{display:none!important}
-@media(max-width:900px){
-  #admin .admin-organizer-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
-@media(max-width:600px){
-  #admin .admin-organizer{padding:11px}
-  #admin .admin-organizer-head{align-items:flex-start;flex-direction:column}
-  #admin .admin-organizer-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
-  #admin .admin-organizer-tab:last-child{grid-column:1/-1}
-}
-
-/* Physical group layout: one card lives in one group body only. */
-#admin .admin-organizer-groups{margin-top:18px;display:flex;flex-direction:column;gap:18px}
-#admin .admin-organizer-group{margin:0;padding:0;border:0}
+#admin .admin-organizer-tab small{display:block;color:var(--muted);font-size:9px;line-height:1.35;margin-top:3px}
+#admin .admin-organizer-status{margin-top:11px;color:var(--muted);font-size:10px;display:flex;align-items:center;gap:7px}
+#admin .admin-organizer-status i{width:6px;height:6px;flex:0 0 6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(37,228,135,.08)}
+#admin .admin-organizer-groups{margin-top:18px}
+#admin .admin-organizer-group{margin:0;padding:0}
 #admin .admin-organizer-group[hidden]{display:none!important}
 #admin .admin-organizer-group-head{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:0 2px}
 #admin .admin-organizer-group-head>div{display:flex;align-items:center;gap:10px}
-#admin .admin-organizer-group-head>div>span{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:rgba(37,228,135,.09);border:1px solid rgba(37,228,135,.18);font-size:17px}
+#admin .admin-organizer-group-head>.m-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:11px;background:rgba(37,228,135,.09);border:1px solid rgba(37,228,135,.18)}
 #admin .admin-organizer-group-head strong{display:block;font-size:14px}
 #admin .admin-organizer-group-head small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
 #admin .admin-organizer-group-body{display:flex;flex-direction:column;gap:18px}
 #admin .admin-organizer-group-body>.card{margin-top:0!important}
-@media(max-width:600px){#admin .admin-organizer-groups{gap:14px}#admin .admin-organizer-group-body{gap:14px}}
+#admin .admin-crud-safe{margin-top:0!important}
+@media(max-width:1100px){#admin .admin-organizer-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){#admin .admin-organizer{padding:12px}#admin .admin-organizer-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:460px){#admin .admin-organizer-tabs{grid-template-columns:1fr}}
