@@ -49,7 +49,7 @@ function info(){
   const st=standings(),u=user();
   let html='<div class="gx-grid"><div class="card"><h3><span class="m-icon" data-icon="stats" aria-hidden="true"></span> Tabela</h3><table class="gx-table"><thead><tr><th>#</th><th>Ekipa</th><th>U</th><th>Gol</th><th>Bod</th></tr></thead><tbody>';
   st.forEach((x,i)=>{html+="<tr><td>"+(i+1)+"</td><td>"+E(x.name)+"</td><td>"+x.played+"</td><td>"+x.gf+":"+x.ga+"</td><td><b>"+x.pts+"</b></td></tr>";});
-  html+='</tbody></table></div><div class="card"><h3>📅 Kalendar</h3><button class="btn btn-green" data-gx="ics-all">Dodaj utakmice u kalendar</button></div></div>';
+  html+='</tbody></table></div><div class="card"><h3><span class="m-icon" data-icon="calendar" aria-hidden="true"></span> Kalendar</h3><button class="btn btn-green" data-gx="ics-all">Dodaj utakmice u kalendar</button></div></div>';
   html+='<div class="card"><h3><span class="m-icon" data-icon="bell" aria-hidden="true"></span> Prati ekipe</h3>';
   html+=u?TM().map(t=>'<div class="gx-follow"><span>'+E(t.name)+'</span><button class="gx-switch '+(follows.has(String(t.id))?"on":"")+'" data-gx="follow" data-id="'+E(t.id)+'"></button></div>').join(""):'<button class="btn btn-green" onclick="showSection(\'login\')">Prijavi se</button>';
   html+='</div><div class="gx-grid"><div class="card"><h3><span class="m-icon" data-icon="result" aria-hidden="true"></span> Pravilnik</h3><ol class="gx-rules"><li>Utakmica traje 2 × 30 minuta.</li><li>Pobjeda 3 boda, neriješeno 1.</li><li>Poredak: bodovi, gol-razlika, golovi.</li></ol></div>';
@@ -78,7 +78,7 @@ async function click(e){
     const row={user_id:user().id,team_name:$("gxTeam").value.trim(),captain_name:$("gxCap").value.trim(),phone:$("gxPhone").value.trim(),note:$("gxNote").value.trim()||null};
     if(!row.team_name||!row.captain_name||!row.phone)return note("Popuni obavezna polja.","error");
     const z=await sb().from("team_applications").insert(row);if(z.error)return note(z.error.message,"error");
-    note("Prijava je poslana. ✅");
+    note("Prijava je poslana. <span class="m-icon" data-icon="result" aria-hidden="true"></span>");
   }
 }
 function mount(){
