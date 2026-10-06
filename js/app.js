@@ -10446,3 +10446,24 @@ window.showSection=showSection;
 window.updateAuthUI=updateAuthUI;
 window.isAdmin=isAdmin;
 window.isModerator=isModerator;
+/* SPA browser-history bridge */
+(()=>{
+  const originalShowSection=window.showSection;
+  if(!originalShowSection||window.__MEDJASI_HISTORY_PATCH__)return;
+  window.__MEDJASI_HISTORY_PATCH__=true;
+  let restoring=false;
+  const active=()=>document.querySelector('.section.active')?.id||'home';
+  history.replaceState({medjasi:true,section:active()},'',location.href);
+  window.showSection=function(id){
+    const before=active();
+    const result=originalShowSection.call(this,id);
+    const after=active();
+    if(!restoring&&after&&after!==before)history.pushState({medjasi:true,section:after},'',location.pathname+location.search+'#'+after);
+    return result;
+  };
+  addEventListener('popstate',e=>{
+    if(!e.state?.medjasi)return;
+    restoring=true;
+    try{originalShowSection.call(window,e.state.section||'home')}finally{restoring=false}
+  });
+})();
