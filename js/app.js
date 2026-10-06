@@ -47,6 +47,35 @@ let musicTracks=[];
 let currentMusicSignature="";
 let musicUserStarted=false;
 
+/* =========================================================
+   GLOBAL STATE BRIDGE
+   Legacy V7-V13 layers access auth/data through window.*.
+   Keep those properties synchronized with the real module state.
+========================================================= */
+for (const [key, getter, setter] of [
+  ["currentUser", () => currentUser, v => { currentUser = v; }],
+  ["currentProfile", () => currentProfile, v => { currentProfile = v; }],
+  ["teams", () => teams, v => { teams = v; }],
+  ["players", () => players, v => { players = v; }],
+  ["matches", () => matches, v => { matches = v; }],
+  ["goals", () => goals, v => { goals = v; }],
+  ["cards", () => cards, v => { cards = v; }],
+  ["comments", () => comments, v => { comments = v; }],
+  ["messages", () => messages, v => { messages = v; }],
+  ["gallery", () => gallery, v => { gallery = v; }],
+  ["matchPlayers", () => matchPlayers, v => { matchPlayers = v; }]
+]) {
+  try {
+    Object.defineProperty(window, key, {
+      configurable: true,
+      get: getter,
+      set: setter
+    });
+  } catch (error) {
+    console.warn("Medjasi state bridge:", key, error);
+  }
+}
+
 
 /* =========================================================
    HELPERS
