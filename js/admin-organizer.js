@@ -47,7 +47,9 @@
       // Some legacy cards have no id; classify them by a stable child/class.
       if(group==="other" && el.querySelector("#adminGalleryList")) group="sadrzaj";
       if(group==="other" && el.classList.contains("admin-music-card")) group="sistem";
-      el.classList.toggle("admin-filter-hidden",active!=="all" && group!==active && group!=="other");
+      // "other" is intentionally hidden in filtered views so tools never repeat
+      // across categories. They remain fully visible under "Sve funkcije".
+      el.classList.toggle("admin-filter-hidden",active!=="all" && group!==active);
     });
 
     const status=document.querySelector("#adminOrganizerStatus");
