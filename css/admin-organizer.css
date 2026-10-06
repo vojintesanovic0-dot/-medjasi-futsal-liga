@@ -1,7 +1,7 @@
 /* =========================================================
    MEĐASI ADMIN ORGANIZER
    Only organizes the existing admin panel.
-   Does not move/delete/change existing controls.
+   Moves existing admin cards into one exclusive group. Never clones/deletes controls.
 ========================================================= */
 #admin .admin-organizer{
   margin:0 0 18px;
@@ -50,3 +50,16 @@
   #admin .admin-organizer-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
   #admin .admin-organizer-tab:last-child{grid-column:1/-1}
 }
+
+/* Physical group layout: one card lives in one group body only. */
+#admin .admin-organizer-groups{margin-top:18px;display:flex;flex-direction:column;gap:18px}
+#admin .admin-organizer-group{margin:0;padding:0;border:0}
+#admin .admin-organizer-group[hidden]{display:none!important}
+#admin .admin-organizer-group-head{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:0 2px}
+#admin .admin-organizer-group-head>div{display:flex;align-items:center;gap:10px}
+#admin .admin-organizer-group-head>div>span{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:rgba(37,228,135,.09);border:1px solid rgba(37,228,135,.18);font-size:17px}
+#admin .admin-organizer-group-head strong{display:block;font-size:14px}
+#admin .admin-organizer-group-head small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+#admin .admin-organizer-group-body{display:flex;flex-direction:column;gap:18px}
+#admin .admin-organizer-group-body>.card{margin-top:0!important}
+@media(max-width:600px){#admin .admin-organizer-groups{gap:14px}#admin .admin-organizer-group-body{gap:14px}}
