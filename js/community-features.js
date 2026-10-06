@@ -64,7 +64,7 @@ async function enhanceFeed(){
       tools.innerHTML=(id!==String(uid())?'<button type="button" class="btn btn-small" data-community-action="block">🚫 Blokiraj</button>':'')+
         '<button type="button" class="btn btn-small" data-community-action="report">⚑ Prijavi</button>';
       tools.querySelector('[data-community-action="block"]')?.addEventListener("click",()=>blockUser(id));
-      const reactionBtn=post.querySelector(".v9-reaction");const postMatch=reactionBtn?.getAttribute("onclick")?.match(/toggleV9Reaction\\(['"]([^'"]+)/);tools.querySelector('[data-community-action="report"]')?.addEventListener("click",()=>reportTarget("post",postMatch?.[1]));
+      const reactionBtn=post.querySelector(".v9-reaction");const postMatch=reactionBtn?.getAttribute("onclick")?.match(/toggleV9Reaction\(['"]([^'"]+)/);tools.querySelector('[data-community-action="report"]')?.addEventListener("click",()=>reportTarget("post",postMatch?.[1]));
       post.querySelector(".v9-post-body")?.appendChild(tools);
     }
   });
