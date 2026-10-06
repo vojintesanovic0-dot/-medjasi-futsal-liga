@@ -17,6 +17,12 @@ const supabaseClient =
     SUPABASE_KEY
   );
 
+/* Legacy patch layers use window.supabaseClient. */
+Object.defineProperty(window, "supabaseClient", {
+  configurable: true,
+  get: () => supabaseClient
+});
+
 
 /* =========================================================
    GLOBAL STATE
