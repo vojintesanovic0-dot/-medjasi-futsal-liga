@@ -10,8 +10,8 @@
   const isAdmin=()=>typeof window.isAdmin==="function"&&window.isAdmin();
 
   const groups=[
-    {id:"liga",icon:"⚽",title:"Liga",desc:"Ekipe • igrači • utakmice • sezone"},
-    {id:"sadrzaj",icon:"📰",title:"Sadržaj",desc:"Vijesti • galerija • playlist • push • community"},
+    {id:"liga",icon:"<span class="m-icon" data-icon="ball" aria-hidden="true"></span>",title:"Liga",desc:"Ekipe • igrači • utakmice • sezone"},
+    {id:"sadrzaj",icon:"<span class="m-icon" data-icon="news" aria-hidden="true"></span>",title:"Sadržaj",desc:"Vijesti • galerija • playlist • push • community"},
     {id:"dizajn",icon:"🎨",title:"Graphic Studio",desc:"Player cards • MVP • grafike"}
   ];
 
