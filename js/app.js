@@ -9875,7 +9875,9 @@ if ("serviceWorker" in navigator) {
 
   /* Admin status header for community areas */
   V3.addAdminNotice=function(){
-    if(typeof isAdmin!=="function" || !isAdmin()) return;
+    /* This banner is strictly for the currently authenticated admin.
+       Never show it based on another user's cached role/admin id. */
+    if(!window.currentUser || window.currentProfile?.role !== "admin") return;
     ["chat","comments"].forEach(sectionId=>{
       const section=document.getElementById(sectionId);
       if(!section || section.querySelector(".v3-admin-tools")) return;
