@@ -71,7 +71,7 @@ create unique index if not exists fan_picks_one_core_kind_idx on public.fan_pick
 
 create table if not exists public.fan_shop_items (
   id serial primary key,
-  kind text not null check (kind in ('name_color','frame','badge','title')),
+  kind text not null check (kind in ('name_color','frame','badge','title','emoji_pack')),
   name text not null,
   description text,
   price int not null check (price > 0),
@@ -173,6 +173,26 @@ create policy sponsors_admin on public.sponsors for all to authenticated using (
 create policy apps_insert on public.team_applications for insert to authenticated with check ((select auth.uid()) is not null and user_id = (select auth.uid()));
 create policy apps_admin_read on public.team_applications for select to authenticated using ((select public.fan_is_admin()) or user_id = (select auth.uid()));
 create policy apps_admin_update on public.team_applications for update to authenticated using ((select public.fan_is_admin())) with check ((select public.fan_is_admin()));
+
+-- ----------------------------------------------------- JAVNI FAN IZGLED
+create or replace function public.fan_public_cosmetics(p_users uuid[])
+returns table(user_id uuid, name_color text, frame text, badge text, title text, emoji_pack text)
+language sql stable security definer set search_path = public
+as $
+  select i.user_id,
+    max(s.value) filter (where s.kind='name_color'),
+    max(s.value) filter (where s.kind='frame'),
+    max(s.value) filter (where s.kind='badge'),
+    max(s.value) filter (where s.kind='title'),
+    max(s.value) filter (where s.kind='emoji_pack')
+  from public.fan_inventory i
+  join public.fan_shop_items s on s.id=i.item_id
+  where i.equipped and s.active and i.user_id = any(coalesce(p_users, '{}'::uuid[]))
+  group by i.user_id;
+$;
+
+revoke all on function public.fan_public_cosmetics(uuid[]) from public;
+grant execute on function public.fan_public_cosmetics(uuid[]) to anon, authenticated;
 
 -- ------------------------------------------------------------- FUNKCIJE
 create or replace function public.fan_ensure_wallet() returns int
@@ -542,7 +562,10 @@ select * from (values
   ('title','Veteran lige','Titula ispod imena',50,'Veteran lige'),
   ('title','Stručnjak za futsal','Titula ispod imena',50,'Stručnjak za futsal'),
   ('title','Vjerni navijač','Titula ispod imena',35,'Vjerni navijač'),
-  ('title','👑 VIP Legenda','Ekskluzivna rijetka titula za navijače koji su sakupili mnogo poena',5000,'VIP Legenda')
+  ('title','👑 VIP Legenda','Ekskluzivna rijetka titula za navijače koji su sakupili mnogo poena',5000,'VIP Legenda'),
+  ('emoji_pack','🔥 Tribina','Brzi navijački emojiji za chat i komentare',90,'🔥,💚,⚽,👏'),
+  ('emoji_pack','👑 Kraljevski','Ekskluzivni emoji paket za ozbiljne navijače',150,'👑,🏆,💥,🫡'),
+  ('emoji_pack','😈 Ludilo','Paket za najluđu atmosferu na tribini',250,'😈,🤯,😂,🚀')
 ) as v(kind,name,description,price,value)
 where not exists (select 1 from public.fan_shop_items);
 revoke all on function public.fan_is_admin() from public, anon;
