@@ -501,7 +501,8 @@ select * from (values
   ('badge','👑 Kralj tribine','Bedž pored imena',120,'👑'),
   ('title','Veteran lige','Titula ispod imena',50,'Veteran lige'),
   ('title','Stručnjak za futsal','Titula ispod imena',50,'Stručnjak za futsal'),
-  ('title','Vjerni navijač','Titula ispod imena',35,'Vjerni navijač')
+  ('title','Vjerni navijač','Titula ispod imena',35,'Vjerni navijač'),
+  ('title','👑 VIP Legenda','Ekskluzivna rijetka titula za navijače koji su sakupili mnogo poena',5000,'VIP Legenda')
 ) as v(kind,name,description,price,value)
 where not exists (select 1 from public.fan_shop_items);
 revoke all on function public.fan_is_admin() from public, anon;
