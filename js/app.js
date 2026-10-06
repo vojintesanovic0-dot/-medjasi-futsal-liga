@@ -7608,15 +7608,19 @@ async function init(){
   supabaseClient
     .auth
     .onAuthStateChange(
-      async () => {
+      async (event) => {
 
+        /*
+          TOKEN_REFRESHED se dešava automatski kada korisnik
+          nije bio na stranici neko vrijeme. Ne mijenjamo
+          aktivnu sekciju u tom slučaju.
+        */
         await checkAuth();
-
         await loadAll();
 
-        if(currentUser){
+        if(event === "SIGNED_IN" || event === "SIGNED_UP"){
           showSection("home");
-        }else{
+        }else if(event === "SIGNED_OUT"){
           showSection("home");
         }
 
