@@ -245,6 +245,7 @@ function playerPhoto(player){
 
 const SECTION_STATE_KEY = "medjasi_active_section_v1";
 let medjasiAuthInteraction = false;
+let medjasiSectionRestoreTimer = null;
 
 function rememberActiveSection(id){
   try{
@@ -254,18 +255,56 @@ function rememberActiveSection(id){
   }
 }
 
+function getRememberedSection(){
+  try{
+    return sessionStorage.getItem(SECTION_STATE_KEY) || "";
+  }catch(error){
+    return "";
+  }
+}
+
 function restoreRememberedSection(){
   try{
-    const saved=sessionStorage.getItem(SECTION_STATE_KEY);
+    const saved=getRememberedSection();
     if(!saved || saved==="login") return false;
     const section=document.getElementById(saved);
     if(!section || !section.classList.contains("section")) return false;
+    if(saved==="admin" && !isAdmin()) return false;
+    const current=document.querySelector(".section.active")?.id || "home";
+    if(current===saved) return true;
     showSection(saved);
     return true;
   }catch(error){
     console.warn("Aktivna sekcija nije mogla biti vraćena:",error);
     return false;
   }
+}
+
+function scheduleSectionRestore(){
+  clearTimeout(medjasiSectionRestoreTimer);
+  medjasiSectionRestoreTimer=setTimeout(()=>{
+    restoreRememberedSection();
+  },120);
+}
+
+function setupTabReturnPersistence(){
+  const restore=()=>{
+    scheduleSectionRestore();
+  };
+
+  document.addEventListener("visibilitychange",()=>{
+    if(document.hidden){
+      rememberActiveSection(document.querySelector(".section.active")?.id || "home");
+    }else{
+      restore();
+    }
+  });
+
+  window.addEventListener("pageshow",restore);
+  window.addEventListener("focus",restore);
+  window.addEventListener("pagehide",()=>{
+    rememberActiveSection(document.querySelector(".section.active")?.id || "home");
+  });
 }
 
 function showSection(id){
@@ -7633,6 +7672,7 @@ async function init(){
   await loadAll();
 
   restoreRememberedSection();
+  setupTabReturnPersistence();
 
   subscribeRealtime();
 
