@@ -75,6 +75,37 @@
     return organizer;
   }
 
+  function crudSectionTitle(section){
+    return (section?.querySelector(".crud-title span")?.textContent||"").trim().toLowerCase();
+  }
+
+  function splitCrudContent(card,bodies){
+    if(!card || card.id!=="adminCrudV4" || card.dataset.adminOrganizerCrudSplit==="1") return;
+
+    // Admin CRUD je jedna stara kartica, ali sadrži funkcije iz dvije kategorije.
+    // Ne brišemo ništa: fizički premještamo postojeće sekcije u odgovarajuću grupu.
+    const contentSections=[...card.querySelectorAll(".crud-section")].filter(section=>{
+      const title=crudSectionTitle(section);
+      return title.includes("komentari") || title.includes("chat") || title.includes("galerija");
+    });
+    if(!contentSections.length) return;
+
+    // Pri novom renderu CRUD-a ukloni samo prethodni pomoćni sadržajni omotač.
+    bodies.sadrzaj?.querySelectorAll('[data-admin-crud-content="1"]').forEach(x=>x.remove());
+
+    const contentCard=document.createElement("div");
+    contentCard.className="card admin-crud-content";
+    contentCard.dataset.adminCrudContent="1";
+    contentCard.style.marginTop="20px";
+    contentCard.innerHTML=
+      '<div class="admin-card-head"><div><span class="hero-kicker">SADRŽAJ</span><h3>🧰 Upravljanje sadržajem</h3><p class="muted">Komentari, chat i galerija iz postojećeg Admin CRUD-a.</p></div><span class="admin-pill">SAMO ADMIN</span></div>';
+
+    contentSections.forEach(section=>contentCard.appendChild(section));
+    bodies.sadrzaj?.appendChild(contentCard);
+
+    card.dataset.adminOrganizerCrudSplit="1";
+  }
+
   function moveCards(host,organizer){
     if(moving) return;
     moving=true;
@@ -84,6 +115,11 @@
         if(el===organizer || el.dataset.adminOrganizerManaged==="1") return;
         const group=classify(el);
         if(!group || !bodies[group]) return;
+
+        if(el.id==="adminCrudV4"){
+          splitCrudContent(el,bodies);
+        }
+
         el.dataset.adminOrganizerManaged="1";
         el.dataset.adminOrganizerGroup=group;
         bodies[group].appendChild(el);
