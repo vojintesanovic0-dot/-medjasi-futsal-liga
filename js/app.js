@@ -1536,16 +1536,30 @@ function renderAll(){
    YOUTUBE MUSIC
 ========================================================= */
 
-function initMusic(){
-  const wrap=document.getElementById("musicPlayerWrap"); const hint=document.getElementById("musicHint"); const btn=document.getElementById("musicUnmute"); if(!wrap)return;
-  const enabled=!!musicSettings?.youtube_music_enabled; const ids=musicTracks.map(t=>t.youtube_music_id).filter(Boolean); const signature=ids.join(",")+"|"+enabled;
-  if(!enabled||!ids.length){wrap.innerHTML=`<div class="music-placeholder"><div><span style="font-size:28px">🎵</span><br>Trenutno nema aktivne muzike lige.</div></div>`;currentMusicSignature="";musicUserStarted=false;if(hint)hint.textContent="Admin može uključiti playlistu iz Admin panela.";if(btn)btn.style.display="none";return;}
-  if(currentMusicSignature!==signature){const first=encodeURIComponent(ids[0]);const playlist=encodeURIComponent(ids.join(","));const src=`https://www.youtube-nocookie.com/embed/${first}?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&modestbranding=1&loop=1&playlist=${playlist}`;wrap.innerHTML=`<iframe id="ytMusic" src="${src}" title="Medjaši Liga playlist" loading="eager" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;currentMusicSignature=signature;musicUserStarted=false;}
-  if(hint)hint.innerHTML='<span class="music-live-badge">● MUZIKA LIGE</span> <span class="music-volume-note">Playlist svira redom. Klikni „Uključi zvuk“ ako želiš zvuk.</span>';if(btn){btn.style.display="inline-flex";btn.textContent=musicUserStarted?"🔊 Zvuk uključen":"🔊 Uključi zvuk";}
+function getSpotifyEmbed(url){
+  const m=String(url||"").trim().match(/open\.spotify\.com\/(track|album|playlist|episode)\/([A-Za-z0-9]+)|spotify:(track|album|playlist|episode):([A-Za-z0-9]+)/i);
+  return m?{type:(m[1]||m[3]).toLowerCase(),id:m[2]||m[4]}:null;
 }
-
-function unmuteMusic(){const frame=document.getElementById("ytMusic");if(!frame||!musicTracks.length)return;const ids=musicTracks.map(t=>t.youtube_music_id).filter(Boolean);const first=encodeURIComponent(ids[0]);const playlist=encodeURIComponent(ids.join(","));frame.src=`https://www.youtube-nocookie.com/embed/${first}?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&modestbranding=1&loop=1&playlist=${playlist}`;musicUserStarted=true;const btn=document.getElementById("musicUnmute");if(btn)btn.textContent="🔊 Zvuk uključen";}
-
+function musicTrackKey(t){return t?(t.provider||"youtube")+":"+t.id:"";}
+function musicEmbedUrl(t,muted){
+  if(!t)return "";
+  if(t.provider==="spotify"){const s=getSpotifyEmbed(t.spotify_url);return s?"https://open.spotify.com/embed/"+s.type+"/"+s.id+"?utm_source=generator&theme=0":"";}
+  if(!t.youtube_music_id)return "";
+  return "https://www.youtube-nocookie.com/embed/"+encodeURIComponent(t.youtube_music_id)+"?autoplay=1&mute="+(muted?1:0)+"&controls=1&rel=0&playsinline=1&modestbranding=1";
+}
+function initMusic(){
+  const wrap=document.getElementById("musicPlayerWrap"),hint=document.getElementById("musicHint"),btn=document.getElementById("musicUnmute");if(!wrap)return;
+  const enabled=!!musicSettings?.youtube_music_enabled,first=musicTracks[0],signature=musicTracks.map(musicTrackKey).join(",")+"|"+enabled;
+  if(!enabled||!first){wrap.innerHTML='<div class="music-placeholder"><div><span style="font-size:28px">🎵</span><br>Trenutno nema aktivne muzike lige.</div></div>';currentMusicSignature="";musicUserStarted=false;if(hint)hint.textContent="Admin može uključiti playlistu iz Admin panela.";if(btn)btn.style.display="none";return;}
+  if(currentMusicSignature!==signature){const src=musicEmbedUrl(first,true);wrap.innerHTML=src?'<iframe id="ytMusic" src="'+src+'" title="Medjaši Liga muzika" loading="eager" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>':"";currentMusicSignature=signature;musicUserStarted=false;}
+  if(hint)hint.innerHTML='<span class="music-live-badge">● MUZIKA LIGE</span> <span class="music-volume-note">'+(first.provider==="spotify"?"Spotify player je spreman. Pritisni Play na playeru.":"Playlist svira redom. Klikni „Uključi zvuk“ ako želiš zvuk.")+'</span>';
+  if(btn){btn.style.display=first.provider==="spotify"?"none":"inline-flex";btn.textContent=musicUserStarted?"🔊 Zvuk uključen":"🔊 Uključi zvuk";}
+}
+function unmuteMusic(){
+  const frame=document.getElementById("ytMusic"),first=musicTracks[0];if(!frame||!first)return;
+  if(first.provider==="spotify"){musicUserStarted=true;return;}
+  const src=musicEmbedUrl(first,false);if(src)frame.src=src;musicUserStarted=true;const btn=document.getElementById("musicUnmute");if(btn)btn.textContent="🔊 Zvuk uključen";
+}
 
 function renderAnnouncement(){
 
@@ -7614,14 +7628,14 @@ function getYoutubeId(url) {
    UČITAJ POSTAVKE IZ SUPABASE
 ----------------------------------------- */
 
-async function loadMusicSettings(){const {data:settings,error:se}=await supabaseClient.from("site_settings").select("youtube_music_enabled").eq("id",1).maybeSingle();if(se)console.error(se);musicSettings=settings||{youtube_music_enabled:false};const {data:tracks,error:te}=await supabaseClient.from("music_tracks").select("id,title,youtube_music_id,sort_order,is_active,created_at").eq("is_active",true).order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(te){console.error(te);musicTracks=[];}else musicTracks=tracks||[];renderMusicAdmin();initMusic();}
+async function loadMusicSettings(){const {data:settings,error:se}=await supabaseClient.from("site_settings").select("youtube_music_enabled").eq("id",1).maybeSingle();if(se)console.error(se);musicSettings=settings||{youtube_music_enabled:false};const {data:tracks,error:te}=await supabaseClient.from("music_tracks").select("id,title,provider,youtube_music_id,spotify_url,sort_order,is_active,created_at").eq("is_active",true).order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(te){console.error(te);musicTracks=[];}else musicTracks=tracks||[];renderMusicAdmin();initMusic();}
 
 
 /* -----------------------------------------
    PRIKAŽI POSTAVKE U ADMIN PANELU
 ----------------------------------------- */
 
-function renderMusicAdmin(){const box=document.getElementById("adminMusicPlaylist"),status=document.getElementById("musicAdminStatus");if(!box)return;if(!isAdmin()){box.innerHTML="";return;}if(!musicTracks.length)box.innerHTML='<div class="empty compact">Playlist je prazna. Dodaj prvu YouTube pjesmu.</div>';else box.innerHTML=musicTracks.map((t,i)=>`<div class="playlist-row"><div class="playlist-num">${i+1}</div><div><strong>${esc(t.title||"YouTube pjesma")}</strong><small>${esc(t.youtube_music_id)}</small></div><div class="playlist-actions"><button class="btn btn-small" onclick="moveMusicTrack(${t.id},-1)">↑</button><button class="btn btn-small" onclick="moveMusicTrack(${t.id},1)">↓</button></div><button class="btn btn-red btn-small" onclick="deleteMusicTrack(${t.id})">Obriši</button></div>`).join("");if(status)status.textContent=musicSettings.youtube_music_enabled?`▶️ Playlist aktivna • ${musicTracks.length} pjesama`:`⏸️ Playlist zaustavljena • ${musicTracks.length} pjesama`;}
+function renderMusicAdmin(){const box=document.getElementById("adminMusicPlaylist"),status=document.getElementById("musicAdminStatus");if(!box)return;if(!isAdmin()){box.innerHTML="";return;}if(!musicTracks.length)box.innerHTML='<div class="empty compact">Playlist je prazna. Dodaj YouTube ili Spotify pjesmu.</div>';else box.innerHTML=musicTracks.map((t,i)=>'<div class="playlist-row"><div class="playlist-num">'+(i+1)+'</div><div><strong>'+esc(t.title||"Pjesma")+'</strong><small>🎵 '+esc(t.provider==="spotify"?"Spotify":"YouTube")+' · '+esc(t.provider==="spotify"?t.spotify_url:t.youtube_music_id)+'</small></div><div class="playlist-actions"><button class="btn btn-small" onclick="moveMusicTrack('+t.id+',-1)">↑</button><button class="btn btn-small" onclick="moveMusicTrack('+t.id+',1)">↓</button></div><button class="btn btn-red btn-small" onclick="deleteMusicTrack('+t.id+')">Obriši</button></div>').join("");if(status)status.textContent=musicSettings.youtube_music_enabled?"▶️ Playlist aktivna • "+musicTracks.length+" pjesama":"⏸️ Playlist zaustavljena • "+musicTracks.length+" pjesama";}
 
 
 /* -----------------------------------------
@@ -7755,11 +7769,10 @@ function removeCommentImage(){
   remove?.classList.add("hidden");
 }
 
-async function addMusicTrack(){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}const input=document.getElementById("adminYoutubeUrl"),title=document.getElementById("adminYoutubeTitle"),id=getYoutubeId(input?.value||"");if(!id){toast("Unesi ispravan YouTube link.","error");return;}if(musicTracks.some(t=>t.youtube_music_id===id)){toast("Ta pjesma je već u playlisti.","error");return;}const next=Math.max(0,...musicTracks.map(t=>Number(t.sort_order)||0))+1;const {error}=await supabaseClient.from("music_tracks").insert({youtube_music_id:id,title:(title?.value||"").trim()||"YouTube pjesma",sort_order:next,is_active:true});if(error){toast(error.message,"error");return;}if(input)input.value="";if(title)title.value="";await loadMusicSettings();toast("Pjesma je dodata u playlistu.","success");}
+async function addMusicTrack(){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}const input=document.getElementById("adminYoutubeUrl"),title=document.getElementById("adminYoutubeTitle"),provider=document.getElementById("adminMusicProvider")?.value||"youtube",raw=(input?.value||"").trim();let payload=null;if(provider==="spotify"){if(!getSpotifyEmbed(raw)){toast("Unesi ispravan Spotify link.","error");return;}payload={provider:"spotify",spotify_url:raw,youtube_music_id:null};}else{const id=getYoutubeId(raw);if(!id){toast("Unesi ispravan YouTube link.","error");return;}payload={provider:"youtube",youtube_music_id:id,spotify_url:null};}const next=Math.max(0,...musicTracks.map(t=>Number(t.sort_order)||0))+1;const {error}=await supabaseClient.from("music_tracks").insert({...payload,title:(title?.value||"").trim()||"Pjesma",sort_order:next,is_active:true});if(error){toast(error.message,"error");return;}if(input)input.value="";if(title)title.value="";await loadMusicSettings();toast("Pjesma je dodata u playlistu.","success");}
 async function deleteMusicTrack(id){if(!isAdmin())return;if(!confirm("Obrisati ovu pjesmu iz playliste?"))return;const {error}=await supabaseClient.from("music_tracks").delete().eq("id",id);if(error){toast(error.message,"error");return;}await loadMusicSettings();toast("Pjesma je obrisana.","success");}
 async function moveMusicTrack(id,direction){if(!isAdmin())return;const list=[...musicTracks],idx=list.findIndex(t=>t.id===id),target=idx+direction;if(idx<0||target<0||target>=list.length)return;[list[idx],list[target]]=[list[target],list[idx]];for(let i=0;i<list.length;i++){const {error}=await supabaseClient.from("music_tracks").update({sort_order:i+1}).eq("id",list[i].id);if(error){toast(error.message,"error");return;}}await loadMusicSettings();}
 async function toggleMusicPlaylist(enabled){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}if(enabled&&!musicTracks.length){toast("Prvo dodaj barem jednu pjesmu.","error");return;}const {error}=await supabaseClient.from("site_settings").update({youtube_music_enabled:enabled}).eq("id",1);if(error){toast(error.message,"error");return;}musicSettings.youtube_music_enabled=enabled;currentMusicSignature="";initMusic();renderMusicAdmin();toast(enabled?"Playlist je uključena.":"Muzika je zaustavljena.","success");}
-
 async function loadModeratorUsers(){
   if(!isAdmin()) return;
 
