@@ -244,6 +244,7 @@ function playerPhoto(player){
 ========================================================= */
 
 const SECTION_STATE_KEY = "medjasi_active_section_v1";
+let medjasiAuthInteraction = false;
 
 function rememberActiveSection(id){
   try{
@@ -1130,6 +1131,7 @@ async function checkAuth(){
 ========================================================= */
 
 async function login(){
+  medjasiAuthInteraction = true;
   const email =
     document
       .getElementById("loginEmail")
@@ -1241,6 +1243,7 @@ async function resetPassword(){
 
 async function register(){
 
+  medjasiAuthInteraction = true;
   const username =
     document
       .getElementById("registerUsername")
@@ -1411,6 +1414,7 @@ window.resendConfirmation=resendConfirmation;
 ========================================================= */
 
 async function logout(){
+  medjasiAuthInteraction = true;
 
   const {
     error
@@ -7647,8 +7651,14 @@ async function init(){
         await loadAll();
 
         if(event === "SIGNED_IN" || event === "SIGNED_UP"){
-          showSection("home");
+          if(medjasiAuthInteraction){
+            medjasiAuthInteraction = false;
+            showSection("home");
+          }else{
+            restoreRememberedSection();
+          }
         }else if(event === "SIGNED_OUT"){
+          medjasiAuthInteraction = false;
           showSection("home");
         }
 
