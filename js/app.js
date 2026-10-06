@@ -481,7 +481,7 @@ function notificationTime(value){
 function addLeagueNotification({
   title,
   text="",
-  icon="<span class="m-icon" data-icon="bell" aria-hidden="true"></span>",
+  icon='<span class="m-icon" data-icon="bell" aria-hidden="true"></span>',
   type="info",
   key="",
   browser=true
@@ -717,7 +717,7 @@ function processLeagueNotifications(){
     addLeagueNotification({
       title:`<span class="m-icon" data-icon="ball" aria-hidden="true"></span> Gol – ${notificationMatchLabel(match)}`,
       text:`${playerName}${team ? ` (${team})` : ""} • ${g.minute || 0}' • rezultat ${notificationMatchScore(match)}`,
-      icon:"<span class="m-icon" data-icon="ball" aria-hidden="true"></span>",
+      icon:'<span class="m-icon" data-icon="ball" aria-hidden="true"></span>',
       type:"goal",
       key:`goal:${g.id}`
     });
@@ -738,9 +738,9 @@ function processLeagueNotifications(){
     const isRed = String(c.card_type).toLowerCase() === "red";
 
     addLeagueNotification({
-      title:`${isRed ? "<span class="m-icon" data-icon="red" aria-hidden="true"></span> Crveni" : "<span class="m-icon" data-icon="yellow" aria-hidden="true"></span> Žuti"} karton – ${notificationMatchLabel(match)}`,
+      title:`${isRed ? '<span class="m-icon" data-icon="red" aria-hidden="true"></span> Crveni' : '<span class="m-icon" data-icon="yellow" aria-hidden="true"></span> Žuti'} karton – ${notificationMatchLabel(match)}`,
       text:`${playerName} • ${c.minute || 0}'`,
-      icon:isRed ? "<span class="m-icon" data-icon="red" aria-hidden="true"></span>" : "<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>",
+      icon:isRed ? '<span class="m-icon" data-icon="red" aria-hidden="true"></span>' : '<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>',
       type:isRed ? "red-card" : "yellow-card",
       key:`card:${c.id}`
     });
@@ -762,7 +762,7 @@ function processLeagueNotifications(){
       addLeagueNotification({
         title:`<span class="m-icon" data-icon="live" aria-hidden="true"></span> Počela utakmica`,
         text:`${notificationMatchLabel(match)} je sada uživo.`,
-        icon:"<span class="m-icon" data-icon="live" aria-hidden="true"></span>",
+        icon:'<span class="m-icon" data-icon="live" aria-hidden="true"></span>',
         type:"live",
         key:`live:${match.id}:${current.status}`
       });
@@ -775,7 +775,7 @@ function processLeagueNotifications(){
       addLeagueNotification({
         title:`<span class="m-icon" data-icon="result" aria-hidden="true"></span> Završena utakmica`,
         text:`${notificationMatchLabel(match)} • rezultat ${notificationMatchScore(match)}`,
-        icon:"<span class="m-icon" data-icon="result" aria-hidden="true"></span>",
+        icon:'<span class="m-icon" data-icon="result" aria-hidden="true"></span>',
         type:"finished",
         key:`finished:${match.id}`
       });
@@ -792,7 +792,7 @@ function processLeagueNotifications(){
       addLeagueNotification({
         title:`<span class="m-icon" data-icon="stats" aria-hidden="true"></span> Promjena rezultata`,
         text:`${notificationMatchLabel(match)} • ${notificationMatchScore(match)}`,
-        icon:"<span class="m-icon" data-icon="stats" aria-hidden="true"></span>",
+        icon:'<span class="m-icon" data-icon="stats" aria-hidden="true"></span>',
         type:"score",
         key:`score:${match.id}:${current.home_score}:${current.away_score}`
       });
@@ -805,14 +805,14 @@ function processLeagueNotifications(){
 
     const content = message.content.trim();
 
-    if(!content.startsWith("<span class="m-icon" data-icon="news" aria-hidden="true"></span>")) return;
+    if(!content.startsWith('<span class="m-icon" data-icon="news" aria-hidden="true"></span>')) return;
 
     const clean = content.replace(/^<span class="m-icon" data-icon="news" aria-hidden="true"></span>\s*/,"").trim();
 
     addLeagueNotification({
-      title:"<span class="m-icon" data-icon="news" aria-hidden="true"></span> Nova najava lige",
+      title:'<span class="m-icon" data-icon="news" aria-hidden="true"></span> Nova najava lige',
       text:clean,
-      icon:"<span class="m-icon" data-icon="news" aria-hidden="true"></span>",
+      icon:'<span class="m-icon" data-icon="news" aria-hidden="true"></span>',
       type:"announcement",
       key:`announcement:${message.id}`
     });
@@ -1420,7 +1420,7 @@ async function register(){
   */
 
   message.innerHTML =
-    "Registracija je uspješna. Poslali smo ti potvrdu na email. Otvori poruku i potvrdi nalog.<br><button type=\"button\" class=\"btn btn-small btn-blue\" style=\"margin-top:10px\" onclick=\"resendConfirmation()\"><span class="m-icon" data-icon="news" aria-hidden="true"></span> Pošalji potvrdu ponovo</button>";
+  message.innerHTML = `Registracija je uspješna. Poslali smo ti potvrdu na email. Otvori poruku i potvrdi nalog.<br><button type="button" class="btn btn-small btn-blue" style="margin-top:10px" onclick="resendConfirmation()"><span class="m-icon" data-icon="news" aria-hidden="true"></span> Pošalji potvrdu ponovo</button>`;
 
   toast("Provjeri email radi potvrde naloga.");
 }
@@ -1702,7 +1702,7 @@ function initMusic(){
     currentMusicSignature=signature;musicUserStarted=false;
   }
   if(hint)hint.innerHTML='<span class="music-live-badge">● MUZIKA LIGE</span> <span class="music-volume-note">'+(first.provider==="spotify"?"Spotify player je spreman. Pritisni Play na playeru.":(musicTracks.every(t=>t.provider!=="spotify")?"Playlist svira redom. Klikni „Uključi zvuk“ ako želiš zvuk.":"Prva pjesma je spremna za puštanje."))+'</span>';
-  if(btn){btn.style.display=first.provider==="spotify"?"none":"inline-flex";btn.textContent=musicUserStarted?"<span class="m-icon" data-icon="music" aria-hidden="true"></span> Zvuk uključen":"<span class="m-icon" data-icon="music" aria-hidden="true"></span> Uključi zvuk";}
+  if(btn){btn.style.display=first.provider==="spotify"?"none":"inline-flex";btn.textContent=musicUserStarted?'<span class="m-icon" data-icon="music" aria-hidden="true"></span> Zvuk uključen':'<span class="m-icon" data-icon="music" aria-hidden="true"></span> Uključi zvuk';}
 }
 function unmuteMusic(){
   const frame=document.getElementById("ytMusic"),first=musicTracks[0];if(!frame||!first)return;
@@ -1712,7 +1712,7 @@ function unmuteMusic(){
     const ids=musicTracks.map(t=>t.youtube_music_id).filter(Boolean);
     if(ids.length)src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(ids[0])+"?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&modestbranding=1&loop=1&playlist="+encodeURIComponent(ids.join(","));
   }
-  if(src)frame.src=src;musicUserStarted=true;const btn=document.getElementById("musicUnmute");if(btn)btn.textContent="<span class="m-icon" data-icon="music" aria-hidden="true"></span> Zvuk uključen";
+  if(src)frame.src=src;musicUserStarted=true;const btn=document.getElementById("musicUnmute");if(btn)btn.textContent='<span class="m-icon" data-icon="music" aria-hidden="true"></span> Zvuk uključen';
 }
 
 function renderAnnouncement(){
@@ -4574,8 +4574,8 @@ async function openLineupControl(
               ${
                 p.position ===
                 "Golman"
-                  ? "<span class="m-icon" data-icon="player" aria-hidden="true"></span>"
-                  : "<span class="m-icon" data-icon="ball" aria-hidden="true"></span>"
+                  ? '<span class="m-icon" data-icon="player" aria-hidden="true"></span>'
+                  : '<span class="m-icon" data-icon="ball" aria-hidden="true"></span>'
               }
             </span>
 
@@ -5658,7 +5658,7 @@ function getMatchEvents(id){
         minute:Number(
           g.minute || 0
         ),
-        icon:"<span class="m-icon" data-icon="ball" aria-hidden="true"></span>",
+        icon:'<span class="m-icon" data-icon="ball" aria-hidden="true"></span>',
         text:
           `${playerName(
             g.player_id
@@ -5683,8 +5683,8 @@ function getMatchEvents(id){
         ),
         icon:
           c.card_type === "red"
-            ? "<span class="m-icon" data-icon="red" aria-hidden="true"></span>"
-            : "<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>",
+            ? '<span class="m-icon" data-icon="red" aria-hidden="true"></span>'
+            : '<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>',
         text:
           `${playerName(
             c.player_id
@@ -7284,7 +7284,7 @@ function openPlayer(
         .sort((a,b) => Number(a.minute || 0) - Number(b.minute || 0))
         .map(c => {
           const m = getMatch(c.match_id);
-          const icon = c.card_type === "red" ? "<span class="m-icon" data-icon="red" aria-hidden="true"></span>" : "<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>";
+          const icon = c.card_type === "red" ? '<span class="m-icon" data-icon="red" aria-hidden="true"></span>' : '<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>';
           return `
             <div class="rank-row">
               <div class="rank-num">${icon}</div>
@@ -7523,7 +7523,7 @@ document.addEventListener(
 function handleLeagueEvent(event){
   const e=event?.new;
   if(!e?.event_type) return;
-  addLeagueNotification({title:e.title||"Novo dešavanje",text:e.body||"",icon:e.event_type==="goal"?"<span class="m-icon" data-icon="ball" aria-hidden="true"></span>":"<span class="m-icon" data-icon="result" aria-hidden="true"></span>",type:e.event_type,key:"league-event:"+e.id,browser:true});
+  addLeagueNotification({title:e.title||"Novo dešavanje",text:e.body||"",icon:e.event_type==="goal"?'<span class="m-icon" data-icon="ball" aria-hidden="true"></span>':'<span class="m-icon" data-icon="result" aria-hidden="true"></span>',type:e.event_type,key:"league-event:"+e.id,browser:true});
   if(currentUser) notifyPush(e.event_type,e.title||"Novo dešavanje",e.body||"",e.match_id||null).catch(()=>{});
   loadAll();
 }
@@ -7830,7 +7830,7 @@ function toggleMobileMenu(){
   const nav=document.getElementById("mainNav");
   const btn=document.getElementById("mobileMenuBtn");
   nav?.classList.toggle("mobile-open",mobileMenuOpen);
-  if(btn){btn.textContent=mobileMenuOpen ? "<span class="m-icon" data-icon="settings" aria-hidden="true"></span>" : "<span class="m-icon" data-icon="settings" aria-hidden="true"></span>";btn.setAttribute("aria-expanded",String(mobileMenuOpen));}
+  if(btn){btn.textContent=mobileMenuOpen ? '<span class="m-icon" data-icon="settings" aria-hidden="true"></span>' : '<span class="m-icon" data-icon="settings" aria-hidden="true"></span>';btn.setAttribute("aria-expanded",String(mobileMenuOpen));}
 }
 
 
@@ -7841,7 +7841,7 @@ function openMobileMore(){
   document.getElementById("mainNav")?.classList.remove("mobile-open");
   closeMobileMore();
   const topBtn=document.getElementById("mobileMenuBtn");
-  if(topBtn){topBtn.textContent="<span class="m-icon" data-icon="settings" aria-hidden="true"></span>";topBtn.setAttribute("aria-expanded","false");}
+  if(topBtn){topBtn.textContent='<span class="m-icon" data-icon="settings" aria-hidden="true"></span>';topBtn.setAttribute("aria-expanded","false");}
   drawer.classList.add("open");
   drawer.setAttribute("aria-hidden","false");
   document.body.classList.add("mobile-more-open");
@@ -8046,7 +8046,7 @@ updateAuthUI=function(){
         adminBtn=document.createElement("button");
         adminBtn.type="button";
         adminBtn.className="nav-admin-btn";
-        adminBtn.innerHTML="<span><span class="m-icon" data-icon="settings" aria-hidden="true"></span>️</span><span>Admin</span>";
+        adminBtn.innerHTML=`<span><span class="m-icon" data-icon="settings" aria-hidden="true"></span>️</span><span>Admin</span>`;
         adminBtn.addEventListener("click",()=>window.showSection("admin"));
         nav.appendChild(adminBtn);
       }
@@ -8086,7 +8086,7 @@ showSection=function(id){
   mobileMenuOpen=false;
   document.getElementById("mainNav")?.classList.remove("mobile-open");
   const btn=document.getElementById("mobileMenuBtn");
-  if(btn){btn.textContent="<span class="m-icon" data-icon="settings" aria-hidden="true"></span>";btn.setAttribute("aria-expanded","false");}
+  if(btn){btn.textContent='<span class="m-icon" data-icon="settings" aria-hidden="true"></span>';btn.setAttribute("aria-expanded","false");}
   document.querySelectorAll('.mobile-bottom button').forEach(b=>b.classList.remove('active'));
   const bottomBtn=document.querySelector(`.mobile-bottom button[onclick*="showSection('${id}')"]`);
   if(bottomBtn) bottomBtn.classList.add('active');
@@ -8705,7 +8705,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       alert(error?.message || "Greška pri izmjeni igrača.");
       if (saveButton) {
         saveButton.disabled = false;
-        saveButton.textContent = "<span class="m-icon" data-icon="result" aria-hidden="true"></span> Sačuvaj promjene";
+        saveButton.textContent = '<span class="m-icon" data-icon="result" aria-hidden="true"></span> Sačuvaj promjene';
       }
     }
   };
@@ -8827,7 +8827,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                 <div class="crud-info">
                   <div class="crud-name">
                     ${esc4(p.name)}
-                    ${p.is_captain ? " <span class="m-icon" data-icon="mvp" aria-hidden="true"></span>" : ""}
+                    ${p.is_captain ? ' <span class="m-icon" data-icon="mvp" aria-hidden="true"></span>' : ""}
                   </div>
 
                   <div class="crud-meta">
@@ -8942,7 +8942,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                 <div class="crud-info">
 
                   <div class="crud-name">
-                    ${c.card_type === "red" ? "<span class="m-icon" data-icon="red" aria-hidden="true"></span>" : "<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>"}
+                    ${c.card_type === "red" ? '<span class="m-icon" data-icon="red" aria-hidden="true"></span>' : '<span class="m-icon" data-icon="yellow" aria-hidden="true"></span>'}
                     ${esc4(
                       player?.name || "Nepoznat igrač"
                     )}
