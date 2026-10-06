@@ -1,139 +1,185 @@
 /* =========================================================
-   MEĐASI ADMIN CENTER
-   Reorganizes existing admin tools only.
-   No public-site navigation, effects or visual system changes.
+   MEĐASI ADMIN CENTER V2
+   Organizes existing admin features into collapsible groups.
+   Public site untouched.
 ========================================================= */
 (function(){
-  if(window.__MEDJASI_ADMIN_CENTER__) return;
-  window.__MEDJASI_ADMIN_CENTER__=true;
+  if(window.__MEDJASI_ADMIN_CENTER_V2__) return;
+  window.__MEDJASI_ADMIN_CENTER_V2__=true;
 
-  var $=function(s){return document.querySelector(s);};
-  var isAdmin=function(){return typeof window.isAdmin==="function"&&window.isAdmin();};
+  const q=s=>document.querySelector(s);
+  const isAdm=()=>typeof window.isAdmin==="function"&&window.isAdmin();
 
-  function cardFor(id){
-    var el=document.getElementById(id);
-    return el && (el.closest(".card")||el);
+  const groups=[
+    {id:"liga",icon:"🏟️",title:"Liga",desc:"Ekipe, igrači, utakmice i live upravljanje."},
+    {id:"sadrzaj",icon:"📰",title:"Sadržaj",desc:"Community, vijesti, galerija, moderacija i grafike."},
+    {id:"fan",icon:"🎯",title:"Fan Game",desc:"Ponude, obračun poena i fan funkcije."},
+    {id:"sistem",icon:"⚙️",title:"Sistem",desc:"Sezone, muzika, push, uloge i napredne postavke."}
+  ];
+
+  function card(id){
+    const el=document.getElementById(id);
+    return el?.closest(".card")||el;
+  }
+
+  function groupHtml(g,open=false){
+    return `
+      <details class="admin-v2-group" data-admin-group="${g.id}" ${open?"open":""}>
+        <summary>
+          <span class="admin-v2-group-icon">${g.icon}</span>
+          <span class="admin-v2-group-copy">
+            <strong>${g.title}</strong>
+            <small>${g.desc}</small>
+          </span>
+          <span class="admin-v2-chevron">⌄</span>
+        </summary>
+        <div class="admin-v2-group-body" data-admin-body="${g.id}"></div>
+      </details>`;
   }
 
   function build(){
-    var root=$("#adminContent");
-    if(!root||!isAdmin()||$("#adminCenterTabs")) return;
+    const root=q("#adminContent");
+    if(!root||!isAdm()||q("#adminV2Root")) return;
 
-    var legacyGrid=root.querySelector(".admin-grid");
-    var adminMatches=cardFor("adminMatches");
-    var gallery=cardFor("adminGalleryList");
-    var music=cardFor("adminMusicPlaylist");
-    var crud=document.getElementById("adminCrudV4");
-    var news=document.getElementById("v7NewsAdmin");
-    var season=document.getElementById("v7SeasonCard");
-    var push=document.getElementById("v7PushCard");
-    var roles=document.getElementById("moderatorManagement");
-    var reports=document.getElementById("communityModerationCard");
+    const legacyGrid=root.querySelector(".admin-grid");
+    const existing={
+      matches:card("adminMatches"),
+      gallery:card("adminGalleryList"),
+      music:card("adminMusicPlaylist"),
+      news:q("#v7NewsAdmin"),
+      season:q("#v7SeasonCard"),
+      push:q("#v7PushCard"),
+      roles:q("#moderatorManagement"),
+      reports:q("#communityModerationCard"),
+      crud:q("#adminCrudV4")
+    };
 
-    var head=document.createElement("div");
-    head.className="admin-center-head";
-    head.innerHTML='<div><div class="admin-center-kicker">ADMIN CONTROL CENTER</div><h2>⚙️ Upravljanje ligom</h2><p>Sve admin funkcije na jednom mjestu. Javni dio sajta ostaje nepromijenjen.</p></div><div class="admin-center-tools"><button class="btn btn-green btn-small" type="button" data-admin-go="match">＋ Nova utakmica</button><button class="btn btn-blue btn-small" type="button" data-admin-go="content">＋ Nova objava</button></div>';
-    root.prepend(head);
+    const oldChildren=[...root.children].filter(el=>!el.classList.contains("section-title"));
 
-    var stats=document.createElement("div");
-    stats.className="admin-center-overview";
-    stats.innerHTML='<div class="admin-center-stat"><b>'+(window.teams?.length||0)+'</b><span>EKIPA</span></div><div class="admin-center-stat"><b>'+(window.players?.length||0)+'</b><span>IGRAČA</span></div><div class="admin-center-stat"><b>'+(window.matches?.length||0)+'</b><span>UTAKMICA</span></div><div class="admin-center-stat"><b>'+(window.gallery?.length||0)+'</b><span>MEDIJA</span></div>';
-    root.appendChild(stats);
+    const shell=document.createElement("div");
+    shell.id="adminV2Root";
+    shell.innerHTML=`
+      <div class="admin-v2-hero">
+        <div>
+          <span>ADMIN PANEL</span>
+          <h2>⚙️ Upravljanje lige</h2>
+          <p>Sve funkcije ostaju, samo su složene jednostavnije.</p>
+        </div>
+        <div class="admin-v2-hero-actions">
+          <button type="button" class="btn btn-green btn-small" data-admin-v2-go="new-match">＋ Nova utakmica</button>
+          <button type="button" class="btn btn-blue btn-small" data-admin-v2-go="content">＋ Nova objava</button>
+        </div>
+      </div>
 
-    var tabs=document.createElement("div");
-    tabs.id="adminCenterTabs";
-    tabs.className="admin-center-tabs";
-    tabs.innerHTML='<button type="button" class="active" data-admin-tab="overview">📊 Pregled</button><button type="button" data-admin-tab="league">🏟️ Liga</button><button type="button" data-admin-tab="content">📰 Sadržaj</button><button type="button" data-admin-tab="system">⚙️ Sistem</button>';
-    root.appendChild(tabs);
+      <div class="admin-v2-stats">
+        <div><b>${window.teams?.length||0}</b><small>EKIPE</small></div>
+        <div><b>${window.players?.length||0}</b><small>IGRAČI</small></div>
+        <div><b>${window.matches?.length||0}</b><small>UTAKMICE</small></div>
+        <div><b>${window.gallery?.length||0}</b><small>MEDIJA</small></div>
+      </div>
 
-    var overview=document.createElement("div");
-    overview.className="admin-center-section active";
-    overview.dataset.adminSection="overview";
-    overview.innerHTML='<div class="admin-center-quick"><button type="button" data-admin-go="match"><b>⚽</b><span>Utakmice</span><small>Dodaj, uredi i vodi live događaje.</small></button><button type="button" data-admin-go="content"><b>📰</b><span>Community i sadržaj</span><small>Vijesti, galerija, moderacija i grafike.</small></button><button type="button" data-admin-go="system"><b>🛠️</b><span>Sistem</span><small>Sezone, muzika, push i korisničke uloge.</small></button></div><div class="admin-center-note">💡 <strong>Grafike</strong> ćemo držati ovdje u Sadržaju. Figma, Adobe i Canva služe samo za izradu šablona/grafika — posjetioci ih nikada neće vidjeti.</div><div class="card"><h3>⚡ Brze radnje</h3><p class="muted">Najčešće admin radnje ostaju dostupne bez traženja kroz cijeli panel.</p></div>';
-    root.appendChild(overview);
+      <div class="admin-v2-groups">
+        ${groups.map((g,i)=>groupHtml(g,i===0)).join("")}
+      </div>
 
-    var league=document.createElement("div");
-    league.className="admin-center-section";
-    league.dataset.adminSection="league";
-    root.appendChild(league);
+      <div class="admin-v2-advanced">
+        <button type="button" class="admin-v2-advanced-toggle">▸ Napredne / rijetke radnje</button>
+        <div class="admin-v2-advanced-body" hidden></div>
+      </div>`;
 
-    var content=document.createElement("div");
-    content.className="admin-center-section";
-    content.dataset.adminSection="content";
-    root.appendChild(content);
+    // Hide current root children; move only the actual admin UI parts into our shell.
+    oldChildren.forEach(el=>{el.dataset.adminV2OriginalDisplay=el.style.display;el.style.display="none";});
 
-    var system=document.createElement("div");
-    system.className="admin-center-section";
-    system.dataset.adminSection="system";
-    root.appendChild(system);
+    root.appendChild(shell);
 
-    if(legacyGrid) league.appendChild(legacyGrid);
-    if(adminMatches) league.appendChild(adminMatches);
-    if(crud) league.appendChild(crud);
+    const body=id=>shell.querySelector('[data-admin-body="'+id+'"]');
 
-    if(news) content.appendChild(news);
-    if(gallery) content.appendChild(gallery);
-    if(reports) content.appendChild(reports);
+    if(legacyGrid) body("liga").appendChild(legacyGrid);
+    if(existing.matches) body("liga").appendChild(existing.matches);
+    if(existing.crud) body("liga").appendChild(existing.crud);
 
-    if(music) system.appendChild(music);
-    if(season) system.appendChild(season);
-    if(push) system.appendChild(push);
-    if(roles) system.appendChild(roles);
+    if(existing.news) body("sadrzaj").appendChild(existing.news);
+    if(existing.gallery) body("sadrzaj").appendChild(existing.gallery);
+    if(existing.reports) body("sadrzaj").appendChild(existing.reports);
 
+    // Fan Game admin is already inside Pogodi. Provide a clean shortcut instead of duplicating its controls.
+    body("fan").innerHTML=`
+      <div class="admin-v2-shortcut">
+        <div><strong>🎯 Fan Game admin</strong><p>Upravljanje ponudama, obračunom poena i dodjelom poena ostaje u postojećem Fan Game admin dijelu.</p></div>
+        <button type="button" class="btn btn-blue btn-small" data-admin-v2-open-game>Otvori Fan Game</button>
+      </div>`;
+
+    if(existing.music) body("sistem").appendChild(existing.music);
+    if(existing.season) body("sistem").appendChild(existing.season);
+    if(existing.push) body("sistem").appendChild(existing.push);
+    if(existing.roles) body("sistem").appendChild(existing.roles);
+
+    const advanced=shell.querySelector(".admin-v2-advanced-body");
+    if(existing.crud){
+      const note=document.createElement("div");
+      note.className="admin-v2-note";
+      note.textContent="CRUD i administratorske kontrole ostaju dostupne unutar Lige, bez uklanjanja postojećih funkcija.";
+      advanced.appendChild(note);
+    }
+    advanced.appendChild(document.createElement("div")).innerHTML='<div class="admin-v2-note">Grafike će biti unutar Sadržaja. Figma, Adobe i Canva ostaju samo alat za izradu grafika i šablona; korisnici ih neće vidjeti.</div>';
+
+    // Existing cards injected after boot.
     function classify(){
-      var map=[
-        ["v7NewsAdmin","content"],["adminGalleryList","content"],["communityModerationCard","content"],
-        ["adminMusicPlaylist","system"],["v7SeasonCard","system"],["v7PushCard","system"],["moderatorManagement","system"],
-        ["adminCrudV4","league"],["adminMatches","league"]
+      const map=[
+        ["v7NewsAdmin","sadrzaj"],["adminGalleryList","sadrzaj"],["communityModerationCard","sadrzaj"],
+        ["adminMusicPlaylist","sistem"],["v7SeasonCard","sistem"],["v7PushCard","sistem"],["moderatorManagement","sistem"],
+        ["adminCrudV4","liga"],["adminMatches","liga"]
       ];
-      map.forEach(function(pair){
-        var el=document.getElementById(pair[0]);
-        var target=root.querySelector('[data-admin-section="'+pair[1]+'"]');
+      map.forEach(([id,g])=>{
+        const el=document.getElementById(id), target=body(g);
         if(el&&target&&!target.contains(el)) target.appendChild(el.closest(".card")||el);
       });
     }
 
-    function activate(id){
-      tabs.querySelectorAll("button").forEach(function(b){b.classList.toggle("active",b.dataset.adminTab===id);});
-      root.querySelectorAll("[data-admin-section]").forEach(function(s){s.classList.toggle("active",s.dataset.adminSection===id);});
-      classify();
-    }
-
-    tabs.querySelectorAll("[data-admin-tab]").forEach(function(btn){
-      btn.addEventListener("click",function(){activate(btn.dataset.adminTab);});
+    shell.querySelectorAll(".admin-v2-group").forEach(d=>{
+      d.addEventListener("toggle",()=>classify());
     });
 
-    root.addEventListener("click",function(e){
-      var target=e.target.closest("[data-admin-go]");
-      if(!target) return;
-      var go=target.dataset.adminGo;
-      activate(go==="match"?"league":go);
-      if(go==="match") setTimeout(function(){document.getElementById("teamName")?.focus();},100);
+    shell.querySelector(".admin-v2-advanced-toggle")?.addEventListener("click",e=>{
+      const b=shell.querySelector(".admin-v2-advanced-body");
+      const hidden=b.hasAttribute("hidden");
+      b.hidden=!hidden;
+      e.currentTarget.textContent=(hidden?"▾ ":"▸ ")+"Napredne / rijetke radnje";
     });
 
-    window.__MEDJASI_ADMIN_CENTER_CLASSIFY__=classify;
-    window.__MEDJASI_ADMIN_CENTER_ACTIVATE__=activate;
+    shell.addEventListener("click",e=>{
+      if(e.target.closest("[data-admin-v2-go='new-match']")){
+        shell.querySelector('[data-admin-group="liga"]')?.setAttribute("open","");
+        setTimeout(()=>document.getElementById("teamName")?.focus(),120);
+      }
+      if(e.target.closest("[data-admin-v2-go='content']")){
+        shell.querySelector('[data-admin-group="sadrzaj"]')?.setAttribute("open","");
+      }
+      if(e.target.closest("[data-admin-v2-open-game]")){
+        window.showSection?.("game");
+      }
+    });
+
+    window.__MEDJASI_ADMIN_V2_CLASSIFY__=classify;
     classify();
   }
 
   function refresh(){
-    if(!isAdmin()) return;
-    var root=$("#adminContent");
-    if(!root) return;
-    if(!$("#adminCenterTabs")) build();
-    setTimeout(function(){window.__MEDJASI_ADMIN_CENTER_CLASSIFY__?.();},80);
+    if(!isAdm()) return;
+    if(!q("#adminV2Root")) build();
+    else window.__MEDJASI_ADMIN_V2_CLASSIFY__?.();
   }
 
-  var oldShow=window.showSection;
-  if(oldShow&&!window.__MEDJASI_ADMIN_CENTER_SHOW_PATCH__){
-    window.__MEDJASI_ADMIN_CENTER_SHOW_PATCH__=true;
+  const oldShow=window.showSection;
+  if(oldShow&&!window.__MEDJASI_ADMIN_V2_SHOW_PATCH__){
+    window.__MEDJASI_ADMIN_V2_SHOW_PATCH__=true;
     window.showSection=function(id){
-      var result=oldShow.apply(this,arguments);
-      if(id==="admin") setTimeout(refresh,120);
-      return result;
+      const r=oldShow.apply(this,arguments);
+      if(id==="admin") setTimeout(refresh,100);
+      return r;
     };
   }
 
-  window.addEventListener("load",function(){setTimeout(refresh,1400);});
-  setInterval(function(){if(document.querySelector("#admin.active")) refresh();},2500);
+  window.addEventListener("load",()=>setTimeout(refresh,1200));
+  setInterval(()=>{if(q("#admin.active")) refresh();},2500);
 })();
