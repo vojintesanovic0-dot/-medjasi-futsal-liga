@@ -1566,7 +1566,12 @@ function initMusic(){
 function unmuteMusic(){
   const frame=document.getElementById("ytMusic"),first=musicTracks[0];if(!frame||!first)return;
   if(first.provider==="spotify"){musicUserStarted=true;return;}
-  const src=musicEmbedUrl(first,false);if(src)frame.src=src;musicUserStarted=true;const btn=document.getElementById("musicUnmute");if(btn)btn.textContent="🔊 Zvuk uključen";
+  let src=musicEmbedUrl(first,false);
+  if(musicTracks.every(t=>t.provider!=="spotify")){
+    const ids=musicTracks.map(t=>t.youtube_music_id).filter(Boolean);
+    if(ids.length)src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(ids[0])+"?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&modestbranding=1&loop=1&playlist="+encodeURIComponent(ids.join(","));
+  }
+  if(src)frame.src=src;musicUserStarted=true;const btn=document.getElementById("musicUnmute");if(btn)btn.textContent="🔊 Zvuk uključen";
 }
 
 function renderAnnouncement(){
