@@ -96,7 +96,10 @@
     const organizer=buildShell(host);
     moveCards(host,organizer);
     organizer.querySelectorAll(".admin-organizer-group").forEach(section=>{
-      section.hidden=section.dataset.adminOrganizerGroupContainer!==active;
+      const isActive=section.dataset.adminOrganizerGroupContainer===active;
+      section.hidden=!isActive;
+      section.classList.toggle("is-active",isActive);
+      section.style.display=isActive?"":"none";
     });
     const label=groups.find(g=>g.id===active)?.title||"Liga";
     const status=organizer.querySelector("#adminOrganizerStatus");
