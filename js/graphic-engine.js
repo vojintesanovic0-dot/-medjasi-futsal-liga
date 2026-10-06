@@ -227,42 +227,68 @@
     const source = cutoutBlob || sourceFile;
     const img = await blobToImage(source);
 
-    /* Bottom information panel */
-    ctx.fillStyle="rgba(0,0,0,.55)";
-    ctx.fillRect(0,1030,1080,320);
-
-    if(cutoutBlob){
-      fitImage(ctx,img,60,110,960,960,true);
-    }else{
-      fitImage(ctx,img,0,80,1080,950,false);
-      ctx.fillStyle="rgba(0,0,0,.18)";
-      ctx.fillRect(0,80,1080,950);
-    }
-
-    ctx.fillStyle="#b7ff55";
-    ctx.fillRect(60,1060,170,8);
-
     const name = player?.name || state.title || "MEDJAŠI IGRAČ";
     const teamName = team?.name || "Medjaši Futsal Liga";
     const number = player?.jersey_number != null ? "#" + player.jersey_number : "";
     const position = player?.position || "";
 
-    let kicker="PLAYER SPOTLIGHT";
-    let headline=name;
-    let sub=teamName + (number ? "  " + number : "");
-    if(template==="mvp"){ kicker="MVP LIGE"; sub=teamName + "  ⭐"; }
-    if(template==="scorer"){ kicker="TOP STRIJELAC"; sub=teamName + (number ? "  " + number : ""); }
-    if(template==="matchday"){ kicker="MATCHDAY"; headline=name; sub=teamName + "  ⚽"; }
-    if(template==="winner"){ kicker="WINNER"; sub=teamName + "  🏆"; }
+    const presets = {
+      player:   {kicker:"PLAYER SPOTLIGHT", tag:"👤 IGRAČ"},
+      mvp:      {kicker:"MVP LIGE", tag:"⭐ MVP"},
+      scorer:   {kicker:"TOP STRIJELAC", tag:"⚽ GOAL"},
+      matchday: {kicker:"MATCHDAY", tag:"🔥 MATCHDAY"},
+      winner:   {kicker:"WINNER", tag:"🏆 POBJEDNIK"},
+      lineup:   {kicker:"STARTING FIVE", tag:"👕 POSTAVA"},
+      transfer: {kicker:"PLAYER ANNOUNCEMENT", tag:"📣 NOVO"},
+      birthday: {kicker:"SRETAN ROĐENDAN", tag:"🎂 BIRTHDAY"},
+      spotlight:{kicker:"U FOKUSU", tag:"🎯 FOCUS"},
+      fan:      {kicker:"IGRAČ TRIBINE", tag:"💚 FAN FAVORITE"},
+      captain:  {kicker:"KAPITEN", tag:"© KAPITEN"},
+      legend:   {kicker:"LEGENDA LIGE", tag:"👑 LEGENDA"}
+    };
+    const preset=presets[template]||presets.player;
+
+    /* Visual composition changes by template. */
+    if(cutoutBlob){
+      const big=["mvp","scorer","winner","captain","legend"].includes(template);
+      fitImage(ctx,img,big?20:80,big?35:120,big?1040:920,big?990:900,true);
+    }else{
+      fitImage(ctx,img,0,50,1080,980,false);
+      ctx.fillStyle="rgba(0,0,0,.20)";
+      ctx.fillRect(0,50,1080,980);
+    }
+
+    /* Accent stripe + lower information panel. */
+    ctx.fillStyle="#b7ff55";
+    ctx.fillRect(60,1045,210,8);
+    ctx.fillStyle="rgba(0,0,0,.60)";
+    ctx.fillRect(0,1020,1080,330);
 
     ctx.fillStyle="#b7ff55";
     ctx.font="700 28px Arial";
-    ctx.fillText(kicker,60,1115);
-    drawText(ctx,headline,60,1190,58,"800");
-    drawText(ctx,sub,60,1240,30,"600");
+    ctx.fillText(preset.kicker,60,1100);
 
-    if(position) drawText(ctx,position.toUpperCase(),1020,1115,24,"700","right");
-    drawText(ctx,"MEDJAŠI FUTSAL LIGA",1020,1295,22,"700","right");
+    let headline=name;
+    let sub=teamName + (number ? "  " + number : "");
+    if(template==="lineup") sub=teamName + (position ? " · "+position : "") + (number ? " · "+number : "");
+    if(template==="transfer") sub="NOVI IGRAČ · "+teamName;
+    if(template==="birthday") sub="ŽELIMO TI SVE NAJBOLJE · "+teamName;
+    if(template==="fan") sub="MILJENIK NAVIJAČA · "+teamName;
+    if(template==="captain") sub="KAPITEN · "+teamName;
+    if(template==="legend") sub="LEGENDA · "+teamName;
+    if(template==="spotlight") sub="DANAS U FOKUSU · "+teamName;
+    if(template==="mvp") sub="NAJBOLJI IGRAČ · "+teamName+"  ⭐";
+    if(template==="scorer") sub="STRIJELAC · "+teamName+"  ⚽";
+    if(template==="winner") sub="POBJEDNIK · "+teamName+"  🏆";
+    if(template==="matchday") sub="DAN UTAKMICE · "+teamName+"  ⚽";
+
+    drawText(ctx,headline,60,1180,58,"800");
+    drawText(ctx,sub,60,1230,30,"600");
+
+    if(position) drawText(ctx,position.toUpperCase(),1020,1100,24,"700","right");
+    if(number) drawText(ctx,number,1020,1175,38,"800","right");
+    drawText(ctx,preset.tag,1020,1295,22,"700","right");
+    drawText(ctx,"MEDJAŠI FUTSAL LIGA",60,1295,22,"700");
 
     generatedBlob = await new Promise((resolve,reject)=>{
       canvas.toBlob(blob=>blob?resolve(blob):reject(new Error("PNG nije napravljen.")),"image/png",.94);
@@ -308,7 +334,9 @@
       const name=player?.name || "Medjaši";
       const templateLabel={
         player:"Player Spotlight",mvp:"MVP Lige",scorer:"Top Strijelac",
-        matchday:"Matchday",winner:"Winner"
+        matchday:"Matchday",winner:"Winner",lineup:"Starting Five",
+        transfer:"Player Announcement",birthday:"Sretan rođendan",
+        spotlight:"U fokusu",fan:"Fan Favorite",captain:"Kapiten",legend:"Legenda lige"
       }[state.template] || "Grafika lige";
 
       const caption=state.caption.trim() || ("🔥 "+templateLabel+" · "+name+" · "+(team?.name||"Medjaši Futsal Liga"));
@@ -437,6 +465,13 @@
               <option value="scorer">⚽ Top Strijelac</option>
               <option value="matchday">🔥 Matchday</option>
               <option value="winner">🏆 Winner</option>
+              <option value="lineup">👕 Starting Five</option>
+              <option value="transfer">📣 Player Announcement</option>
+              <option value="birthday">🎂 Sretan rođendan</option>
+              <option value="spotlight">🎯 U fokusu</option>
+              <option value="fan">💚 Fan Favorite</option>
+              <option value="captain">© Kapiten</option>
+              <option value="legend">👑 Legenda lige</option>
             </select>
           </div>
 
