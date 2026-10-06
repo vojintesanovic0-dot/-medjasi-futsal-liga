@@ -67,6 +67,7 @@ create table if not exists public.fan_picks (
   unique (user_id, market_id)
 );
 create index if not exists fan_picks_user_idx on public.fan_picks(user_id, created_at desc);
+create unique index if not exists fan_picks_one_core_kind_idx on public.fan_picks(user_id, match_id, kind) where kind in ('result','total','red_card','exact');
 
 create table if not exists public.fan_shop_items (
   id serial primary key,
@@ -75,7 +76,8 @@ create table if not exists public.fan_shop_items (
   description text,
   price int not null check (price > 0),
   value text not null,
-  active boolean not null default true
+  active boolean not null default true,
+  unique(kind, name)
 );
 
 create table if not exists public.fan_inventory (
@@ -103,7 +105,7 @@ create table if not exists public.fan_team_follows (
 
 create table if not exists public.fan_team_fund (
   team_id text primary key,
-  total int not null default 0
+  total int not null default 0 check (total >= 0)
 );
 
 create table if not exists public.sponsors (
@@ -122,7 +124,7 @@ create table if not exists public.team_applications (
   captain_name text not null,
   phone text not null,
   note text,
-  status text not null default 'new',
+  status text not null default 'new' check (status in ('new','reviewing','accepted','rejected')),
   created_at timestamptz not null default now()
 );
 
@@ -156,21 +158,21 @@ drop policy if exists apps_admin_read   on public.team_applications;
 drop policy if exists apps_admin_update on public.team_applications;
 
 -- Novčanik, istorija, pogodci, inventar: samo čitanje svojih redova. Upis ISKLJUČIVO preko funkcija ispod.
-create policy fan_wallets_own  on public.fan_wallets  for select using (user_id = auth.uid() or public.fan_is_admin());
-create policy fan_ledger_own   on public.fan_ledger   for select using (user_id = auth.uid() or public.fan_is_admin());
-create policy fan_picks_own    on public.fan_picks    for select using (user_id = auth.uid() or public.fan_is_admin());
-create policy fan_inv_own      on public.fan_inventory for select using (user_id = auth.uid());
-create policy fan_mvp_own      on public.fan_mvp_votes for select using (voter = auth.uid());
-create policy fan_markets_read on public.fan_markets  for select using (true);
-create policy fan_shop_read    on public.fan_shop_items for select using (active or public.fan_is_admin());
-create policy fan_shop_admin   on public.fan_shop_items for all using (public.fan_is_admin()) with check (public.fan_is_admin());
-create policy fan_follow_all   on public.fan_team_follows for all using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy fan_fund_read    on public.fan_team_fund for select using (true);
-create policy sponsors_read    on public.sponsors for select using (active or public.fan_is_admin());
-create policy sponsors_admin   on public.sponsors for all using (public.fan_is_admin()) with check (public.fan_is_admin());
-create policy apps_insert      on public.team_applications for insert with check (auth.uid() is not null and user_id = auth.uid());
-create policy apps_admin_read  on public.team_applications for select using (public.fan_is_admin() or user_id = auth.uid());
-create policy apps_admin_update on public.team_applications for update using (public.fan_is_admin());
+create policy fan_wallets_own on public.fan_wallets for select to authenticated using (user_id = (select auth.uid()) or (select public.fan_is_admin()));
+create policy fan_ledger_own on public.fan_ledger for select to authenticated using (user_id = (select auth.uid()) or (select public.fan_is_admin()));
+create policy fan_picks_own on public.fan_picks for select to authenticated using (user_id = (select auth.uid()) or (select public.fan_is_admin()));
+create policy fan_inv_own on public.fan_inventory for select to authenticated using (user_id = (select auth.uid()));
+create policy fan_mvp_own on public.fan_mvp_votes for select to authenticated using (voter = (select auth.uid()));
+create policy fan_markets_read on public.fan_markets for select to anon, authenticated using (true);
+create policy fan_shop_read on public.fan_shop_items for select to anon, authenticated using (active or (select public.fan_is_admin()));
+create policy fan_shop_admin on public.fan_shop_items for all to authenticated using ((select public.fan_is_admin())) with check ((select public.fan_is_admin()));
+create policy fan_follow_all on public.fan_team_follows for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+create policy fan_fund_read on public.fan_team_fund for select to anon, authenticated using (true);
+create policy sponsors_read on public.sponsors for select to anon, authenticated using (active or (select public.fan_is_admin()));
+create policy sponsors_admin on public.sponsors for all to authenticated using ((select public.fan_is_admin())) with check ((select public.fan_is_admin()));
+create policy apps_insert on public.team_applications for insert to authenticated with check ((select auth.uid()) is not null and user_id = (select auth.uid()));
+create policy apps_admin_read on public.team_applications for select to authenticated using ((select public.fan_is_admin()) or user_id = (select auth.uid()));
+create policy apps_admin_update on public.team_applications for update to authenticated using ((select public.fan_is_admin())) with check ((select public.fan_is_admin()));
 
 -- ------------------------------------------------------------- FUNKCIJE
 create or replace function public.fan_ensure_wallet() returns int
@@ -217,6 +219,7 @@ begin
   if p_stake is null or p_stake < 1 or p_stake > 50 then
     raise exception 'Možeš uložiti od 1 do 50 poena po pogotku.';
   end if;
+  perform pg_advisory_xact_lock(hashtextextended('fan-pick:' || v_uid::text || ':' || m.match_id, 0));
   if m.kind in ('result','total','red_card','exact') and exists (
       select 1 from fan_picks where user_id = v_uid and match_id = m.match_id and kind = m.kind) then
     raise exception 'U ovoj grupi si već pogodio.';
@@ -298,6 +301,7 @@ begin
   select * into mt from matches where id::text = p_match;
   if not found then raise exception 'Utakmica ne postoji.'; end if;
   if mt.status is distinct from 'finished' then raise exception 'Utakmica još nije završena.'; end if;
+  perform pg_advisory_xact_lock(hashtextextended('fan-settle:' || p_match, 0));
 
   hs := coalesce(mt.home_score,0); aw := coalesce(mt.away_score,0); tot := hs + aw;
   red := exists (select 1 from cards where match_id::text = p_match and lower(card_type::text) = 'red');
@@ -354,10 +358,13 @@ language plpgsql security definer set search_path = public as $$
 declare v_bal int;
 begin
   if not fan_is_admin() then raise exception 'Samo admin.'; end if;
+  if p_user is null or not exists (select 1 from auth.users where id = p_user) then raise exception 'Korisnik ne postoji.'; end if;
   if p_amount is null or p_amount = 0 or abs(p_amount) > 1000 then raise exception 'Iznos mora biti od -1000 do 1000 (ne nula).'; end if;
   if coalesce(trim(p_reason),'') = '' then raise exception 'Upiši razlog.'; end if;
   insert into fan_wallets(user_id) values (p_user) on conflict do nothing;
-  update fan_wallets set balance = greatest(0, balance + p_amount) where user_id = p_user returning balance into v_bal;
+  select balance into v_bal from fan_wallets where user_id = p_user for update;
+  if p_amount < 0 and v_bal < abs(p_amount) then raise exception 'Korisnik nema dovoljno poena.'; end if;
+  update fan_wallets set balance = balance + p_amount where user_id = p_user returning balance into v_bal;
   insert into fan_ledger(user_id, delta, reason, ref) values (p_user, p_amount, 'Admin: ' || trim(p_reason), 'admin');
   return v_bal;
 end $$;
@@ -405,7 +412,11 @@ begin
   select * into mt from matches where id::text = p_match;
   if not found or mt.status is distinct from 'finished' then raise exception 'Glasanje je moguće tek kad se utakmica završi.'; end if;
   if not exists (select 1 from players where id::text = p_player and team_id::text in (mt.home_team_id::text, mt.away_team_id::text)) then
-    raise exception 'Taj igrač nije igrao u ovoj utakmici.';
+    raise exception 'Taj igrač nije iz jedne od ekipa u ovoj utakmici.';
+  end if;
+  if exists (select 1 from match_players where match_id::text = p_match)
+     and not exists (select 1 from match_players where match_id::text = p_match and player_id::text = p_player) then
+    raise exception 'Taj igrač nije nastupio u ovoj utakmici.';
   end if;
   if exists (select 1 from fan_mvp_votes where match_id = p_match and voter = v_uid) then
     raise exception 'Već si glasao za ovu utakmicu.';
@@ -493,3 +504,5 @@ select * from (values
   ('title','Vjerni navijač','Titula ispod imena',35,'Vjerni navijač')
 ) as v(kind,name,description,price,value)
 where not exists (select 1 from public.fan_shop_items);
+revoke all on function public.fan_is_admin() from public, anon;
+grant execute on function public.fan_is_admin() to authenticated;
