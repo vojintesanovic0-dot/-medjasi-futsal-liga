@@ -22,13 +22,8 @@
     const id=el.id||"", cls=el.classList||{contains:()=>false};
     const has=s=>!!el.querySelector?.(s);
 
-    // LIGA
-    if(cls.contains("admin-grid")) return "liga";
-    if(id==="adminMatches" || has("#adminMatches")) return "liga";
-    if(id==="adminCrudV4" || has("#adminCrudV4")) return "liga";
-    if(id==="v7SeasonCard" || has("#v7SeasonCard")) return "liga";
-
-    // SADRŽAJ — stare postojeće funkcije, svaka tačno jednom.
+    // SADRŽAJ — ove kartice pripadaju ISKLJUČIVO ovoj kategoriji.
+    // Provjera ide prije Lige da sadržaj nikad ne završi u pogrešnoj grupi.
     if(id==="v7NewsAdmin" || has("#v7NewsAdmin")) return "sadrzaj";
     if(id==="adminGalleryList" || has("#adminGalleryList") || has("#galleryImageFile")) return "sadrzaj";
     if(id==="communityAlbumAdmin" || has("#communityAlbumAdmin")) return "sadrzaj";
@@ -37,8 +32,14 @@
     if(id==="communityModerationCard" || has("#communityModerationCard")) return "sadrzaj";
     if(id==="moderatorManagement" || has("#moderatorManagement")) return "sadrzaj";
 
-    // GRAPHIC STUDIO
+    // GRAPHIC STUDIO — isključivo ovdje.
     if(id==="graphicEngineCard" || has("#graphicEngineCard")) return "dizajn";
+
+    // LIGA — samo originalne ligaške kartice.
+    if(cls.contains("admin-grid") && (has("#teamName") || has("#playerName") || has("#matchHome"))) return "liga";
+    if(id==="adminMatches" || has("#adminMatches")) return "liga";
+    if(id==="adminCrudV4" || has("#adminCrudV4")) return "liga";
+    if(id==="v7SeasonCard" || has("#v7SeasonCard")) return "liga";
 
     return null;
   }
