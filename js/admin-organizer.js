@@ -144,6 +144,52 @@
     }finally{moving=false;}
   }
 
+  function dedupeUniqueContentCards(host,organizer){
+    if(!host||!organizer||moving) return;
+    const bodies={};
+    groups.forEach(g=>bodies[g.id]=organizer.querySelector('[data-admin-group-body="'+g.id+'"]'));
+
+    const directCards=[];
+    [...host.children].forEach(el=>{
+      if(el!==organizer && el.classList?.contains("card")) directCards.push(el);
+    });
+    organizer.querySelectorAll(".admin-organizer-group-body").forEach(body=>{
+      [...body.children].forEach(el=>{if(el.classList?.contains("card")) directCards.push(el)});
+    });
+
+    const specs=[
+      {key:"gallery",match:card=>card.id!=="adminCrudV4"&&!!(card.querySelector?.("#adminGalleryList,#galleryImageFile")||/\\bgalerija\\b/i.test(card.textContent||""))},
+      {key:"playlist",match:card=>!!(card.querySelector?.("#adminMusicPlaylist")||card.classList?.contains("admin-music-card"))},
+      {key:"push",match:card=>card.id==="v7PushCard"||!!card.querySelector?.("#v7PushCard")||/push notifikacije/i.test(card.textContent||"")}
+    ];
+
+    moving=true;
+    try{
+      for(const spec of specs){
+        const seen=[];
+        directCards.forEach(card=>{if(spec.match(card)&&!seen.includes(card))seen.push(card)});
+        if(!seen.length) continue;
+
+        let canonical=seen.find(card=>card.parentElement===bodies.sadrzaj)||seen[0];
+        if(bodies.sadrzaj&&canonical.parentElement!==bodies.sadrzaj){
+          bodies.sadrzaj.appendChild(canonical);
+        }
+        canonical.hidden=false;
+        canonical.style.removeProperty("display");
+        canonical.dataset.adminOrganizerGroup="sadrzaj";
+        canonical.dataset.adminOrganizerManaged="1";
+        canonical.dataset.adminOrganizerCanonical=spec.key;
+
+        seen.forEach(card=>{
+          if(card===canonical)return;
+          card.hidden=true;
+          card.style.display="none";
+          card.dataset.adminOrganizerHiddenDuplicate=spec.key;
+        });
+      }
+    }finally{moving=false;}
+  }
+
   function render(){
     const host=root(); if(!host||!isAdmin()) return;
     const organizer=buildShell(host);
