@@ -142,7 +142,15 @@ async function loadFanPublicStyles(ids=[]){
   try{
     const {data,error}=await supabaseClient.rpc("fan_public_cosmetics",{p_users:valid});
     if(error){ console.warn("Fan cosmetics:",error); return fanPublicStyles; }
-    (data||[]).forEach(row=>{ fanPublicStyles[String(row.user_id)] = row; });
+    const received=new Set();
+    (data||[]).forEach(row=>{
+      const id=String(row.user_id);
+      fanPublicStyles[id]=row;
+      received.add(id);
+    });
+    valid.forEach(id=>{
+      if(!received.has(id)) fanPublicStyles[id]={};
+    });
   }catch(error){ console.warn("Fan cosmetics:",error); }
   return fanPublicStyles;
 }
