@@ -38,7 +38,7 @@
   function normalizeNewsNav(){
     document.querySelectorAll('#mainNav button,.mobile-more-grid button').forEach(b=>{
       if((b.getAttribute('onclick')||'').includes("showSection('comments')") || (b.getAttribute('onclick')||'').includes("mobileMoreGo('comments')") || /Komentari/.test(b.textContent||'')){
-        b.innerHTML=b.closest('#mainNav')?'<span>📰</span><span>Vijesti</span>':'<span>📰</span><b>Vijesti</b><small>Novosti lige</small>';
+        b.innerHTML=b.closest('#mainNav')?'<span></span><span>Vijesti</span>':'<span></span><b>Vijesti</b><small>Novosti lige</small>';
         b.setAttribute('onclick',b.closest('#mainNav')?"showSection('news')":"mobileMoreGo('news')");
       }
     });
@@ -74,7 +74,7 @@
       const oc=b.getAttribute('onclick')||'';
       const txt=(b.textContent||'').trim();
       if(oc.includes("showSection('comments')")||oc.includes("mobileMoreGo('comments')")||/Komentari/.test(txt)){
-        b.innerHTML=b.closest('#mainNav')?'<span>📰</span><span>Vijesti</span>':'<span>📰</span><b>Vijesti</b><small>Novosti lige</small>';
+        b.innerHTML=b.closest('#mainNav')?'<span></span><span>Vijesti</span>':'<span></span><b>Vijesti</b><small>Novosti lige</small>';
         b.setAttribute('onclick',b.closest('#mainNav')?"showSection('news')":"mobileMoreGo('news')");
       }
     });
@@ -157,7 +157,7 @@
     const u=currentUser;
     const p=window.currentProfile||{};
     if(!u){
-      host.innerHTML=`<button type="button" class="account-btn v13-login" onclick="showSection('login')">🔐 Prijava</button><button type="button" class="account-btn v13-register" onclick="showSection('login');setTimeout(()=>document.getElementById('registerUsername')?.focus(),80)">Registracija</button>`;
+      host.innerHTML=`<button type="button" class="account-btn v13-login" onclick="showSection('login')"> Prijava</button><button type="button" class="account-btn v13-register" onclick="showSection('login');setTimeout(()=>document.getElementById('registerUsername')?.focus(),80)">Registracija</button>`;
       return;
     }
     const name=esc13(p.username||u.user_metadata?.username||u.email?.split('@')[0]||'Korisnik');
