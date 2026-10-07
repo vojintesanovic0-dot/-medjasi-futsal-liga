@@ -10452,7 +10452,15 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   window.toggleV9Comments=async function(postId){const box=q('v9comments-'+postId);if(!box)return;if(!box.hidden){box.hidden=true;return}const {data,error}=await supabaseClient.from('community_comments').select('id,user_id,content,created_at').eq('post_id',postId).order('created_at',{ascending:true});if(error)return toastV(error.message,'error');await loadProfiles((data||[]).map(c=>c.user_id));box.innerHTML=(data||[]).map(c=>{const p=V.profiles[String(c.user_id)]||{};return `<div class="v9-comment">${fanCommunityIdentityHTML(p,String(c.user_id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}: ${escV(c.content)}</div>`}).join('')+`<div class="v9-comment-form"><input id="v9ci-${escV(postId)}" maxlength="500" placeholder="Napiši komentar..." ${logged()?'':'disabled'}><button class="btn btn-small btn-green" onclick="addV9Comment('${escV(postId)}')">Pošalji</button></div><div class="fan-community-emoji-wrap">${logged()?fanEmojiBarHTML('v9ci-'+escV(postId)):''}</div>`;box.hidden=false};
   window.addV9Comment=async function(postId){if(!guard())return;const input=q('v9ci-'+postId);const content=input?.value.trim();if(!content)return;const {error}=await supabaseClient.from('community_comments').insert({post_id:postId,user_id:currentUser.id,content});if(error)return toastV(error.message,'error');input.value='';const box=q('v9comments-'+postId);if(box)box.hidden=true;await toggleV9Comments(postId);await refreshPostMeta(postId)};
   window.openV9Lightbox=function(url){showModal(`<div class="v9-lightbox" onclick="hideModal()"><img src="${escV(url)}" alt="" onclick="event.stopPropagation()"></div>`) };
-  function patchAuth(){const old=window.updateAuthUI;if(window.__V10_AUTH_PATCH__)return;window.__V10_AUTH_PATCH__=true;window.updateAuthUI=function(){old?.();const account=q('headerAccount');if(account&&logged()){const name=escV(currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik');account.innerHTML=`<button class="account-btn" onclick="openV9Profile('${escV(currentUser.id)}')"><span class="account-name">👤 ${name}${currentProfile?.role==='admin'?'<span class="account-admin">Admin</span>':''}</span></button><button class="account-btn" onclick="logout()">↪</button>`}if(q('community'))renderMyProfile()}}
+  function patchAuth(){
+    if(window.__V10_AUTH_PATCH__)return;
+    window.__V10_AUTH_PATCH__=true;
+    const old=window.updateAuthUI;
+    window.updateAuthUI=function(){
+      old?.apply(this,arguments);
+      if(q('community'))renderMyProfile();
+    };
+  }
   window.loadV9Community=load;
   const originalShowSection=window.showSection;window.showSection=function(id){originalShowSection?.(id);if(id==='community')setTimeout(load,30)};
   window.addEventListener('load',()=>setTimeout(()=>{patchAuth();load()},450));
