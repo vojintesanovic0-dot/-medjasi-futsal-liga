@@ -48,7 +48,7 @@ input,select,textarea{border-color:rgba(255,255,255,.075)!important;background:#
 
 
 /* V11 league pages visual pass — CSS only */
-#table,#matches,#teams,#players,#stats,#comments,#chat,#gallery,#login,#info,#pravilnik,#duration,#admin,#community,#news,#game{padding-top:8px!important}
+#table,#matches,#teams,#players,#stats,#comments,#chat,#gallery,#login,#info,#duration,#admin,#community,#news,#game{padding-top:8px!important}
 #table>.section-title,#matches>.section-title,#teams>.section-title,#players>.section-title,#stats>.section-title,#comments>.section-title,#chat>.section-title,#admin>.section-title{margin-bottom:18px!important}
 #table .table-wrap{overflow:auto!important;border-radius:18px!important}
 #table table{min-width:720px!important;border-collapse:separate!important;border-spacing:0!important}
@@ -67,7 +67,7 @@ input,select,textarea{border-color:rgba(255,255,255,.075)!important;background:#
 .chat-header{padding:4px 0 14px!important;border-bottom:1px solid rgba(255,255,255,.055)!important;margin-bottom:12px!important}
 .chat-online-dot{font-size:10px!important;letter-spacing:.08em!important;color:var(--m11-green)!important}
 .chat-box{border:1px solid rgba(255,255,255,.045)!important;background:rgba(2,8,10,.58)!important;border-radius:16px!important}
-#gallery .gallery-hero,#info .gallery-hero,#pravilnik .gallery-hero,#duration .gallery-hero{border-radius:22px!important;background:linear-gradient(145deg,rgba(9,22,23,.96),rgba(4,11,13,.96))!important}
+#gallery .gallery-hero,#info .gallery-hero .gallery-hero,#duration .gallery-hero{border-radius:22px!important;background:linear-gradient(145deg,rgba(9,22,23,.96),rgba(4,11,13,.96))!important}
 #galleryGrid{gap:12px!important}
 #galleryGrid>*{border-radius:16px!important;overflow:hidden!important;border-color:rgba(255,255,255,.055)!important}
 #login .grid{gap:14px!important}
