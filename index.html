@@ -2,26 +2,35 @@
 
 <html lang="bs">
 <head>
+<meta charset="utf-8"/>
 <link href="images/icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="images/icon-192.png" rel="apple-touch-icon" sizes="192x192"/>
 <link href="images/icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
 <!-- PWA / Mobile App -->
-<meta content="#07111f" name="theme-color"/>
+<meta content="#07111f" name="theme-color" id="metaThemeColor"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Međasi Futsal" name="apple-mobile-web-app-title"/>
 <link href="./manifest.json" rel="manifest"/>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1.0" name="viewport"/>
-<meta content="Medjaši Futsal Liga – rezultati, tabela, utakmice, ekipe, igrači i statistika." name="description"/>
-<meta content="Medjaši Futsal Liga, futsal, mali fudbal, Medjaši, liga, utakmice, rezultati" name="keywords"/>
-<meta content="Medjaši Futsal Liga" name="author"/>
-<meta content="#06101b" name="theme-color"/>
-<meta content="Medjaši Futsal Liga" property="og:title"/>
-<meta content="Rezultati, tabela, ekipe, igrači i live dešavanja Medjaši Futsal Lige." property="og:description"/>
+<meta content="Međasi Futsal Liga – rezultati, tabela, utakmice, ekipe, igrači i statistika." name="description"/>
+<meta content="Međasi Futsal Liga, futsal, mali fudbal, Međasi, liga, utakmice, rezultati" name="keywords"/>
+<meta content="Međasi Futsal Liga" name="author"/>
+
+<meta content="Međasi Futsal Liga" property="og:title"/>
+<meta content="Rezultati, tabela, ekipe, igrači i live dešavanja Međasi Futsal Lige." property="og:description"/>
 <meta content="website" property="og:type"/>
-<title>Medjaši Futsal Liga</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
+<title>Međasi Futsal Liga</title>
+<link rel="canonical" href="https://vojintesanovic0-dot.github.io/-medjasi-futsal-liga/"/>
+<meta content="https://vojintesanovic0-dot.github.io/-medjasi-futsal-liga/images/icon-512.png" property="og:image"/>
+<meta content="https://vojintesanovic0-dot.github.io/-medjasi-futsal-liga/" property="og:url"/>
+<meta content="sr_Latn" property="og:locale"/>
+<meta content="summary" name="twitter:card"/>
+<meta content="Međasi Futsal Liga" name="twitter:title"/>
+<meta content="Rezultati, tabela, ekipe, igrači i live dešavanja Međasi Futsal Lige." name="twitter:description"/>
+<meta content="https://vojintesanovic0-dot.github.io/-medjasi-futsal-liga/images/icon-512.png" name="twitter:image"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2" crossorigin="anonymous"></script>
 
 
 
@@ -30,12 +39,12 @@
 
 <link rel="stylesheet" href="./css/app.css?v=20261006v21">
 <link rel="stylesheet" href="./css/production.css?v=20261007v23"><link rel="stylesheet" href="./css/effects.css?v=1"><link rel="stylesheet" href="./css/game.css?v=20261007v02">
-<link rel="stylesheet" href="./css/graphic-engine.css?v=1"><link rel="stylesheet" href="./css/admin-organizer.css?v=5"><link rel="stylesheet" href="./css/medjasi-icons-v1.css?v=20261007v02"><link rel="stylesheet" href="./css/medjasi-home-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-matches-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-league-data-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-community-media-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-fan-profile-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-mobile-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-admin-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-sitewide-v3.css?v=1"><link rel="stylesheet" href="./css/medjasi-design-v11.css?v=20261007v02"><link rel="stylesheet" href="./css/medjasi-design-v13.css?v=20261007v02">
+<link rel="stylesheet" href="./css/graphic-engine.css?v=1"><link rel="stylesheet" href="./css/admin-organizer.css?v=5"><link rel="stylesheet" href="./css/medjasi-icons-v1.css?v=20261007v02"><link rel="stylesheet" href="./css/medjasi-home-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-matches-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-league-data-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-community-media-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-fan-profile-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-mobile-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-admin-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-sitewide-v3.css?v=1"><link rel="stylesheet" href="./css/medjasi-design-v11.css?v=20261007v02"><link rel="stylesheet" href="./css/medjasi-design-v13.css?v=20261007v02"><link rel="stylesheet" href="./css/extras.css?v=1">
 </head>
 <body>
 <header class="site-header">
 <div class="header-inner">
-<button aria-label="Medjaši Futsal Liga - Početna" class="logo logo-home" onclick="showSection('home')" type="button"><div class="logo-ball"></div><div><span>Medjaši Futsal Liga</span><small>Zvanična stranica lige</small></div></button>
+<button aria-label="Međasi Futsal Liga - Početna" class="logo logo-home" onclick="showSection('home')" type="button"><div class="logo-ball"></div><div><span>Medjaši Futsal Liga</span><small>Zvanična stranica lige</small></div></button>
 <nav aria-label="Glavna navigacija" id="mainNav">
 <div class="nav-group-title">LIGA</div>
 <button class="active" onclick="showSection('home')"><span></span><span>Početna</span></button>
@@ -730,8 +739,8 @@
 
 
 
-<script src="./js/app.js?v=20261007v05" defer></script>
+<script src="./js/app.js?v=20261008v06" defer></script>
 <script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=20261007v02" defer></script><script src="./js/growth.js?v=20261007v03" defer></script><script src="./js/community-features.js?v=20261007v02" defer></script><script src="./js/ui-compat.js?v=20261007v03" defer></script><script src="./js/admin-organizer.js?v=13" defer></script>
-<script src="./js/graphic-engine.js?v=1" defer></script><script src="./js/medjasi-v13-ui.js?v=20261007v01" defer></script>
+<script src="./js/graphic-engine.js?v=1" defer></script><script src="./js/medjasi-v13-ui.js?v=20261007v01" defer></script><script src="./js/extras.js?v=1" defer></script>
 </body>
 </html>
