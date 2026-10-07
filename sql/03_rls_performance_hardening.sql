@@ -5,6 +5,7 @@ begin;
 
 -- ------------------------------------------------------------ fan_shop_items
 drop policy if exists fan_shop_read on public.fan_shop_items;
+drop policy if exists fan_shop_read_anon on public.fan_shop_items;
 drop policy if exists fan_shop_read_auth on public.fan_shop_items;
 drop policy if exists fan_shop_admin on public.fan_shop_items;
 drop policy if exists fan_shop_select_anon on public.fan_shop_items;
@@ -36,6 +37,7 @@ using ((select public.fan_is_admin()));
 
 -- ------------------------------------------------------------------ sponsors
 drop policy if exists sponsors_read on public.sponsors;
+drop policy if exists sponsors_read_anon on public.sponsors;
 drop policy if exists sponsors_read_auth on public.sponsors;
 drop policy if exists sponsors_admin on public.sponsors;
 drop policy if exists sponsors_select_anon on public.sponsors;
