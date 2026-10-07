@@ -1514,6 +1514,15 @@ function updateAuthUI(){const logged=!!currentUser;const username=currentProfile
 
 let loadAllActive=false;
 let loadAllPending=false;
+let loadAllDebounceTimer=0;
+
+function scheduleLoadAll(delay=180){
+  clearTimeout(loadAllDebounceTimer);
+  loadAllDebounceTimer=setTimeout(()=>{
+    loadAllDebounceTimer=0;
+    void loadAll();
+  },Math.max(0,Number(delay)||0));
+}
 
 async function loadAll(){
   if(loadAllActive){
@@ -3771,22 +3780,23 @@ async function adminAddGalleryImage(){
 
   try{
     const image_url=await uploadFile(file,"gallery");
-    const {error}=await supabaseClient.from("gallery").insert({
+    const {data:inserted,error}=await supabaseClient.from("gallery").insert({
       image_url,
       title:title.slice(0,100) || "Fotografija lige",
       description:description.slice(0,250),
       created_by:currentUser.id
-    });
+    }).select("id").single();
     if(error) throw error;
 
     document.getElementById("galleryImageFile").value="";
     document.getElementById("galleryTitle").value="";
     document.getElementById("galleryDescription").value="";
     toast("Fotografija je objavljena u galeriji.","success");
-    await loadAll();
+    return inserted?.id || null;
   }catch(error){
     console.error(error);
     alert(error.message || "Greška pri objavljivanju fotografije.");
+    return false;
   }
 }
 
@@ -7586,7 +7596,7 @@ function subscribeRealtime(){
             table:"matches"
           },
           () =>
-            loadAll()
+            scheduleLoadAll()
         )
 
 
@@ -7609,7 +7619,7 @@ function subscribeRealtime(){
             table:"goals"
           },
           () =>
-            loadAll()
+            scheduleLoadAll()
         )
 
 
@@ -7621,7 +7631,7 @@ function subscribeRealtime(){
             table:"cards"
           },
           () =>
-            loadAll()
+            scheduleLoadAll()
         )
 
 
@@ -7633,7 +7643,7 @@ function subscribeRealtime(){
             table:"match_players"
           },
           () =>
-            loadAll()
+            scheduleLoadAll()
         )
 
 
@@ -7645,7 +7655,7 @@ function subscribeRealtime(){
             table:"comments"
           },
           () =>
-            loadAll()
+            scheduleLoadAll()
         )
 
 
@@ -7657,7 +7667,7 @@ function subscribeRealtime(){
             table:"messages"
           },
           () =>
-            loadAll()
+            scheduleLoadAll()
         )
 
 
@@ -7669,7 +7679,7 @@ function subscribeRealtime(){
             table:"gallery"
           },
           () =>
-            loadAll()
+            scheduleLoadAll()
         )
 
 
