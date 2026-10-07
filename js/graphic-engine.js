@@ -228,7 +228,7 @@
     const img = await blobToImage(source);
 
     const name = player?.name || state.title || "MEDJAŠI IGRAČ";
-    const teamName = team?.name || "Medjaši Futsal Liga";
+    const teamName = team?.name || "Međasi Futsal Liga";
     const number = player?.jersey_number != null ? "#" + player.jersey_number : "";
     const position = player?.position || "";
 
@@ -331,7 +331,7 @@
 
       const player=currentPlayer();
       const team=teamForPlayer(player);
-      const name=player?.name || "Medjaši";
+      const name=player?.name || "Međasi";
       const templateLabel={
         player:"Player Spotlight",mvp:"MVP Lige",scorer:"Top Strijelac",
         matchday:"Matchday",winner:"Winner",lineup:"Starting Five",
@@ -339,7 +339,7 @@
         spotlight:"U fokusu",fan:"Fan Favorite",captain:"Kapiten",legend:"Legenda lige"
       }[state.template] || "Grafika lige";
 
-      const caption=state.caption.trim() || (" "+templateLabel+" · "+name+" · "+(team?.name||"Medjaši Futsal Liga"));
+      const caption=state.caption.trim() || (" "+templateLabel+" · "+name+" · "+(team?.name||"Međasi Futsal Liga"));
 
       if(state.destination==="community"){
         const {error}=await window.supabaseClient.from("community_posts").insert({
