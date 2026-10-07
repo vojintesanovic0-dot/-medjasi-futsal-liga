@@ -53,7 +53,7 @@
     organizer.id="adminOrganizer";
     organizer.className="admin-organizer";
     organizer.innerHTML=
-      '<div class="admin-organizer-head"><div><span class="admin-organizer-kicker">ADMIN CENTAR</span><strong>Sve funkcije organizovane po područjima</strong><p>Tri kategorije. Ništa nije uklonjeno niti kopirano.</p></div></div>'+
+      '<div class="admin-organizer-head"><div><span class="admin-organizer-kicker">ADMIN CENTAR</span><strong>Sve funkcije organizovane po područjima</strong><p>Četiri kategorije. Ništa nije uklonjeno niti kopirano.</p></div></div>'+
       '<div class="admin-organizer-tabs">'+
         groups.map((g,i)=>'<button type="button" class="admin-organizer-tab '+(i===0?"active":"")+'" data-admin-filter="'+g.id+'"><b>'+g.icon+'</b><span>'+g.title+'</span><small>'+g.desc+'</small></button>').join("")+
       '</div>'+
@@ -84,33 +84,42 @@
     if(!card || card.id!=="adminCrudV4") return;
 
     const sections=[...card.querySelectorAll(".crud-section")];
-    const buckets={sadrzaj:[],moderacija:[]};
+    const buckets={moderacija:[]};
 
     sections.forEach(section=>{
       const title=crudSectionTitle(section);
-      if(title.includes("galerija")) buckets.sadrzaj.push(section);
-      else if(title.includes("komentari") || title.includes("chat")) buckets.moderacija.push(section);
+
+      // Galerija već ima svoju glavnu karticu u Sadržaj kategoriji.
+      // Ne brišemo stari CRUD kod/funkciju; samo skrivamo dupli UI.
+      if(title.includes("galerija")){
+        section.hidden=true;
+        section.dataset.adminOrganizerHiddenDuplicate="gallery";
+        return;
+      }
+
+      if(title.includes("komentari") || title.includes("chat")){
+        buckets.moderacija.push(section);
+      }
     });
 
-    const cleanupGroup=group=>{
-      bodies[group]?.querySelectorAll('[data-admin-crud-content="'+group+'"]').forEach(x=>x.remove());
-    };
-    cleanupGroup("sadrzaj");
-    cleanupGroup("moderacija");
+    const helperKey="moderacija";
+    bodies[helperKey]?.querySelectorAll('[data-admin-crud-content="moderacija"]').forEach(x=>x.remove());
 
-    const makeHelper=(group,kicker,desc)=>{
-      if(!buckets[group].length || !bodies[group]) return;
+    if(buckets.moderacija.length && bodies.moderacija){
       const contentCard=document.createElement("div");
       contentCard.className="card admin-crud-content";
-      contentCard.dataset.adminCrudContent=group;
+      contentCard.dataset.adminCrudContent="moderacija";
       contentCard.style.marginTop="20px";
-      contentCard.innerHTML='<div class="admin-card-head"><div><span class="hero-kicker">'+kicker+'</span><h3>🧰 Upravljanje</h3><p class="muted">'+desc+'</p></div><span class="admin-pill">SAMO ADMIN</span></div>';
-      buckets[group].forEach(section=>contentCard.appendChild(section));
-      bodies[group].appendChild(contentCard);
-    };
+      contentCard.innerHTML='<div class="admin-card-head"><div><span class="hero-kicker">MODERACIJA</span><h3>🧰 Upravljanje</h3><p class="muted">Komentari i chat iz postojećeg Admin CRUD-a.</p></div><span class="admin-pill">SAMO ADMIN</span></div>';
+      buckets.moderacija.forEach(section=>contentCard.appendChild(section));
+      bodies.moderacija.appendChild(contentCard);
+    }
 
-    makeHelper("sadrzaj","SADRŽAJ","Galerija iz postojećeg Admin CRUD-a.");
-    makeHelper("moderacija","MODERACIJA","Komentari i chat iz postojećeg Admin CRUD-a.");
+    const intro=card.querySelector(":scope > .muted");
+    if(intro){
+      intro.textContent="Upravljanje utakmicama, igračima, golovima i kartonima.";
+    }
+
     card.dataset.adminOrganizerCrudSplit="1";
   }
 
