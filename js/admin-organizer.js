@@ -158,7 +158,7 @@
     });
 
     const specs=[
-      {key:"gallery",match:card=>card.id!=="adminCrudV4"&&!!(card.querySelector?.("#adminGalleryList,#galleryImageFile")||/\\bgalerija\\b/i.test(card.textContent||""))},
+      {key:"gallery",match:card=>card.id!=="adminCrudV4"&&!!(card.querySelector?.("#adminGalleryList,#galleryImageFile")||/\bgalerija\b/i.test(card.textContent||""))},
       {key:"playlist",match:card=>!!(card.querySelector?.("#adminMusicPlaylist")||card.classList?.contains("admin-music-card"))},
       {key:"push",match:card=>card.id==="v7PushCard"||!!card.querySelector?.("#v7PushCard")||/push notifikacije/i.test(card.textContent||"")}
     ];
@@ -194,6 +194,7 @@
     const host=root(); if(!host||!isAdmin()) return;
     const organizer=buildShell(host);
     moveCards(host,organizer);
+    dedupeUniqueContentCards(host,organizer);
     organizer.querySelectorAll(".admin-organizer-group").forEach(section=>{
       const isActive=section.dataset.adminOrganizerGroupContainer===active;
       section.hidden=!isActive;
