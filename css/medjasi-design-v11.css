@@ -539,7 +539,6 @@ input:focus,select:focus,textarea:focus{
 }
 #gallery .gallery-hero,
 #info .gallery-hero,
-#pravilnik .gallery-hero,
 #duration .gallery-hero{
   padding:24px!important;
   border-radius:23px!important;
