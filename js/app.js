@@ -99,6 +99,19 @@ function esc(value){
     .replace(/'/g,"&#039;");
 }
 
+/* Allow only normal web URLs and same-origin relative URLs from dynamic data. */
+function safeUrl(value,fallback=""){
+  const raw=String(value??"").trim();
+  if(!raw)return fallback;
+  try{
+    const parsed=new URL(raw,window.location.href);
+    if(parsed.protocol==="https:"||parsed.protocol==="http:"){
+      return raw;
+    }
+  }catch(error){}
+  return fallback;
+}
+
 /* Escape values that are embedded inside inline JavaScript string literals. */
 function escJs(value){
   return String(value ?? "")
@@ -235,15 +248,19 @@ function canManageMatch(){
 
 function teamLogo(team){
 
-  return team?.logo_url ||
-    "https://via.placeholder.com/100?text=%E2%9A%BD";
+  return safeUrl(
+    team?.logo_url,
+    "https://via.placeholder.com/100?text=%E2%9A%BD"
+  );
 }
 
 
 function playerPhoto(player){
 
-  return player?.photo_url ||
-    "https://via.placeholder.com/100?text=%F0%9F%91%A4";
+  return safeUrl(
+    player?.photo_url,
+    "https://via.placeholder.com/100?text=%F0%9F%91%A4"
+  );
 }
 
 
@@ -3333,8 +3350,8 @@ function renderComments(){
                   c.image_url
                     ? `
                       <div class="comment-media">
-                        <a href="${esc(c.image_url)}" target="_blank" rel="noopener noreferrer">
-                          <img src="${esc(c.image_url)}" alt="Slika uz komentar" loading="lazy">
+                        <a href="${esc(safeUrl(c.image_url))}" target="_blank" rel="noopener noreferrer">
+                          <img src="${esc(safeUrl(c.image_url))}" alt="Slika uz komentar" loading="lazy">
                         </a>
                       </div>
                     `
@@ -3586,7 +3603,7 @@ function renderChat(){
               ${m.content ? `<div class="chat-message-text">${esc(m.content)}</div>` : ""}
               ${m.image_url ? `
                 <button class="chat-photo" type="button" onclick="openImagePreview('${escJs(m.image_url)}','${escJs(username)}')">
-                  <img src="${esc(m.image_url)}" alt="Slika u chatu" loading="lazy">
+                  <img src="${esc(safeUrl(m.image_url))}" alt="Slika u chatu" loading="lazy">
                 </button>` : ""}
               ${currentUser && (m.user_id===currentUser.id || isAdmin())
                 ? `<button class="btn btn-red btn-small chat-delete" onclick="deleteChat('${m.id}')">🗑️</button>` : ""}
@@ -3740,7 +3757,7 @@ function renderGallery(){
   grid.innerHTML=gallery.map(item=>`
     <article class="gallery-item">
       <button class="gallery-photo" type="button" onclick="openImagePreview('${escJs(item.image_url)}','${escJs(item.title || "Galerija")}')">
-        <img src="${esc(item.image_url)}" alt="${esc(item.title || "Fotografija")}" loading="lazy">
+        <img src="${esc(safeUrl(item.image_url))}" alt="${esc(item.title || "Fotografija")}" loading="lazy">
         <span class="gallery-overlay">🔍 Pregledaj</span>
       </button>
       <div class="gallery-caption">
@@ -3761,7 +3778,7 @@ function renderAdminGallery(){
     ${gallery.length ? `<div class="admin-gallery-items">
       ${gallery.map(item=>`
         <div class="admin-gallery-item">
-          <img src="${esc(item.image_url)}" alt="">
+          <img src="${esc(safeUrl(item.image_url))}" alt="">
           <div><strong>${esc(item.title || "Bez naslova")}</strong><small class="muted">${formatDate(item.created_at)}</small></div>
           <button class="btn btn-red btn-small" onclick="adminDeleteGalleryImage('${item.id}')">🗑️</button>
         </div>`).join("")}
