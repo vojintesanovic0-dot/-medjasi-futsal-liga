@@ -10524,7 +10524,6 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     };
   }
   window.loadV9Community=load;
-  const originalShowSection=window.showSection;window.showSection=function(id){originalShowSection?.(id);if(id==='community')setTimeout(load,30)};
   window.addEventListener('load',()=>setTimeout(()=>{patchAuth();load()},450));
   setTimeout(()=>{patchAuth()},900);
 })();
@@ -10549,6 +10548,7 @@ window.isModerator=isModerator;
     const before=active();
     const result=originalShowSection.call(this,id);
     const after=active();
+    if(after==='community'&&typeof window.loadV9Community==='function')setTimeout(()=>window.loadV9Community(),30);
     if(!restoring&&after&&after!==before)history.pushState({medjasi:true,section:after},'',location.pathname+location.search+'#'+after);
     return result;
   };
