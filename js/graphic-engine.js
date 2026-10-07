@@ -227,7 +227,7 @@
     const source = cutoutBlob || sourceFile;
     const img = await blobToImage(source);
 
-    const name = player?.name || state.title || "MEDJAŠI IGRAČ";
+    const name = player?.name || state.title || "MEĐASI IGRAČ";
     const teamName = team?.name || "Međasi Futsal Liga";
     const number = player?.jersey_number != null ? "#" + player.jersey_number : "";
     const position = player?.position || "";
@@ -288,7 +288,7 @@
     if(position) drawText(ctx,position.toUpperCase(),1020,1100,24,"700","right");
     if(number) drawText(ctx,number,1020,1175,38,"800","right");
     drawText(ctx,preset.tag,1020,1295,22,"700","right");
-    drawText(ctx,"MEDJAŠI FUTSAL LIGA",60,1295,22,"700");
+    drawText(ctx,"MEĐASI FUTSAL LIGA",60,1295,22,"700");
 
     generatedBlob = await new Promise((resolve,reject)=>{
       canvas.toBlob(blob=>blob?resolve(blob):reject(new Error("PNG nije napravljen.")),"image/png",.94);
@@ -431,7 +431,7 @@
     card.innerHTML=`
       <div class="graphic-engine-head">
         <div>
-          <span class="hero-kicker">MEDJAŠI GRAPHIC ENGINE</span>
+          <span class="hero-kicker">MEĐASI GRAPHIC ENGINE</span>
           <h3> Napravi grafiku iz jedne fotografije</h3>
           <p class="muted">Original ostaje netaknut. Napravi PNG bez pozadine i objavi ga direktno u Community, Chat ili Vijesti.</p>
         </div>
