@@ -3792,6 +3792,7 @@ async function adminAddGalleryImage(){
     document.getElementById("galleryTitle").value="";
     document.getElementById("galleryDescription").value="";
     toast("Fotografija je objavljena u galeriji.","success");
+    await loadAll();
     return inserted?.id || null;
   }catch(error){
     console.error(error);
