@@ -84,7 +84,7 @@ async function click(e){
 function mount(){
   const main=document.querySelector("main");if(!main||$("info"))return;
   const sec=document.createElement("section");sec.className="section";sec.id="info";
-  sec.innerHTML='<h2 class="section-title">ℹ️ Liga info</h2><div id="gxInfoRoot"></div>';main.appendChild(sec);
+  sec.innerHTML='<h2 class="section-title gx-info-title">Liga info</h2><div id="gxInfoRoot"></div>';main.appendChild(sec);
   const h=$("home");if(h&&!$("gxSponsors")){const s=document.createElement("section");s.id="gxSponsors";s.className="gx-sponsors";h.appendChild(s);}
   document.addEventListener("click",click);
 }
