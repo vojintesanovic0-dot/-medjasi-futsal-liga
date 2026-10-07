@@ -10205,8 +10205,24 @@ if ("serviceWorker" in navigator) {
   }
 
   window.medjasiPush={registerSW,subscribePush,disablePush};
-  window.addEventListener("load",async()=>{await registerSW(); setTimeout(addPushUI,1500);});
-  setInterval(addPushUI,3000);
+
+  function watchAdminPushMount(){
+    addPushUI();
+    if(!document.body||window.__MEDJASI_PUSH_ADMIN_OBSERVER__)return;
+    window.__MEDJASI_PUSH_ADMIN_OBSERVER__=true;
+    const observer=new MutationObserver(records=>{
+      const appeared=records.some(record=>[...record.addedNodes].some(node=>
+        node.nodeType===1 && (node.id==="adminContent" || node.querySelector?.("#adminContent"))
+      ));
+      if(appeared)addPushUI();
+    });
+    observer.observe(document.body,{childList:true,subtree:true});
+  }
+
+  window.addEventListener("load",async()=>{
+    await registerSW();
+    setTimeout(watchAdminPushMount,1500);
+  },{once:true});
 })();
 
 
