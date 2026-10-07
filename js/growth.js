@@ -82,11 +82,17 @@ async function click(e){
   }
 }
 function mount(){
-  const main=document.querySelector("main");if(!main||$("info"))return;
-  const sec=document.createElement("section");sec.className="section";sec.id="info";
-  sec.innerHTML='<h2 class="section-title gx-info-title">Liga info</h2><div id="gxInfoRoot"></div>';main.appendChild(sec);
+  const main=document.querySelector("main");if(!main)return;
+  let sec=$("info");
+  if(!sec){
+    sec=document.createElement("section");sec.className="section";sec.id="info";
+    sec.innerHTML='<h2 class="section-title gx-info-title">Liga info</h2><div id="gxInfoRoot"></div>';
+    main.appendChild(sec);
+  }else if(!$("gxInfoRoot")){
+    const root=document.createElement("div");root.id="gxInfoRoot";sec.appendChild(root);
+  }
   const h=$("home");if(h&&!$("gxSponsors")){const s=document.createElement("section");s.id="gxSponsors";s.className="gx-sponsors";h.appendChild(s);}
-  document.addEventListener("click",click);
+  if(!window.__MEDJASI_GROWTH_CLICK_BOUND__){window.__MEDJASI_GROWTH_CLICK_BOUND__=true;document.addEventListener("click",click);}
 }
 function boot(){
   if(!window.showSection||!window.supabaseClient)return setTimeout(boot,250);
