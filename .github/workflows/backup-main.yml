@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 1
       - name: Create backup archive
         run: |
-          tar -czf "backup-pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.base.sha }}.tar.gz" .
+          git archive --format=tar.gz --output="backup-pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.base.sha }}.tar.gz" HEAD
       - name: Upload backup artifact
         uses: actions/upload-artifact@v4
         with:
@@ -40,7 +40,7 @@ jobs:
           fetch-depth: 1
       - name: Create backup archive
         run: |
-          tar -czf "backup-pre-main-${{ github.run_number }}-${{ github.event.before }}.tar.gz" .
+          git archive --format=tar.gz --output="backup-pre-main-${{ github.run_number }}-${{ github.event.before }}.tar.gz" HEAD
       - name: Upload backup artifact
         uses: actions/upload-artifact@v4
         with:
