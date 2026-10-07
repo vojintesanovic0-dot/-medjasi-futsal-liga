@@ -83,6 +83,13 @@
       });
   }
 
+  async function refreshProfileEverywhere(){
+    renderHeaderAccount();
+    if(typeof window.renderMyProfile==="function"){
+      try{ await window.renderMyProfile(); }catch(error){ console.error("Community profile refresh:",error); }
+    }
+  }
+
   function renderHeaderAccount(){
     const host=$("headerAccount");
     if(!host) return;
@@ -171,7 +178,7 @@
   function run(){
     redirectLegacyComments();
     normalizeLegacyNavigation();
-    renderHeaderAccount();
+    void refreshProfileEverywhere();
     polishNews();
     polishCommunity();
     patchAvatarImages();
@@ -184,7 +191,10 @@
 
     window.updateAuthUI=function(){
       const result=originalUpdateAuthUI.apply(this,arguments);
-      queueVisualSync();
+      setTimeout(()=>{
+        void refreshProfileEverywhere();
+        queueVisualSync();
+      },0);
       return result;
     };
   }
