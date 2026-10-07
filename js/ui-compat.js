@@ -69,7 +69,7 @@
 
   function patchAvatarImages(){
     document
-      .querySelectorAll(".v9-avatar,.v9-profile-avatar,.v9-avatar-big,.v11-header-avatar")
+      .querySelectorAll(".v9-avatar,.v9-profile-avatar,.v9-avatar-big,.v11-header-avatar,.v13-header-avatar")
       .forEach(img=>{
         if(!(img instanceof HTMLImageElement)) return;
         if(img.dataset.medjasiFallbackBound==="1") return;
