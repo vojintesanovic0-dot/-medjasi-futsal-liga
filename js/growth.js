@@ -52,7 +52,7 @@ function info(){
   html+='</tbody></table></div><div class="card"><h3> Kalendar</h3><button class="btn btn-green" data-gx="ics-all">Dodaj utakmice u kalendar</button></div></div>';
   html+='<div class="card"><h3> Prati ekipe</h3>';
   html+=u?TM().map(t=>'<div class="gx-follow"><span>'+E(t.name)+'</span><button class="gx-switch '+(follows.has(String(t.id))?"on":"")+'" data-gx="follow" data-id="'+E(t.id)+'"></button></div>').join(""):'<button class="btn btn-green" onclick="showSection(\'login\')">Prijavi se</button>';
-  html+='</div><div class="gx-grid"><div class="card"><h3> Pravilnik</h3><ol class="gx-rules"><li>Utakmica traje 2 × 30 minuta.</li><li>Pobjeda 3 boda, neriješeno 1.</li><li>Poredak: bodovi, gol-razlika, golovi.</li></ol></div>';
+  html+='</div><div class="gx-grid"><div class="card"><h3> Pravila lige</h3><ol class="gx-rules"><li>Utakmica traje 2 × 30 minuta.</li><li>Pobjeda 3 boda, neriješeno 1.</li><li>Poredak: bodovi, gol-razlika, golovi.</li></ol></div>';
   html+='<div class="card"><h3> Prijava ekipe</h3>';
   html+=u?'<div class="gx-form"><input id="gxTeam" placeholder="Naziv ekipe"><input id="gxCap" placeholder="Ime kapitena"><input id="gxPhone" placeholder="Broj telefona"><textarea id="gxNote" placeholder="Napomena"></textarea><button class="btn btn-green" data-gx="apply">Pošalji prijavu</button></div>':'<button class="btn btn-green" onclick="showSection(\'login\')">Prijavi se za prijavu ekipe</button>';
   html+='</div></div>';
