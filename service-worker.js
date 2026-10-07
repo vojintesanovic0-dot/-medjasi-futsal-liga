@@ -1,4 +1,4 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v46";
+const CACHE_NAME = "medjasi-futsal-pwa-v47";
 
 const APP_SHELL = [
   "./",
@@ -7,7 +7,7 @@ const APP_SHELL = [
   "./css/app.css?v=20261006v21",
   "./js/app.js?v=20261007v01",
   "./js/effects.js?v=1",
-  "./css/production.css?v=20261006v22",
+  "./css/production.css?v=20261007v23",
   "./css/effects.css?v=1",
   "./css/game.css?v=2",
   "./js/production.js?v=20261005",
@@ -17,6 +17,15 @@ const APP_SHELL = [
   "./js/ui-compat.js?v=1",
   "./css/admin-organizer.css?v=5",
   "./css/graphic-engine.css?v=1",
+  "./css/visual-redesign-v1.css?v=1",
+  "./css/medjasi-icons-v1.css?v=1",
+  "./css/medjasi-home-v2.css?v=1",
+  "./css/medjasi-matches-v2.css?v=1",
+  "./css/medjasi-league-data-v2.css?v=1",
+  "./css/medjasi-community-media-v2.css?v=1",
+  "./css/medjasi-fan-profile-v2.css?v=1",
+  "./css/medjasi-mobile-v2.css?v=1",
+  "./css/medjasi-admin-v2.css?v=1",
   "./js/admin-organizer.js?v=12",
   "./js/graphic-engine.js?v=1",
   "./images/icon-192.png",
