@@ -30,12 +30,6 @@
       '</svg>'
     );
 
-  function currentAvatar(){
-    return window.currentProfile?.avatar_url ||
-      window.currentUser?.user_metadata?.avatar_url ||
-      fallbackAvatar;
-  }
-
   function normalizeLegacyNavigation(){
     document
       .querySelectorAll("#mainNav button,.mobile-more-grid button")
@@ -201,7 +195,16 @@
   },{once:true});
 
   if(document.body){
-    const observer=new MutationObserver(()=>queueVisualSync());
+    const observer=new MutationObserver(records=>{
+      const relevant=records.some(record=>
+        [...record.addedNodes].some(node=>{
+          if(node.nodeType!==1) return false;
+          return node.matches?.("#mainNav,#headerAccount,#news,#community,.mobile-more-grid") ||
+            node.closest?.("#mainNav,#headerAccount,#news,#community,.mobile-more-grid");
+        })
+      );
+      if(relevant) queueVisualSync();
+    });
     observer.observe(document.body,{childList:true,subtree:true});
   }
 })();
