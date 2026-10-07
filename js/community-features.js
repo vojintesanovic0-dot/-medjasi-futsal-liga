@@ -176,10 +176,17 @@ function patchGalleryUpload(){
         if(galleryId){
           const {error}=await client().from("gallery").update({album_id:album}).eq("id",galleryId).eq("created_by",uid());
           if(error)console.warn("Gallery album:",error);
+          else window.gallery?.find(g=>String(g.id)===String(galleryId)) && (window.gallery.find(g=>String(g.id)===String(galleryId)).album_id=album);
         }else{
           /* Compatibility fallback for older upload implementations. */
           const {data}=await client().from("gallery").select("id").eq("created_by",uid()).order("created_at",{ascending:false}).limit(1);
-          if(data?.[0])await client().from("gallery").update({album_id:album}).eq("id",data[0].id);
+          if(data?.[0]){
+            const {error}=await client().from("gallery").update({album_id:album}).eq("id",data[0].id);
+            if(!error){
+              const local=window.gallery?.find(g=>String(g.id)===String(data[0].id));
+              if(local)local.album_id=album;
+            }
+          }
         }
       }
     }
