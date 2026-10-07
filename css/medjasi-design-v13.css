@@ -1,0 +1,47 @@
+/* MEDJASI V13 — header, responsive normalization and custom UI icons */
+:root{--v13-green:#39f58b;--v13-green-soft:rgba(57,245,139,.07);--v13-green-line:rgba(57,245,139,.17);--v13-bg:#020607;--v13-line:rgba(255,255,255,.065)}
+@media(min-width:1101px){
+ .site-header{min-height:82px!important;background:rgba(2,7,8,.84)!important}
+ .site-header .header-inner{width:min(1500px,calc(100% - 42px))!important;min-height:82px!important;display:grid!important;grid-template-columns:minmax(240px,290px) minmax(0,1fr) auto!important;align-items:center!important;gap:18px!important}
+ .logo{min-width:0!important;width:max-content!important}
+ #mainNav{width:max-content!important;max-width:100%!important;justify-self:center!important;margin:0!important}
+ .header-actions{margin:0!important;justify-self:end!important;white-space:nowrap!important}
+ .mobile-menu-btn{display:none!important}
+}
+@media(max-width:1100px){
+ .site-header{min-height:68px!important}
+ .site-header .header-inner{width:calc(100% - 16px)!important;min-height:68px!important;display:flex!important;align-items:center!important;gap:7px!important}
+ .logo{min-width:0!important;flex:1 1 auto!important}
+ .logo-ball{width:42px!important;height:42px!important;border-radius:13px!important}
+ .logo span{font-size:13px!important;font-weight:950!important}.logo small{display:none!important}
+ .header-actions{margin-left:auto!important;gap:6px!important}.header-live{display:none!important}
+ .header-account{min-width:0!important;display:flex!important;align-items:center!important;gap:5px!important}
+ .notification-bell,.mobile-menu-btn,.header-account .account-btn{width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important;padding:8px!important;border-radius:12px!important}
+ #mainNav{position:absolute!important;top:76px!important;left:8px!important;right:8px!important;z-index:2100!important;display:none!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:3px!important;max-width:none!important;width:auto!important;margin:0!important;padding:9px!important;border:1px solid var(--v13-green-line)!important;border-radius:20px!important;background:rgba(3,9,11,.975)!important;box-shadow:0 28px 80px rgba(0,0,0,.50)!important;backdrop-filter:blur(22px)!important;-webkit-backdrop-filter:blur(22px)!important;overflow:auto!important;max-height:calc(100vh - 96px)!important}
+ #mainNav.mobile-open,#mainNav.open{display:flex!important}
+ #mainNav .nav-group-title{display:block!important;width:100%!important;padding:9px 10px 5px!important;margin:3px 0 0!important;color:#587068!important;font-size:9px!important;letter-spacing:.16em!important}
+ #mainNav .nav-group-title::after{display:none!important}
+ #mainNav button{width:100%!important;min-height:47px!important;justify-content:flex-start!important;padding:10px 12px!important;border-radius:13px!important;text-align:left!important;font-size:13px!important}
+ #mainNav button::before{width:20px!important;height:20px!important;flex-basis:20px!important;background-size:20px 20px!important;opacity:.8!important}
+ #mainNav button.active{background:linear-gradient(90deg,rgba(57,245,139,.10),rgba(57,245,139,.035))!important}
+ #mainNav button.active::after{left:auto!important;right:10px!important;top:50%!important;bottom:auto!important;width:3px!important;height:22px!important;transform:translateY(-50%)!important}
+}
+@media(max-width:560px){
+ .site-header .header-inner{width:calc(100% - 12px)!important}.logo span{font-size:12px!important}.logo-ball{width:40px!important;height:40px!important}
+ .notification-bell,.mobile-menu-btn,.header-account .account-btn{width:38px!important;min-width:38px!important;height:38px!important;min-height:38px!important}
+ #mainNav{top:72px!important;left:6px!important;right:6px!important;border-radius:18px!important}
+}
+.notification-bell,.mobile-menu-btn,.header-account .account-btn{border-color:rgba(255,255,255,.07)!important;background:rgba(255,255,255,.02)!important}
+.notification-bell:hover,.mobile-menu-btn:hover,.header-account .account-btn:hover{border-color:rgba(57,245,139,.18)!important;background:rgba(57,245,139,.05)!important}
+.account-name{display:inline-flex!important;align-items:center!important;gap:7px!important}
+.account-name::before{content:"";width:17px;height:17px;flex:0 0 17px;background:center/17px 17px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='3.2'/%3E%3Cpath d='M5.5 19c1.5-3.4 3.8-5 6.5-5s5 1.6 6.5 5'/%3E%3C/svg%3E")}
+.account-login-btn::before,.v13-login::before{content:"";width:17px;height:17px;display:inline-block;background:center/17px 17px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='5' width='16' height='14' rx='2'/%3E%3Cpath d='M8 10h8M8 14h5'/%3E%3C/svg%3E")}
+.account-edit-btn::before{content:"";width:17px;height:17px;display:inline-block;background:center/17px 17px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 16 9-9 4 4-9 9-4 .9.9-4Z'/%3E%3Cpath d='m14 6 2 2'/%3E%3C/svg%3E")}
+#stats>.grid>.card h3{position:relative!important;display:flex!important;align-items:center!important;gap:9px!important;font-size:17px!important}
+#stats>.grid>.card h3::before{content:"";width:21px;height:21px;flex:0 0 21px;border-radius:7px;background:rgba(57,245,139,.055) center/15px 15px no-repeat;border:1px solid rgba(57,245,139,.12)}
+#stats>.grid>.card:nth-child(1) h3::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8'%3E%3Ccircle cx='12' cy='12' r='7.2'/%3E%3Cpath d='m8 6.2 2.7 2.2M15.3 6.2l-2.1 2.2M6.3 14.8l3.1-1M17.7 14.8l-3.1-1M10 17.5l2-2M14 17.5l-2-2'/%3E%3C/svg%3E")}
+#stats>.grid>.card:nth-child(2) h3::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8'%3E%3Crect x='6' y='4' width='12' height='16' rx='2'/%3E%3Cpath d='M9 9h6M9 13h6M9 17h3'/%3E%3C/svg%3E")}
+#stats>.grid>.card:nth-child(3) h3::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8'%3E%3Cpath d='M6 19c1-4 3-6 6-6s5 2 6 6'/%3E%3Ccircle cx='12' cy='8' r='3'/%3E%3C/svg%3E")}
+#stats>.grid>.card:nth-child(4) h3::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8'%3E%3Cpath d='M8 13c0-4 2-7 4-7s4 3 4 7'/%3E%3Cpath d='M6 17c2-2 4-3 6-3s4 1 6 3'/%3E%3C/svg%3E")}
+#stats>.grid>.card:nth-child(5) h3::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8'%3E%3Cpath d='M12 3 19 6v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E")}
+#pravilnik{display:none!important}

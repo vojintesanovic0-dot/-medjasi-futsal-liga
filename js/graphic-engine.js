@@ -139,7 +139,7 @@
       }
 
       if($("graphicSourceName")){
-        $("graphicSourceName").textContent = "✓ Fotografija bez pozadine";
+        $("graphicSourceName").textContent = " Fotografija bez pozadine";
       }
 
       toast("Pozadina je uklonjena. Originalna fotografija ostaje sačuvana.");
@@ -149,7 +149,7 @@
     }finally{
       if(btn){
         btn.disabled = false;
-        btn.textContent = "✨ Ukloni pozadinu";
+        btn.textContent = " Ukloni pozadinu";
       }
     }
   }
@@ -233,18 +233,18 @@
     const position = player?.position || "";
 
     const presets = {
-      player:   {kicker:"PLAYER SPOTLIGHT", tag:"👤 IGRAČ"},
+      player:   {kicker:"PLAYER SPOTLIGHT", tag:" IGRAČ"},
       mvp:      {kicker:"MVP LIGE", tag:"⭐ MVP"},
-      scorer:   {kicker:"TOP STRIJELAC", tag:"⚽ GOAL"},
-      matchday: {kicker:"MATCHDAY", tag:"🔥 MATCHDAY"},
-      winner:   {kicker:"WINNER", tag:"🏆 POBJEDNIK"},
-      lineup:   {kicker:"STARTING FIVE", tag:"👕 POSTAVA"},
-      transfer: {kicker:"PLAYER ANNOUNCEMENT", tag:"📣 NOVO"},
-      birthday: {kicker:"SRETAN ROĐENDAN", tag:"🎂 BIRTHDAY"},
-      spotlight:{kicker:"U FOKUSU", tag:"🎯 FOCUS"},
-      fan:      {kicker:"IGRAČ TRIBINE", tag:"💚 FAN FAVORITE"},
+      scorer:   {kicker:"TOP STRIJELAC", tag:" GOAL"},
+      matchday: {kicker:"MATCHDAY", tag:" MATCHDAY"},
+      winner:   {kicker:"WINNER", tag:" POBJEDNIK"},
+      lineup:   {kicker:"STARTING FIVE", tag:" POSTAVA"},
+      transfer: {kicker:"PLAYER ANNOUNCEMENT", tag:" NOVO"},
+      birthday: {kicker:"SRETAN ROĐENDAN", tag:" BIRTHDAY"},
+      spotlight:{kicker:"U FOKUSU", tag:" FOCUS"},
+      fan:      {kicker:"IGRAČ TRIBINE", tag:" FAN FAVORITE"},
       captain:  {kicker:"KAPITEN", tag:"© KAPITEN"},
-      legend:   {kicker:"LEGENDA LIGE", tag:"👑 LEGENDA"}
+      legend:   {kicker:"LEGENDA LIGE", tag:" LEGENDA"}
     };
     const preset=presets[template]||presets.player;
 
@@ -278,9 +278,9 @@
     if(template==="legend") sub="LEGENDA · "+teamName;
     if(template==="spotlight") sub="DANAS U FOKUSU · "+teamName;
     if(template==="mvp") sub="NAJBOLJI IGRAČ · "+teamName+"  ⭐";
-    if(template==="scorer") sub="STRIJELAC · "+teamName+"  ⚽";
-    if(template==="winner") sub="POBJEDNIK · "+teamName+"  🏆";
-    if(template==="matchday") sub="DAN UTAKMICE · "+teamName+"  ⚽";
+    if(template==="scorer") sub="STRIJELAC · "+teamName+"  ";
+    if(template==="winner") sub="POBJEDNIK · "+teamName+"  ";
+    if(template==="matchday") sub="DAN UTAKMICE · "+teamName+"  ";
 
     drawText(ctx,headline,60,1180,58,"800");
     drawText(ctx,sub,60,1230,30,"600");
@@ -300,7 +300,7 @@
     if(result){result.src=generatedPreviewUrl;result.hidden=false;}
 
     const status=$("graphicStatus");
-    if(status) status.textContent="✓ Grafika je spremna za objavu.";
+    if(status) status.textContent=" Grafika je spremna za objavu.";
 
     $("graphicPublishBtn")?.removeAttribute("disabled");
   }
@@ -339,7 +339,7 @@
         spotlight:"U fokusu",fan:"Fan Favorite",captain:"Kapiten",legend:"Legenda lige"
       }[state.template] || "Grafika lige";
 
-      const caption=state.caption.trim() || ("🔥 "+templateLabel+" · "+name+" · "+(team?.name||"Medjaši Futsal Liga"));
+      const caption=state.caption.trim() || (" "+templateLabel+" · "+name+" · "+(team?.name||"Medjaši Futsal Liga"));
 
       if(state.destination==="community"){
         const {error}=await window.supabaseClient.from("community_posts").insert({
@@ -392,7 +392,7 @@
       console.error("Graphic Engine publish:",error);
       toast(error?.message || "Greška pri objavi grafike.","error");
     }finally{
-      if(btn){btn.disabled=false;btn.textContent="🚀 Objavi grafiku";}
+      if(btn){btn.disabled=false;btn.textContent=" Objavi grafiku";}
     }
   }
 
@@ -432,7 +432,7 @@
       <div class="graphic-engine-head">
         <div>
           <span class="hero-kicker">MEDJAŠI GRAPHIC ENGINE</span>
-          <h3>🎨 Napravi grafiku iz jedne fotografije</h3>
+          <h3> Napravi grafiku iz jedne fotografije</h3>
           <p class="muted">Original ostaje netaknut. Napravi PNG bez pozadine i objavi ga direktno u Community, Chat ili Vijesti.</p>
         </div>
         <span class="admin-pill">SAMO ADMIN</span>
@@ -453,34 +453,34 @@
           </div>
 
           <div class="graphic-engine-actions">
-            <button id="graphicLoadPlayer" type="button" class="btn btn-blue">📸 Uzmi sliku igrača</button>
-            <button id="graphicRemoveBgBtn" type="button" class="btn btn-green">✨ Ukloni pozadinu</button>
+            <button id="graphicLoadPlayer" type="button" class="btn btn-blue"> Uzmi sliku igrača</button>
+            <button id="graphicRemoveBgBtn" type="button" class="btn btn-green"> Ukloni pozadinu</button>
           </div>
 
           <div class="form-group">
             <label>Vrsta grafike</label>
             <select id="graphicTemplate">
-              <option value="player">👤 Player Spotlight</option>
+              <option value="player"> Player Spotlight</option>
               <option value="mvp">⭐ MVP Lige</option>
-              <option value="scorer">⚽ Top Strijelac</option>
-              <option value="matchday">🔥 Matchday</option>
-              <option value="winner">🏆 Winner</option>
-              <option value="lineup">👕 Starting Five</option>
-              <option value="transfer">📣 Player Announcement</option>
-              <option value="birthday">🎂 Sretan rođendan</option>
-              <option value="spotlight">🎯 U fokusu</option>
-              <option value="fan">💚 Fan Favorite</option>
+              <option value="scorer"> Top Strijelac</option>
+              <option value="matchday"> Matchday</option>
+              <option value="winner"> Winner</option>
+              <option value="lineup"> Starting Five</option>
+              <option value="transfer"> Player Announcement</option>
+              <option value="birthday"> Sretan rođendan</option>
+              <option value="spotlight"> U fokusu</option>
+              <option value="fan"> Fan Favorite</option>
               <option value="captain">© Kapiten</option>
-              <option value="legend">👑 Legenda lige</option>
+              <option value="legend"> Legenda lige</option>
             </select>
           </div>
 
           <div class="form-group">
             <label>Objavi u</label>
             <select id="graphicDestination">
-              <option value="community">✨ Community</option>
-              <option value="news">📰 Vijesti</option>
-              <option value="chat">💬 Chat</option>
+              <option value="community"> Community</option>
+              <option value="news"> Vijesti</option>
+              <option value="chat"> Chat</option>
             </select>
           </div>
 
@@ -501,8 +501,8 @@
           </div>
 
           <div class="graphic-engine-actions">
-            <button id="graphicGenerateBtn" type="button" class="btn btn-green" disabled>🎨 Generiši grafiku</button>
-            <button id="graphicPublishBtn" type="button" class="btn btn-blue" disabled>🚀 Objavi grafiku</button>
+            <button id="graphicGenerateBtn" type="button" class="btn btn-green" disabled> Generiši grafiku</button>
+            <button id="graphicPublishBtn" type="button" class="btn btn-blue" disabled> Objavi grafiku</button>
           </div>
 
           <div id="graphicStatus" class="muted" aria-live="polite"></div>
