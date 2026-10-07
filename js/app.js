@@ -10107,7 +10107,7 @@ if ("serviceWorker" in navigator) {
 
 (function(){
   "use strict";
-  const PUBLIC_VAPID_KEY = "BF31f9WUjYLlq_Ze7seoz7PgKgb3bZnFpAbBoQGHSsraWyt1UMcf2f5Bg3t3pnFVVRsF-nGssAlDNw9yyQLQbCI";
+  const PUBLIC_VAPID_KEY = "BFxGFdgbKlBwU9DwGrhbBbeOv9rrpizEJyHWdGHRuGfZiEuvCZfy5sYt_wSjOX2DSSOcNsUsFrob2pi4CJbVI2U";
   const PUSH_ENDPOINT = "https://mesryrrjnsnhadoahbux.supabase.co/functions/v1/send-push";
 
   function b64ToUint8Array(base64){
