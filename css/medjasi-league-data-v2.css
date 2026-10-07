@@ -1,0 +1,215 @@
+/* Medjasi League / Teams / Players / Stats V2 — phase 5 */
+#table .table-wrap{
+  border-radius:20px!important;
+  padding:0!important;
+  overflow:auto!important;
+  background:rgba(3,10,13,.72)!important;
+  border:1px solid rgba(57,245,139,.12)!important;
+}
+#table table{border-collapse:separate!important;border-spacing:0!important;min-width:820px!important}
+#table thead th{
+  position:sticky!important;top:0!important;z-index:2!important;
+  padding:14px 13px!important;
+  background:#071316!important;
+  color:#8fa79b!important;
+  text-transform:uppercase!important;
+  letter-spacing:.10em!important;
+  font-size:9px!important;
+}
+#table tbody tr{
+  transition:background .18s ease,transform .18s ease!important;
+  cursor:pointer!important;
+}
+#table tbody tr:hover{background:rgba(57,245,139,.045)!important}
+#table tbody td{
+  padding:13px!important;
+  border-top:1px solid rgba(255,255,255,.045)!important;
+  color:#dfeae5!important;
+  font-size:13px!important;
+}
+#table .rank{
+  width:30px!important;height:30px!important;
+  display:grid!important;place-items:center!important;
+  border-radius:10px!important;
+  background:rgba(255,255,255,.045)!important;
+  color:#b6c9c0!important;
+  font-weight:950!important;
+}
+#table tbody tr:nth-child(1) .rank{box-shadow:0 0 18px rgba(57,245,139,.16);color:#07130d!important}
+#table .team-cell{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  font-weight:850!important;white-space:nowrap!important;
+}
+#table .team-mini-logo{
+  width:34px!important;height:34px!important;
+  object-fit:contain!important;padding:5px!important;
+  border-radius:10px!important;background:rgba(255,255,255,.035)!important;
+  border:1px solid rgba(255,255,255,.06)!important;
+}
+#table .points{
+  display:inline-grid!important;place-items:center!important;
+  min-width:40px!important;padding:7px 9px!important;
+  border-radius:10px!important;
+  background:rgba(57,245,139,.08)!important;
+  color:var(--m-green)!important;
+  font-weight:950!important;
+}
+#table .form-dots{justify-content:flex-start!important}
+.form-dots{display:flex!important;gap:4px!important;flex-wrap:nowrap!important}
+.form-dot{
+  width:20px!important;height:20px!important;
+  display:grid!important;place-items:center!important;
+  border-radius:7px!important;
+  font-size:8px!important;font-weight:950!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+}
+.form-W{background:rgba(57,245,139,.15)!important;color:#62ffac!important;border-color:rgba(57,245,139,.24)!important}
+.form-D{background:rgba(244,197,66,.12)!important;color:#f6d978!important;border-color:rgba(244,197,66,.22)!important}
+.form-L{background:rgba(255,67,85,.11)!important;color:#ff8290!important;border-color:rgba(255,67,85,.20)!important}
+#teams .grid-3,#players .grid-3{align-items:stretch!important}
+#teams .card,#players .player-card{
+  position:relative!important;
+  border-radius:20px!important;
+  overflow:hidden!important;
+}
+#teams .card{padding:0!important}
+#teams .team-cover{
+  min-height:132px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:14px!important;
+  padding:18px!important;
+  cursor:pointer!important;
+  background:
+    radial-gradient(circle at 90% 10%,rgba(57,245,139,.10),transparent 35%),
+    linear-gradient(145deg,rgba(10,28,27,.92),rgba(4,12,15,.92))!important;
+  border-bottom:1px solid rgba(255,255,255,.06)!important;
+}
+#teams .team-cover img{
+  width:72px!important;height:72px!important;
+  object-fit:contain!important;padding:10px!important;
+  border-radius:18px!important;background:rgba(255,255,255,.03)!important;
+  border:1px solid rgba(57,245,139,.14)!important;
+}
+#teams .team-cover h3{margin:0!important;font-size:20px!important;letter-spacing:-.03em!important}
+#teams .team-kpis{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:0!important;
+  padding:0!important;
+  border-bottom:1px solid rgba(255,255,255,.05)!important;
+}
+#teams .team-kpis .kpi{
+  padding:14px 12px!important;
+  background:rgba(255,255,255,.018)!important;
+  border-right:1px solid rgba(255,255,255,.05)!important;
+  text-align:center!important;
+}
+#teams .team-kpis .kpi:last-child{border-right:0!important}
+#teams .team-kpis strong{display:block!important;font-size:21px!important;font-weight:950!important;color:#fff!important}
+#teams .team-kpis span{display:block!important;margin-top:4px!important;font-size:9px!important;color:#869c92!important;text-transform:uppercase!important;letter-spacing:.11em!important}
+#teams .card > div:last-child{padding:0 16px 16px!important}
+#players .player-card{
+  display:grid!important;
+  grid-template-columns:88px minmax(0,1fr)!important;
+  gap:14px!important;
+  align-items:center!important;
+  padding:14px!important;
+  cursor:pointer!important;
+  min-height:120px!important;
+}
+#players .player-card::after{
+  content:"";
+  position:absolute;inset:auto 0 0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--m-green),transparent);
+  opacity:.18;
+}
+#players .player-photo{
+  width:88px!important;height:105px!important;
+  object-fit:cover!important;
+  border-radius:16px!important;
+  background:#0a1618!important;
+  border:1px solid rgba(57,245,139,.13)!important;
+}
+#players .player-card h3{
+  margin:0!important;font-size:17px!important;line-height:1.1!important;
+  letter-spacing:-.02em!important;
+}
+#players .player-number,#players .badge,#players .captain{
+  border-radius:999px!important;
+  padding:4px 7px!important;
+  font-size:9px!important;
+  font-weight:900!important;
+}
+#players .match-meta{
+  padding-top:7px!important;
+  color:#91a69d!important;
+  font-variant-numeric:tabular-nums;
+}
+#stats .grid-2{gap:14px!important}
+#stats .card{
+  border-radius:20px!important;
+  min-height:270px!important;
+  background:
+    linear-gradient(145deg,rgba(8,20,22,.94),rgba(4,11,14,.86))!important;
+}
+#stats .card h3{
+  display:flex!important;align-items:center!important;gap:9px!important;
+  font-size:18px!important;
+  color:#fff!important;
+}
+#stats .rank-list{display:grid!important;gap:5px!important}
+#stats .rank-row{
+  display:grid!important;
+  grid-template-columns:30px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:10px!important;
+  padding:10px!important;
+  border-radius:13px!important;
+  min-height:58px!important;
+  background:rgba(255,255,255,.022)!important;
+  border:1px solid rgba(255,255,255,.05)!important;
+}
+#stats .rank-row:hover{
+  background:rgba(57,245,139,.06)!important;
+  border-color:rgba(57,245,139,.17)!important;
+}
+#stats .rank-num{
+  width:28px!important;height:28px!important;
+  display:grid!important;place-items:center!important;
+  border-radius:9px!important;
+  background:rgba(255,255,255,.05)!important;
+  color:#a9bdb4!important;
+  font-size:10px!important;
+  font-weight:950!important;
+}
+#stats .rank-avatar{
+  min-width:0!important;
+  display:flex!important;align-items:center!important;gap:9px!important;
+}
+#stats .rank-avatar img{
+  width:36px!important;height:36px!important;
+  border-radius:10px!important;object-fit:cover!important;
+  border:1px solid rgba(255,255,255,.06)!important;
+}
+#stats .rank-avatar strong{display:block!important;font-size:12px!important}
+#stats .rank-avatar small{display:block!important;margin-top:3px!important;color:#7f968b!important;font-size:9px!important}
+#stats .rank-value{
+  min-width:38px!important;
+  padding:7px 8px!important;
+  border-radius:9px!important;
+  text-align:center!important;
+  background:rgba(57,245,139,.08)!important;
+  color:var(--m-green)!important;
+  font-weight:950!important;
+}
+#table .section-title,#teams .section-title,#players .section-title,#stats .section-title{
+  margin-bottom:15px!important;
+}
+@media(max-width:780px){
+  #teams .grid-3,#players .grid-3{grid-template-columns:1fr!important}
+  #players .player-card{grid-template-columns:74px minmax(0,1fr)!important}
+  #players .player-photo{width:74px!important;height:90px!important}
+  #table .table-wrap{border-radius:17px!important}
+  #stats .grid-2{grid-template-columns:1fr!important}
+}
