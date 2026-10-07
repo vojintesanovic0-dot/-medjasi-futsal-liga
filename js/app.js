@@ -1512,7 +1512,15 @@ function updateAuthUI(){const logged=!!currentUser;const username=currentProfile
    LOAD ALL DATA
 ========================================================= */
 
+let loadAllActive=false;
+let loadAllPending=false;
+
 async function loadAll(){
+  if(loadAllActive){
+    loadAllPending=true;
+    return;
+  }
+  loadAllActive=true;
 
   try{
 
@@ -1646,6 +1654,12 @@ async function loadAll(){
       "Greška pri učitavanju:",
       error
     );
+  }finally{
+    loadAllActive=false;
+    if(loadAllPending){
+      loadAllPending=false;
+      queueMicrotask(()=>{void loadAll();});
+    }
   }
 }
 
