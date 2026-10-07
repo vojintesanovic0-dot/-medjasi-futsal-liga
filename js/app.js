@@ -365,6 +365,14 @@ function showSection(id){
     setTimeout(()=>window.loadV9Community?.(),30);
   }
 
+  // Dynamic sections are mounted by their own modules.
+  if(id === "news"){
+    setTimeout(()=>window.loadNews?.(),30);
+  }
+  if(id === "game"){
+    setTimeout(()=>window.medjasiGame?.refresh?.(),60);
+  }
+
   /* MOBILE BOTTOM NAV */
 
   document.querySelectorAll(".mobile-bottom button")
