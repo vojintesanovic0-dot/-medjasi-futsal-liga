@@ -682,3 +682,9 @@ input:focus,select:focus,textarea:focus{
   .section.active,.v10-hero{animation:none!important}
   .site-header,.card,.v10-kpi,#mainNav button,.btn{transition:none!important}
 }
+
+/* V12 mobile toggle uses the existing app.js class name. */
+@media(max-width:1100px){
+  #mainNav.mobile-open{display:flex!important}
+  #mainNav.open{display:flex!important}
+}
