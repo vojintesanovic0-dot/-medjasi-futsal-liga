@@ -1652,7 +1652,7 @@ header{background:rgba(4,12,21,.82);border-bottom-color:rgba(255,255,255,.07)}
     box-shadow:14px 0 45px rgba(0,0,0,.18);
   }
   #mainNav::before{
-    content:"MEDJAŠI • FUTSAL";
+    content:"MEĐASI • FUTSAL";
     display:block;
     padding:2px 12px 17px;
     color:#6e8295;
@@ -1830,7 +1830,7 @@ body{padding-left:var(--nav-w);}
   overflow-x:hidden!important;
 }
 #mainNav::before{
-  content:'MEDJAŠI  •  FUTSAL';
+  content:'MEĐASI  •  FUTSAL';
   display:block;
   padding:10px 12px 24px;
   color:#f4f8fb;
@@ -2131,7 +2131,7 @@ input,select,textarea{transition:border-color .2s ease,box-shadow .2s ease,backg
 
 
 /* =========================================================
-   MEDJAŠI V10 — HOME + COMMUNITY VISUAL SYSTEM
+   MEĐASI V10 — HOME + COMMUNITY VISUAL SYSTEM
 ========================================================= */
 :root{--v10-green:#24e487;--v10-blue:#2d9cff;--v10-bg:#050c14;--v10-card:rgba(10,22,36,.78);--v10-line:rgba(255,255,255,.08)}
 body{background:radial-gradient(circle at 12% 0%,rgba(36,228,135,.10),transparent 28%),radial-gradient(circle at 88% 12%,rgba(45,156,255,.12),transparent 30%),linear-gradient(145deg,#040a11 0%,#071522 52%,#03070c 100%) fixed!important}
@@ -2839,7 +2839,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
 
 
 /* =========================================================
-   MEDJAŠI V12 — FINAL PROFILE / NEWS / COMMUNITY POLISH
+   MEĐASI V12 — FINAL PROFILE / NEWS / COMMUNITY POLISH
 ========================================================= */
 :root{--v11-green:#24e487;--v11-blue:#2d9cff;--v11-panel:rgba(8,20,33,.86)}
 .v10-trust-row{display:none!important}
