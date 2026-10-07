@@ -10286,7 +10286,7 @@ const playerV=id=>window.getPlayer?.(id)||window.players?.find(x=>String(x.id)==
 const isAdm=()=>!!window.isAdmin?.();
 const toastV=(m,t)=>window.toast?window.toast(m,t):alert(m);
 function formatV(d){try{return window.formatDate?window.formatDate(d):new Date(d).toLocaleString('bs-BA')}catch{return new Date(d).toLocaleString('bs-BA')}}
-function mediaHtml(url,type,title=""){if(!url)return "";return type==='video'?`<video controls playsinline preload="metadata" src="${escV(url)}"></video>`:`<img loading="lazy" src="${escV(url)}" alt="${escV(title)}">`}
+function mediaHtml(url,type,title=""){const safe=safeUrl(url);if(!safe)return "";return type==='video'?`<video controls playsinline preload="metadata" src="${escV(safe)}"></video>`:`<img loading="lazy" src="${escV(safe)}" alt="${escV(title)}">`}
 
 function ensureNewsUI(){
   if(!$('news')){
