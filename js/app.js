@@ -10205,6 +10205,9 @@ if ("serviceWorker" in navigator) {
   }
 
   function addPushUI(){
+    /* V7 is the canonical push UI. Keep V3 API for compatibility,
+       but never render a second push card when V7 is available. */
+    if(window.medjasiV7?.pushPublicKey) return;
     const admin=document.querySelector("#admin");
     if(!admin || document.getElementById("v3PushCard")) return;
     const card=document.createElement("div");
