@@ -199,7 +199,12 @@
       const isActive=section.dataset.adminOrganizerGroupContainer===active;
       section.hidden=!isActive;
       section.classList.toggle("is-active",isActive);
-      section.style.display=isActive?"":"none";
+      section.dataset.adminOrganizerVisible=isActive?"1":"0";
+      if(isActive){
+        section.style.removeProperty("display");
+      }else{
+        section.style.setProperty("display","none","important");
+      }
     });
     const label=groups.find(g=>g.id===active)?.title||"Liga";
     const status=organizer.querySelector("#adminOrganizerStatus");

@@ -63,3 +63,7 @@
 #admin .admin-organizer-group-body{display:flex;flex-direction:column;gap:18px}
 #admin .admin-organizer-group-body>.card{margin-top:0!important}
 @media(max-width:600px){#admin .admin-organizer-groups{gap:14px}#admin .admin-organizer-group-body{gap:14px}}
+
+/* Hard guarantee: only the selected Admin organization is visible. */
+#admin .admin-organizer-group:not(.is-active){display:none!important}
+#admin .admin-organizer-group.is-active{display:block!important}
