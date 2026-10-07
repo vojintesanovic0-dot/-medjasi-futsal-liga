@@ -171,7 +171,17 @@ function patchGalleryUpload(){
   window.__GALLERY_UPLOAD_ALBUM_PATCH__=true;window.adminAddGalleryImage=async function(){
     const r=await old.apply(this,arguments);if(r!==false&&uid()){
       const album=q("galleryAlbumSelect")?.value||null;
-      if(album){const {data}=await client().from("gallery").select("id").eq("created_by",uid()).order("created_at",{ascending:false}).limit(1);if(data?.[0])await client().from("gallery").update({album_id:album}).eq("id",data[0].id)}
+      if(album){
+        const galleryId=typeof r==="string"?r:null;
+        if(galleryId){
+          const {error}=await client().from("gallery").update({album_id:album}).eq("id",galleryId).eq("created_by",uid());
+          if(error)console.warn("Gallery album:",error);
+        }else{
+          /* Compatibility fallback for older upload implementations. */
+          const {data}=await client().from("gallery").select("id").eq("created_by",uid()).order("created_at",{ascending:false}).limit(1);
+          if(data?.[0])await client().from("gallery").update({album_id:album}).eq("id",data[0].id);
+        }
+      }
     }
     return r;
   };
