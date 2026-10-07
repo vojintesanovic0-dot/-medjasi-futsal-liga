@@ -56,17 +56,6 @@
       });
   }
 
-  function redirectLegacyComments(){
-    const original=window.showSection;
-    if(typeof original!=="function" || window.__MEDJASI_COMMENTS_ROUTE_PATCH__) return;
-
-    window.__MEDJASI_COMMENTS_ROUTE_PATCH__=true;
-
-    window.showSection=function(id){
-      return original.call(this,id==="comments" ? "news" : id);
-    };
-  }
-
   function patchAvatarImages(){
     document
       .querySelectorAll(".v9-avatar,.v9-profile-avatar,.v9-avatar-big,.v11-header-avatar,.v13-header-avatar")
@@ -176,7 +165,6 @@
   }
 
   function run(){
-    redirectLegacyComments();
     normalizeLegacyNavigation();
     void refreshProfileEverywhere();
     polishNews();

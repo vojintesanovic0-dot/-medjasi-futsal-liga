@@ -217,13 +217,43 @@
     window.showSection=function(id){const result=oldShow.apply(this,arguments);if(id==="admin")setTimeout(render,100);return result;};
   }
 
-  window.addEventListener("load",()=>setTimeout(render,700));
   let observer=null;
+  let bodyObserver=null;
+  let renderQueued=false;
+
+  function scheduleRender(){
+    if(renderQueued)return;
+    renderQueued=true;
+    setTimeout(()=>{
+      renderQueued=false;
+      if(isAdmin())render();
+      watch();
+    },60);
+  }
+
   function watch(){
-    const host=root(); if(!host||observer)return;
-    observer=new MutationObserver(()=>{if(!moving&&isAdmin())render();});
+    const host=root();
+    if(!host){
+      if(!bodyObserver && document.body){
+        bodyObserver=new MutationObserver(records=>{
+          const appeared=records.some(record=>[...record.addedNodes].some(node=>
+            node.nodeType===1 && (node.id==="adminContent" || node.querySelector?.("#adminContent"))
+          ));
+          if(appeared)scheduleRender();
+        });
+        bodyObserver.observe(document.body,{childList:true,subtree:true});
+      }
+      return;
+    }
+    if(observer)return;
+    observer=new MutationObserver(()=>{if(!moving&&isAdmin())scheduleRender();});
     observer.observe(host,{childList:true});
   }
-  setInterval(()=>{if(document.getElementById("admin")?.classList.contains("active")){render();watch();}},800);
+
+  window.addEventListener("load",()=>{
+    scheduleRender();
+    watch();
+  },{once:true});
+
   window.__MEDJASI_ADMIN_ORGANIZER_APPLY__=render;
 })();
