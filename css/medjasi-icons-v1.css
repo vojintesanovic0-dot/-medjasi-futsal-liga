@@ -4,7 +4,7 @@
 #mainNav button > span:first-child{display:none!important}
 #mainNav button::before{
   content:"";
-  width:19px;height:19px;flex:0 0 19px;display:inline-block;
+  width:19px;height:19px;display:inline-block;
   background:center/19px 19px no-repeat;
   opacity:.82;
   transition:opacity .2s ease,transform .2s ease,filter .2s ease;
