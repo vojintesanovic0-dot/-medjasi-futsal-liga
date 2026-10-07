@@ -7,50 +7,43 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   backup-before-merge:
     if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
     steps:
-      - name: Create immutable backup of current main
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+      - name: Checkout current main state
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 1
+      - name: Create backup archive
         run: |
-          short="${BASE_SHA:0:12}"
-          tag="backup/pr-${PR_NUMBER}-${short}"
-
-          if gh api "repos/${REPO}/git/ref/tags/${tag}" >/dev/null 2>&1; then
-            echo "Backup tag already exists: ${tag}"
-            exit 0
-          fi
-
-          gh api --method POST "repos/${REPO}/git/refs" \
-            -f "ref=refs/tags/${tag}" \
-            -f "sha=${BASE_SHA}"
-
-          echo "Created backup: ${tag}"
+          tar -czf "backup-pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.base.sha }}.tar.gz" .
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.base.sha }}
+          path: backup-pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.base.sha }}.tar.gz
+          retention-days: 90
 
   backup-previous-main:
     if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
     runs-on: ubuntu-latest
     steps:
-      - name: Save the main state from immediately before this push
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          BEFORE_SHA: ${{ github.event.before }}
-          RUN_NUMBER: ${{ github.run_number }}
+      - name: Checkout previous main state
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.before }}
+          fetch-depth: 1
+      - name: Create backup archive
         run: |
-          short="${BEFORE_SHA:0:12}"
-          tag="backup/pre-main-${RUN_NUMBER}-${short}"
-
-          gh api --method POST "repos/${REPO}/git/refs" \
-            -f "ref=refs/tags/${tag}" \
-            -f "sha=${BEFORE_SHA}"
-
-          echo "Saved previous main state as: ${tag}"
+          tar -czf "backup-pre-main-${{ github.run_number }}-${{ github.event.before }}.tar.gz" .
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-pre-main-${{ github.run_number }}-${{ github.event.before }}
+          path: backup-pre-main-${{ github.run_number }}-${{ github.event.before }}.tar.gz
+          retention-days: 90
