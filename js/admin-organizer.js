@@ -12,6 +12,7 @@
   const groups=[
     {id:"liga",icon:"⚽",title:"Liga",desc:"Ekipe • igrači • utakmice • sezone"},
     {id:"sadrzaj",icon:"📰",title:"Sadržaj",desc:"Vijesti • galerija • playlist • push • community"},
+    {id:"moderacija",icon:"🛡️",title:"Moderacija",desc:"Chat • komentari • prijave • moderatori"},
     {id:"dizajn",icon:"🎨",title:"Graphic Studio",desc:"Player cards • MVP • grafike"}
   ];
 
@@ -29,8 +30,8 @@
     if(id==="communityAlbumAdmin" || has("#communityAlbumAdmin")) return "sadrzaj";
     if(id==="adminMusicPlaylist" || has("#adminMusicPlaylist") || cls.contains("admin-music-card")) return "sadrzaj";
     if(id==="v7PushCard" || has("#v7PushCard")) return "sadrzaj";
-    if(id==="communityModerationCard" || has("#communityModerationCard")) return "sadrzaj";
-    if(id==="moderatorManagement" || has("#moderatorManagement")) return "sadrzaj";
+    if(id==="communityModerationCard" || has("#communityModerationCard")) return "moderacija";
+    if(id==="moderatorManagement" || has("#moderatorManagement")) return "moderacija";
 
     // GRAPHIC STUDIO — isključivo ovdje.
     if(id==="graphicEngineCard" || has("#graphicEngineCard")) return "dizajn";
@@ -80,29 +81,36 @@
   }
 
   function splitCrudContent(card,bodies){
-    if(!card || card.id!=="adminCrudV4" || card.dataset.adminOrganizerCrudSplit==="1") return;
+    if(!card || card.id!=="adminCrudV4") return;
 
-    // Admin CRUD je jedna stara kartica, ali sadrži funkcije iz dvije kategorije.
-    // Ne brišemo ništa: fizički premještamo postojeće sekcije u odgovarajuću grupu.
-    const contentSections=[...card.querySelectorAll(".crud-section")].filter(section=>{
+    const sections=[...card.querySelectorAll(".crud-section")];
+    const buckets={sadrzaj:[],moderacija:[]};
+
+    sections.forEach(section=>{
       const title=crudSectionTitle(section);
-      return title.includes("komentari") || title.includes("chat") || title.includes("galerija");
+      if(title.includes("galerija")) buckets.sadrzaj.push(section);
+      else if(title.includes("komentari") || title.includes("chat")) buckets.moderacija.push(section);
     });
-    if(!contentSections.length) return;
 
-    // Pri novom renderu CRUD-a ukloni samo prethodni pomoćni sadržajni omotač.
-    bodies.sadrzaj?.querySelectorAll('[data-admin-crud-content="1"]').forEach(x=>x.remove());
+    const cleanupGroup=group=>{
+      bodies[group]?.querySelectorAll('[data-admin-crud-content="'+group+'"]').forEach(x=>x.remove());
+    };
+    cleanupGroup("sadrzaj");
+    cleanupGroup("moderacija");
 
-    const contentCard=document.createElement("div");
-    contentCard.className="card admin-crud-content";
-    contentCard.dataset.adminCrudContent="1";
-    contentCard.style.marginTop="20px";
-    contentCard.innerHTML=
-      '<div class="admin-card-head"><div><span class="hero-kicker">SADRŽAJ</span><h3>🧰 Upravljanje sadržajem</h3><p class="muted">Komentari, chat i galerija iz postojećeg Admin CRUD-a.</p></div><span class="admin-pill">SAMO ADMIN</span></div>';
+    const makeHelper=(group,kicker,desc)=>{
+      if(!buckets[group].length || !bodies[group]) return;
+      const contentCard=document.createElement("div");
+      contentCard.className="card admin-crud-content";
+      contentCard.dataset.adminCrudContent=group;
+      contentCard.style.marginTop="20px";
+      contentCard.innerHTML='<div class="admin-card-head"><div><span class="hero-kicker">'+kicker+'</span><h3>🧰 Upravljanje</h3><p class="muted">'+desc+'</p></div><span class="admin-pill">SAMO ADMIN</span></div>';
+      buckets[group].forEach(section=>contentCard.appendChild(section));
+      bodies[group].appendChild(contentCard);
+    };
 
-    contentSections.forEach(section=>contentCard.appendChild(section));
-    bodies.sadrzaj?.appendChild(contentCard);
-
+    makeHelper("sadrzaj","SADRŽAJ","Galerija iz postojećeg Admin CRUD-a.");
+    makeHelper("moderacija","MODERACIJA","Komentari i chat iz postojećeg Admin CRUD-a.");
     card.dataset.adminOrganizerCrudSplit="1";
   }
 
