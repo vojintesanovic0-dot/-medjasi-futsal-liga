@@ -72,14 +72,14 @@ input,select,textarea{border-color:rgba(255,255,255,.075)!important;background:#
 #galleryGrid>*{border-radius:16px!important;overflow:hidden!important;border-color:rgba(255,255,255,.055)!important}
 #login .grid{gap:14px!important}
 #login .card{border-radius:20px!important}
-#info .grid>.card,#pravilnik>.card,#duration>.card{border-radius:18px!important}
+#info .grid>.card,#duration>.card{border-radius:18px!important}
 #community{min-height:420px!important}
 #community .card{border-radius:18px!important}
 #news,#game{max-width:1200px!important;margin-left:auto!important;margin-right:auto!important}
 #news .card,#game .card{border-radius:18px!important}
 #admin .admin-grid{gap:14px!important}
 #admin .admin-grid>.card{border-radius:18px!important}
-@media(max-width:780px){#table,#matches,#teams,#players,#stats,#comments,#chat,#gallery,#login,#info,#pravilnik,#duration,#admin,#community,#news,#game{padding-top:4px!important}#table table{min-width:720px!important}#gallery .gallery-hero,#info .gallery-hero,#pravilnik .gallery-hero,#duration .gallery-hero{border-radius:18px!important}}
+@media(max-width:780px){#table,#matches,#teams,#players,#stats,#comments,#chat,#gallery,#login,#info,#duration,#admin,#community,#news,#game{padding-top:4px!important}#table table{min-width:720px!important}#gallery .gallery-hero,#info .gallery-hero,#duration .gallery-hero{border-radius:18px!important}}
 
 
 /* =========================================================
