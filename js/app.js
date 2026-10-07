@@ -3831,8 +3831,9 @@ async function adminDeleteGalleryImage(id){
 }
 
 function openImagePreview(url,title="Fotografija"){
-  if(!url) return;
-  showModal(`<div class="image-lightbox"><img src="${esc(url)}" alt="${esc(title)}"><div class="image-lightbox-caption"><strong>${esc(title)}</strong></div></div>`);
+  const safe=safeUrl(url);
+  if(!safe) return;
+  showModal(`<div class="image-lightbox"><img src="${esc(safe)}" alt="${esc(title)}"><div class="image-lightbox-caption"><strong>${esc(title)}</strong></div></div>`);
 }
 
 /* =========================================================
@@ -10512,7 +10513,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   window.toggleV9Reaction=async function(postId,type){if(!guard())return;const {data:existing,error:ee}=await supabaseClient.from('community_reactions').select('id').eq('post_id',postId).eq('user_id',currentUser.id).eq('reaction',type).maybeSingle();if(ee)return toastV(ee.message,'error');let error;if(existing){({error}=await supabaseClient.from('community_reactions').delete().eq('id',existing.id))}else{({error}=await supabaseClient.from('community_reactions').insert({post_id:postId,user_id:currentUser.id,reaction:type}))}if(error)return toastV(error.message,'error');await refreshPostMeta(postId)};
   window.toggleV9Comments=async function(postId){const box=q('v9comments-'+postId);if(!box)return;if(!box.hidden){box.hidden=true;return}const {data,error}=await supabaseClient.from('community_comments').select('id,user_id,content,created_at').eq('post_id',postId).order('created_at',{ascending:true});if(error)return toastV(error.message,'error');await loadProfiles((data||[]).map(c=>c.user_id));box.innerHTML=(data||[]).map(c=>{const p=V.profiles[String(c.user_id)]||{};return `<div class="v9-comment">${fanCommunityIdentityHTML(p,String(c.user_id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}: ${escV(c.content)}</div>`}).join('')+`<div class="v9-comment-form"><input id="v9ci-${escV(postId)}" maxlength="500" placeholder="Napiši komentar..." ${logged()?'':'disabled'}><button class="btn btn-small btn-green" onclick="addV9Comment('${escV(postId)}')">Pošalji</button></div><div class="fan-community-emoji-wrap">${logged()?fanEmojiBarHTML('v9ci-'+escV(postId)):''}</div>`;box.hidden=false};
   window.addV9Comment=async function(postId){if(!guard())return;const input=q('v9ci-'+postId);const content=input?.value.trim();if(!content)return;const {error}=await supabaseClient.from('community_comments').insert({post_id:postId,user_id:currentUser.id,content});if(error)return toastV(error.message,'error');input.value='';const box=q('v9comments-'+postId);if(box)box.hidden=true;await toggleV9Comments(postId);await refreshPostMeta(postId)};
-  window.openV9Lightbox=function(url){showModal(`<div class="v9-lightbox" onclick="hideModal()"><img src="${escV(url)}" alt="" onclick="event.stopPropagation()"></div>`) };
+  window.openV9Lightbox=function(url){const safe=safeUrl(url);if(!safe)return;showModal(`<div class="v9-lightbox" onclick="hideModal()"><img src="${escV(safe)}" alt="" onclick="event.stopPropagation()"></div>`) };
   function patchAuth(){
     if(window.__V10_AUTH_PATCH__)return;
     window.__V10_AUTH_PATCH__=true;
