@@ -1533,13 +1533,37 @@ let loadAllActive=false;
 let loadAllPending=false;
 let loadAllDebounceTimer=0;
 
-function scheduleLoadAll(delay=180){
+function scheduleLoadAll(delay=350){
   clearTimeout(loadAllDebounceTimer);
   loadAllDebounceTimer=setTimeout(()=>{
     loadAllDebounceTimer=0;
     void loadAll();
   },Math.max(0,Number(delay)||0));
 }
+
+let realtimeMessageTimer=0;
+let realtimeCommentTimer=0;
+function refreshMessagesOnly(){
+  clearTimeout(realtimeMessageTimer);
+  realtimeMessageTimer=setTimeout(async()=>{
+    const {data,error}=await supabaseClient.from("messages").select("*").order("created_at",{ascending:false}).limit(300);
+    if(error){console.error(error);return}
+    messages=(data||[]).slice().reverse();
+    try{renderChat()}catch(e){console.error(e)}
+    try{processLeagueNotifications()}catch(e){console.error(e)}
+  },300);
+}
+function refreshCommentsOnly(){
+  clearTimeout(realtimeCommentTimer);
+  realtimeCommentTimer=setTimeout(async()=>{
+    const {data,error}=await supabaseClient.from("comments").select("*").order("created_at",{ascending:false}).limit(300);
+    if(error){console.error(error);return}
+    comments=data||[];
+    try{renderComments()}catch(e){console.error(e)}
+    try{processLeagueNotifications()}catch(e){console.error(e)}
+  },300);
+}
+
 
 async function loadAll(){
   if(loadAllActive){
@@ -1549,146 +1573,72 @@ async function loadAll(){
   loadAllActive=true;
 
   try{
+    /* Supabase vraća max 1000 redova po upitu: velike tabele čitamo stranicu po stranicu. */
+    const fetchAllRows=async(table,orderCol)=>{
+      const PAGE=1000;
+      let from=0,all=[];
+      for(;;){
+        let q=supabaseClient.from(table).select("*");
+        if(orderCol) q=q.order(orderCol);
+        const {data,error}=await q.range(from,from+PAGE-1);
+        if(error) return {data:null,error};
+        all=all.concat(data||[]);
+        if(!data||data.length<PAGE) break;
+        from+=PAGE;
+        if(from>20000) break;
+      }
+      return {data:all,error:null};
+    };
 
-    const results =
-      await Promise.all([
+    /* Chat, komentari i galerija: samo najnoviji zapisi. */
+    const fetchRecent=async(table,limit)=>{
+      const {data,error}=await supabaseClient
+        .from(table).select("*")
+        .order("created_at",{ascending:false})
+        .limit(limit);
+      return {data:error?null:(data||[]),error};
+    };
 
-        supabaseClient
-          .from("teams")
-          .select("*")
-          .order("name"),
+    const results=await Promise.all([
+      fetchAllRows("teams","name"),
+      fetchAllRows("players","jersey_number"),
+      fetchAllRows("matches","match_date"),
+      fetchAllRows("goals","minute"),
+      fetchAllRows("cards","minute"),
+      fetchRecent("comments",300),
+      fetchRecent("messages",300),
+      fetchRecent("gallery",200),
+      fetchAllRows("match_players",null)
+    ]);
 
-        supabaseClient
-          .from("players")
-          .select("*")
-          .order("jersey_number"),
+    const [teamsResult,playersResult,matchesResult,goalsResult,cardsResult,commentsResult,messagesResult,galleryResult,matchPlayersResult]=results;
+    results.forEach(r=>{if(r.error) console.error(r.error)});
 
-        supabaseClient
-          .from("matches")
-          .select("*")
-          .order("match_date"),
+    /* Ako upit padne, zadržavamo prethodne podatke umjesto da ispraznimo ekran. */
+    const keep=(r,old)=>r.error?old:(r.data||[]);
 
-        supabaseClient
-          .from("goals")
-          .select("*")
-          .order("minute"),
-
-        supabaseClient
-          .from("cards")
-          .select("*")
-          .order("minute"),
-
-        supabaseClient
-          .from("comments")
-          .select("*")
-          .order("created_at",{ascending:false}),
-
-        supabaseClient
-          .from("messages")
-          .select("*")
-          .order("created_at",{ascending:true}),
-
-        supabaseClient
-          .from("gallery")
-          .select("*")
-          .order("created_at",{ascending:false}),
-
-        supabaseClient
-          .from("match_players")
-          .select("*")
-
-      ]);
-
-
-    const [
-      teamsResult,
-      playersResult,
-      matchesResult,
-      goalsResult,
-      cardsResult,
-      commentsResult,
-      messagesResult,
-      galleryResult,
-      matchPlayersResult
-    ] = results;
-
-
-    if(teamsResult.error)
-      console.error(teamsResult.error);
-
-    if(playersResult.error)
-      console.error(playersResult.error);
-
-    if(matchesResult.error)
-      console.error(matchesResult.error);
-
-    if(goalsResult.error)
-      console.error(goalsResult.error);
-
-    if(cardsResult.error)
-      console.error(cardsResult.error);
-
-    if(commentsResult.error)
-      console.error(commentsResult.error);
-
-    if(messagesResult.error)
-      console.error(messagesResult.error);
-
-    if(galleryResult.error)
-      console.error(galleryResult.error);
-
-    if(matchPlayersResult.error)
-      console.error(matchPlayersResult.error);
-
-
-    teams =
-      teamsResult.data || [];
-
-    players =
-      playersResult.data || [];
-
-    matches =
-      matchesResult.data || [];
-
-    goals =
-      goalsResult.data || [];
-
-    cards =
-      cardsResult.data || [];
-
-    comments =
-      commentsResult.data || [];
-
-    messages =
-      messagesResult.data || [];
-
-    gallery =
-      galleryResult.data || [];
-
-    matchPlayers =
-      matchPlayersResult.data || [];
-
+    teams=keep(teamsResult,teams);
+    players=keep(playersResult,players);
+    matches=keep(matchesResult,matches);
+    goals=keep(goalsResult,goals);
+    cards=keep(cardsResult,cards);
+    comments=keep(commentsResult,comments);
+    messages=messagesResult.error?messages:(messagesResult.data||[]).slice().reverse();
+    gallery=keep(galleryResult,gallery);
+    matchPlayers=keep(matchPlayersResult,matchPlayers);
 
     processLeagueNotifications();
-
-
     renderAll();
-
   }catch(error){
-
-    console.error(
-      "Greška pri učitavanju:",
-      error
-    );
+    console.error("Greška pri učitavanju:",error);
   }finally{
     loadAllActive=false;
     if(loadAllPending){
       loadAllPending=false;
-      queueMicrotask(()=>{void loadAll();});
+      queueMicrotask(()=>{void loadAll()});
     }
   }
 }
-
 
 /* =========================================================
    RENDER ALL
@@ -1754,7 +1704,7 @@ function initMusic(){
       const ids=musicTracks.map(t=>t.youtube_music_id).filter(Boolean);
       if(ids.length)src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(ids[0])+"?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&modestbranding=1&loop=1&playlist="+encodeURIComponent(ids.join(","));
     }
-    wrap.innerHTML=src?'<iframe id="ytMusic" src="'+src+'" title="Medjaši Liga muzika" loading="eager" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>':"";
+    wrap.innerHTML=src?'<iframe id="ytMusic" src="'+src+'" title="Međasi Liga muzika" loading="eager" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>':"";
     currentMusicSignature=signature;musicUserStarted=false;
   }
   if(hint)hint.innerHTML='<span class="music-live-badge">● MUZIKA LIGE</span> <span class="music-volume-note">'+(first.provider==="spotify"?"Spotify player je spreman. Pritisni Play na playeru.":(musicTracks.every(t=>t.provider!=="spotify")?"Playlist svira redom. Klikni „Uključi zvuk“ ako želiš zvuk.":"Prva pjesma je spremna za puštanje."))+'</span>';
@@ -7674,7 +7624,7 @@ function subscribeRealtime(){
             table:"comments"
           },
           () =>
-            scheduleLoadAll()
+            refreshCommentsOnly()
         )
 
 
@@ -7686,7 +7636,7 @@ function subscribeRealtime(){
             table:"messages"
           },
           () =>
-            scheduleLoadAll()
+            refreshMessagesOnly()
         )
 
 
@@ -7739,28 +7689,28 @@ async function init(){
   supabaseClient
     .auth
     .onAuthStateChange(
-      async (event) => {
+      (event) => {
+        if(event==="TOKEN_REFRESHED"||event==="INITIAL_SESSION") return;
+        setTimeout(async()=>{
+          try{
+            await checkAuth();
+            await loadAll();
 
-        /*
-          TOKEN_REFRESHED se dešava automatski kada korisnik
-          nije bio na stranici neko vrijeme. Ne mijenjamo
-          aktivnu sekciju u tom slučaju.
-        */
-        await checkAuth();
-        await loadAll();
-
-        if(event === "SIGNED_IN" || event === "SIGNED_UP"){
-          if(medjasiAuthInteraction){
-            medjasiAuthInteraction = false;
-            showSection("home");
-          }else{
-            restoreRememberedSection();
+            if(event==="SIGNED_IN"||event==="SIGNED_UP"){
+              if(medjasiAuthInteraction){
+                medjasiAuthInteraction=false;
+                showSection("home");
+              }else{
+                restoreRememberedSection();
+              }
+            }else if(event==="SIGNED_OUT"){
+              medjasiAuthInteraction=false;
+              showSection("home");
+            }
+          }catch(authError){
+            console.error(authError);
           }
-        }else if(event === "SIGNED_OUT"){
-          medjasiAuthInteraction = false;
-          showSection("home");
-        }
-
+        },0);
       }
     );
 
@@ -7769,14 +7719,17 @@ async function init(){
     Rezervno osvježavanje svakih 30 sekundi.
   */
 
+  document.addEventListener("visibilitychange",()=>{
+    if(!document.hidden) scheduleLoadAll(200);
+  });
+
   setInterval(
     async()=>{
-
+      if(document.hidden) return;
       await loadAll();
       await loadMusicSettings();
-
     },
-    30000
+    60000
   );
 }
 
@@ -7789,13 +7742,13 @@ document.addEventListener(
   "keydown",
   event => {
 
-    if(event.key === "Escape"){
-
+    if(event.key==="Escape"){
+      const wasOpen=document.getElementById("modal")?.classList.contains("active");
       hideModal();
-
-      clearInterval(
-        liveRefreshInterval
-      );
+      if(wasOpen){
+        clearInterval(liveRefreshInterval);
+        clearInterval(window.__medjasiLiveClock);
+      }
     }
 
   }
@@ -10292,7 +10245,7 @@ function mediaHtml(url,type,title=""){const safe=safeUrl(url);if(!safe)return ""
 function ensureNewsUI(){
   if(!$('news')){
     const sec=document.createElement('section');sec.id='news';sec.className='section';
-    sec.innerHTML=`<div class="gallery-hero"><div><span class="hero-kicker">ZVANIČNE INFORMACIJE LIGE</span><h2 class="section-title" style="margin:4px 0 6px">📰 Vijesti</h2><p class="muted">Novosti, najave, rezultati i dešavanja iz Medjaši Futsal Lige.</p></div><div class="gallery-count" id="newsCount">0 vijesti</div></div><div id="newsFeature"></div><div id="newsGrid" class="v7-news-grid"></div>`;
+    sec.innerHTML=`<div class="gallery-hero"><div><span class="hero-kicker">ZVANIČNE INFORMACIJE LIGE</span><h2 class="section-title" style="margin:4px 0 6px">📰 Vijesti</h2><p class="muted">Novosti, najave, rezultati i dešavanja iz Međasi Futsal Lige.</p></div><div class="gallery-count" id="newsCount">0 vijesti</div></div><div id="newsFeature"></div><div id="newsGrid" class="v7-news-grid"></div>`;
     const comments=document.querySelector('#comments');comments?.parentNode.insertBefore(sec,comments);
   }
   document.querySelectorAll('button[onclick*="showSection(\'comments\')"]').forEach(b=>{if(b.innerHTML.includes('Komentari')){b.innerHTML=b.innerHTML.replace('💭','📰').replace('Komentari','Vijesti');b.setAttribute('onclick',"showSection('news')")}});
@@ -10320,10 +10273,10 @@ function renderNews(){
   const feature=$('newsFeature'),grid=$('newsGrid');if(!grid)return;
   if(!publicNews.length){if(feature)feature.innerHTML='';grid.innerHTML='<div class="v7-news-empty" style="grid-column:1/-1">📰 Još nema objavljenih vijesti.</div>';return}
   const f=publicNews[0];
-  if(feature)feature.innerHTML=`<article class="v7-news-card card" style="margin-bottom:0"><div class="v7-news-media">${mediaHtml(f.media_url||f.image_url,f.media_type,f.title)}</div><div class="v7-news-body"><div class="v7-news-kicker">${escV(f.kicker||'VIJEST')}</div><div class="v7-news-title">${escV(f.title)}</div><div class="v7-news-lead">${escV(f.lead||'')}</div><div class="v7-news-meta"><span>${formatV(f.created_at)}</span><span>${escV(f.author_name||'Medjaši Futsal Liga')}</span></div><div class="v7-news-actions"><button class="btn btn-green btn-small" onclick="medjasiV7.openNews('${f.id}')">Otvori vijest →</button><button class="btn btn-small" onclick="medjasiV7.shareNews('${f.id}')">↗ Podijeli</button></div></div></article>`;
+  if(feature)feature.innerHTML=`<article class="v7-news-card card" style="margin-bottom:0"><div class="v7-news-media">${mediaHtml(f.media_url||f.image_url,f.media_type,f.title)}</div><div class="v7-news-body"><div class="v7-news-kicker">${escV(f.kicker||'VIJEST')}</div><div class="v7-news-title">${escV(f.title)}</div><div class="v7-news-lead">${escV(f.lead||'')}</div><div class="v7-news-meta"><span>${formatV(f.created_at)}</span><span>${escV(f.author_name||'Međasi Futsal Liga')}</span></div><div class="v7-news-actions"><button class="btn btn-green btn-small" onclick="medjasiV7.openNews('${f.id}')">Otvori vijest →</button><button class="btn btn-small" onclick="medjasiV7.shareNews('${f.id}')">↗ Podijeli</button></div></div></article>`;
   grid.innerHTML=publicNews.slice(1).map(n=>`<article class="v7-news-card card"><div class="v7-news-media">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div class="v7-news-body"><div class="v7-news-kicker">${escV(n.kicker||'VIJEST')}</div><div class="v7-news-title">${escV(n.title)}</div><div class="v7-news-lead">${escV(n.lead||'')}</div><div class="v7-news-meta"><span>${formatV(n.created_at)}</span><span>${escV(n.author_name||'Liga')}</span></div><div class="v7-news-actions"><button class="btn btn-green btn-small" onclick="medjasiV7.openNews('${n.id}')">Otvori</button><button class="btn btn-small" onclick="medjasiV7.shareNews('${n.id}')">↗ Chat</button></div></div></article>`).join('');
 }
-function openNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n)return;showModal(`<div class="modal-title"><span class="hero-kicker">${escV(n.kicker||'VIJEST')}</span><h2>${escV(n.title)}</h2><p class="muted">${formatV(n.created_at)} · ${escV(n.author_name||'Medjaši Futsal Liga')}</p></div><div class="v7-news-media" style="border-radius:16px">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div style="white-space:pre-wrap;line-height:1.75;margin-top:18px">${escV(n.body||n.lead||'')}</div><div class="actions" style="margin-top:18px"><button class="btn btn-green" onclick="medjasiV7.shareNews('${n.id}')">💬 Podijeli u chat</button></div>`)}
+function openNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n)return;showModal(`<div class="modal-title"><span class="hero-kicker">${escV(n.kicker||'VIJEST')}</span><h2>${escV(n.title)}</h2><p class="muted">${formatV(n.created_at)} · ${escV(n.author_name||'Međasi Futsal Liga')}</p></div><div class="v7-news-media" style="border-radius:16px">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div style="white-space:pre-wrap;line-height:1.75;margin-top:18px">${escV(n.body||n.lead||'')}</div><div class="actions" style="margin-top:18px"><button class="btn btn-green" onclick="medjasiV7.shareNews('${n.id}')">💬 Podijeli u chat</button></div>`)}
 async function shareNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n||!currentUser){showSection('login');toastV('Prijavi se da bi podijelio vijest.','error');return}const text=`📰 ${n.title}\n${n.lead||''}`.trim();const {error}=await supabaseClient.from('messages').insert({user_id:currentUser.id,username:currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik',content:text,image_url:n.media_type==='image'?(n.media_url||n.image_url):null});if(error){toastV(error.message,'error');return}hideModal();showSection('chat');await loadAll();toastV('Vijest je podijeljena u chat.');}
 async function publishNews(){if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');const title=$('v7NewsTitle')?.value.trim(),lead=$('v7NewsLead')?.value.trim(),body=$('v7NewsBody')?.value.trim(),kicker=$('v7NewsKicker')?.value.trim()||'VIJEST',published=$('v7NewsPublished')?.value==='true',file=$('v7NewsFile')?.files?.[0];if(!title||!body){toastV('Unesi naslov i sadržaj vijesti.','error');return}let media_url=null,media_type=null;if(file){if(file.size>50*1024*1024){toastV('Fajl je prevelik. Maksimum je 50 MB.','error');return}media_url=await uploadFile(file,'news');media_type=file.type.startsWith('video/')?'video':'image'}const {error}=await supabaseClient.from('news').insert({title,lead,body,kicker,author_id:currentUser.id,author_name:currentProfile?.username||currentUser.email?.split('@')[0]||'Admin',media_url,media_type,published});if(error){toastV(error.message,'error');return}if(published) await notifyPush('news',`📰 ${title}`,lead||'Nova vijest na sajtu.');['v7NewsTitle','v7NewsLead','v7NewsBody','v7NewsKicker'].forEach(id=>{if($(id))$(id).value=''});if($('v7NewsFile'))$('v7NewsFile').value='';await loadNews();toastV('Vijest je objavljena.');}
 async function deleteNews(id){if(!isAdm())return; if(!confirm('Obrisati ovu vijest?'))return;const {error}=await supabaseClient.from('news').delete().eq('id',id);if(error)return toastV(error.message,'error');await loadNews();toastV('Vijest je obrisana.');}
