@@ -1,11 +1,12 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v54";
+const CACHE_NAME = "medjasi-futsal-pwa-v55";
+const CDN_CACHE = "medjasi-cdn-v1";
 
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
   "./css/app.css?v=20261006v21",
-  "./js/app.js?v=20261007v05",
+  "./js/app.js?v=20261008v06",
   "./js/effects.js?v=1",
   "./css/production.css?v=20261007v23",
   "./css/effects.css?v=1",
@@ -18,6 +19,9 @@ const APP_SHELL = [
   "./css/admin-organizer.css?v=5",
   "./css/graphic-engine.css?v=1",
   "./css/visual-redesign-v1.css?v=1",
+  "./css/extras.css?v=1",
+  "./js/extras.js?v=1",
+  "./offline.html",
   "./css/medjasi-icons-v1.css?v=20261007v02",
   "./css/medjasi-home-v2.css?v=1",
   "./css/medjasi-matches-v2.css?v=1",
@@ -52,7 +56,7 @@ self.addEventListener("activate", event => {
       .then(keys =>
         Promise.all(
           keys
-            .filter(key => key !== CACHE_NAME)
+            .filter(key => key !== CACHE_NAME && key !== CDN_CACHE)
             .map(key => caches.delete(key))
         )
       )
@@ -70,8 +74,25 @@ self.addEventListener("fetch", event => {
 
   const url = new URL(request.url);
 
-  // Ne diramo Supabase, YouTube, CDN i ostale spoljne servise
-  if (url.origin !== self.location.origin) {
+  // Supabase biblioteka sa jsDelivr-a: keširamo je za offline/ponovljeno učitavanje.
+  if(url.origin !== self.location.origin){
+    if(url.hostname === "cdn.jsdelivr.net"){
+      event.respondWith(
+        caches.open(CDN_CACHE).then(cache =>
+          cache.match(request).then(hit => {
+            const net=fetch(request)
+              .then(response=>{
+                if(response&&(response.status===200||response.type==="opaque")){
+                  cache.put(request,response.clone());
+                }
+                return response;
+              })
+              .catch(()=>hit);
+            return hit||net;
+          })
+        )
+      );
+    }
     return;
   }
 
@@ -89,7 +110,7 @@ self.addEventListener("fetch", event => {
           return response;
         })
         .catch(() => {
-          return caches.match("./index.html");
+          return caches.match("./index.html").then(r=>r||caches.match("./offline.html"));
         })
     );
 
@@ -151,12 +172,12 @@ self.addEventListener("push", event => {
     data = event.data ? event.data.json() : {};
   } catch (error) {
     data = {
-      title: "Medjaši Futsal Liga",
+      title: "Međasi Futsal Liga",
       body: event.data ? event.data.text() : "Nova obavijest"
     };
   }
 
-  const title = data.title || "Medjaši Futsal Liga";
+  const title = data.title || "Međasi Futsal Liga";
 
   const options = {
     body: data.body || "Nova obavijest",
@@ -187,22 +208,22 @@ self.addEventListener("notificationclick", event => {
       ? event.notification.data.url
       : "./";
 
+  const target=new URL(targetUrl,self.registration.scope).href;
   event.waitUntil(
     clients.matchAll({
       type: "window",
       includeUncontrolled: true
-    }).then(clientList => {
-
-      for (const client of clientList) {
-        if ("focus" in client) {
-          client.navigate(targetUrl);
+    }).then(async clientList=>{
+      for(const client of clientList){
+        if(client.url===target&&"focus" in client) return client.focus();
+      }
+      for(const client of clientList){
+        if("focus" in client&&"navigate" in client){
+          try{await client.navigate(target)}catch(error){}
           return client.focus();
         }
       }
-
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
-      }
+      if(clients.openWindow) return clients.openWindow(target);
     })
   );
 });
