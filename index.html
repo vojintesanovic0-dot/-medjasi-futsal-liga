@@ -30,7 +30,7 @@
 
 <link rel="stylesheet" href="./css/app.css?v=20261006v21">
 <link rel="stylesheet" href="./css/production.css?v=20261007v23"><link rel="stylesheet" href="./css/effects.css?v=1"><link rel="stylesheet" href="./css/game.css?v=2">
-<link rel="stylesheet" href="./css/graphic-engine.css?v=1"><link rel="stylesheet" href="./css/admin-organizer.css?v=5"><link rel="stylesheet" href="./css/medjasi-icons-v1.css?v=1"><link rel="stylesheet" href="./css/medjasi-home-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-matches-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-league-data-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-community-media-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-fan-profile-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-mobile-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-admin-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-sitewide-v3.css?v=1">
+<link rel="stylesheet" href="./css/graphic-engine.css?v=1"><link rel="stylesheet" href="./css/admin-organizer.css?v=5"><link rel="stylesheet" href="./css/medjasi-icons-v1.css?v=1"><link rel="stylesheet" href="./css/medjasi-home-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-matches-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-league-data-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-community-media-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-fan-profile-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-mobile-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-admin-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-sitewide-v3.css?v=1"><link rel="stylesheet" href="./css/medjasi-design-v11.css?v=1">
 </head>
 <body>
 <header class="site-header">
@@ -52,6 +52,8 @@
 <div class="nav-group-title">FAN ZONA</div>
 <button onclick="showSection('game')"><span>🎯</span><span>Pogodi</span></button>
 <button onclick="showSection('info')"><span>ℹ️</span><span>Liga info</span></button>
+<button onclick="showSection('pravilnik')"><span>▤</span><span>Pravilnik</span></button>
+<button onclick="showSection('duration')"><span>◷</span><span>2×30 trajanje</span></button>
 </nav>
 <div class="header-actions"><span class="header-live"><i></i> Liga online</span><button aria-label="Obavještenja" class="notification-bell" id="notificationBell" onclick="openNotifications()" title="Obavještenja" type="button"><span>🔔</span><b class="notification-badge" hidden="" id="notificationBadge">0</b></button><div class="header-account" id="headerAccount"></div><button aria-expanded="false" aria-label="Otvori meni" class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">☰</button></div>
 </div>
@@ -348,6 +350,48 @@
 </div>
 </div>
 </div>
+</section>
+<!-- ================= LEAGUE INFO ================= -->
+<section class="section" id="info">
+  <div class="gallery-hero">
+    <div>
+      <span class="hero-kicker">MEDJAŠI FUTSAL LIGA</span>
+      <h2 class="section-title" style="margin:4px 0 6px">Liga info</h2>
+      <p class="muted">Sve osnovne informacije o ligi na jednom mjestu.</p>
+    </div>
+  </div>
+  <div class="grid grid-2" style="margin-top:18px">
+    <div class="card"><span class="v10-mini-label">FORMAT</span><h3>2×30 minuta</h3><p class="muted">Standardno trajanje utakmice prema pravilima lige.</p></div>
+    <div class="card"><span class="v10-mini-label">TAKMIČENJE</span><h3>Medjaši Futsal Liga</h3><p class="muted">Rezultati, tabela, ekipe, igrači i statistika na jednom mjestu.</p></div>
+  </div>
+</section>
+<!-- ================= RULEBOOK ================= -->
+<section class="section" id="pravilnik">
+  <div class="gallery-hero">
+    <div>
+      <span class="hero-kicker">PRAVILA TAKMIČENJA</span>
+      <h2 class="section-title" style="margin:4px 0 6px">Pravilnik</h2>
+      <p class="muted">Osnovna pravila i način odvijanja utakmica.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h3>Pravila lige</h3>
+    <p class="muted">Ovdje ćemo objediniti konačni pravilnik lige bez mijenjanja postojeće funkcionalnosti sajta.</p>
+  </div>
+</section>
+<!-- ================= MATCH DURATION ================= -->
+<section class="section" id="duration">
+  <div class="gallery-hero">
+    <div>
+      <span class="hero-kicker">FORMAT UTAKMICE</span>
+      <h2 class="section-title" style="margin:4px 0 6px">2×30 trajanje</h2>
+      <p class="muted">Pregled trajanja i osnovnog formata utakmice.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h3>2×30 minuta</h3>
+    <p class="muted">Utakmica se igra u dva poluvremena po 30 minuta, prema pravilima koja važe za ligu.</p>
+  </div>
 </section>
 <!-- ================= ADMIN ================= -->
 <section class="section" id="admin">

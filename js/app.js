@@ -142,7 +142,15 @@ async function loadFanPublicStyles(ids=[]){
   try{
     const {data,error}=await supabaseClient.rpc("fan_public_cosmetics",{p_users:valid});
     if(error){ console.warn("Fan cosmetics:",error); return fanPublicStyles; }
-    (data||[]).forEach(row=>{ fanPublicStyles[String(row.user_id)] = row; });
+    const received=new Set();
+    (data||[]).forEach(row=>{
+      const id=String(row.user_id);
+      fanPublicStyles[id]=row;
+      received.add(id);
+    });
+    valid.forEach(id=>{
+      if(!received.has(id)) fanPublicStyles[id]={};
+    });
   }catch(error){ console.warn("Fan cosmetics:",error); }
   return fanPublicStyles;
 }
@@ -363,6 +371,14 @@ function showSection(id){
 
   if(id === "community"){
     setTimeout(()=>window.loadV9Community?.(),30);
+  }
+
+  // Dynamic sections are mounted by their own modules.
+  if(id === "news"){
+    setTimeout(()=>window.loadNews?.(),30);
+  }
+  if(id === "game"){
+    setTimeout(()=>window.medjasiGame?.refresh?.(),60);
   }
 
   /* MOBILE BOTTOM NAV */
@@ -10316,7 +10332,7 @@ function renderSearch(){const q=$('v7Search')?.value.trim().toLowerCase(),box=$(
 const originalLoadAll=window.loadAll;
 window.loadAll=async function(...args){const r=await originalLoadAll.apply(this,args);try{await loadStats();await loadNews()}catch(e){console.warn('V7 load:',e)}try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();renderGalleryV7()}catch(e){console.warn(e)}return r};
 // Realtime safety wrapper; original subscription remains but news/stats refresh independently.
-V7.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoal;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
+V7.loadNews=loadNews;window.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoal;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
 window.openGoalControl=function(id){return openGoal(id)};
 window.adminAddGalleryImage=adminAddMedia;
 window.renderAdminNews=renderAdminNews;

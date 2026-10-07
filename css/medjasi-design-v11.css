@@ -1,0 +1,82 @@
+/* Medjasi Design V11 — safe visual layer */
+:root{--m11-green:#39f58b;--m11-green-soft:rgba(57,245,139,.10);--m11-green-line:rgba(57,245,139,.18);--m11-bg:#04090b;--m11-surface:#081214;--m11-surface-2:#0b181a;--m11-text:#effff7;--m11-muted:#789087}
+body{background:radial-gradient(900px 520px at 78% -10%,rgba(57,245,139,.055),transparent 62%),radial-gradient(700px 460px at 8% 18%,rgba(57,245,139,.025),transparent 68%),#04090b!important}
+.site-header{background:rgba(4,9,11,.82)!important;border-bottom:1px solid rgba(255,255,255,.055)!important;backdrop-filter:blur(18px)!important}
+.header-inner{min-height:76px!important}.logo{transition:transform .2s ease,opacity .2s ease!important}.logo:hover{transform:translateY(-1px);opacity:.96}
+.logo-ball{box-shadow:0 0 0 7px rgba(57,245,139,.045),0 12px 35px rgba(57,245,139,.08)!important}
+.header-live{border:1px solid rgba(57,245,139,.14)!important;background:rgba(57,245,139,.045)!important;border-radius:999px!important;padding:8px 11px!important}
+.notification-bell{border:1px solid rgba(255,255,255,.07)!important;background:rgba(255,255,255,.025)!important;border-radius:12px!important}
+#mainNav{display:flex!important;flex-direction:column!important;gap:5px!important;padding:8px!important}
+#mainNav .nav-group-title{width:100%!important;padding:8px 10px 4px!important;margin:6px 0 0!important;color:#5f756d!important;font-size:9px!important;letter-spacing:.15em!important}
+#mainNav button{width:100%!important;display:flex!important;align-items:center!important;gap:11px!important;padding:9px 12px!important;text-align:left!important;border:1px solid transparent!important;border-radius:12px!important;min-height:42px!important;transition:background .18s ease,border-color .18s ease,transform .18s ease!important}
+#mainNav button::before{flex:0 0 19px!important}
+#mainNav button > span:last-child{font-weight:800!important}
+#mainNav button:hover{background:rgba(255,255,255,.035)!important;border-color:rgba(255,255,255,.055)!important;transform:translateX(2px)}
+#mainNav button.active{background:linear-gradient(90deg,rgba(57,245,139,.105),rgba(57,245,139,.025))!important;border-color:rgba(57,245,139,.14)!important;box-shadow:inset 3px 0 0 var(--m11-green)!important}
+.section-title{letter-spacing:-.045em!important;font-weight:950!important}.section-title::before{box-shadow:0 8px 24px rgba(57,245,139,.06)!important}
+.card{border-color:rgba(255,255,255,.055)!important;background:linear-gradient(145deg,rgba(10,21,23,.96),rgba(4,11,13,.94))!important;box-shadow:0 20px 65px rgba(0,0,0,.20)!important}.card:hover{border-color:rgba(57,245,139,.14)!important}
+.v10-home{position:relative}.v10-hero{border-color:rgba(57,245,139,.12)!important;background:radial-gradient(600px 300px at 80% 0%,rgba(57,245,139,.09),transparent 68%),linear-gradient(145deg,rgba(7,18,20,.96),rgba(3,9,11,.96))!important;box-shadow:0 28px 90px rgba(0,0,0,.28)!important}
+.v10-eyebrow{letter-spacing:.13em!important}.v10-hero-copy h1{letter-spacing:-.065em!important}.v10-hero-copy h1 em{text-shadow:0 0 35px rgba(57,245,139,.10)!important}
+.v10-main-cta{box-shadow:0 15px 38px rgba(57,245,139,.12)!important}.v10-ghost-cta{background:rgba(255,255,255,.025)!important;border-color:rgba(255,255,255,.07)!important}
+.v10-kpi{border-color:rgba(255,255,255,.055)!important;background:linear-gradient(145deg,rgba(10,22,24,.9),rgba(5,12,14,.9))!important;border-radius:18px!important;transition:transform .18s ease,border-color .18s ease,background .18s ease!important}
+.v10-kpi:hover{transform:translateY(-2px)!important;border-color:rgba(57,245,139,.16)!important;background:linear-gradient(145deg,rgba(11,28,24,.94),rgba(5,13,14,.92))!important}
+.v10-kpi-icon{filter:saturate(.85)!important}.v10-quick-card,.v10-next-card,.v10-media-strip,.v10-music-card{border-radius:20px!important}
+.btn{border-radius:12px!important;font-weight:900!important}.btn-green{box-shadow:0 10px 30px rgba(57,245,139,.08)!important}.btn-green:hover{box-shadow:0 14px 38px rgba(57,245,139,.13)!important}
+input,select,textarea{border-color:rgba(255,255,255,.075)!important;background:#061011!important}input:focus,select:focus,textarea:focus{border-color:rgba(57,245,139,.30)!important;box-shadow:0 0 0 3px rgba(57,245,139,.055)!important;outline:none!important}
+#table tbody tr,#matches .match-row{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important}#table tbody tr:hover,#matches .match-row:hover{transform:translateY(-1px)!important}
+#community .v9-community-hero,#gallery .gallery-hero{border-color:rgba(57,245,139,.14)!important;box-shadow:0 24px 75px rgba(0,0,0,.22)!important}
+@media(max-width:780px){.header-inner{min-height:64px!important}.v10-hero-copy h1{letter-spacing:-.055em!important}.v10-kpi{border-radius:15px!important}}
+
+
+/* V11 navigation responsive refinement */
+.header-actions{gap:8px!important}
+.header-account{min-width:0!important}
+@media(min-width:1100px){#mainNav{min-width:250px!important}}
+@media(max-width:780px){#mainNav{padding:10px!important}#mainNav button{min-height:46px!important;padding:10px 13px!important}}
+
+/* Home visual hierarchy */
+.v10-hero{min-height:460px!important;border-radius:28px!important;overflow:hidden!important}
+.v10-hero-copy{position:relative;z-index:2!important}
+.v10-hero-visual{position:relative;z-index:1!important}
+.v10-kpi-grid{margin-top:14px!important}
+.v10-kpi strong{font-size:25px!important}
+.v10-kpi small{font-size:10px!important;text-transform:uppercase!important;letter-spacing:.08em!important}
+.v10-card-head h2,.v10-section-heading h2{letter-spacing:-.035em!important}
+.v10-live-section,.v10-results-section{margin-top:18px!important}
+.v10-community-banner{border-radius:24px!important}
+.v10-bottom-grid{gap:14px!important}
+
+
+/* V11 league pages visual pass — CSS only */
+#table,#matches,#teams,#players,#stats,#comments,#chat,#gallery,#login,#info,#pravilnik,#duration,#admin,#community,#news,#game{padding-top:8px!important}
+#table>.section-title,#matches>.section-title,#teams>.section-title,#players>.section-title,#stats>.section-title,#comments>.section-title,#chat>.section-title,#admin>.section-title{margin-bottom:18px!important}
+#table .table-wrap{overflow:auto!important;border-radius:18px!important}
+#table table{min-width:720px!important;border-collapse:separate!important;border-spacing:0!important}
+#table thead th{background:rgba(57,245,139,.045)!important;color:#91aa9f!important;font-size:10px!important;letter-spacing:.08em!important;text-transform:uppercase!important}
+#table tbody tr{background:rgba(255,255,255,.012)!important}
+.filters{gap:10px!important;padding:12px!important;border:1px solid rgba(255,255,255,.045)!important;border-radius:18px!important;background:rgba(7,17,19,.72)!important;margin-bottom:16px!important}
+.filters input,.filters select{min-height:44px!important}
+#matchesList{display:grid!important;gap:12px!important}
+#matchesList>*{border:1px solid rgba(255,255,255,.055)!important;border-radius:18px!important;background:linear-gradient(145deg,rgba(10,22,24,.92),rgba(4,11,13,.94))!important}
+#teamsGrid,#playersGrid{gap:14px!important}
+#teamsGrid>.card,#playersGrid>.card{border-radius:18px!important;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important}
+#teamsGrid>.card:hover,#playersGrid>.card:hover{transform:translateY(-3px)!important;border-color:rgba(57,245,139,.16)!important}
+#stats>.grid{gap:14px!important}
+#stats .grid>.card{min-height:190px!important;border-radius:18px!important}
+#comments>.card,#chat>.card{border-radius:20px!important}
+.chat-header{padding:4px 0 14px!important;border-bottom:1px solid rgba(255,255,255,.055)!important;margin-bottom:12px!important}
+.chat-online-dot{font-size:10px!important;letter-spacing:.08em!important;color:var(--m11-green)!important}
+.chat-box{border:1px solid rgba(255,255,255,.045)!important;background:rgba(2,8,10,.58)!important;border-radius:16px!important}
+#gallery .gallery-hero,#info .gallery-hero,#pravilnik .gallery-hero,#duration .gallery-hero{border-radius:22px!important;background:linear-gradient(145deg,rgba(9,22,23,.96),rgba(4,11,13,.96))!important}
+#galleryGrid{gap:12px!important}
+#galleryGrid>*{border-radius:16px!important;overflow:hidden!important;border-color:rgba(255,255,255,.055)!important}
+#login .grid{gap:14px!important}
+#login .card{border-radius:20px!important}
+#info .grid>.card,#pravilnik>.card,#duration>.card{border-radius:18px!important}
+#community{min-height:420px!important}
+#community .card{border-radius:18px!important}
+#news,#game{max-width:1200px!important;margin-left:auto!important;margin-right:auto!important}
+#news .card,#game .card{border-radius:18px!important}
+#admin .admin-grid{gap:14px!important}
+#admin .admin-grid>.card{border-radius:18px!important}
+@media(max-width:780px){#table,#matches,#teams,#players,#stats,#comments,#chat,#gallery,#login,#info,#pravilnik,#duration,#admin,#community,#news,#game{padding-top:4px!important}#table table{min-width:720px!important}#gallery .gallery-hero,#info .gallery-hero,#pravilnik .gallery-hero,#duration .gallery-hero{border-radius:18px!important}}
