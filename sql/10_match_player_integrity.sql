@@ -25,7 +25,10 @@ begin
   from public.matches
   where id = new.match_id;
 
-  if player_team is null or (player_team <> home_team and player_team <> away_team) then
+  if player_team is null
+     or (home_team is null and away_team is null)
+     or (player_team <> home_team and player_team <> away_team)
+  then
     raise exception 'Igrač ne pripada ekipama ove utakmice.';
   end if;
 
