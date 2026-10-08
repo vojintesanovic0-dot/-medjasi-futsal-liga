@@ -451,7 +451,7 @@ main > .section{
   .mobile-bottom{
     left:8px!important;
     right:8px!important;
-    bottom:8px!important;
+    bottom:calc(8px + env(safe-area-inset-bottom))!important;
     height:62px!important;
     padding:5px!important;
     grid-template-columns:repeat(5,minmax(0,1fr))!important;
@@ -490,12 +490,12 @@ main > .section{
     display:grid!important;
     place-items:center!important;
   }
-  main{padding-bottom:96px!important;}
+  main{padding-bottom:calc(96px + env(safe-area-inset-bottom))!important;}
   .footer{width:calc(100% - 16px)!important;margin-left:auto!important;margin-right:auto!important;}
 }
 
 @media(max-width:380px){
-  .mobile-bottom{left:5px!important;right:5px!important;bottom:5px!important;height:58px!important;border-radius:16px!important;}
+  .mobile-bottom{left:5px!important;right:5px!important;bottom:calc(5px + env(safe-area-inset-bottom))!important;height:58px!important;border-radius:16px!important;}
   .mobile-bottom button{min-height:48px!important;font-size:7px!important;}
   main{padding-bottom:90px!important;}
 }
@@ -616,12 +616,19 @@ main > .section{
 
 /* Final mobile shell: keep the primary header visible while scrolling. */
 @media(max-width:780px){
-  body{padding-top:64px!important;}
+  body{padding-top:calc(64px + env(safe-area-inset-top))!important;}
   .site-header{position:fixed!important;left:0!important;right:0!important;top:0!important;width:100%!important;}
-  .site-header .header-inner{height:64px!important;min-height:64px!important;}
-  .site-header #mainNav{top:70px!important;}
+  .site-header .header-inner{
+    height:calc(64px + env(safe-area-inset-top))!important;
+    min-height:calc(64px + env(safe-area-inset-top))!important;
+    padding-top:env(safe-area-inset-top)!important;
+  }
+  .site-header #mainNav{top:calc(70px + env(safe-area-inset-top))!important;}
 }
 @media(max-width:600px){
-  body{padding-top:64px!important;}
-  .site-header #mainNav{top:70px!important;max-height:calc(100vh - 78px)!important;}
+  body{padding-top:calc(64px + env(safe-area-inset-top))!important;}
+  .site-header #mainNav{
+    top:calc(70px + env(safe-area-inset-top))!important;
+    max-height:calc(100vh - 78px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;
+  }
 }
