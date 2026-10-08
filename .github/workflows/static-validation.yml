@@ -1,0 +1,41 @@
+name: Static validation
+
+on:
+  push:
+    branches: ["main", "ai-complete-repair-2026-10-08"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find js -type f -name "*.js" -print | sort)
+          test "${#files[@]}" -gt 0
+          for file in "${files[@]}"; do
+            echo "Checking $file"
+            node --check "$file"
+          done
+
+      - name: Validate required entry files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in index.html manifest.json service-worker.js; do
+            test -f "$file"
+          done
