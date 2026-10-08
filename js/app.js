@@ -3472,6 +3472,7 @@ async function addComment(){
     await loadAll();
 
   }catch(error){
+    if(image_url) await removeStorageUrls([image_url]);
     console.error(error);
     alert(error.message || "Greška pri objavljivanju komentara.");
   }
@@ -3527,6 +3528,8 @@ async function deleteComment(id){
   }
 
 
+  const storageUrl=comment.image_url||null;
+
   const {
     error
   } =
@@ -3537,18 +3540,16 @@ async function deleteComment(id){
 
 
   if(error){
-
     alert(error.message);
-
     return;
   }
 
+  if(storageUrl){
+    const cleanup=await removeStorageUrls([storageUrl]);
+    if(cleanup.error)console.warn("Comment storage cleanup:",cleanup.error);
+  }
 
-  toast(
-    "Komentar je obrisan."
-  );
-
-
+  toast("Komentar je obrisan.");
   await loadAll();
 }
 
@@ -3681,6 +3682,7 @@ async function sendChat(){
     clearChatImage();
     await loadAll();
   }catch(error){
+    if(typeof image_url!=="undefined" && image_url) await removeStorageUrls([image_url]);
     console.error(error);
     alert(error.message || "Greška pri slanju poruke.");
   }
@@ -3703,6 +3705,9 @@ async function deleteChat(id){
   }
 
 
+  const message=messages.find(m=>String(m.id)===String(id));
+  const storageUrl=message?.image_url||null;
+
   const {
     error
   } =
@@ -3713,18 +3718,16 @@ async function deleteChat(id){
 
 
   if(error){
-
     alert(error.message);
-
     return;
   }
 
+  if(storageUrl){
+    const cleanup=await removeStorageUrls([storageUrl]);
+    if(cleanup.error)console.warn("Chat storage cleanup:",cleanup.error);
+  }
 
-  toast(
-    "Poruka je obrisana."
-  );
-
-
+  toast("Poruka je obrisana.");
   await loadAll();
 }
 
@@ -4012,16 +4015,9 @@ async function addTeam(){
 
     let logo_url = null;
 
-
     if(file){
-
-      logo_url =
-        await uploadFile(
-          file,
-          "teams"
-        );
+      logo_url=await uploadFile(file,"teams");
     }
-
 
     const {
       error
@@ -4033,7 +4029,6 @@ async function addTeam(){
           logo_url,
           coach
         });
-
 
     if(error) throw error;
 
@@ -4059,7 +4054,9 @@ async function addTeam(){
     await loadAll();
 
   }catch(error){
-
+    if(typeof logo_url!=="undefined" && logo_url){
+      await removeStorageUrls([logo_url]);
+    }
     alert(error.message);
   }
 }
@@ -4132,14 +4129,8 @@ async function addPlayer(){
 
     let photo_url = null;
 
-
     if(file){
-
-      photo_url =
-        await uploadFile(
-          file,
-          "players"
-        );
+      photo_url=await uploadFile(file,"players");
     }
 
 
@@ -4212,7 +4203,9 @@ async function addPlayer(){
     await loadAll();
 
   }catch(error){
-
+    if(typeof photo_url!=="undefined" && photo_url){
+      await removeStorageUrls([photo_url]);
+    }
     alert(error.message);
   }
 }
