@@ -10128,7 +10128,6 @@ if ("serviceWorker" in navigator) {
       if(typeof loadAll==="function") await loadAll();
     }catch(error){
       if(typeof image_url!=="undefined" && image_url) await removeStorageUrls([image_url]);
-      {
       console.error(error);
       alert(error.message||"Greška pri slanju poruke.");
     }
