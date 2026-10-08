@@ -7492,7 +7492,7 @@ function openPlayer(
    DELETE TEAM
 ========================================================= */
 
-async async function deleteTeam(teamId){
+async function deleteTeam(teamId){
   if(!isAdmin()){
     alert("Nemaš admin ovlaštenje.");
     return;
