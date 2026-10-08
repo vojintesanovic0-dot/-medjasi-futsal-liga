@@ -9414,15 +9414,39 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
 
+/* =========================================================
+   SHARED SERVICE WORKER REGISTRATION
+   Keeps legacy Push + V7 + PWA registration on one idempotent path.
+========================================================= */
+
+window.medjasiEnsureServiceWorker = function(){
+  if(!("serviceWorker" in navigator)) return Promise.resolve(null);
+
+  if(window.__MEDJASI_SW_REG_PROMISE__){
+    return window.__MEDJASI_SW_REG_PROMISE__;
+  }
+
+  window.__MEDJASI_SW_REG_PROMISE__ =
+    navigator.serviceWorker
+      .getRegistration("./")
+      .then(existing => existing || navigator.serviceWorker.register("./service-worker.js",{scope:"./"}))
+      .catch(error => {
+        window.__MEDJASI_SW_REG_PROMISE__ = null;
+        console.warn("Service worker nije registrovan:",error);
+        return null;
+      });
+
+  return window.__MEDJASI_SW_REG_PROMISE__;
+};
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js")
+    window.medjasiEnsureServiceWorker?.()
       .then(registration => {
-        console.log("Međasi PWA Service Worker aktivan:", registration.scope);
+        if(registration){
+          console.log("Međasi PWA Service Worker aktivan:", registration.scope);
+        }
       })
-      .catch(error => {
-        console.error("PWA Service Worker greška:", error);
-      });
   });
 }
 
@@ -10253,9 +10277,9 @@ if ("serviceWorker" in navigator) {
   }
 
   async function registerSW(){
-    if(!("serviceWorker" in navigator)) return null;
-    try{return await navigator.serviceWorker.register("./service-worker.js",{scope:"./"});}
-    catch(e){console.warn("Service worker nije registrovan:",e);return null;}
+    return window.medjasiEnsureServiceWorker
+      ? window.medjasiEnsureServiceWorker()
+      : null;
   }
 
   async function subscribePush(){
@@ -10540,7 +10564,9 @@ function openSeasonStats(){const by={};(V7.stats||[]).forEach(s=>{const p=player
 
 async function notifyPush(type,title,body,matchId=null){try{if(!currentUser)return;const sessionResult=await supabaseClient.auth.getSession();const token=sessionResult.data?.session?.access_token;if(!token)return;await fetch(V7.pushEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({type,title,body,match_id:matchId||currentMatchId||null})})}catch(e){console.warn('Push notify:',e)}}
 function b64ToBytes(s){const pad='='.repeat((4-s.length%4)%4),raw=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
-async function subscribeRealPush(){if(!currentUser)return toastV('Prvo se prijavi.','error');if(!('serviceWorker' in navigator)||!('PushManager' in window))return toastV('Ovaj browser ne podržava push.','error');const perm=await Notification.requestPermission();if(perm!=='granted')return toastV('Dozvola za obavještenja nije odobrena.','error');const reg=await navigator.serviceWorker.register('./service-worker.js',{scope:'./'});let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToBytes(V7.pushPublicKey)});const j=sub.toJSON();const {error}=await supabaseClient.from('push_subscriptions').upsert({user_id:currentUser.id,endpoint:sub.endpoint,p256dh:j.keys?.p256dh,auth:j.keys?.auth,user_agent:navigator.userAgent,updated_at:new Date().toISOString()},{onConflict:'endpoint'});if(error)return toastV(error.message,'error');localStorage.setItem('medjasi_push_enabled','1');renderPushUI();toastV('🔔 Push obavještenja su uključena.')}
+async function subscribeRealPush(){if(!currentUser)return toastV('Prvo se prijavi.','error');if(!('serviceWorker' in navigator)||!('PushManager' in window))return toastV('Ovaj browser ne podržava push.','error');const perm=await Notification.requestPermission();if(perm!=='granted')return toastV('Dozvola za obavještenja nije odobrena.','error');const reg=await (window.medjasiEnsureServiceWorker
+  ? window.medjasiEnsureServiceWorker()
+  : navigator.serviceWorker.register('./service-worker.js',{scope:'./'}));let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToBytes(V7.pushPublicKey)});const j=sub.toJSON();const {error}=await supabaseClient.from('push_subscriptions').upsert({user_id:currentUser.id,endpoint:sub.endpoint,p256dh:j.keys?.p256dh,auth:j.keys?.auth,user_agent:navigator.userAgent,updated_at:new Date().toISOString()},{onConflict:'endpoint'});if(error)return toastV(error.message,'error');localStorage.setItem('medjasi_push_enabled','1');renderPushUI();toastV('🔔 Push obavještenja su uključena.')}
 async function disableRealPush(){try{const reg=await navigator.serviceWorker.getRegistration('./');const sub=await reg?.pushManager.getSubscription();if(sub){await supabaseClient.from('push_subscriptions').delete().eq('endpoint',sub.endpoint);await sub.unsubscribe()}}catch(e){console.warn(e)}localStorage.removeItem('medjasi_push_enabled');renderPushUI()}
 function renderPushUI(){if(!$('v7PushStatus')||!$('v7PushButton'))return;const on=localStorage.getItem('medjasi_push_enabled')==='1';$('v7PushStatus').textContent=on?'🔔 Push obavještenja su uključena.':'Push obavještenja nisu uključena.';$('v7PushStatus').className='v7-push-status '+(on?'ok':'');$('v7PushButton').textContent=on?'🔕 Isključi push':'🔔 Uključi push';$('v7PushButton').onclick=on?disableRealPush:subscribeRealPush}
 function ensureSeasonAdmin(){if(!$('adminContent')||!isAdm()||$('v7SeasonCard'))return;const c=document.createElement('div');c.id='v7SeasonCard';c.className='card';c.style.marginTop='20px';c.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SEZONE</span><h3>🏆 Upravljanje sezonama</h3><p class="muted">Aktivna sezona se automatski dodjeljuje novim utakmicama.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="actions"><input id="v7SeasonName" placeholder="npr. 2026/27" style="max-width:220px"><button class="btn btn-green" onclick="medjasiV7.addSeason()">＋ Nova sezona</button></div><div id="v7SeasonList" style="margin-top:12px"></div>`;$('adminContent').appendChild(c);renderSeasons()}
