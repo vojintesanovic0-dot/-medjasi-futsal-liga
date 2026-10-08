@@ -10810,10 +10810,12 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   const p=V.posts.find(x=>String(x.id)===String(id));
   if(!p||String(p.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');
   if(!confirm('Obrisati ovu objavu?'))return;
-  const removed=await removeStorageUrls([p.image_url]);
   const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);
   if(error)return toastV(error.message,'error');
+
+  const removed=await removeStorageUrls([p.image_url]);
   if(removed.error)console.warn('Community post storage cleanup:',removed.error);
+
   await load();
   toastV(removed.error?'Objava je obrisana, ali Storage cleanup nije potpuno uspio.':'Objava je obrisana.');
 };
