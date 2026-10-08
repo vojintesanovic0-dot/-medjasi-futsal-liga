@@ -111,7 +111,20 @@ async function publishExtras(postId){
     const options=[...(q("communityPollOptions")?.value||"").split("\n")].map(x=>x.trim()).filter(Boolean).slice(0,8);
     if(question&&options.length>=2){
       const {data:p,error}=await client().from("community_polls").insert({post_id:postId,question}).select("id").single();
-      if(!error&&p) await client().from("community_poll_options").insert(options.map((label,i)=>({poll_id:p.id,label,sort_order:i})));
+      if(error||!p){
+        if(error)console.warn("Community poll:",error);
+        return;
+      }
+
+      const optionResult=await client()
+        .from("community_poll_options")
+        .insert(options.map((label,i)=>({poll_id:p.id,label,sort_order:i})));
+
+      if(optionResult.error){
+        console.warn("Community poll options:",optionResult.error);
+        await client().from("community_polls").delete().eq("id",p.id).eq("post_id",postId);
+        toastX("Anketa nije mogla biti završena.","error");
+      }
     }
   }
 }
@@ -124,8 +137,11 @@ function patchPublish(){
     const r=await old.apply(this,arguments);
     /* The original function closes the modal and reloads. Find the newest own post. */
     if(Date.now()-before<120000&&uid()){
-      const {data}=await client().from("community_posts").select("id").eq("user_id",uid()).order("created_at",{ascending:false}).limit(1);
-      if(data?.[0]) await publishExtras(data[0].id);
+      const postId=(typeof r==="string"&&r)||window.__medjasiLastPublishedPostId||null;
+      if(postId){
+        await publishExtras(postId);
+        window.__medjasiLastPublishedPostId=null;
+      }
       window.loadV9Community?.();
     }
     return r;
