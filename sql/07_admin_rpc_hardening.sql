@@ -108,6 +108,72 @@ create or replace function public.delete_team_admin(team_uuid uuid)
 returns void language sql security invoker set search_path=public,pg_temp
 as $$ select private.delete_team_admin(team_uuid); $$;
 
+create or replace function private.delete_team_admin(team_uuid uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $function$
+declare
+  match_ids uuid[];
+begin
+  perform public._medjasi_require_admin();
+
+  if exists (
+    select 1
+    from public.matches m
+    where (m.home_team_id = team_uuid or m.away_team_id = team_uuid)
+      and exists (
+        select 1 from public.fan_markets fm
+        where fm.match_id::text = m.id::text
+      )
+  ) then
+    raise exception 'Ekipa se ne može obrisati jer njene utakmice sadrže Fan Game markete ili tikete.';
+  end if;
+
+  select array_agg(id) into match_ids
+  from public.matches
+  where home_team_id = team_uuid or away_team_id = team_uuid;
+
+  if match_ids is not null then
+    delete from public.match_players where match_id = any(match_ids);
+    delete from public.goals where match_id = any(match_ids);
+    delete from public.cards where match_id = any(match_ids);
+    delete from public.matches where id = any(match_ids);
+  end if;
+
+  delete from public.players where team_id = team_uuid;
+  delete from public.teams where id = team_uuid;
+end;
+$function$;
+
+create or replace function private.delete_player_admin(player_uuid uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $function$
+begin
+  perform public._medjasi_require_admin();
+
+  if not exists (select 1 from public.players where id = player_uuid) then
+    raise exception 'Igrač nije pronađen.';
+  end if;
+
+  if exists (
+    select 1 from public.fan_markets fm
+    where fm.player_id::text = player_uuid::text
+  ) then
+    raise exception 'Igrač se ne može obrisati jer postoji Fan Game market vezan za tog igrača.';
+  end if;
+
+  delete from public.goals where player_id = player_uuid;
+  delete from public.cards where player_id = player_uuid;
+  delete from public.match_players where player_id = player_uuid;
+  delete from public.players where id = player_uuid;
+end;
+$function$;
+
 create or replace function public.update_match_admin(match_uuid uuid,new_home_team_id uuid,new_away_team_id uuid,new_match_date timestamptz,new_round text)
 returns void language sql security invoker set search_path=public,pg_temp
 as $$ select private.update_match_admin(match_uuid,new_home_team_id,new_away_team_id,new_match_date,new_round); $$;
