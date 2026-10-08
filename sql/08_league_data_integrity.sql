@@ -26,6 +26,12 @@ begin
   if not exists (select 1 from pg_constraint where conrelid='public.matches'::regclass and conname='matches_status_check') then
     alter table public.matches add constraint matches_status_check check (status is null or status in ('scheduled','live','finished'));
   end if;
+  if not exists (select 1 from pg_constraint where conrelid='public.cards'::regclass and conname='cards_type_check') then
+    alter table public.cards add constraint cards_type_check check (lower(card_type) in ('yellow','red'));
+  end if;
+  if not exists (select 1 from pg_constraint where conrelid='public.cards'::regclass and conname='cards_minute_range_check') then
+    alter table public.cards add constraint cards_minute_range_check check (minute is null or minute between 0 and 60);
+  end if;
 end $$;
 
 commit;
