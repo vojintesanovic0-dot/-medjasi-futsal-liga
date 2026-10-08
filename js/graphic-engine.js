@@ -318,16 +318,21 @@
     const btn=$("graphicPublishBtn");
     if(btn){btn.disabled=true;btn.textContent="⏳ Objavljujem...";}
 
+    let image_url=null;
+
     try{
       const filename="graphic-engine/"+window.currentUser.id+"/"+crypto.randomUUID()+".png";
       const {error:uploadError}=await window.supabaseClient
         .storage.from("liga-images")
         .upload(filename,generatedBlob,{contentType:"image/png",upsert:false});
-      if(uploadError) throw uploadError;
+
+      if(uploadError)throw uploadError;
 
       const {data:urlData}=window.supabaseClient
-        .storage.from("liga-images").getPublicUrl(filename);
-      const image_url=urlData.publicUrl;
+        .storage.from("liga-images")
+        .getPublicUrl(filename);
+
+      image_url=urlData.publicUrl;
 
       const player=currentPlayer();
       const team=teamForPlayer(player);
@@ -347,7 +352,7 @@
           image_url,
           caption
         });
-        if(error) throw error;
+        if(error)throw error;
         window.loadV9Community?.();
       }
 
@@ -359,7 +364,7 @@
           content:caption,
           image_url
         });
-        if(error) throw error;
+        if(error)throw error;
         window.loadAll?.();
       }
 
@@ -377,7 +382,7 @@
           media_type:"image",
           published:true
         });
-        if(error) throw error;
+        if(error)throw error;
         window.loadNews?.();
       }
 
@@ -389,6 +394,10 @@
       if(state.destination==="chat") window.showSection?.("chat");
       if(state.destination==="news") window.showSection?.("news");
     }catch(error){
+      if(image_url && window.removeStorageUrls){
+        const cleanup=await window.removeStorageUrls([image_url]);
+        if(cleanup?.error)console.warn("Graphic Engine storage rollback:",cleanup.error);
+      }
       console.error("Graphic Engine publish:",error);
       toast(error?.message || "Greška pri objavi grafike.","error");
     }finally{
