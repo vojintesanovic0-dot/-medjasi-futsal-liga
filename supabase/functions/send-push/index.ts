@@ -38,8 +38,12 @@ Deno.serve(async (req: Request) => {
     if (type === "news" && !isAdmin) {
       return Response.json({ error: "Forbidden" }, { status: 403, headers: corsHeaders });
     }
-    if (type !== "news" && !isAdmin && profile?.role !== "moderator") {
-      return Response.json({ error: "Forbidden" }, { status: 403, headers: corsHeaders });
+
+    if (!isAdmin && profile?.role === "moderator") {
+      const moderatorPushTypes = new Set(["goal", "card", "live", "finish"]);
+      if (!moderatorPushTypes.has(String(type))) {
+        return Response.json({ error: "Forbidden" }, { status: 403, headers: corsHeaders });
+      }
     }
 
     const { data: cfg, error: cfgError } = await admin
