@@ -7494,66 +7494,41 @@ function openPlayer(
    DELETE TEAM
 ========================================================= */
 
-async function deleteTeam(
-  teamId
-){
-
+async async function deleteTeam(teamId){
   if(!isAdmin()){
-
-    alert(
-      "Nemaš admin ovlaštenje."
-    );
-
+    alert("Nemaš admin ovlaštenje.");
     return;
   }
 
+  const team=getTeam(teamId);
+  if(!team)return;
 
-  const team =
-    getTeam(teamId);
-
-
-  if(!team) return;
-
-
-  if(
-    !confirm(
-      `Obrisati ekipu "${team.name}" i sve njene igrače i utakmice?`
-    )
-  ){
+  if(!confirm(`Obrisati ekipu "${team.name}" i sve njene igrače i utakmice?`)){
     return;
   }
 
+  const playerMedia=players
+    .filter(p=>String(p.team_id)===String(teamId))
+    .map(p=>p.photo_url)
+    .filter(Boolean);
 
-  /*
-    Koristi tvoju postojeću RPC funkciju.
-  */
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .rpc(
-        "delete_team_admin",
-        {
-          team_uuid:teamId
-        }
-      );
-
+  const {error}=await supabaseClient.rpc("delete_team_admin",{team_uuid:teamId});
 
   if(error){
-
-    alert(
-      error.message
-    );
-
+    alert(error.message);
     return;
   }
 
+  const cleanup=await removeStorageUrls([
+    team.logo_url,
+    ...playerMedia
+  ].filter(Boolean));
 
-  toast(
-    "Ekipa je obrisana."
-  );
+  if(cleanup.error)console.warn("Team/player storage cleanup:",cleanup.error);
 
+  toast(cleanup.error
+    ? "Ekipa je obrisana, ali dio Storage cleanup-a nije uspio."
+    : "Ekipa je obrisana.");
 
   await loadAll();
 }
