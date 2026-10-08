@@ -7646,9 +7646,22 @@ document.addEventListener(
 function handleLeagueEvent(event){
   const e=event?.new;
   if(!e?.event_type) return;
-  addLeagueNotification({title:e.title||"Novo dešavanje",text:e.body||"",icon:e.event_type==="goal"?"⚽":"🏁",type:e.event_type,key:"league-event:"+e.id,browser:true});
-  if(currentUser) notifyPush(e.event_type,e.title||"Novo dešavanje",e.body||"",e.match_id||null).catch(()=>{});
-  loadAll();
+
+  /*
+    Realtime klijent samo prikazuje događaj i zakazuje objedinjeni refresh.
+    Push se šalje iz stvarne admin akcije, ne iz svakog otvorenog klijenta,
+    kako više admin/moderator tabova ne bi slalo duplikate.
+  */
+  addLeagueNotification({
+    title:e.title||"Novo dešavanje",
+    text:e.body||"",
+    icon:e.event_type==="goal"?"⚽":"🏁",
+    type:e.event_type,
+    key:"league-event:"+e.id,
+    browser:true
+  });
+
+  scheduleLoadAll(150);
 }
 
 function subscribeRealtime(){
