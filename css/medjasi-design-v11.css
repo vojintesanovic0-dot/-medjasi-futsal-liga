@@ -67,7 +67,7 @@ input,select,textarea{border-color:rgba(255,255,255,.075)!important;background:#
 .chat-header{padding:4px 0 14px!important;border-bottom:1px solid rgba(255,255,255,.055)!important;margin-bottom:12px!important}
 .chat-online-dot{font-size:10px!important;letter-spacing:.08em!important;color:var(--m11-green)!important}
 .chat-box{border:1px solid rgba(255,255,255,.045)!important;background:rgba(2,8,10,.58)!important;border-radius:16px!important}
-#gallery .gallery-hero,#info .gallery-hero,#duration .gallery-hero{border-radius:22px!important;background:linear-gradient(145deg,rgba(9,22,23,.96),rgba(4,11,13,.96))!important}
+#gallery .gallery-hero,#info .gallery-hero{border-radius:22px!important;background:linear-gradient(145deg,rgba(9,22,23,.96),rgba(4,11,13,.96))!important}
 #galleryGrid{gap:12px!important}
 #galleryGrid>*{border-radius:16px!important;overflow:hidden!important;border-color:rgba(255,255,255,.055)!important}
 #login .grid{gap:14px!important}
@@ -79,7 +79,7 @@ input,select,textarea{border-color:rgba(255,255,255,.075)!important;background:#
 #news .card,#game .card{border-radius:18px!important}
 #admin .admin-grid{gap:14px!important}
 #admin .admin-grid>.card{border-radius:18px!important}
-@media(max-width:780px){#table,#matches,#teams,#players,#stats,#comments,#chat,#gallery,#login,#info,#admin,#community,#news,#game{padding-top:4px!important}#table table{min-width:720px!important}#gallery .gallery-hero,#info .gallery-hero,#duration .gallery-hero{border-radius:18px!important}}
+@media(max-width:780px){#table,#matches,#teams,#players,#stats,#comments,#chat,#gallery,#login,#info,#admin,#community,#news,#game{padding-top:4px!important}#table table{min-width:720px!important}#gallery .gallery-hero,#info .gallery-hero{border-radius:18px!important}}
 
 
 /* =========================================================
@@ -539,14 +539,7 @@ input:focus,select:focus,textarea:focus{
 }
 #gallery .gallery-hero,
 #info .gallery-hero,
-#duration .gallery-hero{
-  padding:24px!important;
-  border-radius:23px!important;
-  border-color:rgba(57,245,139,.13)!important;
-  background:
-    radial-gradient(460px 180px at 85% 0%,rgba(57,245,139,.08),transparent 70%),
-    linear-gradient(145deg,rgba(9,22,23,.97),rgba(4,11,13,.96))!important;
-}
+
 #galleryGrid{gap:14px!important}
 #galleryGrid>*{border-radius:17px!important}
 
