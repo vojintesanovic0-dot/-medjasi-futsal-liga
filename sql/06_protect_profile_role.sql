@@ -51,4 +51,57 @@ grant execute on function public.update_player_admin(uuid,text,uuid,integer,text
 -- Fan Game settlement is owned by the existing public.medjasi_match_event trigger.
 -- Keeping a single settlement path avoids duplicate processing on match finish.
 
+-- Fan Game settlement integrity:
+-- once a finished match has at least one ticket, goals/cards/lineup changes
+-- must not retroactively invalidate the already-settled result.
+create or replace function private.fan_block_settled_match_edit()
+returns trigger
+language plpgsql
+security definer
+set search_path = private, public, pg_temp
+as $$
+declare
+  v_match text;
+begin
+  if tg_op = 'INSERT' then
+    v_match := new.match_id::text;
+  elsif tg_op = 'DELETE' then
+    v_match := old.match_id::text;
+  else
+    v_match := coalesce(new.match_id::text, old.match_id::text);
+  end if;
+
+  if exists (
+    select 1 from public.matches m
+    where m.id::text = v_match
+      and m.status = 'finished'
+  )
+  and exists (
+    select 1 from public.fan_picks fp
+    where fp.match_id = v_match
+  ) then
+    raise exception 'Utakmica je zaključana jer je Fan Game već obračunat. Korekcija događaja nije dozvoljena.';
+  end if;
+
+  return case when tg_op = 'DELETE' then old else new end;
+end;
+$$;
+
+revoke all on function private.fan_block_settled_match_edit() from public, anon, authenticated;
+
+drop trigger if exists trg_fan_block_finished_goal_edit on public.goals;
+create trigger trg_fan_block_finished_goal_edit
+before insert or update or delete on public.goals
+for each row execute function private.fan_block_settled_match_edit();
+
+drop trigger if exists trg_fan_block_finished_card_edit on public.cards;
+create trigger trg_fan_block_finished_card_edit
+before insert or update or delete on public.cards
+for each row execute function private.fan_block_settled_match_edit();
+
+drop trigger if exists trg_fan_block_finished_lineup_edit on public.match_players;
+create trigger trg_fan_block_finished_lineup_edit
+before insert or update or delete on public.match_players
+for each row execute function private.fan_block_settled_match_edit();
+
 commit;
