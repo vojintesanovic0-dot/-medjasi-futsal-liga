@@ -8490,9 +8490,16 @@ document.addEventListener("DOMContentLoaded",()=>{
     if (!confirm("Obrisati ovu sliku iz galerije?")) return;
 
     try {
+      const item=gallery.find(g=>String(g.id)===String(galleryId));
+
       await rpc4("delete_gallery_admin", {
         gallery_uuid: galleryId
       });
+
+      if(item){
+        const cleanup=await removeStorageUrls([item.media_url,item.image_url].filter(Boolean));
+        if(cleanup.error)console.warn("Admin gallery storage cleanup:",cleanup.error);
+      }
 
       toast4("Slika je obrisana.");
       await loadAll();
