@@ -613,3 +613,15 @@ main > .section{
     transition:none!important;
   }
 }
+
+/* Final mobile shell: keep the primary header visible while scrolling. */
+@media(max-width:780px){
+  body{padding-top:64px!important;}
+  .site-header{position:fixed!important;left:0!important;right:0!important;top:0!important;width:100%!important;}
+  .site-header .header-inner{height:64px!important;min-height:64px!important;}
+  .site-header #mainNav{top:70px!important;}
+}
+@media(max-width:600px){
+  body{padding-top:64px!important;}
+  .site-header #mainNav{top:70px!important;max-height:calc(100vh - 78px)!important;}
+}
