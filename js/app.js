@@ -3878,6 +3878,8 @@ async function removeStorageUrls(urls=[]){
    STORAGE
 ========================================================= */
 
+window.removeStorageUrls=removeStorageUrls;
+
 async function uploadFile(file,folder){
 
   if(!file) return null;
