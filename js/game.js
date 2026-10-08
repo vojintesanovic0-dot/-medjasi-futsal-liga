@@ -128,7 +128,23 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
   function render(){const root=$("gameRoot");if(!root)return;if(S.err==="setup"){root.innerHTML=`<div class="card fg-empty"><h3>Igra još nije aktivirana</h3><p>Pokreni SQL migraciju iz repoa nakon provjere.</p></div>`;return;}const tabs=[...TABS];if(isAdm())tabs.push(["admin","⚙️ Admin"]);const body=({matches:tabMatches,live:tabLive,mine:tabTickets,fanbase:tabFanBase,board:tabBoard,shop:tabShop,collection:tabCollection,club:tabClub,mvp:tabMvp,admin:tabAdmin}[S.tab]||tabMatches)();root.innerHTML=`<div class="card fg-head"><div><div class="fg-bal">⭐ <b>${E(S.wallet?.balance??"…")}</b> <span>poena navijača</span></div><p>Virtuelni fan poeni • bez novca i bez stvarne vrijednosti.</p></div>${user()?`<button class="btn btn-green" data-act="daily">🎁 Dnevni bonus +10</button>`:`<button class="btn btn-green" onclick="showSection('login')">🔐 Prijavi se</button>`}</div><div class="fg-tabs">${tabs.map(([id,l])=>`<button class="${S.tab===id?"active":""}" data-act="tab" data-id="${id}" data-tab="${id}"><span class="fg-tab-label">${E(l)}</span></button>`).join("")}</div><div class="fg-body">${body}</div>`;}
   async function rpc(n,a,msg){const {data,error}=await sb().rpc(n,a);if(error){note(error.message,"error");return{error};}if(msg)note(msg);return{data};}
   async function adminAction(action,payload,msg){const session=await sb().auth.getSession();const token=session.data?.session?.access_token;if(!token){note("Sesija je istekla.","error");return{error:new Error("Unauthorized")};}try{const res=await fetch(SUPABASE_URL+"/functions/v1/fan-admin-action",{method:"POST",headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({action,...payload})});const json=await res.json().catch(()=>({}));if(!res.ok){note(json.error||"Admin akcija nije uspjela.","error");return{error:new Error(json.error||"Admin action failed")};}if(msg)note(msg);return{data:json.data};}catch(error){note(error.message||"Greška mreže.","error");return{error};}}
-  function openPick(id){if(!user())return showSection("login");const m=S.markets.find(x=>x.id===id);if(!m)return;S.sel=m;const bal=S.wallet?.balance||0,max=Math.min(50,bal);showModal(`<div class="fg-modal"><h3>🎯 ${E(m.label)}</h3><p class="fg-hint">${E(title(MT().find(x=>String(x.id)===m.match_id)||{}))}</p><div class="fg-kv"><span>Kvota</span><b>${Number(m.odds).toFixed(2)}</b></div><label class="fg-lab">Ulog</label><input id="fgStake" type="number" min="1" max="${max}" value="${Math.min(10,max)||1}"><label class="fg-check"><input id="fgBoost" type="checkbox"> 🚀 Pojačivač (+50%)</label><div class="fg-kv big"><span>Mogući dobitak</span><b id="fgWin">0</b></div><button class="btn btn-green" data-act="confirm">Potvrdi pogodak</button></div>`);updateWin();}
+  function openPick(id){
+    if(!user())return showSection("login");
+    const m=S.markets.find(x=>x.id===id);
+    if(!m)return;
+
+    const bal=Math.max(0,Number(S.wallet?.balance||0));
+    const max=Math.min(50,Math.floor(bal));
+
+    if(max<1){
+      note("Nemaš dovoljno fan poena za ovaj tiket.","error");
+      return;
+    }
+
+    S.sel=m;
+    showModal(`<div class="fg-modal"><h3>🎯 ${E(m.label)}</h3><p class="fg-hint">${E(title(MT().find(x=>String(x.id)===m.match_id)||{}))}</p><div class="fg-kv"><span>Kvota</span><b>${Number(m.odds).toFixed(2)}</b></div><label class="fg-lab">Ulog</label><input id="fgStake" type="number" min="1" max="${max}" value="${Math.min(10,max)}"><label class="fg-check"><input id="fgBoost" type="checkbox"> 🚀 Pojačivač (+50%)</label><div class="fg-kv big"><span>Mogući dobitak</span><b id="fgWin">0</b></div><button class="btn btn-green" data-act="confirm">Potvrdi pogodak</button></div>`);
+    updateWin();
+  }
   function updateWin(){const m=S.sel,w=$("fgWin");if(m&&w)w.textContent=win($("fgStake")?.value,m.odds,$("fgBoost")?.checked);}
   window.openFanTickets=async function(){
     if(!user()){showSection('login');return;}
