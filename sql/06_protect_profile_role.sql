@@ -48,4 +48,7 @@ grant execute on function public.delete_team_admin(uuid) to authenticated;
 grant execute on function public.update_match_admin(uuid,uuid,uuid,timestamptz,text) to authenticated;
 grant execute on function public.update_player_admin(uuid,text,uuid,integer,text,boolean) to authenticated;
 
+-- Fan Game settlement is owned by the existing public.medjasi_match_event trigger.
+-- Keeping a single settlement path avoids duplicate processing on match finish.
+
 commit;
