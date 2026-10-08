@@ -1,0 +1,39 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const admin = createClient(supabaseUrl, serviceKey);
+
+Deno.serve(async (req: Request) => {
+  if (req.method !== "POST") return Response.json({error:"Method not allowed"},{status:405});
+  try {
+    const auth = req.headers.get("Authorization");
+    if (!auth?.startsWith("Bearer ")) return Response.json({error:"Unauthorized"},{status:401});
+    const token = auth.slice(7);
+    const {data:u,error:ue}=await admin.auth.getUser(token);
+    if(ue || !u.user) return Response.json({error:"Unauthorized"},{status:401});
+
+    const {data:p}=await admin.from("profiles").select("role").eq("id",u.user.id).maybeSingle();
+    if(p?.role!=="admin") return Response.json({error:"Forbidden"},{status:403});
+
+    const body=await req.json();
+    const action=String(body.action||"");
+    let data, error;
+    if(action==="generate_markets"){
+      ({data,error}=await admin.rpc("fan_generate_markets",{p_match:String(body.match_id)}));
+    }else if(action==="settle_match"){
+      ({data,error}=await admin.rpc("fan_settle_match",{p_match:String(body.match_id)}));
+    }else if(action==="grant"){
+      ({data,error}=await admin.rpc("fan_admin_grant",{p_user:String(body.user_id),p_amount:Number(body.amount),p_reason:String(body.reason||"Admin grant")}));
+    }else if(action==="set_odds"){
+      ({data,error}=await admin.rpc("fan_set_odds",{p_market:String(body.market_id),p_odds:Number(body.odds)}));
+    }else{
+      return Response.json({error:"Unknown action"},{status:400});
+    }
+    if(error) return Response.json({error:error.message},{status:400});
+    return Response.json({ok:true,data});
+  }catch(e){
+    return Response.json({error:e instanceof Error?e.message:"Admin action failed"},{status:500});
+  }
+});
