@@ -248,19 +248,19 @@ function canManageMatch(){
 
 function teamLogo(team){
 
-  return safeUrl(
+  return esc(safeUrl(
     team?.logo_url,
     "https://via.placeholder.com/100?text=%E2%9A%BD"
-  );
+  ));
 }
 
 
 function playerPhoto(player){
 
-  return safeUrl(
+  return esc(safeUrl(
     player?.photo_url,
     "https://via.placeholder.com/100?text=%F0%9F%91%A4"
-  );
+  ));
 }
 
 
