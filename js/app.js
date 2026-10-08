@@ -8346,8 +8346,14 @@ document.addEventListener("DOMContentLoaded",()=>{
         player_uuid: playerId
       });
 
+      if(player.photo_url){
+        const cleanup=await removeStorageUrls([player.photo_url]);
+        if(cleanup.error)console.warn("Player storage cleanup:",cleanup.error);
+      }
+
       toast4("Igrač je obrisan.");
-      await loadAll();    } catch (error) {
+      await loadAll();
+    } catch (error) {
       alert(error.message || "Greška pri brisanju igrača.");
     }
   };
