@@ -60,6 +60,38 @@ create or replace function public.delete_goal_admin(goal_uuid uuid)
 returns void language sql security invoker set search_path=public,pg_temp
 as $$ select private.delete_goal_admin(goal_uuid); $$;
 
+create or replace function private.delete_match_admin(match_uuid uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $function$
+begin
+  perform public._medjasi_require_admin();
+
+  if not exists (select 1 from public.matches where id = match_uuid) then
+    raise exception 'Utakmica nije pronađena.';
+  end if;
+
+  if exists (
+    select 1 from public.fan_markets
+    where match_id::text = match_uuid::text
+  ) or exists (
+    select 1
+    from public.fan_picks fp
+    join public.fan_markets fm on fm.id = fp.market_id
+    where fm.match_id::text = match_uuid::text
+  ) then
+    raise exception 'Utakmica se ne može obrisati jer sadrži Fan Game markete ili tikete.';
+  end if;
+
+  delete from public.match_players where match_id = match_uuid;
+  delete from public.goals where match_id = match_uuid;
+  delete from public.cards where match_id = match_uuid;
+  delete from public.matches where id = match_uuid;
+end;
+$function$;
+
 create or replace function public.delete_match_admin(match_uuid uuid)
 returns void language sql security invoker set search_path=public,pg_temp
 as $$ select private.delete_match_admin(match_uuid); $$;
