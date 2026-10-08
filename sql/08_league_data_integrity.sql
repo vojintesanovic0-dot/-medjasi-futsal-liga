@@ -20,6 +20,9 @@ begin
   if not exists (select 1 from pg_constraint where conrelid='public.players'::regclass and conname='players_nonnegative_jersey_check') then
     alter table public.players add constraint players_nonnegative_jersey_check check (jersey_number is null or jersey_number >= 0);
   end if;
+  if not exists (select 1 from pg_constraint where conrelid='public.matches'::regclass and conname='matches_distinct_teams_check') then
+    alter table public.matches add constraint matches_distinct_teams_check check (home_team_id is null or away_team_id is null or home_team_id <> away_team_id);
+  end if;
 end $$;
 
 commit;
