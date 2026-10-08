@@ -398,6 +398,17 @@ function showSection(id){
     setTimeout(()=>window.medjasiGame?.refresh?.(),60);
   }
 
+  /* Close the primary header drawer after selecting a section. */
+  if(mobileMenuOpen){
+    mobileMenuOpen=false;
+    document.getElementById("mainNav")?.classList.remove("mobile-open","open");
+    const mobileMenuButton=document.getElementById("mobileMenuBtn");
+    if(mobileMenuButton){
+      mobileMenuButton.setAttribute("aria-expanded","false");
+      mobileMenuButton.setAttribute("aria-label","Otvori meni");
+    }
+  }
+
   /* MOBILE BOTTOM NAV */
 
   document.querySelectorAll(".mobile-bottom button")
