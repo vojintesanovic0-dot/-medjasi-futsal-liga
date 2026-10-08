@@ -104,4 +104,22 @@ create trigger trg_fan_block_finished_lineup_edit
 before insert or update or delete on public.match_players
 for each row execute function private.fan_block_settled_match_edit();
 
+-- Privileged SECURITY DEFINER routines use an explicit pg_temp tail.
+alter function public._medjasi_require_admin() set search_path = public, pg_temp;
+alter function public.admin_set_user_role(uuid,text) set search_path = public, pg_temp;
+alter function public.delete_card_admin(uuid) set search_path = public, pg_temp;
+alter function public.delete_comment_admin(uuid) set search_path = public, pg_temp;
+alter function public.delete_gallery_admin(uuid) set search_path = public, pg_temp;
+alter function public.delete_goal_admin(uuid) set search_path = public, pg_temp;
+alter function public.delete_match_admin(uuid) set search_path = public, pg_temp;
+alter function public.delete_message_admin(uuid) set search_path = public, pg_temp;
+alter function public.delete_player_admin(uuid) set search_path = public, pg_temp;
+alter function public.delete_team_admin(uuid) set search_path = public, pg_temp;
+alter function public.medjasi_goal_event() set search_path = public, pg_temp;
+alter function public.medjasi_match_event() set search_path = public, pg_temp;
+alter function public.prevent_profile_role_escalation() set search_path = public, pg_temp;
+alter function public.protect_profile_role() set search_path = public, pg_temp;
+alter function public.update_match_admin(uuid,uuid,uuid,timestamptz,text) set search_path = public, pg_temp;
+alter function public.update_player_admin(uuid,text,uuid,integer,text,boolean) set search_path = public, pg_temp;
+
 commit;
