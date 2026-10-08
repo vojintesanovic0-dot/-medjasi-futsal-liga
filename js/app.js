@@ -392,6 +392,12 @@ function showSection(id){
 
   // Dynamic sections are mounted by their own modules.
   if(id === "news"){
+    // News is created lazily by the V7 module; mount it before resolving
+    // the active section so the navigation click never lands on a missing node.
+    if(!document.getElementById("news")){
+      window.medjasiV7?.ensureNewsUI?.();
+    }
+    document.getElementById("news")?.classList.add("active");
     setTimeout(()=>window.loadNews?.(),30);
   }
   if(id === "game"){
@@ -404,6 +410,7 @@ function showSection(id){
     document.getElementById("mainNav")?.classList.remove("mobile-open","open");
     const mobileMenuButton=document.getElementById("mobileMenuBtn");
     if(mobileMenuButton){
+      mobileMenuButton.textContent="☰";
       mobileMenuButton.setAttribute("aria-expanded","false");
       mobileMenuButton.setAttribute("aria-label","Otvori meni");
     }
@@ -10366,7 +10373,7 @@ function renderSearch(){const q=$('v7Search')?.value.trim().toLowerCase(),box=$(
 const originalLoadAll=window.loadAll;
 window.loadAll=async function(...args){const r=await originalLoadAll.apply(this,args);try{await loadStats();await loadNews()}catch(e){console.warn('V7 load:',e)}try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();renderGalleryV7()}catch(e){console.warn(e)}return r};
 // Realtime safety wrapper; original subscription remains but news/stats refresh independently.
-V7.loadNews=loadNews;window.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoal;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
+V7.ensureNewsUI=ensureNewsUI;V7.loadNews=loadNews;window.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoal;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
 window.openGoalControl=function(id){return openGoal(id)};
 window.adminAddGalleryImage=adminAddMedia;
 window.renderAdminNews=renderAdminNews;
