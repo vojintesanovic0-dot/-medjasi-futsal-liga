@@ -3812,22 +3812,19 @@ async function adminAddGalleryImage(){
 }
 
 async function adminDeleteGalleryImage(id){
-  if(!isAdmin()) return;
+  if(!isAdmin())return;
   const item=gallery.find(g=>String(g.id)===String(id));
-  if(!item) return;
-  if(!confirm(`Obrisati "${item.title || "ovaj medij"}" iz galerije?`)) return;
-
-  const storageUrls=[item.media_url,item.image_url].filter(Boolean);
-  const removed=await removeStorageUrls(storageUrls);
-  if(removed.error){
-    console.warn("Gallery storage cleanup:",removed.error);
-  }
+  if(!item)return;
+  if(!confirm(`Obrisati "${item.title||"ovaj medij"}" iz galerije?`))return;
 
   const {error}=await supabaseClient.from("gallery").delete().eq("id",id);
   if(error){
     alert(error.message);
     return;
   }
+
+  const removed=await removeStorageUrls([item.media_url,item.image_url].filter(Boolean));
+  if(removed.error)console.warn("Gallery storage cleanup:",removed.error);
 
   toast(
     removed.error
@@ -3837,7 +3834,6 @@ async function adminDeleteGalleryImage(id){
   );
   await loadAll();
 }
-
 function openImagePreview(url,title="Fotografija"){
   const safe=safeUrl(url);
   if(!safe) return;
@@ -10483,18 +10479,16 @@ async function publishNews(){
   }
 }
 async function deleteNews(id){
-  if(!isAdm()) return;
+  if(!isAdm())return;
   const item=V7.news.find(x=>String(x.id)===String(id));
-  if(!item) return;
-  if(!confirm('Obrisati ovu vijest?')) return;
-
-  const removed=await removeStorageUrls([item.media_url,item.image_url].filter(Boolean));
-  if(removed.error){
-    console.warn('News storage cleanup:',removed.error);
-  }
+  if(!item)return;
+  if(!confirm('Obrisati ovu vijest?'))return;
 
   const {error}=await supabaseClient.from('news').delete().eq('id',id);
   if(error)return toastV(error.message,'error');
+
+  const removed=await removeStorageUrls([item.media_url,item.image_url].filter(Boolean));
+  if(removed.error)console.warn('News storage cleanup:',removed.error);
 
   await loadNews();
   toastV(
@@ -10745,14 +10739,17 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   window.openV9Story=function(id){const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=V.profiles[String(s.user_id)]||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${fanCommunityIdentityHTML(p,String(s.user_id))}</b><div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${esc(safeUrl(s.image_url))}" alt=""><div class="v9-story-caption">${escV(s.caption||'')}</div>${communityMusicChip(s.music_track_id)}${logged()&&(String(s.user_id)===String(currentUser.id)||typeof isAdmin==='function'&&isAdmin())?`<button class="btn btn-small" onclick="deleteV9Story('${escV(s.id)}')">Obriši priču</button>`:''}</div>`) };
   window.deleteV9Story=async function(id){
   if(!guard())return;
-  const s=V.stories.find(x=>String(x.id)===String(id));
-  if(!s)return;
-  if(String(s.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');
+  const item=V.stories.find(x=>String(x.id)===String(id));
+  if(!item)return;
+  if(String(item.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');
   if(!confirm('Obrisati ovu priču?'))return;
-  const removed=await removeStorageUrls([s.image_url]);
+
   const {error}=await supabaseClient.from('community_stories').delete().eq('id',id);
   if(error)return toastV(error.message,'error');
+
+  const removed=await removeStorageUrls([item.image_url]);
   if(removed.error)console.warn('Community story storage cleanup:',removed.error);
+
   hideModal();
   await load();
   toastV(removed.error?'Priča je obrisana, ali Storage cleanup nije potpuno uspio.':'Priča je obrisana.');
