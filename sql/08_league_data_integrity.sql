@@ -23,6 +23,9 @@ begin
   if not exists (select 1 from pg_constraint where conrelid='public.matches'::regclass and conname='matches_distinct_teams_check') then
     alter table public.matches add constraint matches_distinct_teams_check check (home_team_id is null or away_team_id is null or home_team_id <> away_team_id);
   end if;
+  if not exists (select 1 from pg_constraint where conrelid='public.matches'::regclass and conname='matches_status_check') then
+    alter table public.matches add constraint matches_status_check check (status is null or status in ('scheduled','live','finished'));
+  end if;
 end $$;
 
 commit;
