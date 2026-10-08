@@ -8461,9 +8461,16 @@ document.addEventListener("DOMContentLoaded",()=>{
     if (!confirm("Admin: obrisati ovu chat poruku?")) return;
 
     try {
+      const message=messages.find(m=>String(m.id)===String(messageId));
+
       await rpc4("delete_message_admin", {
         message_uuid: messageId
       });
+
+      if(message?.image_url){
+        const cleanup=await removeStorageUrls([message.image_url]);
+        if(cleanup.error)console.warn("Admin chat storage cleanup:",cleanup.error);
+      }
 
       toast4("Poruka je obrisana.");
       await loadAll();
