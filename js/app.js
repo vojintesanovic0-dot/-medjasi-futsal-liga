@@ -3819,6 +3819,21 @@ async function uploadFile(file,folder){
 
   if(!file) return null;
 
+  /* Centralna provjera za admin upload: MIME tip je važniji od ekstenzije.
+     Timovi i igrači prihvataju samo slike; video je dozvoljen samo modulima
+     koji imaju vlastitu media validaciju (npr. Gallery/News V7). */
+  const allowedImageTypes=new Set([
+    "image/jpeg","image/png","image/webp","image/gif"
+  ]);
+  const maxSize=10*1024*1024;
+
+  if(!allowedImageTypes.has(String(file.type||"").toLowerCase())){
+    throw new Error("Dozvoljene su samo JPG, PNG, WEBP ili GIF slike.");
+  }
+
+  if(Number(file.size||0)>maxSize){
+    throw new Error("Slika je prevelika. Maksimum je 10 MB.");
+  }
 
   const extension =
     file.name
@@ -3826,10 +3841,13 @@ async function uploadFile(file,folder){
       .pop()
       .toLowerCase();
 
+  const safeExtension =
+    extension==="jpeg" ? "jpg" :
+    ["jpg","png","webp","gif"].includes(extension) ? extension :
+    "bin";
 
   const filename =
-    `${folder}/${crypto.randomUUID()}.${extension}`;
-
+    `${folder}/${crypto.randomUUID()}.${safeExtension}`;
 
   const {
     error
@@ -3841,13 +3859,12 @@ async function uploadFile(file,folder){
         filename,
         file,
         {
-          upsert:false
+          upsert:false,
+          contentType:file.type
         }
       );
 
-
   if(error) throw error;
-
 
   const {
     data
@@ -3856,7 +3873,6 @@ async function uploadFile(file,folder){
       .storage
       .from("liga-images")
       .getPublicUrl(filename);
-
 
   return data.publicUrl;
 }
