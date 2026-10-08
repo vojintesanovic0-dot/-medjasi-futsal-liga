@@ -548,6 +548,21 @@ function addLeagueNotification({
     return;
   }
 
+  /* Cross-tab dedupe: another otvoreni tab može isti realtime event
+     već upisati u shared localStorage prije nego ovaj tab obradi event. */
+  if(key){
+    try{
+      const raw=localStorage.getItem(NOTIFICATION_STORE_KEY);
+      const stored=raw?JSON.parse(raw):[];
+      if(Array.isArray(stored)&&stored.some(n=>n?.key===key)){
+        leagueNotifications=stored;
+        updateNotificationBadge();
+        renderNotificationsIfOpen();
+        return;
+      }
+    }catch(error){}
+  }
+
   const item = {
     id: `${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     title: String(title || "Obavještenje"),
