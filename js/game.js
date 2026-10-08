@@ -92,7 +92,39 @@ function tabFanBase(){
 function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tabela navijača je još prazna.</p></div>`;const me=user()?.id;return `<div class="card"><h3>🏅 Tabela navijača</h3>${S.board.map((r,i)=>`<div class="fg-row ${r.user_id===me?"me":""}"><div><b>${["🥇","🥈","🥉"][i]||`${i+1}.`}</b> ${styled(r)}<small>${r.won}/${r.picks} pogođeno</small></div><b class="fg-pts">⭐ ${r.balance}</b></div>`).join("")}</div>`;}
   function tabShop(){if(!user())return `<div class="card fg-empty"><p>Prijavi se da koristiš prodavnicu.</p></div>`;const owned=new Map(S.inv.map(i=>[i.item_id,i])),kinds={name_color:"Boja imena",frame:"Okviri",badge:"Bedževi",title:"Titule",emoji_pack:"😀 Emoji paketi"};const shop=Object.entries(kinds).map(([k,l])=>{const items=S.shop.filter(i=>i.kind===k);if(!items.length)return"";return `<div class="card"><h3>${l}</h3><div class="fg-shop">${items.map(i=>{const o=owned.get(i.id),preview=k==="name_color"?`<span style="color:${E(i.value)}">Ime</span>`:k==="frame"?`<span class="fg-name has-frame" style="border-color:${E(i.value)}">Ime</span>`:k==="badge"?E(i.value):k==="emoji_pack"?i.value.split(",").map(E).join(" "):`<small>${E(i.value)}</small>`;return `<div class="fg-item"><div class="fg-prev">${preview}</div><b>${E(i.name)}</b><small>${E(i.description||"")}</small>${o?`<button class="btn btn-small ${o.equipped?"btn-green":""}" data-act="equip" data-id="${i.id}" data-on="${o.equipped?0:1}">${o.equipped?"✓ Nosiš":"Stavi"}</button>`:`<button class="btn btn-small" data-act="buy" data-id="${i.id}">⭐ ${i.price}</button>`}</div>`}).join("")}</div></div>`}).join("");const fund=TM().map(t=>`<option value="${E(t.id)}">${E(t.name)} (${S.fund[String(t.id)]||0})</option>`).join("");return shop+`<div class="card"><h3>💚 Navijački fond ekipe</h3><div class="fg-form"><select id="fgFundTeam">${fund}</select><input id="fgFundAmt" type="number" min="1" max="100" value="10"><button class="btn btn-green" data-act="donate">Pokloni</button></div></div>`;}
   function tabMvp(){const fin=finished().slice(0,4);if(!fin.length)return `<div class="card fg-empty"><p>MVP glasanje se otvara kad se završi prva utakmica.</p></div>`;return fin.map(m=>{const id=String(m.id),pl=PL().filter(p=>[String(m.home_team_id),String(m.away_team_id)].includes(String(p.team_id)));const top=(S.mvp[id]||[]).slice(0,3).map((r,i)=>`<div class="fg-row slim"><span>${["🥇","🥈","🥉"][i]} ${E(pname(r.player_id))}</span><b>${r.votes}</b></div>`).join("");const form=!user()?`<p class="fg-hint">Prijavi se da glasaš.</p>`:S.votes[id]?`<p class="fg-hint">✅ Već si glasao za ovu utakmicu.</p>`:`<div class="fg-form"><select id="mvpP-${E(id)}">${pl.map(p=>`<option value="${E(p.id)}">${E(p.name)} (${E(tname(p.team_id))})</option>`).join("")}</select><select id="mvpX-${E(id)}"><option value="0">Običan glas</option><option value="2">Jači glas (−2)</option><option value="5">Jak glas (−5)</option><option value="10">Najjači glas (−10)</option></select><button class="btn btn-green" data-act="mvp" data-id="${E(id)}">Glasaj</button></div>`;return `<article class="card"><h3>${E(title(m))} <small>${m.home_score||0}:${m.away_score||0}</small></h3>${top}${form}</article>`}).join("");}
-  function tabAdmin(){if(!isAdm())return"";const open=new Map();S.markets.forEach(k=>open.set(k.match_id,(open.get(k.match_id)||0)+1));const rows=MT().filter(m=>m.status!=="finished"||open.has(String(m.id))).slice(0,14).map(m=>{const id=String(m.id),n=open.get(id)||0,act=m.status==="finished"?`<button class="btn btn-green btn-small" data-act="settle" data-id="${E(id)}">✅ Obračunaj poene</button>`:!n?`<button class="btn btn-small" data-act="gen" data-id="${E(id)}">➕ Otvori ponudu</button>`:"";return `<div class="fg-adm"><div class="fg-row"><div><b>${E(title(m))}</b><small>${E(m.status)} · ${E(fmt(m.match_date))} · ponuda: ${n}</small></div>${act}</div></div>`}).join("");const users=S.profiles.map(p=>`<option value="${E(p.id)}">${E(p.username||p.id)}</option>`).join("");return `<div class="card"><h3>Utakmice i ponude</h3>${rows||`<p class="fg-hint">Nema utakmica.</p>`}</div><div class="card"><h3>🎁 Dodijeli poene</h3><div class="fg-form"><select id="grU">${users}</select><input id="grA" type="number" value="20" min="-1000" max="1000"><input id="grR" placeholder="Razlog" maxlength="80"><button class="btn btn-green" data-act="grant">Dodijeli</button></div></div>`;}
+  function tabAdmin(){
+  if(!isAdm())return"";
+
+  const open=new Map();
+  S.markets
+    .filter(k=>k.status==="open"||k.status==="suspended")
+    .forEach(k=>open.set(k.match_id,(open.get(k.match_id)||0)+1));
+
+  const rows=MT()
+    .filter(m=>m.status!=="finished"||open.has(String(m.id)))
+    .slice(0,14)
+    .map(m=>{
+      const id=String(m.id);
+      const n=open.get(id)||0;
+
+      let act="";
+      if(m.status==="finished"&&n){
+        act=`<button class="btn btn-green btn-small" data-act="settle" data-id="${E(id)}">✅ Provjeri obračun</button>`;
+      }else if(m.status!=="finished"&&!n){
+        act=`<button class="btn btn-small" data-act="gen" data-id="${E(id)}">➕ Otvori ponudu</button>`;
+      }
+
+      return `<div class="fg-adm"><div class="fg-row"><div><b>${E(title(m))}</b><small>${E(m.status)} · ${E(fmt(m.match_date))} · otvorena tržišta: ${n}</small></div>${act}</div></div>`;
+    })
+    .join("");
+
+  const users=S.profiles
+    .map(p=>`<option value="${E(p.id)}">${E(p.username||p.id)}</option>`)
+    .join("");
+
+  return `<div class="card"><h3>Utakmice i ponude</h3>${rows||`<p class="fg-hint">Nema utakmica.</p>`}</div>
+  <div class="card"><h3>🎁 Dodijeli poene</h3><div class="fg-form"><select id="grU">${users}</select><input id="grA" type="number" value="20" min="-1000" max="1000"><input id="grR" placeholder="Razlog" maxlength="80"><button class="btn btn-green" data-act="grant">Dodijeli</button></div></div>`;
+}
   function render(){const root=$("gameRoot");if(!root)return;if(S.err==="setup"){root.innerHTML=`<div class="card fg-empty"><h3>Igra još nije aktivirana</h3><p>Pokreni SQL migraciju iz repoa nakon provjere.</p></div>`;return;}const tabs=[...TABS];if(isAdm())tabs.push(["admin","⚙️ Admin"]);const body=({matches:tabMatches,live:tabLive,mine:tabTickets,fanbase:tabFanBase,board:tabBoard,shop:tabShop,collection:tabCollection,club:tabClub,mvp:tabMvp,admin:tabAdmin}[S.tab]||tabMatches)();root.innerHTML=`<div class="card fg-head"><div><div class="fg-bal">⭐ <b>${E(S.wallet?.balance??"…")}</b> <span>poena navijača</span></div><p>Virtuelni fan poeni • bez novca i bez stvarne vrijednosti.</p></div>${user()?`<button class="btn btn-green" data-act="daily">🎁 Dnevni bonus +10</button>`:`<button class="btn btn-green" onclick="showSection('login')">🔐 Prijavi se</button>`}</div><div class="fg-tabs">${tabs.map(([id,l])=>`<button class="${S.tab===id?"active":""}" data-act="tab" data-id="${id}" data-tab="${id}"><span class="fg-tab-label">${E(l)}</span></button>`).join("")}</div><div class="fg-body">${body}</div>`;}
   async function rpc(n,a,msg){const {data,error}=await sb().rpc(n,a);if(error){note(error.message,"error");return{error};}if(msg)note(msg);return{data};}
   async function adminAction(action,payload,msg){const session=await sb().auth.getSession();const token=session.data?.session?.access_token;if(!token){note("Sesija je istekla.","error");return{error:new Error("Unauthorized")};}try{const res=await fetch(SUPABASE_URL+"/functions/v1/fan-admin-action",{method:"POST",headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({action,...payload})});const json=await res.json().catch(()=>({}));if(!res.ok){note(json.error||"Admin akcija nije uspjela.","error");return{error:new Error(json.error||"Admin action failed")};}if(msg)note(msg);return{data:json.data};}catch(error){note(error.message||"Greška mreže.","error");return{error};}}
