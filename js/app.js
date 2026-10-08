@@ -10131,8 +10131,8 @@ if ("serviceWorker" in navigator) {
           ${c.content ? `<div class="comment-text">${V3.escape(c.content)}</div>` : ""}
           ${c.image_url ? `
             <div class="comment-media">
-              <a href="${V3.escape(c.image_url)}" target="_blank" rel="noopener noreferrer">
-                <img src="${V3.escape(c.image_url)}" alt="Slika uz komentar" loading="lazy">
+              <a href="${V3.escape(safeUrl(c.image_url))}" target="_blank" rel="noopener noreferrer">
+                <img src="${V3.escape(safeUrl(c.image_url))}" alt="Slika uz komentar" loading="lazy">
               </a>
             </div>` : ""}
           ${window.currentUser && (c.user_id===window.currentUser.id || typeof isAdmin==="function" && isAdmin())
@@ -10469,7 +10469,27 @@ async function activateSeason(id){if(!isAdm())return;await supabaseClient.from('
 function ensurePushUI(){if(!$('adminContent')||!isAdm()||$('v7PushCard'))return;const c=document.createElement('div');c.id='v7PushCard';c.className='card v7-push-card';c.innerHTML=`<div class="v7-push-row"><div><strong>🔔 Push notifikacije</strong><div id="v7PushStatus" class="v7-push-status">Provjera...</div></div><button id="v7PushButton" class="btn btn-blue">🔔 Uključi push</button></div>`;$('adminContent').appendChild(c);renderPushUI()}
 
 // Gallery: image + video compatibility layer. Existing image_url rows continue to work.
-function renderGalleryV7(){const grid=$('galleryGrid'),count=$('galleryCount');if(!grid)return;const arr=gallery||[];if(count)count.textContent=`${arr.length} ${arr.length===1?'medij':'medija'}`;if(!arr.length){grid.innerHTML='<div class="empty gallery-empty">📸 Galerija je trenutno prazna.</div>';return}grid.innerHTML=arr.map(x=>{const url=x.media_url||x.image_url,type=x.media_type||'image';return `<article class="gallery-item"><button class="gallery-photo" type="button" onclick="${type==='video'?`medjasiV7.openMedia('${escV(url)}','video','${escV(x.title||'Video')}')`:`openImagePreview('${escV(url)}','${escV(x.title||'Galerija')}')`}">${type==='video'?`<video muted playsinline preload="metadata" src="${escV(url)}"></video>`:`<img src="${escV(url)}" alt="${escV(x.title||'Fotografija')}" loading="lazy">`}<span class="gallery-overlay">${type==='video'?'▶️ Pusti video':'🔍 Pregledaj'}</span></button><div class="gallery-caption"><strong>${escV(x.title||'Medij lige')}</strong>${x.description?`<p>${escV(x.description)}</p>`:''}<small class="muted">${formatV(x.created_at)}</small></div></article>`}).join('')}
+function renderGalleryV7(){
+  const grid=$('galleryGrid'),count=$('galleryCount');
+  if(!grid)return;
+  const arr=gallery||[];
+  if(count)count.textContent=`${arr.length} ${arr.length===1?'medij':'medija'}`;
+  if(!arr.length){grid.innerHTML='<div class="empty gallery-empty">📸 Galerija je trenutno prazna.</div>';return}
+  grid.innerHTML=arr.map(x=>{
+    const rawUrl=x.media_url||x.image_url;
+    const url=safeUrl(rawUrl);
+    if(!url)return '';
+    const type=x.media_type||'image';
+    const title=x.title||'Medij lige';
+    const action=type==='video'
+      ? "medjasiV7.openMedia('"+escJs(url)+"','video','"+escJs(title)+"')"
+      : "openImagePreview('"+escJs(url)+"','"+escJs(title)+"')";
+    const media=type==='video'
+      ? `<video muted playsinline preload="metadata" src="${esc(url)}"></video>`
+      : `<img src="${esc(url)}" alt="${esc(title)}" loading="lazy">`;
+    return `<article class="gallery-item"><button class="gallery-photo" type="button" onclick="${action}">${media}<span class="gallery-overlay">${type==='video'?'▶️ Pusti video':'🔍 Pregledaj'}</span></button><div class="gallery-caption"><strong>${esc(title)}</strong>${x.description?`<p>${escV(x.description)}</p>`:''}<small class="muted">${formatV(x.created_at)}</small></div></article>`;
+  }).join('')
+}
 function openMedia(url,type,title){showModal(`<div class="modal-title"><h2>${escV(title)}</h2></div>${type==='video'?`<video controls autoplay playsinline style="display:block;width:100%;max-height:75vh;border-radius:14px;background:#000" src="${escV(url)}"></video>`:`<img src="${escV(url)}" style="display:block;max-width:100%;max-height:75vh;margin:auto;border-radius:14px">`}`)}
 async function adminAddMedia(){if(!isAdm())return;const file=$('galleryImageFile')?.files?.[0],title=$('galleryTitle')?.value.trim()||'',description=$('galleryDescription')?.value.trim()||'';if(!file)return toastV('Izaberi sliku ili video.','error');if(file.size>50*1024*1024)return toastV('Maksimum je 50 MB.','error');try{const media_url=await uploadFile(file,'gallery');const media_type=file.type.startsWith('video/')?'video':'image';const {error}=await supabaseClient.from('gallery').insert({image_url:media_type==='image'?media_url:null,media_url,media_type,title:title.slice(0,100)||'Medij lige',description:description.slice(0,250),created_by:currentUser.id});if(error)throw error;$('galleryImageFile').value='';$('galleryTitle').value='';$('galleryDescription').value='';await loadAll();toastV('Medij je objavljen.')}catch(e){toastV(e.message||'Greška pri uploadu.','error')}}
 function ensureGalleryVideoUI(){const input=$('galleryImageFile');if(!input)return;input.accept='image/*,video/mp4,video/webm,video/ogg';const label=input.closest('.form-group')?.querySelector('label');if(label)label.textContent='Fotografija ili video'}
