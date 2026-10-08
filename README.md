@@ -29,6 +29,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 10. `sql/09_runtime_event_sync.sql` – verzionira live triggere za gol, završetak utakmice i zaštitu `profiles.role`.
 11. `sql/10_match_player_integrity.sql` – server-side provjerava pripadnost igrača utakmici i maksimalno 5 startera po ekipi.
 12. `sql/11_fan_game_data_integrity.sql` – zaključava opseg uloga/kvota, statusa tiketa i nenegativno stanje Fan Game novčanika.
+13. `sql/12_fan_reprice_runtime_sync.sql` – verzionira privatni live repricing za rezultat/gol/karton promjene.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
