@@ -10578,7 +10578,17 @@ function renderGalleryV7(){
     return `<article class="gallery-item"><button class="gallery-photo" type="button" onclick="${action}">${media}<span class="gallery-overlay">${type==='video'?'▶️ Pusti video':'🔍 Pregledaj'}</span></button><div class="gallery-caption"><strong>${esc(title)}</strong>${x.description?`<p>${escV(x.description)}</p>`:''}<small class="muted">${formatV(x.created_at)}</small></div></article>`;
   }).join('')
 }
-function openMedia(url,type,title){showModal(`<div class="modal-title"><h2>${escV(title)}</h2></div>${type==='video'?`<video controls autoplay playsinline style="display:block;width:100%;max-height:75vh;border-radius:14px;background:#000" src="${escV(url)}"></video>`:`<img src="${escV(url)}" style="display:block;max-width:100%;max-height:75vh;margin:auto;border-radius:14px">`}`)}
+function openMedia(url,type,title){
+  const safe=safeUrl(url);
+  if(!safe)return;
+  const safeTitle=esc(title||"Medij");
+  showModal(
+    `<div class="modal-title"><h2>${safeTitle}</h2></div>`+
+    (type==="video"
+      ? `<video controls autoplay playsinline style="display:block;width:100%;max-height:75vh;border-radius:14px;background:#000" src="${esc(safe)}"></video>`
+      : `<img src="${esc(safe)}" alt="${safeTitle}" style="display:block;max-width:100%;max-height:75vh;margin:auto;border-radius:14px">`)
+  );
+}
 async function adminAddMedia(){
   if(!isAdm())return;
 
@@ -10751,7 +10761,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     await loadFanPublicStyles([id]);
     const {data:p,error}=await supabaseClient.from('profiles').select('id,username,avatar_url,bio,role').eq('id',id).maybeSingle();if(error||!p)return toastV('Profil nije pronađen.','error');
     const [{data:posts},{data:stories}]=await Promise.all([supabaseClient.from('community_posts').select('id,user_id,image_url,caption,created_at').eq('user_id',id).order('created_at',{ascending:false}).limit(30),supabaseClient.from('community_stories').select('id,user_id,image_url,caption,created_at,expires_at').eq('user_id',id).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false})]);
-    showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${fanCommunityIdentityHTML(p,String(id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${escV(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&String(id)===String(currentUser.id)?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button><button class="btn" onclick="window.openFanTickets?.()">🎟️ Moji tiketi</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<div><img class="v9-post-image" style="border-radius:16px" src="${escV(x.image_url)}" alt="${escV(x.caption||'')}" onclick="openV9Lightbox('${escV(x.image_url)}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${escV(x.caption)}</div>`:''}</div>`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
+    showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${fanCommunityIdentityHTML(p,String(id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${escV(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&String(id)===String(currentUser.id)?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button><button class="btn" onclick="window.openFanTickets?.()">🎟️ Moji tiketi</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<div><img class="v9-post-image" style="border-radius:16px" src="${esc(safeUrl(x.image_url))}" alt="${escV(x.caption||'')}" onclick="openV9Lightbox('${escJs(safeUrl(x.image_url))}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${escV(x.caption)}</div>`:''}</div>`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
   };
   window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/*" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${escV(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${escV(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);filePreview('v9AvatarFile','v9AvatarPreview')};
   window.saveV9Profile=async function(){
