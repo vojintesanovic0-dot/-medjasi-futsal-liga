@@ -8432,9 +8432,16 @@ document.addEventListener("DOMContentLoaded",()=>{
     if (!confirm("Admin: obrisati ovaj komentar?")) return;
 
     try {
+      const comment=comments.find(c=>String(c.id)===String(commentId));
+
       await rpc4("delete_comment_admin", {
         comment_uuid: commentId
       });
+
+      if(comment?.image_url){
+        const cleanup=await removeStorageUrls([comment.image_url]);
+        if(cleanup.error)console.warn("Admin comment storage cleanup:",cleanup.error);
+      }
 
       toast4("Komentar je obrisan.");
       await loadAll();
