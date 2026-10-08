@@ -9208,7 +9208,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                   ? `
                     <img
                       class="crud-thumb"
-                      src="${esc4(g.image_url)}"
+                      src="${esc4(safeUrl(g.image_url))}"
                       alt=""
                     >
                   `
@@ -10078,8 +10078,8 @@ if ("serviceWorker" in navigator) {
             ${m.content ? `<div class="chat-message-text">${V3.escape(m.content)}</div>` : ""}
             ${m.image_url ? `
               <button class="chat-photo" type="button"
-                onclick="openImagePreview('${V3.escape(m.image_url)}','${V3.escape(username)}')">
-                <img src="${V3.escape(m.image_url)}" alt="Slika u chatu" loading="lazy">
+                onclick="openImagePreview('${escJs(safeUrl(m.image_url))}','${escJs(username)}')">
+                <img src="${V3.escape(safeUrl(m.image_url))}" alt="Slika u chatu" loading="lazy">
               </button>` : ""}
             ${V3.reactionHTML(safeId)}
             ${window.currentUser && (m.user_id===window.currentUser.id || typeof isAdmin==="function" && isAdmin())
