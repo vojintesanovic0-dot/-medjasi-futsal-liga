@@ -426,6 +426,13 @@ function showSection(id){
 
   mobileButton?.classList.add("active");
 
+  /* Keep the secondary mobile drawer in sync with the current section. */
+  document.querySelectorAll(".mobile-more-grid button").forEach(button=>{
+    button.classList.toggle(
+      "active",
+      button.getAttribute("onclick")?.includes("mobileMoreGo('"+id+"')")
+    );
+  });
 
   /* Ako je otvoren "Više", zatvori ga */
 
@@ -7850,6 +7857,7 @@ function renderMusicAdmin(){const box=document.getElementById("adminMusicPlaylis
 
 function toggleMobileMenu(){
   mobileMenuOpen=!mobileMenuOpen;
+  if(mobileMenuOpen && typeof closeMobileMore==="function") closeMobileMore();
   const nav=document.getElementById("mainNav");
   const btn=document.getElementById("mobileMenuBtn");
   nav?.classList.toggle("mobile-open",mobileMenuOpen);
