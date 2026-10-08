@@ -274,6 +274,7 @@ html,body{
   .site-header{margin-left:0!important;left:auto!important;right:auto!important;width:100%!important;}
   .site-header #mainNav{position:static!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;width:auto!important;height:auto!important;max-height:none!important;}
   main{margin-left:auto!important;margin-right:auto!important;}
+  .footer{margin-left:0!important;width:min(var(--page-max),calc(100% - (var(--page-gutter) * 2)))!important;max-width:var(--page-max)!important;margin-right:auto!important;}
   body > #mainNav{position:static!important;}
 }
 
