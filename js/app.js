@@ -6860,91 +6860,103 @@ async function addGoal(
 
   if(!canManageMatch()) return;
 
+  const match=getMatch(matchId);
+  if(!match){
+    alert("Utakmica nije pronađena.");
+    return;
+  }
 
-  const match =
-    getMatch(matchId);
-
-
+  /* Legacy i V7 UI koriste različite ID-jeve; centralna funkcija
+     prihvata oba da jedan tok ne bude dupliran i da oba ekrana rade. */
   const player_id =
-    document.getElementById(
-      "goalPlayer"
-    )?.value;
+    document.getElementById("goalPlayer")?.value ||
+    document.getElementById("v7GoalPlayer")?.value ||
+    "";
 
+  const minuteInput =
+    document.getElementById("goalMinute")?.value ??
+    document.getElementById("v7GoalMinute")?.value ??
+    0;
 
-  const minute =
-    Number(
-      document.getElementById(
-        "goalMinute"
-      )?.value
-    ) || 0;
+  const secondInput=
+    document.getElementById("goalSecond")?.value ?? 0;
 
-  const second=Math.max(0,Math.min(59,Number(document.getElementById("goalSecond")?.value)||0));
+  const minute=Math.max(0,Math.min(60,Number(minuteInput)||0));
+  const second=Math.max(0,Math.min(59,Number(secondInput)||0));
 
+  const assist_player_id=
+    document.getElementById("goalAssist")?.value ||
+    document.getElementById("v7GoalAssist")?.value ||
+    "";
 
-  const player =
-    getPlayer(player_id);
-
+  const player=getPlayer(player_id);
 
   if(!player){
-
-    alert(
-      "Izaberi igrača."
-    );
-
+    alert("Izaberi igrača.");
     return;
   }
-
 
   if(
-    player.team_id !==
-      match.home_team_id &&
-    player.team_id !==
-      match.away_team_id
+    player.team_id !== match.home_team_id &&
+    player.team_id !== match.away_team_id
   ){
+    alert("Igrač ne pripada ekipama u ovoj utakmici.");
+    return;
+  }
 
-    alert(
-      "Igrač ne pripada ekipama u ovoj utakmici."
+  let assistPlayer=null;
+  if(assist_player_id){
+    assistPlayer=getPlayer(assist_player_id);
+
+    if(!assistPlayer){
+      alert("Izabrani asistent nije pronađen.");
+      return;
+    }
+
+    if(assistPlayer.team_id!==player.team_id){
+      alert("Asistent mora biti iz iste ekipe kao strijelac.");
+      return;
+    }
+
+    const registered=matchPlayers.some(
+      mp=>String(mp.match_id)===String(matchId) &&
+          String(mp.player_id)===String(assistPlayer.id)
     );
 
-    return;
+    if(!registered){
+      alert("Asistent mora biti u postavi utakmice.");
+      return;
+    }
+
+    if(String(assistPlayer.id)===String(player.id)){
+      alert("Strijelac ne može biti sam sebi asistent.");
+      return;
+    }
   }
 
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("goals")
-      .insert({
-        match_id:matchId,
-        player_id,
-         minute,
-         second
-       });
-
+  const {error}=await supabaseClient
+    .from("goals")
+    .insert({
+      match_id:matchId,
+      player_id,
+      assist_player_id:assist_player_id||null,
+      minute,
+      second
+    });
 
   if(error){
-
     alert(error.message);
-
     return;
   }
 
-
-  /* Score is now derived centrally by the database goal-event trigger. */
-
+  /*
+    Rezultat se računa centralno u DB triggeru medjasi_goal_event.
+    Time nema duplog ručnog računanja rezultata u frontendu.
+  */
 
   hideModal();
-
-
-  toast(
-    "Gol je evidentiran."
-  );
-
-
+  toast("Gol je evidentiran.");
   await loadAll();
-
-
   openMatch(matchId);
 }
 
