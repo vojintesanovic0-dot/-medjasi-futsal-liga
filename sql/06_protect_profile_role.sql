@@ -34,4 +34,18 @@ before update on public.profiles
 for each row
 execute function public.prevent_profile_role_escalation();
 
+-- The frontend calls these admin-only RPC endpoints as authenticated users.
+-- The functions themselves enforce administrator authorization.
+grant execute on function public.admin_set_user_role(uuid,text) to authenticated;
+grant execute on function public.delete_card_admin(uuid) to authenticated;
+grant execute on function public.delete_comment_admin(uuid) to authenticated;
+grant execute on function public.delete_gallery_admin(uuid) to authenticated;
+grant execute on function public.delete_goal_admin(uuid) to authenticated;
+grant execute on function public.delete_match_admin(uuid) to authenticated;
+grant execute on function public.delete_message_admin(uuid) to authenticated;
+grant execute on function public.delete_player_admin(uuid) to authenticated;
+grant execute on function public.delete_team_admin(uuid) to authenticated;
+grant execute on function public.update_match_admin(uuid,uuid,uuid,timestamptz,text) to authenticated;
+grant execute on function public.update_player_admin(uuid,text,uuid,integer,text,boolean) to authenticated;
+
 commit;
