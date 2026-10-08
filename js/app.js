@@ -3819,20 +3819,43 @@ async function uploadFile(file,folder){
 
   if(!file) return null;
 
-  /* Centralna provjera za admin upload: MIME tip je važniji od ekstenzije.
-     Timovi i igrači prihvataju samo slike; video je dozvoljen samo modulima
-     koji imaju vlastitu media validaciju (npr. Gallery/News V7). */
-  const allowedImageTypes=new Set([
+  const type=String(file.type||"").toLowerCase();
+  const normalizedFolder=String(folder||"").toLowerCase();
+  const isMediaUpload=normalizedFolder==="news"||normalizedFolder==="gallery";
+  const isAvatarUpload=normalizedFolder.startsWith("avatars/");
+
+  const imageTypes=new Set([
     "image/jpeg","image/png","image/webp","image/gif"
   ]);
-  const maxSize=10*1024*1024;
+  const videoTypes=new Set([
+    "video/mp4","video/webm","video/ogg"
+  ]);
+  const allowedTypes=isMediaUpload
+    ? new Set([...imageTypes,...videoTypes])
+    : imageTypes;
 
-  if(!allowedImageTypes.has(String(file.type||"").toLowerCase())){
-    throw new Error("Dozvoljene su samo JPG, PNG, WEBP ili GIF slike.");
+  const maxSize=isMediaUpload
+    ? 50*1024*1024
+    : isAvatarUpload
+      ? 5*1024*1024
+      : 10*1024*1024;
+
+  if(!allowedTypes.has(type)){
+    throw new Error(
+      isMediaUpload
+        ? "Dozvoljeni su JPG, PNG, WEBP, GIF, MP4, WEBM ili OGG fajlovi."
+        : "Dozvoljene su samo JPG, PNG, WEBP ili GIF slike."
+    );
   }
 
   if(Number(file.size||0)>maxSize){
-    throw new Error("Slika je prevelika. Maksimum je 10 MB.");
+    throw new Error(
+      isMediaUpload
+        ? "Medij je prevelik. Maksimum je 50 MB."
+        : isAvatarUpload
+          ? "Avatar može imati najviše 5 MB."
+          : "Slika je prevelika. Maksimum je 10 MB."
+    );
   }
 
   const extension =
@@ -3841,38 +3864,43 @@ async function uploadFile(file,folder){
       .pop()
       .toLowerCase();
 
-  const safeExtension =
-    extension==="jpeg" ? "jpg" :
-    ["jpg","png","webp","gif"].includes(extension) ? extension :
-    "bin";
+  const extensionMap={
+    "jpeg":"jpg",
+    "jpg":"jpg",
+    "png":"png",
+    "webp":"webp",
+    "gif":"gif",
+    "mp4":"mp4",
+    "webm":"webm",
+    "ogg":"ogg"
+  };
 
-  const filename =
+  const safeExtension=extensionMap[extension];
+  if(!safeExtension){
+    throw new Error("Ekstenzija fajla nije dozvoljena.");
+  }
+
+  const filename=
     `${folder}/${crypto.randomUUID()}.${safeExtension}`;
 
-  const {
-    error
-  } =
-    await supabaseClient
-      .storage
-      .from("liga-images")
-      .upload(
-        filename,
-        file,
-        {
-          upsert:false,
-          contentType:file.type
-        }
-      );
+  const {error}=await supabaseClient
+    .storage
+    .from("liga-images")
+    .upload(
+      filename,
+      file,
+      {
+        upsert:false,
+        contentType:type
+      }
+    );
 
   if(error) throw error;
 
-  const {
-    data
-  } =
-    supabaseClient
-      .storage
-      .from("liga-images")
-      .getPublicUrl(filename);
+  const {data}=supabaseClient
+    .storage
+    .from("liga-images")
+    .getPublicUrl(filename);
 
   return data.publicUrl;
 }
