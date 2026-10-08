@@ -3797,11 +3797,26 @@ async function adminDeleteGalleryImage(id){
   if(!isAdmin()) return;
   const item=gallery.find(g=>String(g.id)===String(id));
   if(!item) return;
-  if(!confirm(`Obrisati "${item.title || "ovu fotografiju"}" iz galerije?`)) return;
+  if(!confirm(`Obrisati "${item.title || "ovaj medij"}" iz galerije?`)) return;
+
+  const storageUrls=[item.media_url,item.image_url].filter(Boolean);
+  const removed=await removeStorageUrls(storageUrls);
+  if(removed.error){
+    console.warn("Gallery storage cleanup:",removed.error);
+  }
 
   const {error}=await supabaseClient.from("gallery").delete().eq("id",id);
-  if(error){ alert(error.message); return; }
-  toast("Fotografija je obrisana.","success");
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  toast(
+    removed.error
+      ? "Medij je obrisan iz galerije, ali Storage cleanup nije u potpunosti uspio."
+      : "Medij je obrisan.",
+    removed.error ? "error" : "success"
+  );
   await loadAll();
 }
 
@@ -3809,6 +3824,36 @@ function openImagePreview(url,title="Fotografija"){
   const safe=safeUrl(url);
   if(!safe) return;
   showModal(`<div class="image-lightbox"><img src="${esc(safe)}" alt="${esc(title)}"><div class="image-lightbox-caption"><strong>${esc(title)}</strong></div></div>`);
+}
+
+/* =========================================================
+   STORAGE HELPERS
+========================================================= */
+
+function storagePathFromPublicUrl(value){
+  const raw=String(value||"").trim();
+  if(!raw) return null;
+  try{
+    const url=new URL(raw);
+    const markerPath="/storage/v1/object/public/liga-images/";
+    const index=url.pathname.indexOf(markerPath);
+    if(index<0) return null;
+    return decodeURIComponent(url.pathname.slice(index+markerPath.length));
+  }catch{
+    return null;
+  }
+}
+
+async function removeStorageUrls(urls=[]){
+  const paths=[...new Set((urls||[]).map(storagePathFromPublicUrl).filter(Boolean))];
+  if(!paths.length) return {removed:[],error:null};
+
+  const {data,error}=await supabaseClient
+    .storage
+    .from("liga-images")
+    .remove(paths);
+
+  return {removed:data||[],error:error||null};
 }
 
 /* =========================================================
@@ -10349,7 +10394,27 @@ function renderNews(){
 function openNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n)return;showModal(`<div class="modal-title"><span class="hero-kicker">${escV(n.kicker||'VIJEST')}</span><h2>${escV(n.title)}</h2><p class="muted">${formatV(n.created_at)} · ${escV(n.author_name||'Međasi Futsal Liga')}</p></div><div class="v7-news-media" style="border-radius:16px">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div style="white-space:pre-wrap;line-height:1.75;margin-top:18px">${escV(n.body||n.lead||'')}</div><div class="actions" style="margin-top:18px"><button class="btn btn-green" onclick="medjasiV7.shareNews('${n.id}')">💬 Podijeli u chat</button></div>`)}
 async function shareNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n||!currentUser){showSection('login');toastV('Prijavi se da bi podijelio vijest.','error');return}const text=`📰 ${n.title}\n${n.lead||''}`.trim();const {error}=await supabaseClient.from('messages').insert({user_id:currentUser.id,username:currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik',content:text,image_url:n.media_type==='image'?(n.media_url||n.image_url):null});if(error){toastV(error.message,'error');return}hideModal();showSection('chat');await loadAll();toastV('Vijest je podijeljena u chat.');}
 async function publishNews(){if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');const title=$('v7NewsTitle')?.value.trim(),lead=$('v7NewsLead')?.value.trim(),body=$('v7NewsBody')?.value.trim(),kicker=$('v7NewsKicker')?.value.trim()||'VIJEST',published=$('v7NewsPublished')?.value==='true',file=$('v7NewsFile')?.files?.[0];if(!title||!body){toastV('Unesi naslov i sadržaj vijesti.','error');return}let media_url=null,media_type=null;if(file){if(file.size>50*1024*1024){toastV('Fajl je prevelik. Maksimum je 50 MB.','error');return}media_url=await uploadFile(file,'news');media_type=file.type.startsWith('video/')?'video':'image'}const {error}=await supabaseClient.from('news').insert({title,lead,body,kicker,author_id:currentUser.id,author_name:currentProfile?.username||currentUser.email?.split('@')[0]||'Admin',media_url,media_type,published});if(error){toastV(error.message,'error');return}if(published) await notifyPush('news',`📰 ${title}`,lead||'Nova vijest na sajtu.');['v7NewsTitle','v7NewsLead','v7NewsBody','v7NewsKicker'].forEach(id=>{if($(id))$(id).value=''});if($('v7NewsFile'))$('v7NewsFile').value='';await loadNews();toastV('Vijest je objavljena.');}
-async function deleteNews(id){if(!isAdm())return; if(!confirm('Obrisati ovu vijest?'))return;const {error}=await supabaseClient.from('news').delete().eq('id',id);if(error)return toastV(error.message,'error');await loadNews();toastV('Vijest je obrisana.');}
+async function deleteNews(id){
+  if(!isAdm()) return;
+  const item=V7.news.find(x=>String(x.id)===String(id));
+  if(!item) return;
+  if(!confirm('Obrisati ovu vijest?')) return;
+
+  const removed=await removeStorageUrls([item.media_url,item.image_url].filter(Boolean));
+  if(removed.error){
+    console.warn('News storage cleanup:',removed.error);
+  }
+
+  const {error}=await supabaseClient.from('news').delete().eq('id',id);
+  if(error)return toastV(error.message,'error');
+
+  await loadNews();
+  toastV(
+    removed.error
+      ? 'Vijest je obrisana, ali Storage cleanup nije u potpunosti uspio.'
+      : 'Vijest je obrisana.'
+  );
+}
 function renderAdminNews(){
   const box=$('v7NewsAdminList');
   if(!box||!isAdm())return;
