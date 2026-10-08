@@ -7675,19 +7675,10 @@ function handleLeagueEvent(event){
   if(!e?.event_type) return;
 
   /*
-    Realtime klijent samo prikazuje događaj i zakazuje objedinjeni refresh.
-    Push se šalje iz stvarne admin akcije, ne iz svakog otvorenog klijenta,
-    kako više admin/moderator tabova ne bi slalo duplikate.
+    league_events je samo realtime signal. Jedinstveni notification pipeline
+    u processLeagueNotifications() obrađuje goal/status/card/message snapshot-e
+    i sprječava da isti događaj dobije dvije različite obavijesti.
   */
-  addLeagueNotification({
-    title:e.title||"Novo dešavanje",
-    text:e.body||"",
-    icon:e.event_type==="goal"?"⚽":"🏁",
-    type:e.event_type,
-    key:"league-event:"+e.id,
-    browser:true
-  });
-
   scheduleLoadAll(150);
 }
 
