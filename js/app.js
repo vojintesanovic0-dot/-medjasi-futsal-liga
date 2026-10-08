@@ -10584,7 +10584,7 @@ function openMedia(url,type,title){
   );
 }
 async function adminAddMedia(){
-  if(!isAdm())return;
+  if(!isAdm())return null;
 
   const file=$('galleryImageFile')?.files?.[0];
   const title=$('galleryTitle')?.value.trim()||'';
@@ -10599,14 +10599,18 @@ async function adminAddMedia(){
     media_url=await uploadFile(file,'gallery');
     const media_type=file.type.startsWith('video/')?'video':'image';
 
-    const {error}=await supabaseClient.from('gallery').insert({
-      image_url:media_type==='image'?media_url:null,
-      media_url,
-      media_type,
-      title:title.slice(0,100)||'Medij lige',
-      description:description.slice(0,250),
-      created_by:currentUser.id
-    });
+    const {data:item,error}=await supabaseClient
+      .from('gallery')
+      .insert({
+        image_url:media_type==='image'?media_url:null,
+        media_url,
+        media_type,
+        title:title.slice(0,100)||'Medij lige',
+        description:description.slice(0,250),
+        created_by:currentUser.id
+      })
+      .select('id')
+      .single();
 
     if(error)throw error;
 
@@ -10616,9 +10620,11 @@ async function adminAddMedia(){
 
     await loadAll();
     toastV('Medij je objavljen.');
+    return item.id;
   }catch(e){
     if(media_url)await removeStorageUrls([media_url]);
     toastV(e.message||'Greška pri uploadu.','error');
+    return null;
   }
 }
 function ensureGalleryVideoUI(){const input=$('galleryImageFile');if(!input)return;input.accept='image/*,video/mp4,video/webm,video/ogg';const label=input.closest('.form-group')?.querySelector('label');if(label)label.textContent='Fotografija ili video'}
@@ -10733,7 +10739,40 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   }
   function filePreview(fileId,imgId){q(fileId)?.addEventListener('change',()=>{const f=q(fileId)?.files?.[0],im=q(imgId);if(f&&im){im.src=URL.createObjectURL(f);im.style.display='block'}})}
   window.openV9PostComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>📸 Nova objava</h2><p class="muted">Dodaj fotografiju, opis i po želji muziku.</p></div><div class="form"><label class="v9-drop" for="v9PostFile">📷 Izaberi fotografiju<input id="v9PostFile" type="file" accept="image/*" hidden></label><img id="v9PostPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9PostCaption" maxlength="1000" placeholder="Napiši nešto..."></textarea></div>'+communityMusicPicker("v9PostMusic")+'<button class="btn btn-green" onclick="publishV9Post()">Objavi fotografiju</button></div></div>');filePreview('v9PostFile','v9PostPreview')};
-  window.publishV9Post=async function(){if(!guard())return;const f=q('v9PostFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');let url=null;try{url=await uploadFile(f,`community/${currentUser.id}`);const {error}=await supabaseClient.from('community_posts').insert({user_id:currentUser.id,image_url:url,caption:q('v9PostCaption')?.value.trim()||null,music_track_id:q('v9PostMusic')?.value?Number(q('v9PostMusic').value):null});if(error)throw error;hideModal();await load();toastV('Objava je objavljena.')}catch(err){if(url)await removeStorageUrls([url]);toastV(err.message||'Greška pri objavi.','error')}};
+  window.publishV9Post=async function(){
+  if(!guard())return;
+  const f=q('v9PostFile')?.files?.[0];
+  if(!f)return toastV('Izaberi fotografiju.','error');
+  if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');
+  if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');
+
+  let url=null;
+  try{
+    url=await uploadFile(f,`community/${currentUser.id}`);
+    const {data:post,error}=await supabaseClient
+      .from('community_posts')
+      .insert({
+        user_id:currentUser.id,
+        image_url:url,
+        caption:q('v9PostCaption')?.value.trim()||null,
+        music_track_id:q('v9PostMusic')?.value?Number(q('v9PostMusic').value):null
+      })
+      .select('id')
+      .single();
+
+    if(error)throw error;
+
+    window.__medjasiLastPublishedPostId=post.id;
+    hideModal();
+    await load();
+    toastV('Objava je objavljena.');
+    return post.id;
+  }catch(err){
+    if(url)await removeStorageUrls([url]);
+    toastV(err.message||'Greška pri objavi.','error');
+    return null;
+  }
+};
   window.openV9StoryComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/*" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div>'+communityMusicPicker("v9StoryMusic")+'<button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>');filePreview('v9StoryFile','v9StoryPreview')};
   window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');let url=null;try{url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null,music_track_id:q('v9StoryMusic')?.value?Number(q('v9StoryMusic').value):null});if(error)throw error;hideModal();await load();toastV('Priča je objavljena.')}catch(err){if(url)await removeStorageUrls([url]);toastV(err.message||'Greška pri objavi.','error')}};
   window.openV9Story=function(id){const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=V.profiles[String(s.user_id)]||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${fanCommunityIdentityHTML(p,String(s.user_id))}</b><div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${esc(safeUrl(s.image_url))}" alt=""><div class="v9-story-caption">${escV(s.caption||'')}</div>${communityMusicChip(s.music_track_id)}${logged()&&(String(s.user_id)===String(currentUser.id)||typeof isAdmin==='function'&&isAdmin())?`<button class="btn btn-small" onclick="deleteV9Story('${escV(s.id)}')">Obriši priču</button>`:''}</div>`) };
