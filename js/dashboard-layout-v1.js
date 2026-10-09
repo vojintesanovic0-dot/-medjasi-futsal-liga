@@ -149,7 +149,7 @@ window.dashboardOpenGameTab=function(tab){
   };
   function applyReferenceLayout(){
     if(document.body.dataset.dashboardReferenceApplied==="1")return;
-    const main=$("main"),home=$("home"),header=document.querySelector(".site-header");
+    const main=document.querySelector("main"),home=$("home"),header=document.querySelector(".site-header");
     if(!main||!home||!header)return;
     document.body.dataset.dashboardReferenceApplied="1";
 
@@ -281,11 +281,11 @@ window.dashboardOpenGameTab=function(tab){
       const el=$(id);if(!el)return;
       new MutationObserver(()=>setTimeout(sync,40)).observe(el,{childList:true,subtree:true});
     };
-    ["tableBody","galleryGrid","news","homeLive","gameRoot"].forEach(watch);
-    const main=$("main");
+    ["tableBody","galleryGrid","news","homeLive","game"].forEach(watch);
+    const main=document.querySelector("main");
     if(main)new MutationObserver(records=>{
       if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.id==="news"||n.id==="game"||n.id==="info")))){
-        ["news","gameRoot"].forEach(watch);setTimeout(sync,100);
+        ["news","game"].forEach(watch);setTimeout(sync,100);
       }
     }).observe(main,{childList:true,subtree:false});
   }
