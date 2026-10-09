@@ -186,7 +186,8 @@ window.dashboardOpenGameTab=function(tab){
     const scroll=document.createElement("div");scroll.className="sidebar-scroll";
     if(nav)scroll.appendChild(nav);
     if(nav&&!nav.querySelector("[data-dashboard-tab]")){
-      nav.insertAdjacentHTML("beforeend",
+      const fanZoneTitle=[...nav.querySelectorAll(".nav-group-title")].find(el=>el.textContent.trim().toUpperCase()==="FAN ZONA");
+      const fanServicesHTML=
         '<div class="nav-group-title dashboard-extras-group">FAN SERVISI</div>'+
         '<button type="button" data-dashboard-tab="shop" onclick="dashboardOpenGameTab(\'shop\')"><span></span><span>Fan Shop</span></button>'+
         '<button type="button" data-dashboard-tab="fanbase" onclick="dashboardOpenGameTab(\'fanbase\')"><span></span><span>Fan Base</span></button>'+
@@ -197,22 +198,9 @@ window.dashboardOpenGameTab=function(tab){
         '<button type="button" data-dashboard-tab="club" onclick="dashboardOpenGameTab(\'club\')"><span></span><span>Moja tribina</span></button>'+
         '<button type="button" data-dashboard-tab="mvp" onclick="dashboardOpenGameTab(\'mvp\')"><span></span><span>MVP</span></button>'+
         '<div class="nav-group-title dashboard-admin-group" hidden>ADMINISTRACIJA</div>'+
-        '<button type="button" id="dashboardAdminNav" hidden onclick="showSection(\'admin\')"><span></span><span>Admin panel</span></button>'
-      );
-    }
-
-    // Keep the remaining Fan Zone destinations at the very end of the sidebar,
-    // after the appended Fan Services group, without recreating removed legacy items.
-    if(nav){
-      const fanZoneTitle=[...nav.querySelectorAll(".nav-group-title")].find(el=>/FAN ZONA/i.test(el.textContent||""));
-      const finalButtons=[...nav.querySelectorAll("button")].filter(button=>{
-        const handler=button.getAttribute("onclick")||"";
-        return /showSection\(['"]game['"]\)/.test(handler)||/showSection\(['"]info['"]\)/.test(handler);
-      });
-      if(fanZoneTitle&&finalButtons.length===2){
-        nav.appendChild(fanZoneTitle);
-        finalButtons.forEach(button=>nav.appendChild(button));
-      }
+        '<button type="button" id="dashboardAdminNav" hidden onclick="showSection(\'admin\')"><span></span><span>Admin panel</span></button>';
+      if(fanZoneTitle)fanZoneTitle.insertAdjacentHTML("beforebegin",fanServicesHTML);
+      else nav.insertAdjacentHTML("beforeend",fanServicesHTML);
     }
 
     const livePanel=sidebar.querySelector(".sidebar-live-panel");
