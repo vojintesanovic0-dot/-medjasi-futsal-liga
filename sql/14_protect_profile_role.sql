@@ -21,7 +21,7 @@ security definer
 set search_path = public, pg_temp
 as $$
 begin
-  if new.role is distinct from old.role and not coalesce(public.is_admin(), false) then
+  if new.role is distinct from old.role and not coalesce(public.medjasi_is_admin(), false) then
     raise exception 'Nemaš dozvolu da mijenjaš ulogu korisnika.';
   end if;
   return new;
