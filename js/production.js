@@ -34,21 +34,7 @@ function run(){
   patchImages();
   patchAccessibility();
 }
-function registerServiceWorker(){
-  if(!("serviceWorker" in navigator)) return;
-  const swUrl = new URL("./service-worker.js", document.baseURI);
-  navigator.serviceWorker.register(swUrl.href)
-    .then(registration => registration.update().catch(error => {
-      console.warn("Medjasi PWA update check:", error);
-    }))
-    .catch(error => console.warn("Medjasi PWA registration:", error));
-}
-window.addEventListener("load",()=>{
-  run();
-  registerServiceWorker();
-  setTimeout(run,800);
-  setTimeout(run,2200);
-});
+window.addEventListener("load",()=>{run();setTimeout(run,800);setTimeout(run,2200)});
 window.addEventListener("error",e=>console.error("Medjasi runtime:",e.error||e.message));
 window.addEventListener("unhandledrejection",e=>console.error("Medjasi async:",e.reason));
 })();
