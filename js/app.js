@@ -10605,8 +10605,28 @@ function ratingClass(r){return r>=7.5?'good':r>=6?'mid':'low'}
 function matchRating(matchId,pid){const p=playerV(pid),m=matches.find(x=>String(x.id)===String(matchId));if(!p||!m)return 6;const gs=goals.filter(g=>String(g.match_id)===String(matchId));const cs=cards.filter(c=>String(c.match_id)===String(matchId));const g=gs.filter(x=>String(x.player_id)===String(pid)).length;const a=gs.filter(x=>String(x.assist_player_id)===String(pid)).length;const yc=cs.filter(x=>String(x.player_id)===String(pid)&&String(x.card_type).toLowerCase().includes('yellow')).length;const rc=cs.filter(x=>String(x.player_id)===String(pid)&&String(x.card_type).toLowerCase().includes('red')).length;const side=p.team_id===m.home_team_id?'home':p.team_id===m.away_team_id?'away':null;let r=6+g*1.0+a*.7-yc*.35-rc*2;if(side){const hs=+m.home_score||0,as=+m.away_score||0;if(hs!==as)r+=(side==='home'?(hs>as?.35:-.2):(as>hs?.35:-.2))}const st=V7.stats.find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(pid));if(st)r+=Math.min(2,(+st.saves||0)*.12);return Math.max(3,Math.min(10,Math.round(r*10)/10))}
 function playerRatingLine(matchId,pid){const r=matchRating(matchId,pid);return `<span class="v7-rating ${ratingClass(r)}">${r.toFixed(1)}</span>`}
 function ratingRows(matchId,teamId){const ids=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===teamId);return ids.map(mp=>{const p=playerV(mp.player_id);return p?`<tr><td>#${escV(p.jersey_number??'-')} ${escV(p.name)}</td><td>${playerRatingLine(matchId,p.id)}</td><td>${goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.player_id)===String(p.id)).length}</td><td>${goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.assist_player_id)===String(p.id)).length}</td><td>${V7.stats.find(s=>String(s.match_id)===String(matchId)&&String(s.player_id)===String(p.id))?.saves||0}</td></tr>`:''}).join('')}
-async function loadStats(){const {data,error}=await supabaseClient.from('match_player_stats').select('*');if(!error)V7.stats=data||[]}
-async function addSave(matchId,pid){if(!canManageMatch())return;const existing=V7.stats.find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(pid));const saves=(+existing?.saves||0)+1;const {error}=await supabaseClient.from('match_player_stats').upsert({match_id:matchId,player_id:pid,saves,updated_at:new Date().toISOString()},{onConflict:'match_id,player_id'});if(error)return toastV(error.message,'error');await loadStats();await renderEnhancedLive(matchId);}
+async function loadStats(){
+  const {data,error}=await supabaseClient.from("match_player_stats").select("*");
+  if(error)throw error;
+  V7.stats=data||[];
+  return V7.stats;
+}
+async function addSave(matchId,pid){
+  if(!canManageMatch())return;
+  const existing=V7.stats.find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(pid));
+  const saves=(+existing?.saves||0)+1;
+  const {error}=await supabaseClient.from("match_player_stats").upsert({
+    match_id:matchId,player_id:pid,saves,updated_at:new Date().toISOString()
+  },{onConflict:"match_id,player_id"});
+  if(error)return toastV(error.message,"error");
+  try{
+    await loadStats();
+    await renderEnhancedLive(matchId);
+  }catch(refreshError){
+    console.error("Odbrana je sačuvana, ali statistika nije osvježena:",refreshError);
+    toastV("Odbrana je sačuvana, ali prikaz statistike nije osvježen. Ponovo otvori utakmicu.","error");
+  }
+}
 function renderEnhancedLive(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m||m.status!=='live')return;const host=$('modalContent');if(!host)return;host.querySelectorAll('.v7-live-rating-table').forEach(x=>x.remove());const h=teamV(m.home_team_id),a=teamV(m.away_team_id);const block=(team,label)=>`<div class="card v7-live-rating-table" style="margin-top:14px"><h3>${label} · ocjene</h3><div class="table-wrap" style="margin-top:10px"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Ocjena</th><th>G</th><th>A</th><th>O</th></tr></thead><tbody>${ratingRows(matchId,team.id)||'<tr><td colspan="5">Nema postave.</td></tr>'}</tbody></table></div></div>`;host.insertAdjacentHTML('beforeend',block(h,escV(h?.name||'Domaćin'))+block(a,escV(a?.name||'Gost')))}
 async function openFinished(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const hp=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.home_team_id);const ap=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.away_team_id);showModal(`<div class="modal-title"><h2>🏁 Završetak utakmice · statistika</h2><p class="muted">${escV(teamV(m.home_team_id)?.name)} ${m.home_score||0}:${m.away_score||0} ${escV(teamV(m.away_team_id)?.name)}</p></div><div class="v7-finished-grid"><div class="card"><h3>⚽ Golovi i asistencije</h3><p class="muted" style="margin:6px 0 12px">Ako statistiku unosiš naknadno, možeš evidentirati svaki gol i asistenta.</p><div class="actions"><button class="btn btn-green" onclick="medjasiV7.openGoal('${matchId}')">＋ Dodaj gol</button></div><div style="margin-top:12px">${goals.filter(g=>String(g.match_id)===String(matchId)).sort((x,y)=>(+x.minute||0)-(+y.minute||0)).map(g=>`<div class="event"><span class="event-minute">${g.minute||0}'</span><span class="event-icon">⚽</span><div><b>${escV(playerV(g.player_id)?.name||'Igrač')}</b>${g.assist_player_id?` <span class="muted">assist: ${escV(playerV(g.assist_player_id)?.name||'')}</span>`:''}</div></div>`).join('')||'<div class="empty compact">Nema golova.</div>'}</div></div><div class="card"><h3>📊 Ocjene igrača</h3><div class="table-wrap" style="margin-top:10px"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Ocjena</th><th>G</th><th>A</th><th>O</th></tr></thead><tbody>${ratingRows(matchId,m.home_team_id)}${ratingRows(matchId,m.away_team_id)}</tbody></table></div></div></div>${renderMvp(matchId)}<div class="actions" style="margin-top:16px"><button class="btn btn-blue" onclick="medjasiV7.finishAndSave('${matchId}')">💾 Sačuvaj statistiku i završi</button></div>`)}
 async function finishAndSave(matchId){
@@ -10615,7 +10635,9 @@ async function finishAndSave(matchId){
   if(!m)return toastV("Utakmica nije pronađena.","error");
 
   try{
-    // Never mark a match finished until every player-stat write succeeds.
+    // Preserve saves/ratings only from a confirmed read, then require all writes
+    // to succeed before allowing the database to finish the match.
+    await loadStats();
     await saveRatings(matchId);
     const {error}=await supabaseClient.from("matches").update({status:"finished"}).eq("id",matchId);
     if(error)throw error;
