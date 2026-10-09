@@ -1617,11 +1617,11 @@ async function loadAll(){
         const {data,error}=await q.range(from,from+PAGE-1);
         if(error) return {data:null,error};
         all=all.concat(data||[]);
-        if(!data||data.length<PAGE) break;
-        from+=PAGE;
-        if(from>20000){
+        if(all.length>21000){
           return {data:null,error:new Error("Podaci prelaze sigurni limit od 21.000 redova; rezultat nije skraćen tiho.")};
         }
+        if(!data||data.length<PAGE) break;
+        from+=PAGE;
       }
       return {data:all,error:null};
     };
