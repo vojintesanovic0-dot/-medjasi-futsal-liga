@@ -3,21 +3,22 @@
 const q=s=>document.querySelector(s);
 let timer=0;
 
-function loadScriptOnce(src,flag){
-  if(document.querySelector(`script[data-${flag}]`)) return;
+function loadScriptOnce(src,attrName,datasetKey){
+  if(document.querySelector(`script[${attrName}]`)) return;
   const s=document.createElement('script');
   s.src=src;
   s.defer=false;
-  s.dataset[flag]='1';
+  s.setAttribute(attrName,'1');
+  if(datasetKey) s.dataset[datasetKey]='1';
   document.head.appendChild(s);
 }
 
 function loadGalleryFixes(){
-  loadScriptOnce('./js/gallery-fixes.js?v=20261008v01','medjasiGalleryFixes');
+  loadScriptOnce('./js/gallery-fixes.js?v=20261008v01','data-medjasi-gallery-fixes','medjasiGalleryFixes');
 }
 
 function loadFanFixes(){
-  loadScriptOnce('./js/fan-fixes.js?v=20261008v01','medjasiFanFixes');
+  loadScriptOnce('./js/fan-fixes.js?v=20261008v01','data-medjasi-fan-fixes','medjasiFanFixes');
 }
 
 window.medjasiProduction={
