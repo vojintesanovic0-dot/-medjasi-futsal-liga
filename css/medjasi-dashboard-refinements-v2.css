@@ -17,7 +17,7 @@ body{overflow-x:hidden!important}
 body>.footer{display:block!important}
 .dashboard-phone-rail{display:none!important}
 
-/* --- Desktop grid: dashboard + only the real information rail --- */
+/* --- Desktop grid: full workspace beside the left sidebar; redundant right rail is hidden below --- */
 main{
   display:grid!important;
   grid-template-columns:minmax(0,1fr)!important;
@@ -174,6 +174,7 @@ main{
 
 /* --- Header: search gets real space, all controls align on one baseline --- */
 .site-header{
+  position:fixed!important;
   left:var(--dash-sidebar)!important;
   right:0!important;
   width:calc(100% - var(--dash-sidebar))!important;
