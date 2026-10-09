@@ -8242,13 +8242,14 @@ showSection=function(id){
   if(actualId==="game"){
     const gameTab=window.medjasiGame?.getActiveTab?.()||"matches";
     activeBtn=navButtons.find(btn=>btn.getAttribute("data-dashboard-tab")===gameTab) ||
+      (gameTab==="matches" ? navButtons.find(btn=>(btn.getAttribute("onclick")||"").includes("dashboardOpenGameTab('matches')")) : null) ||
       navButtons.find(btn=>(btn.getAttribute("onclick")||"").includes("showSection('game')"));
   }else{
     activeBtn=navButtons.find(btn=>!btn.hasAttribute("data-dashboard-tab") &&
       (btn.getAttribute("onclick")||"").includes("showSection('"+actualId+"')"));
   }
   activeBtn?.classList.add("active");
-  if(activeBtn?.hasAttribute("data-dashboard-tab"))activeBtn.setAttribute("aria-current","page");
+  if(activeBtn)activeBtn.setAttribute("aria-current","page");
   mobileMenuOpen=false;
   document.getElementById("mainNav")?.classList.remove("mobile-open","open");
   const btn=document.getElementById("mobileMenuBtn");
