@@ -656,6 +656,19 @@ if (
   pass("League-event push wiring and server-side role gate are present");
 }
 
+const adminOrganizerSource = read("js/admin-organizer.js");
+if (
+  !adminOrganizerSource.includes("function dedupeUniqueContentCards") ||
+  !adminOrganizerSource.includes("const headingOf=card=>") ||
+  !adminOrganizerSource.includes('card.querySelector?.("#adminGalleryList,#galleryImageFile")') ||
+  adminOrganizerSource.includes('/\\bgalerija\\b/i.test(card.textContent||"")') ||
+  adminOrganizerSource.includes('/push notifikacije/i.test(card.textContent||"")')
+) {
+  fail("Admin duplicate cleanup must identify actual Gallery/Playlist/Push cards without hiding unrelated cards that merely mention them");
+} else {
+  pass("Admin deduplication is restricted to actual Gallery/Playlist/Push cards");
+}
+
 const searchActionStart = app.indexOf("function renderSearch()");
 const searchActionEnd = app.indexOf("// Load wrappers",searchActionStart);
 const searchActionSource = searchActionStart >= 0 && searchActionEnd > searchActionStart
