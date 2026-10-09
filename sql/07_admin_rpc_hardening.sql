@@ -4,6 +4,30 @@
 
 begin;
 
+-- The wrappers remain in the exposed public schema. Authenticated clients need
+-- schema visibility for their EXECUTE grants, but the private schema is not
+-- added to the PostgREST exposed-schema list.
+grant usage on schema private to authenticated;
+
+create or replace function public._medjasi_require_admin()
+returns void
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $function$
+begin
+  if not exists (
+    select 1
+    from public.profiles
+    where id = (select auth.uid())
+      and role = 'admin'
+  ) then
+    raise exception 'Nemaš admin ovlaštenje.';
+  end if;
+end;
+$function$;
+revoke all on function public._medjasi_require_admin() from public, anon, authenticated;
+
 alter function public.admin_set_user_role(uuid,text) set schema private;
 alter function public.delete_card_admin(uuid) set schema private;
 alter function public.delete_comment_admin(uuid) set schema private;
@@ -85,6 +109,8 @@ begin
     raise exception 'Utakmica se ne može obrisati jer sadrži Fan Game markete ili tikete.';
   end if;
 
+  delete from public.match_substitutions where match_id = match_uuid;
+  delete from public.match_player_stats where match_id = match_uuid;
   delete from public.match_players where match_id = match_uuid;
   delete from public.goals where match_id = match_uuid;
   delete from public.cards where match_id = match_uuid;
@@ -136,6 +162,8 @@ begin
   where home_team_id = team_uuid or away_team_id = team_uuid;
 
   if match_ids is not null then
+    delete from public.match_substitutions where match_id = any(match_ids);
+    delete from public.match_player_stats where match_id = any(match_ids);
     delete from public.match_players where match_id = any(match_ids);
     delete from public.goals where match_id = any(match_ids);
     delete from public.cards where match_id = any(match_ids);
@@ -167,8 +195,14 @@ begin
     raise exception 'Igrač se ne može obrisati jer postoji Fan Game market vezan za tog igrača.';
   end if;
 
-  delete from public.goals where player_id = player_uuid;
+  delete from public.goals
+  where player_id = player_uuid
+     or assist_player_id = player_uuid;
   delete from public.cards where player_id = player_uuid;
+  delete from public.match_substitutions
+  where player_out_id = player_uuid
+     or player_in_id = player_uuid;
+  delete from public.match_player_stats where player_id = player_uuid;
   delete from public.match_players where player_id = player_uuid;
   delete from public.players where id = player_uuid;
 end;
