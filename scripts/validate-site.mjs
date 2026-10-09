@@ -25,6 +25,15 @@ const htmlRefs = [...html.matchAll(/(?:src|href)=["'](\.\/[^"']+)["']/gi)]
   .map((m) => m[1])
   .filter((ref) => /\.(?:css|js|html|json|png|svg|webp|jpe?g|woff2?)(?:[?#]|$)/i.test(ref));
 
+const stylesheetTags = [...html.matchAll(/<link\\b[^>]+href=["'][^"']+\\.css(?:\\?[^"']*)?["'][^>]*>/gi)];
+const finalHeaderIndex = stylesheetTags.findIndex((m) => m[0].includes("header-final.css"));
+const lastStylesheetIndex = stylesheetTags.length - 1;
+if (finalHeaderIndex < 0 || finalHeaderIndex !== lastStylesheetIndex) {
+  fail("header-final.css must remain the last stylesheet so navigation overrides win the cascade");
+} else {
+  pass("Final header/navigation stylesheet is loaded last");
+}
+
 for (const ref of [...new Set(htmlRefs)]) {
   const path = pathFromRef(ref);
   if (!existsSync(path)) fail(`Missing local HTML asset: ${ref}`);
