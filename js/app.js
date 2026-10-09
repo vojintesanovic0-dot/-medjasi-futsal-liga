@@ -1108,10 +1108,10 @@ async function ensureProfile(user){
       .maybeSingle();
 
   if(selectError){
-    console.error(
-      "Greška pri učitavanju profila:",
-      selectError
-    );
+    console.error("Greška pri učitavanju profila:",selectError);
+    // Do not create a profile when the read failed for another reason, and
+    // do not leave the previous account's profile/role in memory.
+    throw selectError;
   }
 
   if(existing){
@@ -1206,7 +1206,7 @@ async function ensureProfile(user){
 
 
 async function checkAuth(){
-  // The static shell must remain usable when the Supabase CDN is unavailable.
+  // Fail closed: a stale profile must never carry admin privileges across account changes.
   if(!supabaseClient?.auth?.getSession){
     currentUser=null;
     currentProfile=null;
@@ -1214,11 +1214,29 @@ async function checkAuth(){
     return null;
   }
 
-  const {data,error}=await supabaseClient.auth.getSession();
-  if(error) throw error;
+  let sessionResult;
+  try{
+    sessionResult=await supabaseClient.auth.getSession();
+  }catch(error){
+    currentUser=null;
+    currentProfile=null;
+    updateAuthUI();
+    throw error;
+  }
+
+  const {data,error}=sessionResult||{};
+  if(error){
+    currentUser=null;
+    currentProfile=null;
+    updateAuthUI();
+    throw error;
+  }
 
   currentUser=data?.session?.user||null;
-  currentProfile=currentUser?await ensureProfile(currentUser):null;
+  currentProfile=null;
+  if(currentUser){
+    currentProfile=await ensureProfile(currentUser);
+  }
 
   updateAuthUI();
 
