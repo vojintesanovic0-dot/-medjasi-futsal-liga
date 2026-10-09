@@ -132,7 +132,16 @@
     const season=$("sidebarSeasonGames");
     if(season)season.textContent=allMatches().length+" utakmica u rasporedu";
   }
+  function syncAdminAccess(){
+    const admin=window.currentProfile?.role==="admin";
+    ["dashboardAdminNav","dashboardMobileAdminLink"].forEach(id=>{
+      const el=$(id);if(el)el.hidden=!admin;
+    });
+    document.querySelectorAll(".dashboard-admin-group").forEach(el=>el.hidden=!admin);
+  }
+
   function sync(){
+    syncAdminAccess();
     renderNext();renderUpcoming();renderSidebarLive();syncTable();syncGallery();renderNewsMirror();syncWallet();syncFooter();
   }
 window.dashboardOpenGameTab=function(tab){
@@ -167,8 +176,34 @@ window.dashboardOpenGameTab=function(tab){
     if(logo)sidebar.appendChild(logo);
     const scroll=document.createElement("div");scroll.className="sidebar-scroll";
     if(nav)scroll.appendChild(nav);
+    if(nav&&!nav.querySelector("[data-dashboard-tab]")){
+      nav.insertAdjacentHTML("beforeend",
+        '<button type="button" data-dashboard-tab="shop" onclick="dashboardOpenGameTab(\'shop\')"><span></span><span>Fan Shop</span></button>'+
+        '<button type="button" data-dashboard-tab="fanbase" onclick="dashboardOpenGameTab(\'fanbase\')"><span></span><span>Fan Base</span></button>'+
+        '<button type="button" data-dashboard-tab="mine" onclick="dashboardOpenGameTab(\'mine\')"><span></span><span>Moji tiketi</span></button>'+
+        '<button type="button" data-dashboard-tab="live" onclick="dashboardOpenGameTab(\'live\')"><span></span><span>Live centar</span></button>'+
+        '<button type="button" data-dashboard-tab="board" onclick="dashboardOpenGameTab(\'board\')"><span></span><span>Nagrade i poredak</span></button>'+
+        '<button type="button" data-dashboard-tab="collection" onclick="dashboardOpenGameTab(\'collection\')"><span></span><span>Kolekcija</span></button>'+
+        '<button type="button" data-dashboard-tab="club" onclick="dashboardOpenGameTab(\'club\')"><span></span><span>Moja tribina</span></button>'+
+        '<button type="button" data-dashboard-tab="mvp" onclick="dashboardOpenGameTab(\'mvp\')"><span></span><span>MVP</span></button>'+
+        '<div class="nav-group-title dashboard-admin-group" hidden>ADMINISTRACIJA</div>'+
+        '<button type="button" id="dashboardAdminNav" hidden onclick="showSection(\'admin\')"><span></span><span>Admin panel</span></button>'
+      );
+    }
+
     const livePanel=sidebar.querySelector(".sidebar-live-panel");
     sidebar.insertBefore(scroll,livePanel);
+    const quickPanel=document.createElement("section");
+    quickPanel.className="sidebar-quick-panel";
+    quickPanel.innerHTML='<div class="sidebar-panel-title"><span>BRZI PRISTUP</span></div>'+
+      '<div class="sidebar-quick-grid">'+
+      '<button type="button" onclick="dashboardOpenGameTab(\'shop\')"><span class="sidebar-quick-icon">♜</span><span>Fan Shop</span></button>'+
+      '<button type="button" onclick="dashboardOpenGameTab(\'fanbase\')"><span class="sidebar-quick-icon">♟</span><span>Fan Base</span></button>'+
+      '<button type="button" onclick="dashboardOpenGameTab(\'mine\')"><span class="sidebar-quick-icon">▣</span><span>Tiketi</span></button>'+
+      '<button type="button" onclick="dashboardOpenGameTab(\'collection\')"><span class="sidebar-quick-icon">⬡</span><span>Kolekcija</span></button>'+
+      '</div>';
+    sidebar.insertBefore(quickPanel,livePanel);
+
     if(logo)sidebar.insertBefore(logo,sidebar.firstChild);
     document.body.insertBefore(sidebar,header);
 
@@ -252,16 +287,7 @@ window.dashboardOpenGameTab=function(tab){
         <section class="dashboard-rail-panel"><div class="dashboard-section-head"><h2>Novosti</h2><button onclick="showSection('news')">Pogledaj sve →</button></div><div id="dashboardNewsList" class="dashboard-news-list"><div class="dashboard-news-empty">Učitavanje vijesti…</div></div></section>
         <section class="dashboard-rail-panel"><div class="dashboard-section-head"><h2>Fan Base</h2><small>ZAJEDNICA</small></div><div class="dashboard-fanbase-content"><div class="dashboard-fanbase-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><path d="M4 20c.7-4 3.2-6 8-6s7.3 2 8 6"/></svg></div><div><b>Postani dio Fan Base!</b><small>Više nivoa, više pogodnosti i više nagrada.</small><button onclick="dashboardOpenGameTab('fanbase')">Pridruži se →</button></div></div></section>
       </aside>
-      <aside class="dashboard-phone-rail" id="dashboardPhoneRail" aria-label="Mobilni prikaz stranice">
-        <div class="dashboard-phone-device"><div class="dashboard-phone-screen"><div class="dashboard-phone-notch"></div><div class="dashboard-phone-status">9:41 <span style="float:right">● ▮ ▰</span></div>
-          <div class="dashboard-phone-header"><div class="dashboard-phone-logo"><img src="./images/icon-192.png" alt=""><div>MEDJAŠI<small>FUTSAL LIGA</small></div></div><button onclick="toggleMobileMenu()" aria-label="Otvori meni">☰</button></div>
-          <div class="dashboard-phone-hero"><small>DOBRO DOŠLI NA</small><h3>MEDJAŠI FUTSAL LIGA</h3><p>Strast. Zajednica. Futsal.</p><button onclick="showSection('matches')">▶ Pogledaj utakmice</button></div>
-          <div class="dashboard-phone-shortcuts"><button onclick="showSection('matches')">◎<br>Utakmice</button><button onclick="showSection('table')">▤<br>Tabela</button><button onclick="showSection('teams')">♜<br>Ekipe</button><button onclick="showSection('players')">♙<br>Igrači</button></div>
-          <div class="dashboard-phone-next"><div class="dashboard-section-head"><h2>Naredna utakmica</h2></div><div id="dashboardPhoneNext"><div class="dashboard-empty">Učitavanje…</div></div></div>
-          <div class="dashboard-phone-bottom"><button onclick="showSection('home')">⌂<br>Početna</button><button onclick="showSection('table')">♜<br>Liga</button><button onclick="showSection('community')">▣<br>Zajednica</button><button onclick="dashboardOpenGameTab('matches')">◎<br>Fan Zona</button></div>
-        </div></div>
-        <section class="dashboard-phone-community"><div class="dashboard-section-head"><h2>Tvoja strast. Naša zajednica.</h2></div><div class="dashboard-community-shortcuts"><button onclick="dashboardOpenGameTab('shop')">♙<br>Fan Shop</button><button onclick="dashboardOpenGameTab('fanbase')">♟<br>Fan Base</button><button onclick="showSection('game')">◎<br>Pogodi</button><button onclick="dashboardOpenGameTab('matches')">▣<br>Eventi</button><button onclick="dashboardOpenGameTab('board')">♜<br>Nagrade</button><button onclick="dashboardOpenGameTab('collection')">⬡<br>Badges</button></div><div class="dashboard-signature">Medjaši ♛<br>Futsal Liga</div></section>
-      </aside>`;
+      `;
     if(!$("dashboardRightRail"))main.insertAdjacentHTML("beforeend",mainRails);
     if(!$("dashboardFooter")){
       const footer=document.createElement("footer");footer.id="dashboardFooter";footer.className="dashboard-footer";
