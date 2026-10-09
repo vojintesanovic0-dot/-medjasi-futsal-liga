@@ -3,12 +3,22 @@
 const q=s=>document.querySelector(s);
 let timer=0;
 
+function loadGalleryFixes(){
+  if(document.querySelector('script[data-medjasi-gallery-fixes]')) return;
+  const s=document.createElement('script');
+  s.src='./js/gallery-fixes.js?v=20261008v01';
+  s.defer=false;
+  s.dataset.medjasiGalleryFixes='1';
+  document.head.appendChild(s);
+}
+
 window.medjasiProduction={
   version:"2026.10",
   refresh(delay=250){
     clearTimeout(timer);
     timer=setTimeout(()=>window.loadAll?.(),delay);
-  }
+  },
+  loadGalleryFixes
 };
 
 function patchImages(){
@@ -34,7 +44,13 @@ function run(){
   patchImages();
   patchAccessibility();
 }
-window.addEventListener("load",()=>{run();setTimeout(run,800);setTimeout(run,2200)});
+window.addEventListener("load",()=>{
+  run();
+  loadGalleryFixes();
+  setTimeout(run,800);
+  setTimeout(run,2200);
+  setTimeout(loadGalleryFixes,1200);
+});
 window.addEventListener("error",e=>console.error("Medjasi runtime:",e.error||e.message));
 window.addEventListener("unhandledrejection",e=>console.error("Medjasi async:",e.reason));
 })();
