@@ -17,6 +17,10 @@ html,body{
 .site-header{
   position:sticky!important;
   top:0!important;
+  left:0!important;
+  right:0!important;
+  margin-left:0!important;
+  margin-right:0!important;
   z-index:3000!important;
   width:100%!important;
   min-height:0!important;
