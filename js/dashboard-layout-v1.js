@@ -302,8 +302,28 @@ window.dashboardOpenGameTab=function(tab){
     }
   }
 
+  function bindResponsiveNavigation(){
+    const nav=$("mainNav");
+    if(!nav||nav.dataset.dashboardCloseBound==="1")return;
+    nav.dataset.dashboardCloseBound="1";
+    nav.addEventListener("click",event=>{
+      const button=event.target.closest("button");
+      if(!button||!nav.classList.contains("mobile-open")||window.innerWidth>1024)return;
+      window.setTimeout(()=>{if(nav.classList.contains("mobile-open")&&typeof window.toggleMobileMenu==="function")window.toggleMobileMenu();},0);
+    });
+    document.addEventListener("keydown",event=>{
+      if(event.key==="Escape"&&nav.classList.contains("mobile-open")&&typeof window.toggleMobileMenu==="function")window.toggleMobileMenu();
+    });
+    document.addEventListener("click",event=>{
+      if(window.innerWidth>1024||!nav.classList.contains("mobile-open"))return;
+      if(event.target.closest("#mainNav")||event.target.closest("#mobileMenuBtn"))return;
+      if(typeof window.toggleMobileMenu==="function")window.toggleMobileMenu();
+    });
+  }
+
   function start(){
     applyReferenceLayout();
+    bindResponsiveNavigation();
     sync();
     [400,1000,2200,5000,9000].forEach(delay=>setTimeout(sync,delay));
     window.addEventListener("focus",sync);
