@@ -7700,15 +7700,41 @@ function subscribeRealtime(){
 
 async function init(){
 
-  await checkAuth();
-  await loadMusicSettings();
+  /* Jedan neuspješan servis ne smije zaustaviti ostatak aplikacije. */
+  try {
+    await checkAuth();
+  } catch (error) {
+    console.error("Medjasi auth initialization:", error);
+    try { updateAuthUI(); } catch (uiError) {
+      console.error("Medjasi auth UI:", uiError);
+    }
+  }
 
-  await loadAll();
+  try {
+    await loadMusicSettings();
+  } catch (error) {
+    console.error("Medjasi music initialization:", error);
+    musicSettings = {youtube_music_enabled:false};
+    musicTracks = [];
+    try { initMusic(); } catch (musicError) {
+      console.error("Medjasi music UI:", musicError);
+    }
+  }
+
+  try {
+    await loadAll();
+  } catch (error) {
+    console.error("Medjasi data initialization:", error);
+  }
 
   restoreRememberedSection();
   setupTabReturnPersistence();
 
-  subscribeRealtime();
+  try {
+    subscribeRealtime();
+  } catch (error) {
+    console.error("Medjasi realtime initialization:", error);
+  }
 
 
   supabaseClient
