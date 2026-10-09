@@ -8204,6 +8204,7 @@ showSection=function(id){
   _baseShowSection(id);
   const activeSection=document.querySelector(".section.active");
   const actualId=activeSection?.id || "home";
+  window.dashboardSyncHeaderContext?.(actualId);
   document.querySelectorAll("#mainNav button").forEach(btn=>btn.classList.remove("active"));
   const activeBtn=[...document.querySelectorAll("#mainNav button")].find(btn=>{
     const target=btn.getAttribute("onclick")||"";
