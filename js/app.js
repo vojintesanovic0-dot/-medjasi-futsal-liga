@@ -8208,23 +8208,27 @@ showSection=function(id){
   const activeSection=document.querySelector(".section.active");
   const actualId=activeSection?.id || "home";
   window.dashboardSyncHeaderContext?.(actualId);
-  document.querySelectorAll("#mainNav button").forEach(btn=>btn.classList.remove("active"));
-  const activeBtn=[...document.querySelectorAll("#mainNav button")].find(btn=>{
-    const target=btn.getAttribute("onclick")||"";
-    return target.includes(`showSection('${actualId}')`) ||
-      (actualId==="game" && btn.hasAttribute("data-dashboard-tab") &&
-       btn.getAttribute("data-dashboard-tab")===window.medjasiGame?.getActiveTab?.());
-  });
+  const navButtons=[...document.querySelectorAll("#mainNav button")];
+  navButtons.forEach(btn=>btn.classList.remove("active"));
+  let activeBtn;
+  if(actualId==="game"){
+    const gameTab=window.medjasiGame?.getActiveTab?.()||"matches";
+    activeBtn=navButtons.find(btn=>btn.getAttribute("data-dashboard-tab")===gameTab) ||
+      navButtons.find(btn=>(btn.getAttribute("onclick")||"").includes("showSection('game')"));
+  }else{
+    activeBtn=navButtons.find(btn=>!btn.hasAttribute("data-dashboard-tab") &&
+      (btn.getAttribute("onclick")||"").includes("showSection('"+actualId+"')"));
+  }
   activeBtn?.classList.add("active");
   mobileMenuOpen=false;
   document.getElementById("mainNav")?.classList.remove("mobile-open","open");
   const btn=document.getElementById("mobileMenuBtn");
   if(btn){btn.textContent="☰";btn.setAttribute("aria-expanded","false");btn.setAttribute("aria-label","Otvori meni");}
   document.querySelectorAll(".mobile-bottom button").forEach(b=>b.classList.remove("active"));
-  const bottomBtn=[...document.querySelectorAll(".mobile-bottom button")].find(b=>(b.getAttribute("onclick")||"").includes(`showSection('${actualId}')`));
+  const bottomBtn=[...document.querySelectorAll(".mobile-bottom button")].find(b=>(b.getAttribute("onclick")||"").includes("showSection('"+actualId+"')"));
   bottomBtn?.classList.add("active");
   document.querySelectorAll(".mobile-more-grid button").forEach(b=>b.classList.remove("active"));
-  const moreBtn=[...document.querySelectorAll(".mobile-more-grid button")].find(b=>(b.getAttribute("onclick")||"").includes(`mobileMoreGo('${actualId}')`));
+  const moreBtn=[...document.querySelectorAll(".mobile-more-grid button")].find(b=>(b.getAttribute("onclick")||"").includes("mobileMoreGo('"+actualId+"')"));
   moreBtn?.classList.add("active");
 };
 
