@@ -249,6 +249,7 @@ window.dashboardOpenGameTab=function(tab){
     if(actions&&!actions.querySelector(".header-chat-button")){
       const chat=document.createElement("button");chat.type="button";chat.className="header-chat-button";chat.setAttribute("aria-label","Otvori chat");chat.title="Chat";
       chat.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v10H9l-4 3z"/><path d="M8 9h8M8 12h5"/></svg>';
+      chat.addEventListener("click",()=>{if(typeof window.showSection==="function")window.showSection("chat");});
       const account=$("headerAccount");
       actions.insertBefore(chat,account||null);
     }
