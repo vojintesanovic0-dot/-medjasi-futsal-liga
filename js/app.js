@@ -10430,7 +10430,62 @@ function renderNews(){
 }
 function openNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n)return;showModal(`<div class="modal-title"><span class="hero-kicker">${escV(n.kicker||'VIJEST')}</span><h2>${escV(n.title)}</h2><p class="muted">${formatV(n.created_at)} · ${escV(n.author_name||'Međasi Futsal Liga')}</p></div><div class="v7-news-media" style="border-radius:16px">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div style="white-space:pre-wrap;line-height:1.75;margin-top:18px">${escV(n.body||n.lead||'')}</div><div class="actions" style="margin-top:18px"><button class="btn btn-green" onclick="medjasiV7.shareNews('${n.id}')">💬 Podijeli u chat</button></div>`)}
 async function shareNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n||!currentUser){showSection('login');toastV('Prijavi se da bi podijelio vijest.','error');return}const text=`📰 ${n.title}\n${n.lead||''}`.trim();const {error}=await supabaseClient.from('messages').insert({user_id:currentUser.id,username:currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik',content:text,image_url:n.media_type==='image'?(n.media_url||n.image_url):null});if(error){toastV(error.message,'error');return}hideModal();showSection('chat');await loadAll();toastV('Vijest je podijeljena u chat.');}
-async function publishNews(){if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');const title=$('v7NewsTitle')?.value.trim(),lead=$('v7NewsLead')?.value.trim(),body=$('v7NewsBody')?.value.trim(),kicker=$('v7NewsKicker')?.value.trim()||'VIJEST',published=$('v7NewsPublished')?.value==='true',file=$('v7NewsFile')?.files?.[0];if(!title||!body){toastV('Unesi naslov i sadržaj vijesti.','error');return}let media_url=null,media_type=null;if(file){if(file.size>50*1024*1024){toastV('Fajl je prevelik. Maksimum je 50 MB.','error');return}media_url=await uploadFile(file,'news');media_type=file.type.startsWith('video/')?'video':'image'}const {error}=await supabaseClient.from('news').insert({title,lead,body,kicker,author_id:currentUser.id,author_name:currentProfile?.username||currentUser.email?.split('@')[0]||'Admin',media_url,media_type,published});if(error){toastV(error.message,'error');return}if(published) await notifyPush('news',`📰 ${title}`,lead||'Nova vijest na sajtu.');['v7NewsTitle','v7NewsLead','v7NewsBody','v7NewsKicker'].forEach(id=>{if($(id))$(id).value=''});if($('v7NewsFile'))$('v7NewsFile').value='';await loadNews();toastV('Vijest je objavljena.');}
+function supportedLeagueMedia(file){
+  if(!file)return null;
+  const type=String(file.type||"").toLowerCase();
+  if(["image/jpeg","image/png","image/webp","image/gif","image/avif"].includes(type)){
+    return {kind:"image",maxBytes:15*1024*1024};
+  }
+  if(["video/mp4","video/webm","video/ogg"].includes(type)){
+    return {kind:"video",maxBytes:50*1024*1024};
+  }
+  return null;
+}
+
+async function publishNews(){
+  if(!isAdm())return toastV("Nemaš admin ovlaštenje.","error");
+  const title=$("v7NewsTitle")?.value.trim()||"";
+  const lead=$("v7NewsLead")?.value.trim()||"";
+  const body=$("v7NewsBody")?.value.trim()||"";
+  const kicker=$("v7NewsKicker")?.value.trim()||"VIJEST";
+  const published=$("v7NewsPublished")?.value==="true";
+  const file=$("v7NewsFile")?.files?.[0];
+
+  if(!title||!body)return toastV("Unesi naslov i sadržaj vijesti.","error");
+
+  try{
+    let media_url=null,media_type=null;
+    if(file){
+      const media=supportedLeagueMedia(file);
+      if(!media)return toastV("Podržani su JPG, PNG, WebP, GIF, AVIF, MP4, WebM i Ogg fajlovi.","error");
+      if(file.size>media.maxBytes)return toastV(media.kind==="video"?"Video može imati najviše 50 MB.":"Slika može imati najviše 15 MB.","error");
+      media_url=await uploadFile(file,"news");
+      media_type=media.kind;
+    }
+
+    const {error}=await supabaseClient.from("news").insert({
+      title:title.slice(0,150),
+      lead:lead.slice(0,400),
+      body:body.slice(0,10000),
+      kicker:kicker.slice(0,50),
+      author_id:currentUser.id,
+      author_name:currentProfile?.username||currentUser.email?.split("@")[0]||"Admin",
+      media_url,
+      media_type,
+      published
+    });
+    if(error)throw error;
+
+    if(published)await notifyPush("news",`📰 ${title}`,lead||"Nova vijest na sajtu.");
+    ["v7NewsTitle","v7NewsLead","v7NewsBody","v7NewsKicker"].forEach(id=>{if($(id))$(id).value="";});
+    if($("v7NewsFile"))$("v7NewsFile").value="";
+    await loadNews();
+    toastV(published?"Vijest je objavljena.":"Skica vijesti je sačuvana.");
+  }catch(error){
+    console.error("Objava vijesti nije uspjela:",error);
+    toastV(error?.message||"Vijest nije sačuvana. Pokušaj ponovo.","error");
+  }
+}
 async function deleteNews(id){if(!isAdm())return; if(!confirm('Obrisati ovu vijest?'))return;const {error}=await supabaseClient.from('news').delete().eq('id',id);if(error)return toastV(error.message,'error');await loadNews();toastV('Vijest je obrisana.');}
 function renderAdminNews(){
   const box=$('v7NewsAdminList');
@@ -10542,8 +10597,39 @@ function ensurePushUI(){if(!$('adminContent')||!isAdm()||$('v7PushCard'))return;
 // Gallery: image + video compatibility layer. Existing image_url rows continue to work.
 function renderGalleryV7(){const grid=$('galleryGrid'),count=$('galleryCount');if(!grid)return;const arr=gallery||[];if(count)count.textContent=`${arr.length} ${arr.length===1?'medij':'medija'}`;if(!arr.length){grid.innerHTML='<div class="empty gallery-empty">📸 Galerija je trenutno prazna.</div>';return}grid.innerHTML=arr.map(x=>{const url=x.media_url||x.image_url,type=x.media_type||'image';return `<article class="gallery-item"><button class="gallery-photo" type="button" onclick="${type==='video'?`medjasiV7.openMedia('${escV(url)}','video','${escV(x.title||'Video')}')`:`openImagePreview('${escV(url)}','${escV(x.title||'Galerija')}')`}">${type==='video'?`<video muted playsinline preload="metadata" src="${escV(url)}"></video>`:`<img src="${escV(url)}" alt="${escV(x.title||'Fotografija')}" loading="lazy">`}<span class="gallery-overlay">${type==='video'?'▶️ Pusti video':'🔍 Pregledaj'}</span></button><div class="gallery-caption"><strong>${escV(x.title||'Medij lige')}</strong>${x.description?`<p>${escV(x.description)}</p>`:''}<small class="muted">${formatV(x.created_at)}</small></div></article>`}).join('')}
 function openMedia(url,type,title){showModal(`<div class="modal-title"><h2>${escV(title)}</h2></div>${type==='video'?`<video controls autoplay playsinline style="display:block;width:100%;max-height:75vh;border-radius:14px;background:#000" src="${escV(url)}"></video>`:`<img src="${escV(url)}" style="display:block;max-width:100%;max-height:75vh;margin:auto;border-radius:14px">`}`)}
-async function adminAddMedia(){if(!isAdm())return;const file=$('galleryImageFile')?.files?.[0],title=$('galleryTitle')?.value.trim()||'',description=$('galleryDescription')?.value.trim()||'';if(!file)return toastV('Izaberi sliku ili video.','error');if(file.size>50*1024*1024)return toastV('Maksimum je 50 MB.','error');try{const media_url=await uploadFile(file,'gallery');const media_type=file.type.startsWith('video/')?'video':'image';const {error}=await supabaseClient.from('gallery').insert({image_url:media_type==='image'?media_url:null,media_url,media_type,title:title.slice(0,100)||'Medij lige',description:description.slice(0,250),created_by:currentUser.id});if(error)throw error;$('galleryImageFile').value='';$('galleryTitle').value='';$('galleryDescription').value='';await loadAll();toastV('Medij je objavljen.')}catch(e){toastV(e.message||'Greška pri uploadu.','error')}}
-function ensureGalleryVideoUI(){const input=$('galleryImageFile');if(!input)return;input.accept='image/*,video/mp4,video/webm,video/ogg';const label=input.closest('.form-group')?.querySelector('label');if(label)label.textContent='Fotografija ili video'}
+async function adminAddMedia(){
+  if(!isAdm())return;
+  const file=$("galleryImageFile")?.files?.[0];
+  const title=$("galleryTitle")?.value.trim()||"";
+  const description=$("galleryDescription")?.value.trim()||"";
+  if(!file)return toastV("Izaberi sliku ili video.","error");
+
+  const media=supportedLeagueMedia(file);
+  if(!media)return toastV("Podržani su JPG, PNG, WebP, GIF, AVIF, MP4, WebM i Ogg fajlovi.","error");
+  if(file.size>media.maxBytes)return toastV(media.kind==="video"?"Video može imati najviše 50 MB.":"Slika može imati najviše 15 MB.","error");
+
+  try{
+    const media_url=await uploadFile(file,"gallery");
+    const {error}=await supabaseClient.from("gallery").insert({
+      image_url:media.kind==="image"?media_url:null,
+      media_url,
+      media_type:media.kind,
+      title:title.slice(0,100)||"Medij lige",
+      description:description.slice(0,250),
+      created_by:currentUser.id
+    });
+    if(error)throw error;
+    $("galleryImageFile").value="";
+    $("galleryTitle").value="";
+    $("galleryDescription").value="";
+    await loadAll();
+    toastV("Medij je objavljen.");
+  }catch(error){
+    console.error("Objava medija nije uspjela:",error);
+    toastV(error?.message||"Greška pri uploadu medija.","error");
+  }
+}
+function ensureGalleryVideoUI(){const input=$('galleryImageFile');if(!input)return;input.accept='image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/ogg';const label=input.closest('.form-group')?.querySelector('label');if(label)label.textContent='Fotografija ili video'}
 
 // Search: teams, players, matches and news.
 function ensureSearch(){if($('v7Search'))return;const actions=document.querySelector('.header-actions');if(!actions)return;const wrap=document.createElement('div');wrap.className='v7-search-wrap';wrap.innerHTML='<input id="v7Search" type="search" placeholder="🔎 Pretraži..." autocomplete="off"><div id="v7SearchResults" class="v7-search-results"></div>';actions.insertBefore(wrap,actions.firstChild);$('v7Search').addEventListener('input',renderSearch);document.addEventListener('click',e=>{if(!wrap.contains(e.target))$('v7SearchResults').classList.remove('open')})}
