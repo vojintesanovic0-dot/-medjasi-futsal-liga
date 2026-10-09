@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.117.2";
 import webpush from "npm:web-push@3.6.7";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -33,16 +33,57 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
 
     const isAdmin = profile?.role === "admin";
-    const { type, title, body, match_id } = await req.json();
+    const payloadInput = await req.json();
+    if (!payloadInput || typeof payloadInput !== "object" || Array.isArray(payloadInput)) {
+      return Response.json({ error: "Invalid request body" }, { status: 400, headers: corsHeaders });
+    }
 
-    if (type === "news" && !isAdmin) {
+    const { type, title, body, match_id } = payloadInput;
+    const normalizedType = String(type || "general").slice(0, 40);
+
+    // Fail closed: regular users may not broadcast push notifications.
+    if (normalizedType === "news" && !isAdmin) {
       return Response.json({ error: "Forbidden" }, { status: 403, headers: corsHeaders });
     }
 
-    if (!isAdmin && profile?.role === "moderator") {
+    if (!isAdmin) {
       const moderatorPushTypes = new Set(["goal", "card", "live", "finish"]);
-      if (!moderatorPushTypes.has(String(type))) {
+      if (profile?.role !== "moderator" || !moderatorPushTypes.has(normalizedType)) {
         return Response.json({ error: "Forbidden" }, { status: 403, headers: corsHeaders });
+      }
+
+      if (!match_id) {
+        return Response.json({ error: "A valid match_id is required" }, { status: 400, headers: corsHeaders });
+      }
+
+      const { data: match, error: matchError } = await admin
+        .from("matches")
+        .select("id,status")
+        .eq("id", String(match_id))
+        .maybeSingle();
+
+      if (matchError) throw matchError;
+      if (!match) {
+        return Response.json({ error: "Match not found" }, { status: 404, headers: corsHeaders });
+      }
+
+      if (normalizedType === "live" && match.status !== "live") {
+        return Response.json({ error: "The match is not live" }, { status: 403, headers: corsHeaders });
+      }
+      if (normalizedType === "finish" && match.status !== "finished") {
+        return Response.json({ error: "The match is not finished" }, { status: 403, headers: corsHeaders });
+      }
+      if (normalizedType === "goal" || normalizedType === "card") {
+        const table = normalizedType === "goal" ? "goals" : "cards";
+        const { data: events, error: eventError } = await admin
+          .from(table)
+          .select("id")
+          .eq("match_id", String(match_id))
+          .limit(1);
+        if (eventError) throw eventError;
+        if (!events?.length) {
+          return Response.json({ error: "The match has no matching event" }, { status: 403, headers: corsHeaders });
+        }
       }
     }
 
@@ -65,7 +106,7 @@ Deno.serve(async (req: Request) => {
     const payload = JSON.stringify({
       title: String(title || "Medjaši Futsal Liga").slice(0, 160),
       body: String(body || "").slice(0, 1000),
-      type: String(type || "general").slice(0, 40),
+      type: normalizedType,
       match_id: match_id || null,
       url: "./"
     });
