@@ -213,6 +213,63 @@ create trigger medjasi_goal_event
 after insert on public.goals
 for each row execute function public.medjasi_goal_event();
 
+-- Keep match scores synchronized when a goal is corrected or removed.
+-- Inserts are handled by medjasi_goal_event(), which also emits the goal event.
+create or replace function public.medjasi_goal_score_sync()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $function$
+declare
+  old_match_id uuid;
+  new_match_id uuid;
+  affected_match_id uuid;
+begin
+  if tg_op <> 'INSERT' then
+    old_match_id := old.match_id;
+  end if;
+  if tg_op <> 'DELETE' then
+    new_match_id := new.match_id;
+  end if;
+
+  for affected_match_id in
+    select distinct candidate.match_id
+    from (values (old_match_id), (new_match_id)) as candidate(match_id)
+    where candidate.match_id is not null
+  loop
+    update public.matches m
+       set home_score = (
+             select count(*)
+             from public.goals g
+             join public.players p on p.id = g.player_id
+             where g.match_id = affected_match_id
+               and p.team_id = m.home_team_id
+           ),
+           away_score = (
+             select count(*)
+             from public.goals g
+             join public.players p on p.id = g.player_id
+             where g.match_id = affected_match_id
+               and p.team_id = m.away_team_id
+           )
+     where m.id = affected_match_id;
+  end loop;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$function$;
+
+revoke all on function public.medjasi_goal_score_sync() from public, anon, authenticated;
+
+drop trigger if exists trg_medjasi_goal_score_sync on public.goals;
+create trigger trg_medjasi_goal_score_sync
+after update or delete on public.goals
+for each row execute function public.medjasi_goal_score_sync();
+
 drop trigger if exists medjasi_match_event on public.matches;
 create trigger medjasi_match_event
 after update on public.matches
