@@ -26,7 +26,8 @@
     const home=findTeam(m.home_team_id),away=findTeam(m.away_team_id);
     const venue=String(m.venue||m.location||"Sportska dvorana Međasi");
     const meta=fmt(m.match_date)+(m.round?" · "+esc(m.round)+". kolo":"");
-    return '<div class="dashboard-upcoming-item"'+(phone?'':' onclick="openMatch(\''+esc(m.id)+'\')"')+'>'+
+    const phoneAttrs=phone?' role="button" tabindex="0" aria-label="Otvori detalje utakmice"':'';
+    return '<div class="dashboard-upcoming-item" onclick="openMatch(\''+esc(m.id)+'\')"'+phoneAttrs+'>'+
       '<div class="dashboard-upcoming-meta">'+esc(meta)+'</div>'+
       '<div class="dashboard-upcoming-venue">⌖ '+esc(venue)+'</div>'+
       '<div class="dashboard-upcoming-teams">'+
@@ -354,9 +355,23 @@ window.dashboardOpenGameTab=function(tab){
     });
   }
 
+  function bindUpcomingCardKeyboard(){
+    if(window.__MEDJASI_UPCOMING_CARD_KEYBOARD_BOUND__)return;
+    window.__MEDJASI_UPCOMING_CARD_KEYBOARD_BOUND__=true;
+    document.addEventListener("keydown",event=>{
+      if(event.key!=="Enter"&&event.key!==" ")return;
+      const target=event.target;
+      const card=target instanceof Element?target.closest(".dashboard-upcoming-item[role='button']"):null;
+      if(!card)return;
+      event.preventDefault();
+      card.click();
+    });
+  }
+
   function start(){
     applyReferenceLayout();
     bindResponsiveNavigation();
+    bindUpcomingCardKeyboard();
     sync();
     [400,1000,2200,5000,9000].forEach(delay=>setTimeout(sync,delay));
     window.addEventListener("focus",sync);
