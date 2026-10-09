@@ -63,6 +63,16 @@ if (!dashboard.includes("if(attempts++<25)window.setTimeout(selectTab,100)")) {
   fail("Fan Game quick links must wait for asynchronously rendered tabs with a bounded retry");
 } else pass("Fan Game quick links wait for tabs without infinite retries");
 
+if (
+  !game.includes("const currentUserKey=()=>user()?.id==null?null:String(user().id)") ||
+  !game.includes("resetUserSnapshot(requestedUserKey)") ||
+  !game.includes("if(currentUserKey()!==requestedUserKey)") ||
+  !app.includes("window.medjasiGame?.refresh?.();")
+) {
+  fail("Fan Game must clear account-scoped state and reject stale refreshes across auth changes");
+} else pass("Fan Game private state is isolated across account changes");
+
+
 
 const htmlRefs = [...html.matchAll(/(?:src|href)=["'](\.\/[^"']+)["']/gi)]
   .map((m) => m[1])

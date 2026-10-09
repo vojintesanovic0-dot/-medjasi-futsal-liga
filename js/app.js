@@ -7792,6 +7792,9 @@ async function init(){
           try{
             await checkAuth();
             await loadAll();
+            // Update Fan Game's account-scoped snapshot after login/logout.
+            // refresh() discards any in-flight response from the previous user.
+            window.medjasiGame?.refresh?.();
 
             if(event==="SIGNED_IN"||event==="SIGNED_UP"){
               if(medjasiAuthInteraction){

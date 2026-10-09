@@ -16,13 +16,32 @@
   const fmt = v => { try { return new Date(v).toLocaleString("bs-BA",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}); } catch { return ""; } };
   const title = m => `${tname(m.home_team_id)} – ${tname(m.away_team_id)}`;
   const win = (s,o,b) => Math.floor(Number(s||0)*Number(o||0)*(b?1.5:1));
-  const S={tab:"matches",loading:false,err:null,wallet:null,markets:[],picks:[],ledger:[],board:[],shop:[],inv:[],follows:[],fund:{},stats:{},votes:{},mvp:{},profiles:[],sel:null};
+  const S={tab:"matches",loading:false,err:null,userKey:undefined,wallet:null,markets:[],picks:[],ledger:[],board:[],shop:[],inv:[],follows:[],fund:{},stats:{},votes:{},mvp:{},profiles:[],sel:null};
+  const currentUserKey=()=>user()?.id==null?null:String(user().id);
+  function resetUserSnapshot(nextUserKey){
+    if(S.userKey===nextUserKey)return false;
+    S.userKey=nextUserKey;
+    S.wallet=null;
+    S.picks=[];
+    S.ledger=[];
+    S.inv=[];
+    S.follows=[];
+    S.votes={};
+    S.profiles=[];
+    S.sel=null;
+    if(S.tab==="admin"&&!isAdm())S.tab="matches";
+    // Do not show the previous account's private data while a new snapshot loads.
+    S.err=nextUserKey?"unavailable":null;
+    return true;
+  }
   const TABS=[["matches","Pogodi"],["live","Live"],["mine","Tiketi"],["fanbase","Fan Base"],["board","Tabela navijača"],["shop","Fan Shop"],["collection","Kolekcija"],["club","Moja tribina"],["mvp","MVP"]];
   const active=()=>MT().filter(m=>m.status==="scheduled"||m.status==="live").sort((a,b)=>new Date(a.match_date||0)-new Date(b.match_date||0));
   const upcoming=()=>active().filter(m=>m.status==="scheduled");
   const finished=()=>MT().filter(m=>m.status==="finished").sort((a,b)=>new Date(b.match_date||0)-new Date(a.match_date||0));
   let refreshPending=false;
   async function refresh(){
+    const requestedUserKey=currentUserKey();
+    resetUserSnapshot(requestedUserKey);
     if(!sb())return;
     if(S.loading){refreshPending=true;return;}
     S.loading=true;
@@ -96,6 +115,13 @@
         nextProfiles=profilesResult.data||[];
       }
 
+      // A request started for a previous login must never overwrite the
+      // current account's private snapshot after an auth switch.
+      if(currentUserKey()!==requestedUserKey){
+        refreshPending=true;
+        return;
+      }
+
       // Commit one complete snapshot only after all required reads succeed.
       S.markets=mk.data||[];
       S.shop=shop.data||[];
@@ -112,8 +138,12 @@
       S.profiles=nextProfiles;
       S.err=null;
     }catch(error){
-      console.error("Pogodi:",error);
-      if(S.err!=="setup"&&!S.markets.length&&!S.shop.length&&!S.board.length)S.err="unavailable";
+      if(currentUserKey()!==requestedUserKey){
+        refreshPending=true;
+      }else{
+        console.error("Pogodi:",error);
+        if(S.err!=="setup"&&!S.markets.length&&!S.shop.length&&!S.board.length)S.err="unavailable";
+      }
     }finally{
       S.loading=false;
       render();
