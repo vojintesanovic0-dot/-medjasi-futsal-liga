@@ -157,10 +157,42 @@
       [...body.children].forEach(el=>{if(el.classList?.contains("card")) directCards.push(el)});
     });
 
+    const headingOf=card=>(
+      card.querySelector?.(".admin-card-head h3, .admin-card-head strong, .crud-title span, h3")?.textContent||""
+    ).trim().toLowerCase();
+
     const specs=[
-      {key:"gallery",match:card=>card.id!=="adminCrudV4"&&!!(card.querySelector?.("#adminGalleryList,#galleryImageFile")||/\bgalerija\b/i.test(card.textContent||""))},
-      {key:"playlist",match:card=>!!(card.querySelector?.("#adminMusicPlaylist")||card.classList?.contains("admin-music-card"))},
-      {key:"push",match:card=>card.id==="v7PushCard"||!!card.querySelector?.("#v7PushCard")||/push notifikacije/i.test(card.textContent||"")}
+      {
+        key:"gallery",
+        match:card=>{
+          if(card.id==="adminCrudV4")return false;
+          const heading=headingOf(card);
+          return card.id==="adminGalleryCard" ||
+            card.id==="adminGallery" ||
+            !!card.querySelector?.("#adminGalleryList,#galleryImageFile") ||
+            !!card.classList?.contains("admin-gallery-card") ||
+            /^galerija(?:\\b|$)/i.test(heading);
+        }
+      },
+      {
+        key:"playlist",
+        match:card=>{
+          const heading=headingOf(card);
+          return card.id==="adminMusicCard" ||
+            !!card.querySelector?.("#adminMusicPlaylist") ||
+            !!card.classList?.contains("admin-music-card") ||
+            /^(?:playlist|liga muzika|upravljanje muzikom)(?:\\b|$)/i.test(heading);
+        }
+      },
+      {
+        key:"push",
+        match:card=>{
+          const heading=headingOf(card);
+          return card.id==="v7PushCard" ||
+            !!card.querySelector?.("#v7PushCard") ||
+            /^(?:push obavještenja|push notifikacije)(?:\\b|$)/i.test(heading);
+        }
+      }
     ];
 
     moving=true;
