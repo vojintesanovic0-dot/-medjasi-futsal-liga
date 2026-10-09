@@ -135,6 +135,28 @@ if (
   fail("Image-upload forms must not accept unrestricted image/* MIME types");
 } else pass("Image-upload forms use the explicit raster-image allowlist");
 
+const pushStart = app.indexOf("async function notifyPush(");
+const pushEnd = app.indexOf("function b64ToBytes", pushStart);
+const pushFunction = pushStart >= 0 && pushEnd > pushStart ? app.slice(pushStart, pushEnd) : "";
+const publishStart = app.indexOf("async function publishNews()");
+const publishEnd = app.indexOf("async function deleteNews(id)", publishStart);
+const publishFunction = publishStart >= 0 && publishEnd > publishStart ? app.slice(publishStart, publishEnd) : "";
+if (
+  !pushFunction.includes("if(!response.ok)") ||
+  !pushFunction.includes("return false") ||
+  !pushFunction.includes("return true")
+) {
+  fail("Push helper must surface HTTP delivery failure to callers");
+} else pass("Push helper returns explicit delivery success/failure");
+
+if (
+  !publishFunction.includes("let pushSent=true") ||
+  !publishFunction.includes("Vijest je objavljena, ali push obavještenje nije poslano")
+) {
+  fail("News publishing must not be reported as failed solely because push delivery failed");
+} else pass("News publishing reports storage and push outcomes separately");
+
+
 
 
 
