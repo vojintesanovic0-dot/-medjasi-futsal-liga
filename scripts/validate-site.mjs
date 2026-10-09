@@ -656,6 +656,23 @@ if (
   pass("League-event push wiring and server-side role gate are present");
 }
 
+const musicLoaderStart = app.indexOf("async function loadMusicSettings()");
+const musicLoaderEnd = app.indexOf("function renderMusicAdmin()",musicLoaderStart);
+const musicLoader = musicLoaderStart >= 0 && musicLoaderEnd > musicLoaderStart
+  ? app.slice(musicLoaderStart,musicLoaderEnd) : "";
+if (
+  !musicLoader.includes('else{\n      musicSettings=settings||{youtube_music_enabled:false};') ||
+  !musicLoader.includes('musicTracks=tracks||[];') ||
+  !musicLoader.includes('Učitavanje playlist-e nije uspjelo:') ||
+  !musicLoader.includes('Učitavanje postavki muzike nije uspjelo:') ||
+  (musicLoader.match(/catch\(error\)/g)||[]).length<2 ||
+  musicLoader.includes('musicTracks=[];')
+) {
+  fail("Music/settings refresh must preserve the last working playlist when either Supabase query fails");
+} else {
+  pass("Music and playlist refreshes retain last known-good data after transient failures");
+}
+
 const pushSubscribeStart = app.indexOf("async function subscribeRealPush()");
 const pushSubscribeEnd = app.indexOf("async function disableRealPush()",pushSubscribeStart);
 const pushSubscribeFunction = pushSubscribeStart >= 0 && pushSubscribeEnd > pushSubscribeStart
