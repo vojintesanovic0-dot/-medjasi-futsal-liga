@@ -263,10 +263,13 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
     });
     let activeNav=navButtons.find(button=>button.getAttribute("data-dashboard-tab")===key);
     if(!activeNav){
-      activeNav=navButtons.find(button=>(button.getAttribute("onclick")||"").includes("showSection('game')"));
+      activeNav=navButtons.find(button=>{
+        const handler=button.getAttribute("onclick")||"";
+        return (key==="matches"&&handler.includes("dashboardOpenGameTab('matches')"))||handler.includes("showSection('game')");
+      });
     }
     activeNav?.classList.add("active");
-    if(activeNav?.hasAttribute("data-dashboard-tab"))activeNav.setAttribute("aria-current","page");
+    if(activeNav)activeNav.setAttribute("aria-current","page");
     document.querySelectorAll(".mobile-more-grid button").forEach(button=>{
       const target=button.getAttribute("onclick")||"";
       button.classList.toggle("active",target.includes("dashboardOpenGameTab('"+key+"')"));
