@@ -52,6 +52,54 @@ if (
   fail("Logout failures must reset the auth interaction flag and report network errors");
 } else pass("Logout resets auth interaction state on success and failure");
 
+const resetStart = app.indexOf("async function resetPassword()");
+const resetEnd = app.indexOf("/* =========================================================\\n   REGISTER", resetStart);
+const resetFunction = resetStart >= 0 && resetEnd > resetStart ? app.slice(resetStart, resetEnd) : "";
+const resendStart = app.indexOf("async function resendConfirmation()");
+const resendEnd = app.indexOf("window.resendConfirmation=resendConfirmation;", resendStart);
+const resendFunction = resendStart >= 0 && resendEnd > resendStart ? app.slice(resendStart, resendEnd) : "";
+if (
+  !resetFunction.includes("resetPasswordForEmail") ||
+  !resetFunction.includes("catch(error)") ||
+  !resetFunction.includes("if(!supabaseClient?.auth?.resetPasswordForEmail)")
+) {
+  fail("Password reset must handle a missing Auth SDK and rejected network requests");
+} else pass("Password reset handles unavailable services and network failures");
+
+if (
+  !resendFunction.includes("supabaseClient?.auth?.resend") ||
+  !resendFunction.includes("catch(error)") ||
+  !resendFunction.includes("if(!supabaseClient?.auth?.resend)")
+) {
+  fail("Confirmation resend must handle an unavailable Auth SDK and request failures");
+} else pass("Confirmation resend handles unavailable services and network failures");
+
+const finishStart = app.indexOf("async function finishAndSave(matchId)");
+const saveStart = app.indexOf("async function saveRatings(matchId)", finishStart);
+const goalStart = app.indexOf("function openGoal(matchId)", saveStart);
+const finishFunction = finishStart >= 0 && saveStart > finishStart ? app.slice(finishStart, saveStart) : "";
+const saveFunction = saveStart >= 0 && goalStart > saveStart ? app.slice(saveStart, goalStart) : "";
+if (
+  !finishFunction.includes("await saveRatings(matchId)") ||
+  !finishFunction.includes("if(error)throw error") ||
+  !finishFunction.includes("catch(error)") ||
+  !saveFunction.includes("if(error)throw error") ||
+  !saveFunction.includes("clearMvp.error")
+) {
+  fail("Match finalization must stop on player-stat/MVP write errors");
+} else pass("Match finalization checks player-stat and MVP writes before completing");
+
+if (
+  !app.includes("function supportedLeagueMedia(file)") ||
+  !app.includes("const media=supportedLeagueMedia(file)") ||
+  !app.includes("file.size>media.maxBytes") ||
+  !app.includes("async function publishNews()") ||
+  !app.includes("async function adminAddMedia()")
+) {
+  fail("News and gallery uploads must validate media types and sizes before storage");
+} else pass("News and gallery uploads validate allowed media formats and sizes");
+
+
 if (
   !authMarkup.includes('onclick="exitAuthScreen()"') ||
   !authMarkup.includes('class="auth-return-btn"') ||
