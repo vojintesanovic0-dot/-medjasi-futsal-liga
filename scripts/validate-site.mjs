@@ -120,7 +120,7 @@ if (
   !uploadFunction.includes("extensions[mime]") ||
   !uploadFunction.includes("contentType:mime") ||
   !uploadFunction.includes("await hasExpectedMediaSignature(file,mime)") ||
-  !uploadFunction.includes("parts.some(part=>!part||! /^[a-z0-9_-]+$/i.test(part))") ||
+  !uploadFunction.includes("parts.some(part=>!part||!/^[a-z0-9_-]+$/i.test(part))") ||
   !uploadFunction.includes("file.size>maxBytes")
 ) {
   fail("Storage uploads must validate allowlisted MIME types, file signatures, paths, and size limits");
@@ -157,10 +157,10 @@ if (
 } else pass("News publishing reports storage and push outcomes separately");
 
 const matchStatusStart = app.indexOf("async function changeMatchStatus(");
-const matchStatusEnd = app.indexOf("/* =========================================================\\n   MATCH MINUTE", matchStatusStart);
+const matchStatusEnd = app.indexOf("/* =========================================================\n   MATCH MINUTE", matchStatusStart);
 const matchStatusFunction = matchStatusStart >= 0 && matchStatusEnd > matchStatusStart ? app.slice(matchStatusStart, matchStatusEnd) : "";
 const addCardStart = app.indexOf("async function addCard(matchId)");
-const addCardEnd = app.indexOf("/* =========================================================\\n   TEAM MODAL", addCardStart);
+const addCardEnd = app.indexOf("/* =========================================================\n   TEAM MODAL", addCardStart);
 const addCardFunction = addCardStart >= 0 && addCardEnd > addCardStart ? app.slice(addCardStart, addCardEnd) : "";
 if (
   !app.includes("async function notifyLeaguePush(type,title,body,matchId)") ||
