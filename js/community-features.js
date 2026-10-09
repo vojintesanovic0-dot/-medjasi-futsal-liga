@@ -132,16 +132,90 @@ function patchPublish(){
   };
 }
 async function renderPolls(){
-  const feed=q("v9Feed");if(!feed)return;
-  const posts=[...feed.querySelectorAll(".v9-post")];
-  for(const post of posts){
-    const del=post.querySelector(".v9-post-menu");const oc=del?.getAttribute("onclick")||"";const m=oc.match(/deleteV9Post\(['"]([^'"]+)/);if(!m)continue;
-    const postId=m[1];
-    const {data:p}=await client().from("community_polls").select("id,question").eq("post_id",postId).maybeSingle();if(!p)continue;
-    const {data:o}=await client().from("community_poll_options").select("id,label,sort_order").eq("poll_id",p.id).order("sort_order");
-    const box=document.createElement("div");box.className="community-poll";box.innerHTML="<strong> "+escX(p.question)+"</strong>"+(o||[]).map(x=>'<button type="button" data-option="'+x.id+'">'+escX(x.label)+'</button>').join("");
-    box.querySelectorAll("button").forEach(b=>b.addEventListener("click",async()=>{if(!uid())return toastX("Prijavi se da glasaš.","error");const {error}=await client().from("community_poll_votes").insert({poll_id:p.id,option_id:b.dataset.option,user_id:uid()});if(error?.code==="23505")return toastX("Već si glasao na ovoj anketi.");if(error)return toastX(error.message,"error");toastX("Glas je zabilježen.");}));
-    post.querySelector(".v9-post-body")?.appendChild(box);
+  const feed=q("v9Feed");
+  if(!feed||!client()?.from)return;
+
+  // Read IDs from the post itself, never from the owner/admin-only delete button.
+  const postNodes=[...feed.querySelectorAll(".v9-post[data-post-id]")];
+  const postById=new Map(
+    postNodes.map(post=>[String(post.dataset.postId||""),post]).filter(([id])=>id)
+  );
+  const postIds=[...postById.keys()];
+  if(!postIds.length)return;
+
+  try{
+    const {data:pollRows,error:pollError}=await client()
+      .from("community_polls")
+      .select("id,post_id,question")
+      .in("post_id",postIds);
+    if(pollError)throw pollError;
+    const polls=pollRows||[];
+    if(!polls.length)return;
+
+    const pollIds=polls.map(p=>p.id).filter(Boolean);
+    const {data:optionRows,error:optionError}=await client()
+      .from("community_poll_options")
+      .select("id,poll_id,label,sort_order")
+      .in("poll_id",pollIds)
+      .order("sort_order",{ascending:true});
+    if(optionError)throw optionError;
+
+    const optionsByPoll=new Map();
+    for(const option of optionRows||[]){
+      const key=String(option.poll_id);
+      if(!optionsByPoll.has(key))optionsByPoll.set(key,[]);
+      optionsByPoll.get(key).push(option);
+    }
+
+    for(const poll of polls){
+      const post=postById.get(String(poll.post_id));
+      const body=post?.querySelector(".v9-post-body");
+      if(!body||body.querySelector(":scope > .community-poll"))continue;
+
+      const box=document.createElement("div");
+      box.className="community-poll";
+      box.dataset.pollId=String(poll.id);
+      const question=document.createElement("strong");
+      question.textContent=poll.question||"Anketa";
+      box.appendChild(question);
+
+      for(const option of optionsByPoll.get(String(poll.id))||[]){
+        const button=document.createElement("button");
+        button.type="button";
+        button.dataset.option=String(option.id);
+        button.textContent=option.label||"Opcija";
+        button.addEventListener("click",async()=>{
+          if(!uid()){
+            toastX("Prijavi se da glasaš.","error");
+            return;
+          }
+          if(button.disabled)return;
+          box.querySelectorAll("button").forEach(item=>{item.disabled=true;});
+          try{
+            const {error}=await client().from("community_poll_votes").insert({
+              poll_id:poll.id,
+              option_id:button.dataset.option,
+              user_id:uid()
+            });
+            if(error?.code==="23505"){
+              toastX("Već si glasao na ovoj anketi.","error");
+            }else if(error){
+              throw error;
+            }else{
+              toastX("Glas je zabilježen.");
+            }
+          }catch(error){
+            console.warn("Community poll vote:",error);
+            toastX(error?.message||"Glasanje nije uspjelo. Pokušaj ponovo.","error");
+            if(box.isConnected)box.querySelectorAll("button").forEach(item=>{item.disabled=false;});
+          }
+        });
+        box.appendChild(button);
+      }
+      body.appendChild(box);
+    }
+  }catch(error){
+    console.warn("Community polls:",error);
   }
 }
 function boot(){
