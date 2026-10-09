@@ -1611,7 +1611,9 @@ async function loadAll(){
       let from=0,all=[];
       for(;;){
         let q=supabaseClient.from(table).select("*");
-        if(orderCol) q=q.order(orderCol);
+        if(orderCol) q=q.order(orderCol,{ascending:true});
+        // Stable tie-breaker prevents duplicate/missing rows between paginated requests.
+        q=q.order("id",{ascending:true});
         const {data,error}=await q.range(from,from+PAGE-1);
         if(error) return {data:null,error};
         all=all.concat(data||[]);
@@ -1629,6 +1631,7 @@ async function loadAll(){
       const {data,error}=await supabaseClient
         .from(table).select("*")
         .order("created_at",{ascending:false})
+        .order("id",{ascending:false})
         .limit(limit);
       return {data:error?null:(data||[]),error};
     };
