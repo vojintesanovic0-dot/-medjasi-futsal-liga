@@ -117,6 +117,12 @@ function safeUrl(value,fallback=""){
 }
 
 /* Escape values that are embedded inside inline JavaScript string literals. */
+function isAllowedRasterImage(file){
+  return !!file && [
+    "image/jpeg","image/png","image/webp","image/gif","image/avif"
+  ].includes(String(file.type||"").toLowerCase());
+}
+
 function escJs(value){
   return String(value ?? "")
     .replace(/\\/g,"\\\\")
@@ -3510,7 +3516,7 @@ async function addComment(){
   }
 
   if(file){
-    if(!file.type.startsWith("image/")){
+    if(!isAllowedRasterImage(file)){
       alert("Dozvoljene su samo slike.");
       return;
     }
@@ -3696,7 +3702,7 @@ function setupChatImageUI(){
     const meta=document.getElementById("chatImageMeta");
 
     if(!file){ clearChatImage(); return; }
-    if(!file.type.startsWith("image/") || file.size>5*1024*1024){
+    if(!isAllowedRasterImage(file) || file.size>5*1024*1024){
       alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB.");
       clearChatImage();
       return;
@@ -3738,7 +3744,7 @@ async function sendChat(){
 
   if(!content && !file){ alert("Napiši poruku ili dodaj sliku."); return; }
   if(content.length>1000){ alert("Poruka može imati najviše 1000 znakova."); return; }
-  if(file && (!file.type.startsWith("image/") || file.size>5*1024*1024)){
+  if(file && (!isAllowedRasterImage(file) || file.size>5*1024*1024)){
     alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB."); return;
   }
 
@@ -3862,7 +3868,7 @@ async function adminAddGalleryImage(){
   const description=document.getElementById("galleryDescription")?.value.trim() || "";
 
   if(!file){ alert("Izaberi fotografiju."); return; }
-  if(!file.type.startsWith("image/") || file.size>8*1024*1024){ alert("Dozvoljene su slike do 8 MB."); return; }
+  if(!isAllowedRasterImage(file) || file.size>8*1024*1024){ alert("Dozvoljene su slike do 8 MB."); return; }
 
   try{
     const image_url=await uploadFile(file,"gallery");
@@ -3910,51 +3916,53 @@ function openImagePreview(url,title="Fotografija"){
 ========================================================= */
 
 async function uploadFile(file,folder){
+  if(!file)return null;
+  if(!supabaseClient?.storage)throw new Error("Skladište datoteka trenutno nije dostupno.");
 
-  if(!file) return null;
+  const mime=String(file.type||"").toLowerCase();
+  const extensions={
+    "image/jpeg":"jpg",
+    "image/png":"png",
+    "image/webp":"webp",
+    "image/gif":"gif",
+    "image/avif":"avif",
+    "video/mp4":"mp4",
+    "video/webm":"webm",
+    "video/ogg":"ogv"
+  };
+  const extension=extensions[mime];
+  if(!extension)throw new Error("Format datoteke nije podržan. Koristi JPG, PNG, WebP, GIF, AVIF ili podržani video format.");
 
+  const parts=String(folder||"").replace(/\\/g,"/").split("/");
+  if(!parts.length||parts.some(part=>!part||!/^[a-z0-9_-]+$/i.test(part))){
+    throw new Error("Odredište datoteke nije ispravno.");
+  }
 
-  const extension =
-    file.name
-      .split(".")
-      .pop()
-      .toLowerCase();
+  const isVideo=mime.startsWith("video/");
+  const root=parts[0].toLowerCase();
+  if(isVideo&&!["gallery","news"].includes(root)){
+    throw new Error("Video se može dodati samo u galeriju ili vijesti.");
+  }
 
+  const maxBytes=isVideo?50*1024*1024:15*1024*1024;
+  if(!Number.isFinite(file.size)||file.size<=0||file.size>maxBytes){
+    throw new Error(isVideo?"Video mora imati najviše 50 MB.":"Slika mora imati najviše 15 MB.");
+  }
 
-  const filename =
-    `${folder}/${crypto.randomUUID()}.${extension}`;
+  if(typeof crypto?.randomUUID!=="function"){
+    throw new Error("Sigurno generisanje naziva datoteke nije dostupno u ovom pregledniku.");
+  }
 
+  const filename=parts.join("/")+"/"+crypto.randomUUID()+"."+extension;
+  const {error}=await supabaseClient.storage.from("liga-images").upload(
+    filename,file,{upsert:false,contentType:mime}
+  );
+  if(error)throw error;
 
-  const {
-    error
-  } =
-    await supabaseClient
-      .storage
-      .from("liga-images")
-      .upload(
-        filename,
-        file,
-        {
-          upsert:false
-        }
-      );
-
-
-  if(error) throw error;
-
-
-  const {
-    data
-  } =
-    supabaseClient
-      .storage
-      .from("liga-images")
-      .getPublicUrl(filename);
-
-
+  const {data}=supabaseClient.storage.from("liga-images").getPublicUrl(filename);
+  if(!data?.publicUrl)throw new Error("Skladište nije vratilo javni URL datoteke.");
   return data.publicUrl;
 }
-
 
 /* =========================================================
    ADMIN - TEAM
@@ -8049,7 +8057,7 @@ function setupCommentImageUI(){
       removeCommentImage();
       return;
     }
-    if(!file.type.startsWith("image/") || file.size>5*1024*1024){
+    if(!isAllowedRasterImage(file) || file.size>5*1024*1024){
       alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB.");
       input.value="";
       removeCommentImage();
@@ -10114,7 +10122,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     if(!content && !file){alert("Napiši poruku ili dodaj sliku.");return;}
     if(content.length>1000){alert("Poruka može imati najviše 1000 znakova.");return;}
-    if(file && (!file.type.startsWith("image/") || file.size>5*1024*1024)){
+    if(file && (!isAllowedRasterImage(file) || file.size>5*1024*1024)){
       alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB.");
       return;
     }
@@ -10791,10 +10799,10 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     host.innerHTML=`<div class="v9-profile-top"><img class="v9-profile-avatar" src="${avatar(p)}" alt=""><h3>${escV(p.username||'Korisnik')}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h3><div class="v9-profile-bio">${escV(p.bio||'Dodaj kratak opis svog profila.')}</div></div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${postCount}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${storyCount}</b><span>Priče</span></div></div><button class="btn btn-blue" style="width:100%" onclick="openV9Profile('${escV(currentUser.id)}')">Moj profil</button><button class="btn" style="width:100%;margin-top:7px" onclick="openV9EditProfile()">Uredi profil</button>`;
   }
   function filePreview(fileId,imgId){q(fileId)?.addEventListener('change',()=>{const f=q(fileId)?.files?.[0],im=q(imgId);if(f&&im){im.src=URL.createObjectURL(f);im.style.display='block'}})}
-  window.openV9PostComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>📸 Nova objava</h2><p class="muted">Dodaj fotografiju, opis i po želji muziku.</p></div><div class="form"><label class="v9-drop" for="v9PostFile">📷 Izaberi fotografiju<input id="v9PostFile" type="file" accept="image/*" hidden></label><img id="v9PostPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9PostCaption" maxlength="1000" placeholder="Napiši nešto..."></textarea></div>'+communityMusicPicker("v9PostMusic")+'<button class="btn btn-green" onclick="publishV9Post()">Objavi fotografiju</button></div></div>');filePreview('v9PostFile','v9PostPreview')};
-  window.publishV9Post=async function(){if(!guard())return;const f=q('v9PostFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`community/${currentUser.id}`);const {error}=await supabaseClient.from('community_posts').insert({user_id:currentUser.id,image_url:url,caption:q('v9PostCaption')?.value.trim()||null,music_track_id:q('v9PostMusic')?.value?Number(q('v9PostMusic').value):null});if(error)throw error;hideModal();await load();toastV('Objava je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
-  window.openV9StoryComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/*" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div>'+communityMusicPicker("v9StoryMusic")+'<button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>');filePreview('v9StoryFile','v9StoryPreview')};
-  window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null,music_track_id:q('v9StoryMusic')?.value?Number(q('v9StoryMusic').value):null});if(error)throw error;hideModal();await load();toastV('Priča je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
+  window.openV9PostComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>📸 Nova objava</h2><p class="muted">Dodaj fotografiju, opis i po želji muziku.</p></div><div class="form"><label class="v9-drop" for="v9PostFile">📷 Izaberi fotografiju<input id="v9PostFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden></label><img id="v9PostPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9PostCaption" maxlength="1000" placeholder="Napiši nešto..."></textarea></div>'+communityMusicPicker("v9PostMusic")+'<button class="btn btn-green" onclick="publishV9Post()">Objavi fotografiju</button></div></div>');filePreview('v9PostFile','v9PostPreview')};
+  window.publishV9Post=async function(){if(!guard())return;const f=q('v9PostFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!isAllowedRasterImage(f))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`community/${currentUser.id}`);const {error}=await supabaseClient.from('community_posts').insert({user_id:currentUser.id,image_url:url,caption:q('v9PostCaption')?.value.trim()||null,music_track_id:q('v9PostMusic')?.value?Number(q('v9PostMusic').value):null});if(error)throw error;hideModal();await load();toastV('Objava je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
+  window.openV9StoryComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div>'+communityMusicPicker("v9StoryMusic")+'<button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>');filePreview('v9StoryFile','v9StoryPreview')};
+  window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!isAllowedRasterImage(f))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null,music_track_id:q('v9StoryMusic')?.value?Number(q('v9StoryMusic').value):null});if(error)throw error;hideModal();await load();toastV('Priča je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
   window.openV9Story=function(id){const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=V.profiles[String(s.user_id)]||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${fanCommunityIdentityHTML(p,String(s.user_id))}</b><div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${escV(s.image_url)}" alt=""><div class="v9-story-caption">${escV(s.caption||'')}</div>${communityMusicChip(s.music_track_id)}${logged()&&(String(s.user_id)===String(currentUser.id)||typeof isAdmin==='function'&&isAdmin())?`<button class="btn btn-small" onclick="deleteV9Story('${escV(s.id)}')">Obriši priču</button>`:''}</div>`) };
   window.deleteV9Story=async function(id){if(!guard())return;const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;if(String(s.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu priču?'))return;const {error}=await supabaseClient.from('community_stories').delete().eq('id',id);if(error)return toastV(error.message,'error');hideModal();await load();toastV('Priča je obrisana.')};
   window.openV9Profile=async function(id){
@@ -10803,8 +10811,8 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     const [{data:posts},{data:stories}]=await Promise.all([supabaseClient.from('community_posts').select('id,user_id,image_url,caption,created_at').eq('user_id',id).order('created_at',{ascending:false}).limit(30),supabaseClient.from('community_stories').select('id,user_id,image_url,caption,created_at,expires_at').eq('user_id',id).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false})]);
     showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${fanCommunityIdentityHTML(p,String(id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${escV(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&String(id)===String(currentUser.id)?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button><button class="btn" onclick="window.openFanTickets?.()">🎟️ Moji tiketi</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<div><img class="v9-post-image" style="border-radius:16px" src="${escV(x.image_url)}" alt="${escV(x.caption||'')}" onclick="openV9Lightbox('${escV(x.image_url)}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${escV(x.caption)}</div>`:''}</div>`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
   };
-  window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/*" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${escV(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${escV(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);filePreview('v9AvatarFile','v9AvatarPreview')};
-  window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!f.type.startsWith('image/'))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await supabaseClient.from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV('Profil je ažuriran.')}catch(err){toastV(err.message||'Greška pri čuvanju profila.','error')}};
+  window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${escV(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${escV(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);filePreview('v9AvatarFile','v9AvatarPreview')};
+  window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!isAllowedRasterImage(f))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await supabaseClient.from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV('Profil je ažuriran.')}catch(err){toastV(err.message||'Greška pri čuvanju profila.','error')}};
   window.deleteV9Post=async function(id){if(!guard())return;const p=V.posts.find(x=>String(x.id)===String(id));if(!p||String(p.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);if(error)return toastV(error.message,'error');await load();toastV('Objava je obrisana.')};
   window.toggleV9Reaction=async function(postId,type){
     if(!guard())return;
