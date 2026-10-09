@@ -267,6 +267,37 @@ if (
 } else pass("Modal and drawer overlays sufficiently obscure the underlying home screen");
 
 if (
+  !html.includes('id="mobileMenuBtn" onclick="toggleMobileMenu()"') ||
+  !app.includes('nav?.classList.toggle("mobile-open",mobileMenuOpen)') ||
+  !app.includes('btn.setAttribute("aria-expanded",String(mobileMenuOpen))') ||
+  !app.includes('document.getElementById("mainNav")?.classList.remove("mobile-open","open")')
+) {
+  fail("Mobile header menu must open, close, and keep its expanded state synchronized");
+} else pass("Mobile header menu opens and closes with synchronized accessibility state");
+
+if (
+  !app.includes("function openMobileMore()") ||
+  !app.includes("function closeMobileMore()") ||
+  !app.includes('drawer.classList.add("open")') ||
+  !app.includes('drawer.classList.remove("open")') ||
+  !app.includes("function mobileMoreGo(id)") ||
+  !app.includes("setTimeout(()=>showSection(id),40")
+) {
+  fail("Mobile More drawer must open, close, and route a selected item to its requested section");
+} else pass("Mobile More drawer items open the selected section and close the drawer");
+
+if (
+  !html.includes('id="modal" onclick="closeModal(event)"') ||
+  !html.includes('class="modal-box" onclick="event.stopPropagation()"') ||
+  !app.includes('function closeModal(event)') ||
+  !app.includes('if(event.target.id === "modal")') ||
+  !app.includes('function hideModal()') ||
+  !app.includes('classList.remove("active")')
+) {
+  fail("Modal backdrop must close only on outside click and explicit close buttons must dismiss it");
+} else pass("Modal backdrop and close buttons dismiss the panel without closing on inner clicks");
+
+if (
   !game.includes("const currentUserKey=()=>user()?.id==null?null:String(user().id)") ||
   !game.includes("resetUserSnapshot(requestedUserKey)") ||
   !game.includes("if(currentUserKey()!==requestedUserKey)") ||
