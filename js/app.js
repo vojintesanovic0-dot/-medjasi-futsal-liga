@@ -339,17 +339,29 @@ function showSection(id){
     id = "home";
   }
 
+  /*
+   * Dynamic sections may mount after the initial HTML. Resolve the target
+   * before clearing the current page so a premature/invalid navigation click
+   * can never leave the application with no active section.
+   */
+  if(id === "news" && !document.getElementById("news")){
+    try{ window.medjasiV7?.ensureNewsUI?.(); }
+    catch(error){ console.warn("News sekcija još nije spremna:",error); }
+  }
+
+  const section = document.getElementById(id);
+  if(!section || !section.classList.contains("section")){
+    console.warn("Navigacija je zaustavljena: sekcija nije montirana.",id);
+    if(typeof toast === "function") toast("Ova sekcija se još učitava. Pokušaj ponovo.","error");
+    return;
+  }
+
   document.querySelectorAll(".section")
     .forEach(section =>
       section.classList.remove("active")
     );
 
-  const section =
-    document.getElementById(id);
-
-  if(section){
-    section.classList.add("active");
-  }
+  section.classList.add("active");
 
   rememberActiveSection(id);
 
@@ -392,11 +404,6 @@ function showSection(id){
 
   // Dynamic sections are mounted by their own modules.
   if(id === "news"){
-    // News is created lazily by the V7 module; mount it before resolving
-    // the active section so the navigation click never lands on a missing node.
-    if(!document.getElementById("news")){
-      window.medjasiV7?.ensureNewsUI?.();
-    }
     document.getElementById("news")?.classList.add("active");
     setTimeout(()=>window.loadNews?.(),30);
   }
@@ -7894,7 +7901,11 @@ function toggleMobileMenu(){
   const nav=document.getElementById("mainNav");
   const btn=document.getElementById("mobileMenuBtn");
   nav?.classList.toggle("mobile-open",mobileMenuOpen);
-  if(btn){btn.textContent=mobileMenuOpen ? "✕" : "☰";btn.setAttribute("aria-expanded",String(mobileMenuOpen));}
+  if(btn){
+    btn.textContent=mobileMenuOpen ? "✕" : "☰";
+    btn.setAttribute("aria-expanded",String(mobileMenuOpen));
+    btn.setAttribute("aria-label",mobileMenuOpen ? "Zatvori meni" : "Otvori meni");
+  }
 }
 
 
@@ -7902,10 +7913,14 @@ function openMobileMore(){
   const drawer=document.getElementById("mobileMoreDrawer");
   if(!drawer) return;
   mobileMenuOpen=false;
-  document.getElementById("mainNav")?.classList.remove("mobile-open");
+  document.getElementById("mainNav")?.classList.remove("mobile-open","open");
   closeMobileMore();
   const topBtn=document.getElementById("mobileMenuBtn");
-  if(topBtn){topBtn.textContent="☰";topBtn.setAttribute("aria-expanded","false");}
+  if(topBtn){
+    topBtn.textContent="☰";
+    topBtn.setAttribute("aria-expanded","false");
+    topBtn.setAttribute("aria-label","Otvori meni");
+  }
   drawer.classList.add("open");
   drawer.setAttribute("aria-hidden","false");
   document.body.classList.add("mobile-more-open");
