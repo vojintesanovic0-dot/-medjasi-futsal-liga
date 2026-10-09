@@ -31,6 +31,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 12. `sql/11_allow_community_reaction_updates.sql` – omogućava korisniku promjenu vlastite reakcije bez kršenja ograničenja jedne reakcije po objavi.
 13. `sql/12_fan_set_odds_invoker_wrapper.sql` – vraća siguran invoker RPC za podešavanje kvota, uz provjeru administratorske uloge u privatnoj funkciji.
 14. `sql/13_guard_match_status_and_market_generation.sql` – odbija utakmice s nedostajućim ekipama/statusom, nameće obavezne ID-jeve ekipa i status, te sprečava otvaranje novih Fan Game kvota nakon početka ili završetka utakmice.
+15. `sql/14_fix_fan_reprice_match_live_status_alias.sql` – ispravlja live preračunavanje kvota tako da koristi status same utakmice umjesto nepostojećeg aliasa.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
