@@ -140,6 +140,42 @@ const unboundInlineCalls = [...inlineCallNames].filter((name) => !knownInlineHan
 if (unboundInlineCalls.length) fail("HTML inline click handlers have no global target: " + unboundInlineCalls.join(", "));
 else pass("All HTML inline click handlers resolve to a global function");
 
+const clickMarkupSources = [
+  app, game, dashboard, growth,
+  read("js/community-features.js"),
+  read("js/ui-compat.js"),
+  read("js/admin-organizer.js"),
+  read("js/extras.js"),
+  read("js/graphic-engine.js"),
+  read("js/effects.js"),
+  read("js/medjasi-v13-ui.js"),
+  read("js/production.js")
+];
+const clickMarkupSource = clickMarkupSources.join("\n");
+const declaredClickTargets = new Set([
+  ...[...clickMarkupSource.matchAll(/\bfunction\s+([A-Za-z_$][\w$]*)\s*\(/g)].map((m) => m[1]),
+  ...[...clickMarkupSource.matchAll(/(?:window|globalThis)\.([A-Za-z_$][\w$]*)\s*=/g)].map((m) => m[1])
+]);
+if (app.includes("const $=")) declaredClickTargets.add("$");
+const unboundGeneratedCalls = new Set();
+let generatedOnclickCount = 0;
+for (const source of clickMarkupSources) {
+  for (const handler of source.matchAll(/\bonclick\s*=\s*(?:\\?["'])([\s\S]*?)(?:\\?["'])/gi)) {
+    generatedOnclickCount++;
+    for (const call of handler[1].matchAll(/(?<![.\w$])([A-Za-z_$][\w$]*)\s*\(/g)) {
+      const name = call[1];
+      if (!["if", "for", "while", "switch", "function", "return"].includes(name) && !declaredClickTargets.has(name)) {
+        unboundGeneratedCalls.add(name);
+      }
+    }
+  }
+}
+if (unboundGeneratedCalls.size) {
+  fail("Generated inline click handlers have no callable target: " + [...unboundGeneratedCalls].sort().join(", "));
+} else {
+  pass("Generated inline click targets resolve across application modules (" + generatedOnclickCount + " handlers scanned)");
+}
+
 const gameActionValues = [...new Set([...game.matchAll(/data-act\s*=\s*["']([^"']+)["']/g)].map((m) => m[1]))];
 const gameClickStart = game.indexOf("async function onClick");
 const gameClickSource = gameClickStart >= 0 ? game.slice(gameClickStart) : "";
