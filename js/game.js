@@ -21,21 +21,109 @@
   const active=()=>MT().filter(m=>m.status==="scheduled"||m.status==="live").sort((a,b)=>new Date(a.match_date||0)-new Date(b.match_date||0));
   const upcoming=()=>active().filter(m=>m.status==="scheduled");
   const finished=()=>MT().filter(m=>m.status==="finished").sort((a,b)=>new Date(b.match_date||0)-new Date(a.match_date||0));
+  let refreshPending=false;
   async function refresh(){
-    if(S.loading||!sb())return; S.loading=true;
+    if(!sb())return;
+    if(S.loading){refreshPending=true;return;}
+    S.loading=true;
     try{
       const u=user();
-      const [mk,shop,fund,board]=await Promise.all([sb().from("fan_markets").select("*").eq("status","open").order("created_at"),sb().from("fan_shop_items").select("*").eq("active",true).order("price"),sb().from("fan_team_fund").select("*"),sb().rpc("fan_leaderboard")]);
-      if(mk.error&&/relation|does not exist|schema cache|function/i.test(mk.error.message||"")){S.err="setup";return;}
-      S.err=null; S.markets=mk.data||[]; S.shop=shop.data||[]; S.fund=Object.fromEntries((fund.data||[]).map(r=>[String(r.team_id),r.total])); S.board=board.data||[];
-      if(S.board.length){const ids=S.board.map(r=>r.user_id).filter(Boolean);const {data:styles}=await sb().rpc("fan_public_cosmetics",{p_users:ids});const byId=Object.fromEntries((styles||[]).map(r=>[String(r.user_id),r]));S.board=S.board.map(r=>({...r,...(byId[String(r.user_id)]||{})}));}
-      if(u){await sb().rpc("fan_ensure_wallet");const [w,pk,led,inv,votes,fol]=await Promise.all([sb().from("fan_wallets").select("*").eq("user_id",u.id).maybeSingle(),sb().from("fan_picks").select("*,fan_markets(label)").eq("user_id",u.id).order("created_at",{ascending:false}).limit(60),sb().from("fan_ledger").select("*").eq("user_id",u.id).order("created_at",{ascending:false}).limit(15),sb().from("fan_inventory").select("*").eq("user_id",u.id),sb().from("fan_mvp_votes").select("match_id").eq("voter",u.id),sb().from("fan_team_follows").select("team_id").eq("user_id",u.id)]);S.wallet=w.data||null;S.picks=pk.data||[];S.ledger=led.data||[];S.inv=inv.data||[];S.follows=(fol.data||[]).map(x=>String(x.team_id));S.votes=Object.fromEntries((votes.data||[]).map(v=>[String(v.match_id),true]));}else{S.wallet=null;S.picks=[];S.ledger=[];S.inv=[];S.follows=[];S.votes={};}
-      S.stats={}; await Promise.all(active().slice(0,12).map(async m=>{const {data}=await sb().rpc("fan_market_stats",{p_match:String(m.id)});(data||[]).forEach(r=>S.stats[r.market_id]=Number(r.picks));}));
-      S.mvp={}; await Promise.all(finished().slice(0,4).map(async m=>{const {data}=await sb().rpc("fan_mvp_results",{p_match:String(m.id)});S.mvp[String(m.id)]=data||[];}));
-      if(isAdm()&&!S.profiles.length){const {data}=await sb().from("profiles").select("id,username").order("username");S.profiles=data||[];}
-    }catch(e){console.error("Pogodi:",e);}finally{S.loading=false;render();}
+      const [mk,shop,fund,board]=await Promise.all([
+        sb().from("fan_markets").select("*").eq("status","open").order("created_at"),
+        sb().from("fan_shop_items").select("*").eq("active",true).order("price"),
+        sb().from("fan_team_fund").select("*"),
+        sb().rpc("fan_leaderboard")
+      ]);
+      if(mk.error&&/relation|does not exist|schema cache|function/i.test(mk.error.message||"")){
+        S.err="setup";
+        return;
+      }
+      const coreError=[mk,shop,fund,board].find(result=>result.error);
+      if(coreError)throw coreError.error;
+
+      let nextBoard=board.data||[];
+      if(nextBoard.length){
+        const ids=nextBoard.map(row=>row.user_id).filter(Boolean);
+        const stylesResult=await sb().rpc("fan_public_cosmetics",{p_users:ids});
+        if(!stylesResult.error){
+          const byId=Object.fromEntries((stylesResult.data||[]).map(row=>[String(row.user_id),row]));
+          nextBoard=nextBoard.map(row=>({...row,...(byId[String(row.user_id)]||{})}));
+        }else{
+          console.warn("Fan Game cosmetics are temporarily unavailable:",stylesResult.error);
+        }
+      }
+
+      let nextWallet=null,nextPicks=[],nextLedger=[],nextInventory=[],nextFollows=[],nextVotes={};
+      if(u){
+        const ensure=await sb().rpc("fan_ensure_wallet");
+        if(ensure.error)throw ensure.error;
+        const [w,pk,ledger,inventory,votes,follows]=await Promise.all([
+          sb().from("fan_wallets").select("*").eq("user_id",u.id).maybeSingle(),
+          sb().from("fan_picks").select("*,fan_markets(label)").eq("user_id",u.id).order("created_at",{ascending:false}).limit(60),
+          sb().from("fan_ledger").select("*").eq("user_id",u.id).order("created_at",{ascending:false}).limit(15),
+          sb().from("fan_inventory").select("*").eq("user_id",u.id),
+          sb().from("fan_mvp_votes").select("match_id").eq("voter",u.id),
+          sb().from("fan_team_follows").select("team_id").eq("user_id",u.id)
+        ]);
+        const userError=[w,pk,ledger,inventory,votes,follows].find(result=>result.error);
+        if(userError)throw userError.error;
+        nextWallet=w.data||null;
+        nextPicks=pk.data||[];
+        nextLedger=ledger.data||[];
+        nextInventory=inventory.data||[];
+        nextFollows=(follows.data||[]).map(row=>String(row.team_id));
+        nextVotes=Object.fromEntries((votes.data||[]).map(row=>[String(row.match_id),true]));
+      }
+
+      const nextStats={};
+      await Promise.all(active().slice(0,12).map(async match=>{
+        const result=await sb().rpc("fan_market_stats",{p_match:String(match.id)});
+        if(result.error)throw result.error;
+        (result.data||[]).forEach(row=>{nextStats[row.market_id]=Number(row.picks);});
+      }));
+
+      const nextMvp={};
+      await Promise.all(finished().slice(0,4).map(async match=>{
+        const result=await sb().rpc("fan_mvp_results",{p_match:String(match.id)});
+        if(result.error)throw result.error;
+        nextMvp[String(match.id)]=result.data||[];
+      }));
+
+      let nextProfiles=S.profiles;
+      if(isAdm()&&!nextProfiles.length){
+        const profilesResult=await sb().from("profiles").select("id,username").order("username");
+        if(profilesResult.error)throw profilesResult.error;
+        nextProfiles=profilesResult.data||[];
+      }
+
+      // Commit one complete snapshot only after all required reads succeed.
+      S.markets=mk.data||[];
+      S.shop=shop.data||[];
+      S.fund=Object.fromEntries((fund.data||[]).map(row=>[String(row.team_id),row.total]));
+      S.board=nextBoard;
+      S.wallet=nextWallet;
+      S.picks=nextPicks;
+      S.ledger=nextLedger;
+      S.inv=nextInventory;
+      S.follows=nextFollows;
+      S.votes=nextVotes;
+      S.stats=nextStats;
+      S.mvp=nextMvp;
+      S.profiles=nextProfiles;
+      S.err=null;
+    }catch(error){
+      console.error("Pogodi:",error);
+      if(S.err!=="setup"&&!S.markets.length&&!S.shop.length&&!S.board.length)S.err="unavailable";
+    }finally{
+      S.loading=false;
+      render();
+      if(refreshPending){
+        refreshPending=false;
+        queueMicrotask(()=>{void refresh();});
+      }
+    }
   }
-  function group(list){const g={result:[],total:[],red_card:[],exact:[],scorer:[],player_2plus:[]};list.forEach(x=>g[x.kind]?.push(x));return g;}
+    function group(list){const g={result:[],total:[],red_card:[],exact:[],scorer:[],player_2plus:[]};list.forEach(x=>g[x.kind]?.push(x));return g;}
   function opt(m,total){const mine=S.picks.find(p=>p.market_id===m.id),n=S.stats[m.id]||0,pct=total?Math.round(100*n/total):null;return `<button class="fg-opt ${mine?"is-mine":""}" data-act="pick" data-id="${E(m.id)}" ${mine?"disabled":""}><span>${E(m.label)}</span><b>${Number(m.odds).toFixed(2)}</b>${mine?`<small>✓ tvoj pogodak (${mine.stake})</small>`:pct!==null?`<small>${pct}% navijača</small>`:""}</button>`;}
   function block(t,l){if(!l.length)return"";const total=l.reduce((s,m)=>s+(S.stats[m.id]||0),0);return `<div class="fg-group"><h4>${t}</h4><div class="fg-opts">${l.map(m=>opt(m,total)).join("")}</div></div>`;}
   function scorer(t,l,m){if(!l.length)return"";const by=id=>l.filter(x=>PL().find(p=>String(p.id)===String(x.player_id))?.team_id==id);return `<details class="fg-group fg-more"><summary>${t} <small>(${l.length})</small></summary><div class="fg-cols">${[m.home_team_id,m.away_team_id].map(id=>{const x=by(id);return x.length?`<div class="fg-team-col"><h5>${E(tname(id))}</h5><div class="fg-opts">${x.map(v=>opt(v,0)).join("")}</div></div>`:""}).join("")}</div></details>`;}
