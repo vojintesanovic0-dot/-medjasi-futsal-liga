@@ -33,6 +33,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 14. `sql/13_guard_match_status_and_market_generation.sql` – odbija utakmice s nedostajućim ekipama/statusom, nameće obavezne ID-jeve ekipa i status, te sprečava otvaranje novih Fan Game kvota nakon početka ili završetka utakmice.
 15. `sql/14_fix_fan_reprice_match_live_status_alias.sql` – ispravlja live preračunavanje kvota tako da koristi status same utakmice umjesto nepostojećeg aliasa.
 16. `sql/15_validate_match_event_integrity.sql` – zahtijeva utakmicu i igrača na golu/kartonu te odbija strijelce/asistente/kartonisane igrače koji nisu iz ekipa te utakmice.
+17. `sql/16_restrict_liga_images_uploads.sql` – ograničava Storage upload na dozvoljene medije, 50 MB po objektu i slike do 12 MB u korisničkim folderima; administratori zadržavaju video upload.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
