@@ -10588,10 +10588,61 @@ async function subscribeRealPush(){if(!currentUser)return toastV('Prvo se prijav
 async function disableRealPush(){try{const reg=await navigator.serviceWorker.getRegistration('./');const sub=await reg?.pushManager.getSubscription();if(sub){await supabaseClient.from('push_subscriptions').delete().eq('endpoint',sub.endpoint);await sub.unsubscribe()}}catch(e){console.warn(e)}localStorage.removeItem('medjasi_push_enabled');renderPushUI()}
 function renderPushUI(){if(!$('v7PushStatus')||!$('v7PushButton'))return;const on=localStorage.getItem('medjasi_push_enabled')==='1';$('v7PushStatus').textContent=on?'🔔 Push obavještenja su uključena.':'Push obavještenja nisu uključena.';$('v7PushStatus').className='v7-push-status '+(on?'ok':'');$('v7PushButton').textContent=on?'🔕 Isključi push':'🔔 Uključi push';$('v7PushButton').onclick=on?disableRealPush:subscribeRealPush}
 function ensureSeasonAdmin(){if(!$('adminContent')||!isAdm()||$('v7SeasonCard'))return;const c=document.createElement('div');c.id='v7SeasonCard';c.className='card';c.style.marginTop='20px';c.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SEZONE</span><h3>🏆 Upravljanje sezonama</h3><p class="muted">Aktivna sezona se automatski dodjeljuje novim utakmicama.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="actions"><input id="v7SeasonName" placeholder="npr. 2026/27" style="max-width:220px"><button class="btn btn-green" onclick="medjasiV7.addSeason()">＋ Nova sezona</button></div><div id="v7SeasonList" style="margin-top:12px"></div>`;$('adminContent').appendChild(c);renderSeasons()}
-async function loadSeasons(){const {data,error}=await supabaseClient.from('seasons').select('*').order('created_at',{ascending:false});if(!error)V7.seasons=data||[];renderSeasons()}
+async function loadSeasons(){
+  try{
+    const {data,error}=await supabaseClient.from("seasons").select("*").order("created_at",{ascending:false});
+    if(error)throw error;
+    V7.seasons=data||[];
+    renderSeasons();
+    return true;
+  }catch(error){
+    console.error("Učitavanje sezona nije uspjelo:",error);
+    toastV(error?.message||"Sezone trenutno nisu dostupne.","error");
+    renderSeasons();
+    return false;
+  }
+}
 function renderSeasons(){const box=$('v7SeasonList');if(!box)return;box.innerHTML=(V7.seasons||[]).map(s=>`<div class="admin-match" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><strong>${escV(s.name)}</strong><small class="muted" style="display:block;margin-top:3px">${s.is_active?'AKTIVNA':'Arhiva'}</small></div>${s.is_active?'':'<button class="btn btn-small" onclick="medjasiV7.activateSeason(\''+s.id+'\')">Postavi aktivnu</button>'}</div>`).join('')||'<div class="muted">Nema sezona.</div>'}
 async function addSeason(){if(!isAdm())return;const name=$('v7SeasonName')?.value.trim();if(!name)return;const {error}=await supabaseClient.from('seasons').insert({name,is_active:false});if(error)return toastV(error.message,'error');$('v7SeasonName').value='';await loadSeasons()}
-async function activateSeason(id){if(!isAdm())return;await supabaseClient.from('seasons').update({is_active:false}).neq('id','00000000-0000-0000-0000-000000000000');const {error}=await supabaseClient.from('seasons').update({is_active:true}).eq('id',id);if(error)return toastV(error.message,'error');await loadSeasons();toastV('Aktivna sezona je promijenjena.')} 
+async function activateSeason(id){
+  if(!isAdm())return;
+  const target=V7.seasons.find(season=>String(season.id)===String(id));
+  if(!target)return toastV("Sezona nije pronađena. Osvježi prikaz i pokušaj ponovo.","error");
+  if(target.is_active)return toastV("Ova sezona je već aktivna.");
+
+  const previousActiveIds=V7.seasons.filter(season=>season.is_active).map(season=>season.id);
+  try{
+    const {error:deactivateError}=await supabaseClient
+      .from("seasons")
+      .update({is_active:false})
+      .neq("id","00000000-0000-0000-0000-000000000000");
+    if(deactivateError)throw deactivateError;
+
+    const {error:activateError}=await supabaseClient
+      .from("seasons")
+      .update({is_active:true})
+      .eq("id",id);
+    if(activateError){
+      // Best-effort rollback so a failed activation does not leave the league without its previous active season.
+      if(previousActiveIds.length){
+        const {error:rollbackError}=await supabaseClient
+          .from("seasons")
+          .update({is_active:true})
+          .in("id",previousActiveIds);
+        if(rollbackError)console.error("Vraćanje prethodne aktivne sezone nije uspjelo:",rollbackError);
+      }
+      throw activateError;
+    }
+
+    if(await loadSeasons()){
+      toastV("Aktivna sezona je promijenjena.");
+    }
+  }catch(error){
+    console.error("Promjena aktivne sezone nije uspjela:",error);
+    toastV(error?.message||"Aktivna sezona nije promijenjena. Pokušaj ponovo.","error");
+    await loadSeasons();
+  }
+} 
 function ensurePushUI(){if(!$('adminContent')||!isAdm()||$('v7PushCard'))return;const c=document.createElement('div');c.id='v7PushCard';c.className='card v7-push-card';c.innerHTML=`<div class="v7-push-row"><div><strong>🔔 Push notifikacije</strong><div id="v7PushStatus" class="v7-push-status">Provjera...</div></div><button id="v7PushButton" class="btn btn-blue">🔔 Uključi push</button></div>`;$('adminContent').appendChild(c);renderPushUI()}
 
 // Gallery: image + video compatibility layer. Existing image_url rows continue to work.
