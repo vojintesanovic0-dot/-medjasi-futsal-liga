@@ -155,13 +155,13 @@ const fanGrantWrapperSource = read("sql/07_admin_rpc_wrapper.sql");
 const repricingFixSource = read("sql/14_fix_fan_reprice_match_live_status_alias.sql");
 const pushEdgeSource = read("supabase/functions/send-push/index.ts");
 
-const grantRpcCall = fanAdminEdgeSource.match(/actor\\.rpc\\(["']fan_admin_grant["'],\\s*\\{([^}]*)\\}\\)/s)?.[1] || "";
+const grantRpcCall = fanAdminEdgeSource.split('actor.rpc("fan_admin_grant",')[1]?.split(");")[0] || "";
 if (
   !grantRpcCall.includes("p_user:") ||
   !grantRpcCall.includes("p_amount:") ||
   !grantRpcCall.includes("p_reason:") ||
   grantRpcCall.includes("p_note:") ||
-  !/fan_admin_grant\\(p_user uuid, p_amount integer, p_reason text\\)/.test(fanGrantWrapperSource)
+  !fanGrantWrapperSource.includes("create or replace function public.fan_admin_grant(p_user uuid, p_amount integer, p_reason text)")
 ) {
   fail("Fan admin grant Edge RPC arguments must match the SQL wrapper signature");
 } else {
