@@ -7197,12 +7197,13 @@ async function addCard(matchId){
   // Cards do not currently create a league_events row, so send one push
   // directly after the database confirms that the card was recorded.
   const cardLabel=card_type==="red"?"Crveni karton":"Žuti karton";
+  const playerIsHome=String(player.team_id)===String(match.home_team_id);
+  const opponentName=teamName(playerIsHome?match.away_team_id:match.home_team_id);
+  const liveScore=(match.home_score||0)+":"+(match.away_score||0);
   void notifyLeaguePush(
     "card",
     (card_type==="red"?"🟥 ":"🟨 ")+cardLabel+" — "+player.name,
-    teamName(player.team_id)+" · "+minute+"' · "+teamName(
-      String(player.team_id)===String(match.home_team_id)?match.home_team_id:match.away_team_id
-    ),
+    teamName(player.team_id)+" – "+opponentName+" · "+minute+"' · rezultat "+liveScore,
     matchId
   );
 
