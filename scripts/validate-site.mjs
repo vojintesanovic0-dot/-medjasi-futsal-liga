@@ -156,6 +156,24 @@ if (
   fail("News publishing must not be reported as failed solely because push delivery failed");
 } else pass("News publishing reports storage and push outcomes separately");
 
+const matchStatusStart = app.indexOf("async function changeMatchStatus(");
+const matchStatusEnd = app.indexOf("/* =========================================================\\n   MATCH MINUTE", matchStatusStart);
+const matchStatusFunction = matchStatusStart >= 0 && matchStatusEnd > matchStatusStart ? app.slice(matchStatusStart, matchStatusEnd) : "";
+const addCardStart = app.indexOf("async function addCard(matchId)");
+const addCardEnd = app.indexOf("/* =========================================================\\n   TEAM MODAL", addCardStart);
+const addCardFunction = addCardStart >= 0 && addCardEnd > addCardStart ? app.slice(addCardStart, addCardEnd) : "";
+if (
+  !app.includes("async function notifyLeaguePush(type,title,body,matchId)") ||
+  !matchStatusFunction.includes('void notifyLeaguePush("live",title,body,id)') ||
+  !matchStatusFunction.includes("changed&&status===\"live\"") ||
+  !addCardFunction.includes('    "card",') ||
+  !addCardFunction.includes("const {error}=await supabaseClient.from(\"cards\").insert") ||
+  !addCardFunction.includes("void notifyLeaguePush(")
+) {
+  fail("Push events for LIVE kickoff and saved cards must send only after a successful database write");
+} else pass("LIVE kickoff and saved-card push notifications are wired after database success");
+
+
 
 
 
