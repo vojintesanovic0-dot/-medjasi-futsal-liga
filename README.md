@@ -32,6 +32,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 13. `sql/12_fan_set_odds_invoker_wrapper.sql` – vraća siguran invoker RPC za podešavanje kvota, uz provjeru administratorske uloge u privatnoj funkciji.
 14. `sql/13_guard_match_status_and_market_generation.sql` – odbija utakmice s nedostajućim ekipama/statusom, nameće obavezne ID-jeve ekipa i status, te sprečava otvaranje novih Fan Game kvota nakon početka ili završetka utakmice.
 15. `sql/14_fix_fan_reprice_match_live_status_alias.sql` – ispravlja live preračunavanje kvota tako da koristi status same utakmice umjesto nepostojećeg aliasa.
+16. `sql/15_validate_match_event_integrity.sql` – zahtijeva utakmicu i igrača na golu/kartonu te odbija strijelce/asistente/kartonisane igrače koji nisu iz ekipa te utakmice.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
