@@ -1,0 +1,234 @@
+/* =========================================================
+   MEDJASI HEADER REPAIR V1
+   One stable topbar contract; preserve the established palette.
+========================================================= */
+.site-header{
+  position:fixed!important;
+  z-index:1300!important;
+  left:var(--dash-sidebar,218px)!important;
+  right:auto!important;
+  top:0!important;
+  width:calc(100% - var(--dash-sidebar,218px))!important;
+  height:var(--dash-header,66px)!important;
+  min-height:var(--dash-header,66px)!important;
+  box-sizing:border-box!important;
+}
+.site-header .header-inner{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:14px!important;
+  width:100%!important;
+  max-width:none!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0 18px!important;
+  box-sizing:border-box!important;
+}
+.site-header .dashboard-header-context{
+  display:flex!important;
+  flex:0 0 164px!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-self:stretch!important;
+  min-width:0!important;
+  margin:0 2px 0 0!important;
+  padding:0 15px 0 1px!important;
+  border-right:1px solid rgba(0,205,225,.17)!important;
+  overflow:hidden!important;
+}
+.site-header .dashboard-header-context-kicker{
+  display:block!important;
+  margin:0 0 5px!important;
+  color:#51dcb0!important;
+  font-size:8px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:.16em!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+}
+.site-header .dashboard-header-context strong{
+  display:block!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  color:#effbf6!important;
+  font-size:14px!important;
+  line-height:1.15!important;
+  font-weight:850!important;
+  letter-spacing:-.015em!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.site-header .header-actions{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:7px!important;
+  flex:1 1 0!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:100%!important;
+  margin:0!important;
+  padding:0!important;
+}
+.site-header .v7-search-wrap{
+  order:0!important;
+  display:block!important;
+  position:relative!important;
+  flex:1 1 350px!important;
+  width:auto!important;
+  min-width:170px!important;
+  max-width:460px!important;
+  margin:0 auto 0 0!important;
+}
+.site-header .v7-search-wrap input{
+  width:100%!important;
+  height:39px!important;
+  box-sizing:border-box!important;
+  border-radius:12px!important;
+  padding:0 14px 0 40px!important;
+  border:1px solid rgba(0,205,225,.19)!important;
+  background:linear-gradient(110deg,rgba(3,22,26,.97),rgba(2,12,15,.96))!important;
+  color:#eafff4!important;
+  font-size:11px!important;
+  box-shadow:inset 0 0 18px rgba(0,201,224,.025)!important;
+}
+.site-header .v7-search-wrap input::placeholder{color:#718a88!important}
+.site-header .v7-search-wrap input:focus{
+  border-color:rgba(57,245,139,.48)!important;
+  outline:none!important;
+  box-shadow:0 0 0 3px rgba(57,245,139,.06)!important;
+}
+.site-header .header-actions>button,
+.site-header .header-account .account-btn{
+  flex:0 0 auto!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:38px!important;
+  min-width:38px!important;
+  height:38px!important;
+  min-height:38px!important;
+  padding:6px!important;
+  box-sizing:border-box!important;
+  border:1px solid rgba(0,205,225,.13)!important;
+  border-radius:11px!important;
+  background:rgba(4,19,22,.78)!important;
+  color:#eafff4!important;
+  box-shadow:none!important;
+  transition:background .16s ease,border-color .16s ease!important;
+}
+.site-header .header-actions>button:hover,
+.site-header .header-account .account-btn:hover{
+  border-color:rgba(57,245,139,.34)!important;
+  background:rgba(57,245,139,.07)!important;
+}
+.site-header .header-account{
+  flex:0 1 auto!important;
+  min-width:0!important;
+  max-width:170px!important;
+  margin:0 2px!important;
+  padding-left:8px!important;
+  border-left:1px solid rgba(0,205,225,.13)!important;
+}
+.site-header .header-account .v13-auth-main{
+  width:auto!important;
+  min-width:0!important;
+  max-width:160px!important;
+  padding:3px 6px!important;
+  border:0!important;
+  background:transparent!important;
+}
+.site-header .header-account .v13-auth-copy{min-width:0!important}
+.site-header .header-account .v13-auth-copy strong{
+  max-width:90px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.site-header .header-chat-button svg,
+.site-header .topbar-action svg{
+  display:block!important;
+  width:18px!important;
+  height:18px!important;
+  fill:none!important;
+  stroke:#eafff4!important;
+  stroke-width:1.7!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+.site-header .dashboard-mobile-brand{display:none!important}
+.site-header .mobile-menu-btn{display:none!important}
+@media(max-width:1180px) and (min-width:1025px){
+  .site-header .header-inner{gap:9px!important;padding:0 12px!important}
+  .site-header .dashboard-header-context{flex-basis:132px!important;padding-right:10px!important}
+  .site-header .dashboard-header-context strong{font-size:12px!important}
+  .site-header .v7-search-wrap{flex-basis:220px!important;min-width:125px!important;max-width:350px!important}
+  .site-header .header-actions{gap:5px!important}
+  .site-header .header-actions>button,.site-header .header-account .account-btn{
+    width:34px!important;min-width:34px!important;height:34px!important;min-height:34px!important;padding:4px!important
+  }
+  .site-header .header-account .v13-auth-copy{display:none!important}
+  .site-header .header-account .v13-auth-main{width:34px!important;min-width:34px!important;padding:2px!important}
+  .site-header .header-account .v13-header-avatar{width:30px!important;height:30px!important;min-width:30px!important}
+  .site-header .header-account .v13-logout{display:none!important}
+  .site-header .topbar-action{width:34px!important;min-width:34px!important;height:34px!important;padding:5px!important}
+}
+@media(max-width:1024px){
+  .site-header{
+    left:0!important;right:0!important;width:100%!important;
+    height:var(--dash-header,64px)!important;min-height:var(--dash-header,64px)!important;
+  }
+  .site-header .header-inner{gap:8px!important;padding:0 12px!important}
+  .site-header .dashboard-header-context{display:none!important}
+  .site-header .dashboard-mobile-brand{
+    display:flex!important;align-items:center!important;gap:6px!important;
+    flex:0 0 auto!important;min-width:0!important;margin:0 3px 0 0!important;
+    white-space:nowrap!important;
+  }
+  .site-header .dashboard-mobile-brand img{width:31px!important;height:31px!important;object-fit:contain!important}
+  .site-header .dashboard-mobile-brand strong{display:block!important;color:#f0fff7!important;font-size:10px!important;line-height:1.1!important;font-weight:1000!important}
+  .site-header .dashboard-mobile-brand span{display:block!important;margin-top:3px!important;color:#43f58f!important;font-size:7px!important;line-height:1!important;letter-spacing:.13em!important}
+  .site-header .header-actions{flex:1 1 auto!important;width:auto!important;gap:5px!important;min-width:0!important}
+  .site-header .v7-search-wrap{flex:1 1 150px!important;width:auto!important;min-width:70px!important;max-width:none!important;margin:0 auto 0 0!important}
+  .site-header .v7-search-wrap input{height:35px!important;padding:0 7px 0 31px!important;font-size:10px!important}
+  .site-header .header-actions>button,.site-header .header-account .account-btn{
+    width:34px!important;min-width:34px!important;height:34px!important;min-height:34px!important;padding:4px!important
+  }
+  .site-header .header-actions .topbar-action,.site-header .header-chat-button{display:none!important}
+  .site-header .header-account{width:34px!important;min-width:34px!important;max-width:34px!important;margin:0!important;padding:0!important;border:0!important}
+  .site-header .header-account .v13-auth-main{width:34px!important;min-width:34px!important;max-width:34px!important;padding:2px!important}
+  .site-header .header-account .v13-auth-copy,.site-header .header-account .v13-logout{display:none!important}
+  .site-header .header-account .v13-header-avatar{width:30px!important;height:30px!important;min-width:30px!important}
+  .site-header .mobile-menu-btn{
+    display:inline-flex!important;flex:0 0 35px!important;width:35px!important;min-width:35px!important;height:35px!important;
+    min-height:35px!important;margin:0!important;position:relative!important;order:8!important
+  }
+}
+@media(max-width:640px){
+  .site-header .header-inner{gap:5px!important;padding:0 7px!important}
+  .site-header .dashboard-mobile-brand{gap:4px!important;margin-right:1px!important}
+  .site-header .dashboard-mobile-brand img{width:27px!important;height:27px!important}
+  .site-header .dashboard-mobile-brand strong{font-size:9px!important}
+  .site-header .dashboard-mobile-brand span{font-size:6px!important;letter-spacing:.1em!important}
+  .site-header .header-actions{gap:4px!important}
+  .site-header .v7-search-wrap{flex:1 1 100px!important;min-width:48px!important;margin:0!important}
+  .site-header .v7-search-wrap input{height:33px!important;padding:0 5px 0 27px!important;font-size:9px!important;border-radius:10px!important}
+  .site-header .v7-search-wrap::before{left:9px!important;top:10px!important;width:10px!important;height:10px!important}
+  .site-header .v7-search-wrap::after{left:19px!important;top:20px!important}
+  .site-header .header-actions>button,.site-header .header-account .account-btn{
+    width:31px!important;min-width:31px!important;height:31px!important;min-height:31px!important;padding:3px!important;border-radius:9px!important
+  }
+  .site-header .notification-bell::before{width:16px!important;height:16px!important;background-size:16px 16px!important}
+  .site-header .header-account,.site-header .header-account .v13-auth-main{
+    width:31px!important;min-width:31px!important;max-width:31px!important
+  }
+  .site-header .header-account .v13-header-avatar{width:28px!important;height:28px!important;min-width:28px!important}
+  .site-header .mobile-menu-btn{width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;flex-basis:32px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .site-header .header-actions>button,.site-header .header-account .account-btn{transition:none!important}
+}

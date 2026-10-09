@@ -94,9 +94,15 @@ if (!growth.includes("if(sponsorResult.error)") || !growth.includes("if(seasonRe
   fail("Liga info must preserve the last valid sponsor/season data when a refresh query fails");
 } else pass("Liga info keeps the last valid state during partial service failures");
 
-if (!dashboard.includes("if(attempts++<25)window.setTimeout(selectTab,100)")) {
+const hasDirectTabRouter =
+  dashboard.includes("window.medjasiGame?.openTab?.(key)===true") &&
+  dashboard.includes("const retry=()=>{") &&
+  dashboard.includes("++attempts>=12") &&
+  dashboard.includes("window.setTimeout(retry,100)");
+const hasLegacyBoundedTabRouter = dashboard.includes("if(attempts++<25)window.setTimeout(selectTab,100)");
+if (!hasDirectTabRouter && !hasLegacyBoundedTabRouter) {
   fail("Fan Game quick links must wait for asynchronously rendered tabs with a bounded retry");
-} else pass("Fan Game quick links wait for tabs without infinite retries");
+} else pass("Fan Game quick links use validated direct routing or a bounded render retry");
 
 const fixtureStart = dashboard.indexOf("function fixtureMarkup(m,phone=false){");
 const fixtureEnd = dashboard.indexOf("function renderNext(){", fixtureStart);
@@ -218,9 +224,18 @@ const htmlRefs = [...html.matchAll(/(?:src|href)=["'](\.\/[^"']+)["']/gi)]
 
 const stylesheetTags = [...html.matchAll(/<link\b[^>]+href=["'][^"']+\.css(?:\?[^"']*)?["'][^>]*>/gi)];
 const finalLayoutIndex = stylesheetTags.findIndex((m) => m[0].includes("medjasi-dashboard-refinements-v2.css"));
+const finalHeaderIndex = stylesheetTags.findIndex((m) => m[0].includes("medjasi-header-fix-v1.css"));
 const lastStylesheetIndex = stylesheetTags.length - 1;
-if (finalLayoutIndex < 0 || finalLayoutIndex !== lastStylesheetIndex) {
-  fail("medjasi-dashboard-refinements-v2.css must remain the last stylesheet so sidebar/layout overrides win the cascade");
+if (finalLayoutIndex < 0) {
+  fail("The dashboard/sidebar layout stylesheet must be present");
+} else if (finalHeaderIndex >= 0) {
+  if (finalHeaderIndex !== lastStylesheetIndex || finalLayoutIndex >= finalHeaderIndex) {
+    fail("The header fix must load last, after dashboard/sidebar layout refinements");
+  } else {
+    pass("Header fix and dashboard/sidebar refinements load in the correct order");
+  }
+} else if (finalLayoutIndex !== lastStylesheetIndex) {
+  fail("medjasi-dashboard-refinements-v2.css must remain the last stylesheet when no header fix layer is present");
 } else {
   pass("Final dashboard/sidebar layout stylesheet is loaded last");
 }
