@@ -78,8 +78,10 @@ begin
   if tg_op = 'UPDATE'
      and new.match_id is not distinct from old.match_id
      and new.player_id is not distinct from old.player_id then
-    if tg_table_name <> 'goals'
-       or new.assist_player_id is not distinct from old.assist_player_id then
+    if tg_table_name <> 'goals' then
+      return new;
+    end if;
+    if new.assist_player_id is not distinct from old.assist_player_id then
       return new;
     end if;
   end if;
