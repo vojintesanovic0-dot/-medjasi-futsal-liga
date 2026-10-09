@@ -169,6 +169,7 @@ window.dashboardOpenGameTab=function(tab){
     if(nav)scroll.appendChild(nav);
     const livePanel=sidebar.querySelector(".sidebar-live-panel");
     sidebar.insertBefore(scroll,livePanel);
+    if(logo)sidebar.insertBefore(logo,sidebar.firstChild);
     document.body.insertBefore(sidebar,header);
 
     if(headerInner&&actions){
