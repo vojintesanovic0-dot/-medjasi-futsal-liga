@@ -1,0 +1,99 @@
+/* Međasi Icons V2 — additive, CSS-only custom SVG accents.
+   No markup rewrites, external assets, emoji/content changes, or JS behavior changes. */
+:root{
+  --mfl-icon-ball:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%228%22%2F%3E%3Cpath%20d%3D%22m8.3%207.1%203.7%202%203.7-2M6.1%2012.9l3.4-1.2%202.5%203.2-1.2%203.4M17.9%2012.9l-3.4-1.2-2.5%203.2%201.2%203.4M12%209.1V12M10.8%2014.9h2.4%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-moon:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M20.4%2015.4A8.5%208.5%200%200%201%208.6%203.6%208.5%208.5%200%201%200%2020.4%2015.4Z%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-table:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%224%22%20y%3D%225%22%20width%3D%2216%22%20height%3D%2214%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M4%2010h16M4%2014h16M9%205v14M15%205v14%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-settings:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%223.2%22%2F%3E%3Cpath%20d%3D%22M19.4%2015a1.7%201.7%200%200%200%20.3%201.9l.1.1-1.8%201.8-.1-.1a1.7%201.7%200%200%200-1.9-.3%201.7%201.7%200%200%200-1%201.5v.1h-2.6v-.1a1.7%201.7%200%200%200-1-1.5%201.7%201.7%200%200%200-1.9.3l-.1.1-1.8-1.8.1-.1A1.7%201.7%200%200%200%208%2015a1.7%201.7%200%200%200-1.5-1H6.4v-2.6h.1A1.7%201.7%200%200%200%208%2010a1.7%201.7%200%200%200-.3-1.9l-.1-.1%201.8-1.8.1.1a1.7%201.7%200%200%200%201.9.3%201.7%201.7%200%200%200%201-1.5V5h2.6v.1a1.7%201.7%200%200%200%201%201.5%201.7%201.7%200%200%200%201.9-.3l.1-.1%201.8%201.8-.1.1a1.7%201.7%200%200%200-.3%201.9%201.7%201.7%200%200%200%201.5%201h.1v2.6h-.1a1.7%201.7%200%200%200-1.5%201.4Z%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-community:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%229%22%20cy%3D%228%22%20r%3D%223%22%2F%3E%3Cpath%20d%3D%22M3.5%2019c.4-3.1%202.3-5%205.5-5s5.1%201.9%205.5%205%22%2F%3E%3Cpath%20d%3D%22M16%205.5a3%203%200%200%201%200%205.7M17%2014c2.1.5%203.3%202.1%203.5%205%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-newspaper:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%2216%22%20height%3D%2216%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M8%208h8M8%2011h8M8%2014h5M8%2017h8%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-shield:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%203%2019%206v5c0%204.5-3%208-7%2010-4-2-7-5.5-7-10V6l7-3Z%22%2F%3E%3Cpath%20d%3D%22m9%2012%202%202%204-4%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-design:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m4%2016-.8%204.8L8%2020l10.7-10.7a2.4%202.4%200%200%200-3.4-3.4L4%2016Z%22%2F%3E%3Cpath%20d%3D%22m13.8%207.6%203.4%203.4M4%2016l4%204%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-pulse:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2012h4l2.2-6%204.1%2012%202.2-6H21%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-ticket:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%207a2%202%200%200%200%200%204v2a2%202%200%200%200%200%204h16v-4a2%202%200%200%201%200-4V5H4v2Z%22%2F%3E%3Cpath%20d%3D%22M14%208v1M14%2012v1M14%2016v1%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-leaderboard:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%2019h16%22%2F%3E%3Crect%20x%3D%225%22%20y%3D%2212%22%20width%3D%223%22%20height%3D%227%22%20rx%3D%221%22%2F%3E%3Crect%20x%3D%2210.5%22%20y%3D%228%22%20width%3D%223%22%20height%3D%2211%22%20rx%3D%221%22%2F%3E%3Crect%20x%3D%2216%22%20y%3D%224%22%20width%3D%223%22%20height%3D%2215%22%20rx%3D%221%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-shop:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%208h14l1%2012H4L5%208Z%22%2F%3E%3Cpath%20d%3D%22M9%209V6a3%203%200%200%201%206%200v3%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-medal:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%229%22%20r%3D%225%22%2F%3E%3Cpath%20d%3D%22m9%2013-2%208%205-2%205%202-2-8M10%209l1.3%201.3L14%208%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-flag:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%2021V4%22%2F%3E%3Cpath%20d%3D%22M5%205c4-3%208%203%2013%200v10c-5%203-9-3-13%200%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-star:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m12%203%202.7%205.5%206.1.9-4.4%204.3%201%206.1-5.4-2.9-5.4%202.9%201-6.1-4.4-4.3%206.1-.9L12%203Z%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-target:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%228%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Cpath%20d%3D%22M12%202v3M22%2012h-3M12%2022v-3M2%2012h3%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-info:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M12%2011v5M12%208h.01%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-arrow:url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2339f58b%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%2012h15M13%205l7%207-7%207%22%2F%3E%3C%2Fsvg%3E");
+  --mfl-icon-size:18px;
+  --mfl-icon-green:#39f58b;
+}
+/* Dashboard topbar actions: replace decorative Unicode glyphs, keep aria-labels/actions. */
+.site-header .topbar-action{font-size:0!important;line-height:0!important;}
+.site-header .topbar-action::before{
+  content:"";display:block;flex:0 0 var(--mfl-icon-size);
+  width:var(--mfl-icon-size);height:var(--mfl-icon-size);
+  background-position:center;background-size:contain;background-repeat:no-repeat;
+}
+.site-header .dashboard-glow-toggle::before{background-image:var(--mfl-icon-moon);}
+.site-header .dashboard-table-shortcut::before{background-image:var(--mfl-icon-table);}
+.site-header .dashboard-settings-shortcut::before{background-image:var(--mfl-icon-settings);}
+/* Dashboard hero buttons: use the same line-icon language as navigation. */
+.dashboard-hero-actions .btn{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;
+}
+.dashboard-hero-actions .btn-green,.dashboard-hero-actions .btn-ghost{font-size:0!important;}
+.dashboard-hero-actions .btn::before{
+  content:"";display:block;flex:0 0 17px;width:17px;height:17px;
+  background-position:center;background-size:contain;background-repeat:no-repeat;
+}
+.dashboard-hero-actions .btn-green::before{background-image:var(--mfl-icon-ball);}
+.dashboard-hero-actions .btn-ghost::before{background-image:var(--mfl-icon-community);}
+.dashboard-hero-actions .btn-green::after{
+  content:"Pogledaj utakmice";font-size:12px;line-height:1.2;font-weight:900;
+}
+.dashboard-hero-actions .btn-ghost::after{
+  content:"Pridruži se zajednici";font-size:12px;line-height:1.2;font-weight:900;
+}
+/* Main section headings whose icons were not covered by the first icon pass. */
+#community .section-title::before{background-image:var(--mfl-icon-community)!important;}
+#news .section-title::before{background-image:var(--mfl-icon-newspaper)!important;}
+#info .section-title::before{background-image:var(--mfl-icon-info)!important;}
+/* Admin category cards: consistent custom icons instead of their decorative emoji. */
+#admin .admin-organizer-tab>b{
+  display:grid!important;place-items:center!important;width:28px!important;height:27px!important;
+  margin:0 0 4px!important;font-size:0!important;line-height:0!important;
+}
+#admin .admin-organizer-tab>b::before{
+  content:"";display:block;width:21px;height:21px;background-position:center;background-size:contain;background-repeat:no-repeat;
+}
+#admin .admin-organizer-tab[data-admin-filter="liga"]>b::before{background-image:var(--mfl-icon-ball);}
+#admin .admin-organizer-tab[data-admin-filter="sadrzaj"]>b::before{background-image:var(--mfl-icon-newspaper);}
+#admin .admin-organizer-tab[data-admin-filter="moderacija"]>b::before{background-image:var(--mfl-icon-shield);}
+#admin .admin-organizer-tab[data-admin-filter="dizajn"]>b::before{background-image:var(--mfl-icon-design);}
+#admin .admin-organizer-group-head>div>span{font-size:0!important;line-height:0!important;}
+#admin .admin-organizer-group-head>div>span::before{
+  content:"";display:block;width:21px;height:21px;background-position:center;background-size:contain;background-repeat:no-repeat;
+}
+#admin .admin-organizer-group[data-admin-organizer-group-container="liga"] .admin-organizer-group-head>div>span::before{background-image:var(--mfl-icon-ball);}
+#admin .admin-organizer-group[data-admin-organizer-group-container="sadrzaj"] .admin-organizer-group-head>div>span::before{background-image:var(--mfl-icon-newspaper);}
+#admin .admin-organizer-group[data-admin-organizer-group-container="moderacija"] .admin-organizer-group-head>div>span::before{background-image:var(--mfl-icon-shield);}
+#admin .admin-organizer-group[data-admin-organizer-group-container="dizajn"] .admin-organizer-group-head>div>span::before{background-image:var(--mfl-icon-design);}
+/* Fan Game / Fan Shop tabs: icons are independent of tab labels and click handlers. */
+#game .fg-tabs button[data-act="tab"][data-id]{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;
+}
+#game .fg-tabs button[data-act="tab"][data-id]::before{
+  content:"";display:block;flex:0 0 16px;width:16px;height:16px;
+  background-position:center;background-size:contain;background-repeat:no-repeat;opacity:.92;
+}
+#game .fg-tabs button[data-id="matches"]::before{background-image:var(--mfl-icon-target);}
+#game .fg-tabs button[data-id="live"]::before{background-image:var(--mfl-icon-pulse);}
+#game .fg-tabs button[data-id="mine"]::before{background-image:var(--mfl-icon-ticket);}
+#game .fg-tabs button[data-id="fanbase"]::before{background-image:var(--mfl-icon-community);}
+#game .fg-tabs button[data-id="board"]::before{background-image:var(--mfl-icon-leaderboard);}
+#game .fg-tabs button[data-id="shop"]::before{background-image:var(--mfl-icon-shop);}
+#game .fg-tabs button[data-id="collection"]::before{background-image:var(--mfl-icon-medal);}
+#game .fg-tabs button[data-id="club"]::before{background-image:var(--mfl-icon-flag);}
+#game .fg-tabs button[data-id="mvp"]::before{background-image:var(--mfl-icon-star);}
+/* The tab labels, player names, shop item previews, and chat reactions remain untouched. */
+@media(max-width:600px){
+  .site-header .topbar-action::before{width:17px;height:17px;}
+  .dashboard-hero-actions .btn{gap:7px!important;}
+  .dashboard-hero-actions .btn-green::after,.dashboard-hero-actions .btn-ghost::after{font-size:11px;}
+  #game .fg-tabs button[data-act="tab"][data-id]{gap:5px!important;}
+}
