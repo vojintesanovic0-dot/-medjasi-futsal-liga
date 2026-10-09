@@ -24,7 +24,7 @@
   const liveMatches=()=>allMatches().filter(m=>m.status==="live").sort((a,b)=>(Number(b.current_minute)||0)-(Number(a.current_minute)||0));
   function fixtureMarkup(m,phone=false){
     const home=findTeam(m.home_team_id),away=findTeam(m.away_team_id);
-    const venue=String(m.venue||m.location||"Sportska dvorana Medjaši");
+    const venue=String(m.venue||m.location||"Sportska dvorana Međasi");
     const meta=fmt(m.match_date)+(m.round?" · "+esc(m.round)+". kolo":"");
     return '<div class="dashboard-upcoming-item"'+(phone?'':' onclick="openMatch(\''+esc(m.id)+'\')"')+'>'+
       '<div class="dashboard-upcoming-meta">'+esc(meta)+'</div>'+
@@ -45,7 +45,7 @@
     host.innerHTML='<div class="dashboard-next-card">'+
       '<div class="dashboard-next-top"><span class="dashboard-lime-chip">Naredna utakmica</span><small>'+esc(next.round?String(next.round)+". KOLO":"RASPORED")+'</small></div>'+
       '<div class="dashboard-next-meta">◷ '+esc(fmt(next.match_date))+'</div>'+
-      '<div class="dashboard-next-meta">⌖ '+esc(next.venue||next.location||"Sportska dvorana Medjaši")+'</div>'+
+      '<div class="dashboard-next-meta">⌖ '+esc(next.venue||next.location||"Sportska dvorana Međasi")+'</div>'+
       '<div class="dashboard-fixture-teams">'+
       '<div class="dashboard-fixture-team"><img src="'+esc(teamImage(home))+'" alt=""><span>'+esc(teamTitle(home))+'</span></div>'+
       '<span class="dashboard-fixture-vs">VS</span>'+
@@ -172,7 +172,7 @@ window.dashboardOpenGameTab=function(tab){
     }
     const sidebar=document.createElement("aside");
     sidebar.className="app-sidebar";sidebar.id="appSidebar";
-    sidebar.innerHTML='<div class="sidebar-live-panel"><div class="sidebar-panel-title"><span>LIVE / MATCH CENTER</span><span>×</span></div><div id="sidebarLiveMatch"><div class="dashboard-empty">Provjera utakmica uživo…</div></div></div><div class="sidebar-fan-panel"><div class="sidebar-panel-title"><span>FAN LEVEL</span></div><div class="sidebar-fan-level"><div class="sidebar-fan-ring">12</div><div class="sidebar-fan-meta"><b><span id="sidebarFanPoints">—</span> poena</b><small>Tvoj nivo</small><div class="sidebar-fan-meter"><span></span></div></div></div></div><div class="sidebar-season-panel"><div class="sidebar-panel-title"><span>SEZONA U TOKU</span><b>↗</b></div><div class="sidebar-season-line"><span id="sidebarSeasonGames">Učitavanje rasporeda</span><b>● ONLINE</b></div><div class="sidebar-season-track"><span></span></div></div>';
+    sidebar.innerHTML='<div class="sidebar-live-panel"><div class="sidebar-panel-title"><span>LIVE / MATCH CENTER</span><span>×</span></div><div id="sidebarLiveMatch"><div class="dashboard-empty">Provjera utakmica uživo…</div></div></div><div class="sidebar-fan-panel"><div class="sidebar-panel-title"><span>FAN NOVČANIK</span></div><div class="sidebar-fan-level"><div class="sidebar-fan-ring" aria-hidden="true">F</div><div class="sidebar-fan-meta"><b><span id="sidebarFanPoints">—</span> poena</b><small>Raspoloživi poeni</small></div></div></div><div class="sidebar-season-panel"><div class="sidebar-panel-title"><span>SEZONA U TOKU</span><b>↗</b></div><div class="sidebar-season-line"><span id="sidebarSeasonGames">Učitavanje rasporeda</span><b>● ONLINE</b></div><div class="sidebar-season-track"><span></span></div></div>';
     if(logo)sidebar.appendChild(logo);
     const scroll=document.createElement("div");scroll.className="sidebar-scroll";
     if(nav)scroll.appendChild(nav);
@@ -210,7 +210,7 @@ window.dashboardOpenGameTab=function(tab){
 
     if(headerInner&&actions){
       const mobileBrand=document.createElement("div");mobileBrand.className="dashboard-mobile-brand";
-      mobileBrand.innerHTML='<img src="./images/icon-192.png" alt=""><div><strong>MEDJAŠI</strong><span>FUTSAL LIGA</span></div>';
+      mobileBrand.innerHTML='<img src="./images/icon-192.png" alt=""><div><strong>MEĐASI</strong><span>FUTSAL LIGA</span></div>';
       headerInner.insertBefore(mobileBrand,actions);
     }
     if(actions&&!actions.querySelector(".header-chat-button")){
@@ -242,14 +242,14 @@ window.dashboardOpenGameTab=function(tab){
     home.innerHTML=`
       <section class="dashboard-hero dashboard-panel">
         <div class="dashboard-hero-copy">
-          <div class="dashboard-brand-mini"><img src="./images/icon-192.png" alt=""><span>MEDJAŠI FUTSAL LIGA</span></div>
+          <div class="dashboard-brand-mini"><img src="./images/icon-192.png" alt=""><span>MEĐASI FUTSAL LIGA</span></div>
           <span class="dashboard-welcome">DOBRO DOŠLI NA</span>
-          <h1>MEDJAŠI <span>FUTSAL LIGA</span></h1>
+          <h1>MEĐASI <span>FUTSAL LIGA</span></h1>
           <h2>Strast. Zajednica. Futsal.</h2>
           <p>Prati utakmice, rezultate, statistiku, igrače i budi dio najveće futsal zajednice u regiji.</p>
           <div class="dashboard-hero-actions"><button class="btn btn-green" onclick="showSection('matches')">▶ &nbsp; Pogledaj utakmice</button><button class="btn btn-ghost" onclick="showSection('community')">♟ &nbsp; Pridruži se zajednici</button></div>
         </div>
-        <div class="dashboard-hero-mark"><img src="./images/icon-512.png" alt="Medjaši Futsal Liga"><span>SEZONA 2026/27</span></div>
+        <div class="dashboard-hero-mark"><img src="./images/icon-512.png" alt="Međasi Futsal Liga"><span>SEZONA 2026/27</span></div>
       </section>
       <section class="dashboard-kpis" aria-label="Statistika lige">
         <article class="dashboard-kpi"><span class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><path d="M5 20c.7-4 3-6 7-6s6.3 2 7 6M3 11a2.5 2.5 0 0 0 0 5m18-5a2.5 2.5 0 0 1 0 5"/></svg></span><div><small>EKIPE</small><div data-slot="statTeams"></div><em>U ligi</em></div></article>
@@ -269,8 +269,8 @@ window.dashboardOpenGameTab=function(tab){
       </section>
       <section class="dashboard-bottom-grid">
         <article class="dashboard-panel dashboard-bottom-panel"><div class="dashboard-section-head"><h2>Galerija</h2><button onclick="showSection('gallery')">Pogledaj sve →</button></div><div id="dashboardGalleryThumbs" class="dashboard-gallery-strip"><div class="dashboard-empty">Fotografije lige</div></div></article>
-        <article id="dashboardMusicPlayer" class="dashboard-panel dashboard-bottom-panel"><div class="dashboard-section-head"><h2>Playlist / YT Music</h2><button onclick="dashboardOpenGameTab('club')">Fan zona →</button></div><p style="font-size:9px;color:#a3b8b0;line-height:1.4;margin:0 0 6px">Soundtrack Medjaši Futsal Lige</p><div id="dashboardMusicInner"><div class="music-player" id="musicPlayerWrap"></div></div><div class="dashboardMusicActions"><button class="btn btn-green btn-small" id="musicUnmute" onclick="unmuteMusic()" style="display:none">Uključi zvuk</button><span class="muted" id="musicHint"></span></div></article>
-        <article class="dashboard-panel dashboard-bottom-panel"><div class="dashboard-section-head"><h2>Fan Shop</h2><button onclick="dashboardOpenGameTab('shop')">Pogledaj sve →</button></div><div class="dashboard-shop-promo"><div class="dashboard-shop-shirt"><svg viewBox="0 0 64 64" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m19 9 9-4h8l9 4 12 10-8 9-6-5v32H21V23l-6 5-8-9z"/><path d="M28 5c0 7 8 7 8 0M28 23l4 4 4-4M32 27v12M25 34h14"/></svg></div><div class="dashboard-shop-copy"><b>Ekskluzivni dres Medjaši</b><small>Premijum kolekcija · Fan Shop</small><button onclick="dashboardOpenGameTab('shop')">Otvori shop →</button></div></div></article>
+        <article id="dashboardMusicPlayer" class="dashboard-panel dashboard-bottom-panel"><div class="dashboard-section-head"><h2>Playlist / YT Music</h2><button onclick="dashboardOpenGameTab('club')">Fan zona →</button></div><p style="font-size:9px;color:#a3b8b0;line-height:1.4;margin:0 0 6px">Soundtrack Međasi Futsal Lige</p><div id="dashboardMusicInner"><div class="music-player" id="musicPlayerWrap"></div></div><div class="dashboardMusicActions"><button class="btn btn-green btn-small" id="musicUnmute" onclick="unmuteMusic()" style="display:none">Uključi zvuk</button><span class="muted" id="musicHint"></span></div></article>
+        <article class="dashboard-panel dashboard-bottom-panel"><div class="dashboard-section-head"><h2>Fan Shop</h2><button onclick="dashboardOpenGameTab('shop')">Pogledaj sve →</button></div><div class="dashboard-shop-promo"><div class="dashboard-shop-shirt"><svg viewBox="0 0 64 64" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m19 9 9-4h8l9 4 12 10-8 9-6-5v32H21V23l-6 5-8-9z"/><path d="M28 5c0 7 8 7 8 0M28 23l4 4 4-4M32 27v12M25 34h14"/></svg></div><div class="dashboard-shop-copy"><b>Ekskluzivni dres Međasi</b><small>Premijum kolekcija · Fan Shop</small><button onclick="dashboardOpenGameTab('shop')">Otvori shop →</button></div></div></article>
       </section>
       <div class="dashboard-hidden-mounts" aria-hidden="true"><div id="dashboardHiddenMounts"></div></div>`;
 
@@ -298,7 +298,7 @@ window.dashboardOpenGameTab=function(tab){
     if(!$("dashboardRightRail"))main.insertAdjacentHTML("beforeend",mainRails);
     if(!$("dashboardFooter")){
       const footer=document.createElement("footer");footer.id="dashboardFooter";footer.className="dashboard-footer";
-      footer.innerHTML='<div class="dashboard-footer-season"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span>SEZONA 2026/27</span></div><div class="dashboard-footer-brand">MEDJAŠI FUTSAL LIGA &nbsp; • &nbsp; STRAST &nbsp; • &nbsp; ZAJEDNICA &nbsp; • &nbsp; FUTSAL</div><div class="dashboard-footer-stats"><span>♜ <b id="footerTeams">0</b> ekipa</span><span>♟ <b id="footerPlayers">0</b> igrača</span><span>▣ <b id="footerMatches">0</b> utakmica</span></div><div class="dashboard-footer-social"><span aria-hidden="true">▶</span><span aria-hidden="true">◎</span><span aria-hidden="true">♪</span><span aria-hidden="true">f</span></div>';
+      footer.innerHTML='<div class="dashboard-footer-season"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span>SEZONA 2026/27</span></div><div class="dashboard-footer-brand">MEĐASI FUTSAL LIGA &nbsp; • &nbsp; STRAST &nbsp; • &nbsp; ZAJEDNICA &nbsp; • &nbsp; FUTSAL</div><div class="dashboard-footer-stats"><span>♜ <b id="footerTeams">0</b> ekipa</span><span>♟ <b id="footerPlayers">0</b> igrača</span><span>▣ <b id="footerMatches">0</b> utakmica</span></div><div class="dashboard-footer-social"><span aria-hidden="true">▶</span><span aria-hidden="true">◎</span><span aria-hidden="true">♪</span><span aria-hidden="true">f</span></div>';
       document.body.appendChild(footer);
     }
   }

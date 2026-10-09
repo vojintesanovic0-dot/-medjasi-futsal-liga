@@ -89,9 +89,11 @@
     if(!user){
       host.innerHTML=
         '<button type="button" class="account-btn v13-login" '+
+        'aria-label="Prijava ili registracija" '+
         'onclick="window.showSection(\'login\')" '+
         'title="Prijava ili registracija">Prijava</button>'+
         '<button type="button" class="account-btn v13-register" '+
+        'aria-label="Registracija" '+
         'onclick="window.showSection(\'login\');setTimeout(()=>document.getElementById(\'registerUsername\')?.focus(),80)" '+
         'title="Registracija">Registracija</button>';
       return;
