@@ -223,7 +223,13 @@ window.dashboardOpenGameTab=function(tab){
       const addAction=(className,label,title,icon,onclick)=>{
         if(actions.querySelector("."+className))return;
         const button=document.createElement("button");button.type="button";button.className="topbar-action "+className;
-        button.setAttribute("aria-label",label);button.title=title;button.textContent=icon;button.setAttribute("onclick",onclick);
+        button.setAttribute("aria-label",label);button.title=title;button.setAttribute("onclick",onclick);
+        const icons={
+          "dashboard-glow-toggle":'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.4A8.3 8.3 0 0 1 9.6 3.5 8.5 8.5 0 1 0 20.5 14.4Z"/></svg>',
+          "dashboard-table-shortcut":'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8l1 5a5 5 0 0 1-10 0l1-5Z"/><path d="M8 6H4v2a4 4 0 0 0 4 4M16 6h4v2a4 4 0 0 1-4 4M12 14v5M8 21h8M9 17h6"/></svg>',
+          "dashboard-settings-shortcut":'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z"/></svg>'
+        };
+        button.innerHTML=icons[className]||'<span aria-hidden="true">'+icon+'</span>';
         actions.insertBefore(button,mobile||null);
       };
       addAction("dashboard-glow-toggle","Smanji svjetlosne efekte","Smanji svjetlosne efekte","☾","toggleDashboardGlow()");
@@ -291,7 +297,7 @@ window.dashboardOpenGameTab=function(tab){
     if(!$("dashboardRightRail"))main.insertAdjacentHTML("beforeend",mainRails);
     if(!$("dashboardFooter")){
       const footer=document.createElement("footer");footer.id="dashboardFooter";footer.className="dashboard-footer";
-      footer.innerHTML='<div class="dashboard-footer-season"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span>SEZONA 2026/27</span></div><div class="dashboard-footer-brand">MEDJAŠI FUTSAL LIGA &nbsp; • &nbsp; STRAST &nbsp; • &nbsp; ZAJEDNICA &nbsp; • &nbsp; FUTSAL</div><div class="dashboard-footer-stats"><span>♜ <b id="footerTeams">0</b> ekipa</span><span>♟ <b id="footerPlayers">0</b> igrača</span><span>▣ <b id="footerMatches">0</b> utakmica</span></div><div class="dashboard-footer-social"><button aria-label="YouTube">▶</button><button aria-label="Instagram">◎</button><button aria-label="TikTok">♪</button><button aria-label="Facebook">f</button></div>';
+      footer.innerHTML='<div class="dashboard-footer-season"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span>SEZONA 2026/27</span></div><div class="dashboard-footer-brand">MEDJAŠI FUTSAL LIGA &nbsp; • &nbsp; STRAST &nbsp; • &nbsp; ZAJEDNICA &nbsp; • &nbsp; FUTSAL</div><div class="dashboard-footer-stats"><span>♜ <b id="footerTeams">0</b> ekipa</span><span>♟ <b id="footerPlayers">0</b> igrača</span><span>▣ <b id="footerMatches">0</b> utakmica</span></div><div class="dashboard-footer-social"><span aria-hidden="true">▶</span><span aria-hidden="true">◎</span><span aria-hidden="true">♪</span><span aria-hidden="true">f</span></div>';
       document.body.appendChild(footer);
     }
   }
