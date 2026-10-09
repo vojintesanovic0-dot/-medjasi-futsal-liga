@@ -10764,6 +10764,19 @@ async function notifyPush(type,title,body,matchId=null){
       console.warn("Push notify: servis je vratio HTTP",response.status);
       return false;
     }
+    const delivery=await response.json().catch(()=>null);
+    if(!delivery?.ok){
+      console.warn("Push notify: servis nije potvrdio slanje.");
+      return false;
+    }
+    const sent=Number(delivery.sent)||0;
+    if(sent<1){
+      console.warn("Push notify: nema aktivnih pretplata kojima je obavještenje poslano.");
+      return false;
+    }
+    if(Number(delivery.failed)>0){
+      console.warn("Push notify: djelimično slanje.",{sent,failed:Number(delivery.failed)||0});
+    }
     return true;
   }catch(error){
     console.warn("Push notify:",error);
@@ -10849,7 +10862,7 @@ async function adminAddMedia(){
   try{
     const media_url=await uploadFile(file,"gallery");
     const {error}=await supabaseClient.from("gallery").insert({
-      image_url:media.kind==="image"?media_url:null,
+      image_url:media_url,
       media_url,
       media_type:media.kind,
       title:title.slice(0,100)||"Medij lige",
