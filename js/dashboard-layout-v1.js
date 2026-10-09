@@ -203,6 +203,12 @@ window.dashboardOpenGameTab=function(tab){
       else nav.insertAdjacentHTML("beforeend",fanServicesHTML);
     }
 
+    const mainGameButton=[...(nav?.querySelectorAll("button")||[])].find(button=>
+      !button.hasAttribute("data-dashboard-tab") &&
+      (button.getAttribute("onclick")||"").includes("showSection('game')")
+    );
+    if(mainGameButton)mainGameButton.setAttribute("onclick","dashboardOpenGameTab('matches')");
+
     const livePanel=sidebar.querySelector(".sidebar-live-panel");
     sidebar.insertBefore(scroll,livePanel);
     const quickPanel=document.createElement("section");
