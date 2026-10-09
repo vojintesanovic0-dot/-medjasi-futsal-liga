@@ -8217,10 +8217,10 @@ showSection=function(id){
   const btn=document.getElementById("mobileMenuBtn");
   if(btn){btn.textContent="☰";btn.setAttribute("aria-expanded","false");btn.setAttribute("aria-label","Otvori meni");}
   document.querySelectorAll(".mobile-bottom button").forEach(b=>b.classList.remove("active"));
-  const bottomBtn=[...document.querySelectorAll(".mobile-bottom button")].find(b=>(b.getAttribute("onclick")||"").includes(`showSection('${actualId}')"));
+  const bottomBtn=[...document.querySelectorAll(".mobile-bottom button")].find(b=>(b.getAttribute("onclick")||"").includes(`showSection('${actualId}')`));
   bottomBtn?.classList.add("active");
   document.querySelectorAll(".mobile-more-grid button").forEach(b=>b.classList.remove("active"));
-  const moreBtn=[...document.querySelectorAll(".mobile-more-grid button")].find(b=>(b.getAttribute("onclick")||"").includes(`mobileMoreGo('${actualId}')"));
+  const moreBtn=[...document.querySelectorAll(".mobile-more-grid button")].find(b=>(b.getAttribute("onclick")||"").includes(`mobileMoreGo('${actualId}')`));
   moreBtn?.classList.add("active");
 };
 
