@@ -96,7 +96,6 @@ if (!growth.includes("if(sponsorResult.error)") || !growth.includes("if(seasonRe
 
 const hasDirectTabRouter =
   dashboard.includes("window.medjasiGame?.openTab?.(key)===true") &&
-  dashboard.includes("const retry()=>") === false &&
   dashboard.includes("const retry=()=>{") &&
   dashboard.includes("++attempts>=12") &&
   dashboard.includes("window.setTimeout(retry,100)");
