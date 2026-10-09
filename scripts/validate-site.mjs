@@ -197,6 +197,19 @@ if (
   fail("Video gallery upload must preserve required legacy image_url while storing media metadata");
 } else pass("Gallery video uploads keep legacy required image_url and media metadata");
 
+const galleryRenderStart = app.indexOf("function renderGalleryV7()");
+const galleryRenderEnd = app.indexOf("function openMedia(", galleryRenderStart);
+const galleryRenderFunction = galleryRenderStart >= 0 && galleryRenderEnd > galleryRenderStart ? app.slice(galleryRenderStart, galleryRenderEnd) : "";
+if (
+  !galleryRenderFunction.includes("escJs(url)") ||
+  !galleryRenderFunction.includes("escJs(x.title||'Video')") ||
+  !galleryRenderFunction.includes("escJs(x.title||'Galerija')") ||
+  galleryRenderFunction.includes("openImagePreview('${escV(url)}'")
+) {
+  fail("Gallery inline event handlers must JavaScript-escape dynamic URLs and titles");
+} else pass("Gallery inline event handlers safely escape dynamic URLs and titles");
+
+
 
 
 
