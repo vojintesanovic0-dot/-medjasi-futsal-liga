@@ -145,11 +145,19 @@
     renderNext();renderUpcoming();renderSidebarLive();syncTable();syncGallery();renderNewsMirror();syncWallet();syncFooter();
   }
 window.dashboardOpenGameTab=function(tab){
+    const key=String(tab||"");
+    const known=["matches","live","mine","fanbase","board","shop","collection","club","mvp","admin"];
+    if(!known.includes(key))return;
+    if(key==="admin"&&window.currentProfile?.role!=="admin")return;
     if(typeof window.showSection==="function")window.showSection("game");
-    setTimeout(()=>{
-      const buttons=[...document.querySelectorAll("#game [data-act='tab'][data-id]")];
-      buttons.find(button=>button.getAttribute("data-id")===String(tab))?.click();
-    },250);
+    const open=()=>window.medjasiGame?.openTab?.(key)===true;
+    if(open())return;
+    let attempts=0;
+    const retry=()=>{
+      if(open()||++attempts>=12)return;
+      window.setTimeout(retry,100);
+    };
+    window.setTimeout(retry,0);
   };
   window.toggleDashboardGlow=function(){document.body.classList.toggle("dashboard-low-glow");};
   window.dashboardSettings=function(){
@@ -177,19 +185,21 @@ window.dashboardOpenGameTab=function(tab){
     const scroll=document.createElement("div");scroll.className="sidebar-scroll";
     if(nav)scroll.appendChild(nav);
     if(nav&&!nav.querySelector("[data-dashboard-tab]")){
-      nav.insertAdjacentHTML("beforeend",
+      const fanZoneTitle=[...nav.querySelectorAll(".nav-group-title")].find(el=>el.textContent.trim().toUpperCase()==="FAN ZONA");
+      const fanServicesHTML=
         '<div class="nav-group-title dashboard-extras-group">FAN SERVISI</div>'+
-        '<button type="button" data-dashboard-tab="shop" onclick="dashboardOpenGameTab(\'shop\')"><span></span><span>Fan Shop</span></button>'+
-        '<button type="button" data-dashboard-tab="fanbase" onclick="dashboardOpenGameTab(\'fanbase\')"><span></span><span>Fan Base</span></button>'+
-        '<button type="button" data-dashboard-tab="mine" onclick="dashboardOpenGameTab(\'mine\')"><span></span><span>Moji tiketi</span></button>'+
-        '<button type="button" data-dashboard-tab="live" onclick="dashboardOpenGameTab(\'live\')"><span></span><span>Live centar</span></button>'+
-        '<button type="button" data-dashboard-tab="board" onclick="dashboardOpenGameTab(\'board\')"><span></span><span>Nagrade i poredak</span></button>'+
-        '<button type="button" data-dashboard-tab="collection" onclick="dashboardOpenGameTab(\'collection\')"><span></span><span>Kolekcija</span></button>'+
-        '<button type="button" data-dashboard-tab="club" onclick="dashboardOpenGameTab(\'club\')"><span></span><span>Moja tribina</span></button>'+
-        '<button type="button" data-dashboard-tab="mvp" onclick="dashboardOpenGameTab(\'mvp\')"><span></span><span>MVP</span></button>'+
+        '<button type="button" data-dashboard-tab="shop" onclick="dashboardOpenGameTab(\\'shop\\')"><span></span><span>Fan Shop</span></button>'+
+        '<button type="button" data-dashboard-tab="fanbase" onclick="dashboardOpenGameTab(\\'fanbase\\')"><span></span><span>Fan Base</span></button>'+
+        '<button type="button" data-dashboard-tab="mine" onclick="dashboardOpenGameTab(\\'mine\\')"><span></span><span>Moji tiketi</span></button>'+
+        '<button type="button" data-dashboard-tab="live" onclick="dashboardOpenGameTab(\\'live\\')"><span></span><span>Live centar</span></button>'+
+        '<button type="button" data-dashboard-tab="board" onclick="dashboardOpenGameTab(\\'board\\')"><span></span><span>Nagrade i poredak</span></button>'+
+        '<button type="button" data-dashboard-tab="collection" onclick="dashboardOpenGameTab(\\'collection\\')"><span></span><span>Kolekcija</span></button>'+
+        '<button type="button" data-dashboard-tab="club" onclick="dashboardOpenGameTab(\\'club\\')"><span></span><span>Moja tribina</span></button>'+
+        '<button type="button" data-dashboard-tab="mvp" onclick="dashboardOpenGameTab(\\'mvp\\')"><span></span><span>MVP</span></button>'+
         '<div class="nav-group-title dashboard-admin-group" hidden>ADMINISTRACIJA</div>'+
-        '<button type="button" id="dashboardAdminNav" hidden onclick="showSection(\'admin\')"><span></span><span>Admin panel</span></button>'
-      );
+        '<button type="button" id="dashboardAdminNav" hidden onclick="showSection(\\'admin\\')"><span></span><span>Admin panel</span></button>';
+      if(fanZoneTitle)fanZoneTitle.insertAdjacentHTML("beforebegin",fanServicesHTML);
+      else nav.insertAdjacentHTML("beforeend",fanServicesHTML);
     }
 
     const livePanel=sidebar.querySelector(".sidebar-live-panel");
