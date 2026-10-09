@@ -240,15 +240,8 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
     }
     mount();
     if(!sb()){S.err="unavailable";render();}
-    if(!window.__MEDJASI_GAME_SECTION_PATCH__){
-      window.__MEDJASI_GAME_SECTION_PATCH__=true;
-      const orig=window.showSection;
-      window.showSection=function(id){
-        const r=orig.apply(this,arguments);
-        if(id==="game"){if(sb())refresh();else{S.err="unavailable";render();}}
-        return r;
-      };
-    }
+    // Core app.js owns section navigation and schedules a single refresh
+    // when "game" becomes active. Do not wrap showSection a second time.
     if(sb()&&!window.__MEDJASI_GAME_REFRESH_TIMER__){
       window.__MEDJASI_GAME_REFRESH_TIMER__=setInterval(()=>{
         if(sb()&&document.querySelector(".section.active")?.id==="game")refresh();

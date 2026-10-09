@@ -10615,7 +10615,7 @@ window.isModerator=isModerator;
     const before=active();
     const result=originalShowSection.call(this,id);
     const after=active();
-    if(after==='community'&&typeof window.loadV9Community==='function')setTimeout(()=>window.loadV9Community(),30);
+    // Community loading is already scheduled by the core showSection handler.
     if(!restoring&&after&&after!==before)history.pushState({medjasi:true,section:after},'',location.pathname+location.search+'#'+after);
     return result;
   };

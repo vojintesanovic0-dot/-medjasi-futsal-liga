@@ -146,10 +146,28 @@
   }
 window.dashboardOpenGameTab=function(tab){
     if(typeof window.showSection==="function")window.showSection("game");
-    setTimeout(()=>{
-      const buttons=[...document.querySelectorAll("#game [data-act='tab'][data-id]")];
-      buttons.find(button=>button.getAttribute("data-id")===String(tab))?.click();
-    },250);
+    let attempts=0;
+    const selectTab=()=>{
+      const button=[...document.querySelectorAll("#game [data-act='tab'][data-id]")]
+        .find(item=>item.getAttribute("data-id")===String(tab));
+      if(button){
+        button.click();
+        document.querySelectorAll("#mainNav [data-dashboard-tab]").forEach(item=>{
+          item.classList.toggle("active",item.getAttribute("data-dashboard-tab")===String(tab));
+        });
+        document.querySelectorAll("#mainNav button:not([data-dashboard-tab])").forEach(item=>{
+          if(item.getAttribute("onclick")?.includes("showSection('game')"))item.classList.remove("active");
+        });
+        document.querySelectorAll(".mobile-more-grid button").forEach(item=>{
+          item.classList.toggle("active",item.getAttribute("onclick")?.includes("dashboardOpenGameTab('"+String(tab)+"')")||false);
+        });
+        return;
+      }
+      // The tabs are rendered after the first data refresh; retry briefly but
+      // never leave an unbounded timer running when the service is unavailable.
+      if(attempts++<25)window.setTimeout(selectTab,100);
+    };
+    selectTab();
   };
   window.toggleDashboardGlow=function(){document.body.classList.toggle("dashboard-low-glow");};
   window.dashboardSettings=function(){
