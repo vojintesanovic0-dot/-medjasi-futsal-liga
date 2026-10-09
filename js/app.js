@@ -11,11 +11,15 @@ const SUPABASE_KEY =
 
 
 
-const supabaseClient =
-  supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+// If the CDN is temporarily unavailable, keep the static shell alive instead
+// of aborting this entire script at top-level initialization.
+const supabaseClient = window.supabase?.createClient
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null;
+
+if (!supabaseClient) {
+  console.error("Supabase SDK nije učitan; podaci i prijava su privremeno nedostupni.");
+}
 
 /* Legacy patch layers use window.supabaseClient. */
 Object.defineProperty(window, "supabaseClient", {
@@ -7762,9 +7766,7 @@ async function init(){
   }
 
 
-  supabaseClient
-    .auth
-    .onAuthStateChange(
+  supabaseClient?.auth?.onAuthStateChange?.(
       (event) => {
         if(event==="TOKEN_REFRESHED"||event==="INITIAL_SESSION") return;
         setTimeout(async()=>{
@@ -7803,7 +7805,11 @@ async function init(){
     async()=>{
       if(document.hidden) return;
       await loadAll();
-      await loadMusicSettings();
+      try {
+        await loadMusicSettings();
+      } catch (error) {
+        console.error("Medjasi background music refresh:", error);
+      }
     },
     60000
   );
