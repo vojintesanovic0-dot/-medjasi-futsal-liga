@@ -256,12 +256,17 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
     if(!valid){console.warn("Nepoznata Fan Game kartica:",key);return false;}
     S.tab=key;
     window.dashboardSyncHeaderContext?.("game");
-    document.querySelectorAll("#mainNav [data-dashboard-tab]").forEach(button=>{
-      const active=button.getAttribute("data-dashboard-tab")===key;
-      button.classList.toggle("active",active);
-      if(active)button.setAttribute("aria-current","page");
-      else button.removeAttribute("aria-current");
+    const navButtons=[...document.querySelectorAll("#mainNav button")];
+    navButtons.forEach(button=>{
+      button.classList.remove("active");
+      button.removeAttribute("aria-current");
     });
+    let activeNav=navButtons.find(button=>button.getAttribute("data-dashboard-tab")===key);
+    if(!activeNav){
+      activeNav=navButtons.find(button=>(button.getAttribute("onclick")||"").includes("showSection('game')"));
+    }
+    activeNav?.classList.add("active");
+    if(activeNav?.hasAttribute("data-dashboard-tab"))activeNav.setAttribute("aria-current","page");
     document.querySelectorAll(".mobile-more-grid button").forEach(button=>{
       const target=button.getAttribute("onclick")||"";
       button.classList.toggle("active",target.includes("dashboardOpenGameTab('"+key+"')"));
