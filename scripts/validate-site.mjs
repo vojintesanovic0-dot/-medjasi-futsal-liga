@@ -246,6 +246,19 @@ if (
   pass("League-event push wiring and server-side role gate are present");
 }
 
+const eventIntegritySource = read("sql/15_validate_match_event_integrity.sql");
+if (
+  !eventIntegritySource.includes("create trigger trg_medjasi_validate_goal_match_participants") ||
+  !eventIntegritySource.includes("create trigger trg_medjasi_validate_card_match_participants") ||
+  !eventIntegritySource.includes("v_player_team not in (v_home_team, v_away_team)") ||
+  !eventIntegritySource.includes("if tg_table_name <> 'goals' then") ||
+  !eventIntegritySource.includes("alter column player_id set not null")
+) {
+  fail("Database event integrity migration must reject missing participants and non-participant goals/cards");
+} else {
+  pass("Database event integrity migration guards goal/card participants and required references");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
