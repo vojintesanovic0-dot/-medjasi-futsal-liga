@@ -8202,16 +8202,26 @@ showSection=function(id){
     id=currentUser ? "home" : "login";
   }
   _baseShowSection(id);
-  document.querySelectorAll('#mainNav button[onclick*="showSection"]').forEach(btn=>btn.classList.remove("active"));
-  const activeBtn=document.querySelector(`#mainNav button[onclick*="showSection('${id}')"]`);
-  if(activeBtn) activeBtn.classList.add("active");
+  const activeSection=document.querySelector(".section.active");
+  const actualId=activeSection?.id || "home";
+  document.querySelectorAll("#mainNav button").forEach(btn=>btn.classList.remove("active"));
+  const activeBtn=[...document.querySelectorAll("#mainNav button")].find(btn=>{
+    const target=btn.getAttribute("onclick")||"";
+    return target.includes(`showSection('${actualId}')`) ||
+      (actualId==="game" && btn.hasAttribute("data-dashboard-tab") &&
+       btn.getAttribute("data-dashboard-tab")===window.medjasiGame?.getActiveTab?.());
+  });
+  activeBtn?.classList.add("active");
   mobileMenuOpen=false;
-  document.getElementById("mainNav")?.classList.remove("mobile-open");
+  document.getElementById("mainNav")?.classList.remove("mobile-open","open");
   const btn=document.getElementById("mobileMenuBtn");
-  if(btn){btn.textContent="☰";btn.setAttribute("aria-expanded","false");}
-  document.querySelectorAll('.mobile-bottom button').forEach(b=>b.classList.remove('active'));
-  const bottomBtn=document.querySelector(`.mobile-bottom button[onclick*="showSection('${id}')"]`);
-  if(bottomBtn) bottomBtn.classList.add('active');
+  if(btn){btn.textContent="☰";btn.setAttribute("aria-expanded","false");btn.setAttribute("aria-label","Otvori meni");}
+  document.querySelectorAll(".mobile-bottom button").forEach(b=>b.classList.remove("active"));
+  const bottomBtn=[...document.querySelectorAll(".mobile-bottom button")].find(b=>(b.getAttribute("onclick")||"").includes(`showSection('${actualId}')"));
+  bottomBtn?.classList.add("active");
+  document.querySelectorAll(".mobile-more-grid button").forEach(b=>b.classList.remove("active"));
+  const moreBtn=[...document.querySelectorAll(".mobile-more-grid button")].find(b=>(b.getAttribute("onclick")||"").includes(`mobileMoreGo('${actualId}')"));
+  moreBtn?.classList.add("active");
 };
 
 document.addEventListener("DOMContentLoaded",()=>{
