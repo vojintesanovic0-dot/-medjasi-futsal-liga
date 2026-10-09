@@ -190,6 +190,12 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
         return false;
       }
       S.tab=key;
+      document.querySelectorAll("#mainNav [data-dashboard-tab]").forEach(button=>{
+        const active=button.getAttribute("data-dashboard-tab")===key;
+        button.classList.toggle("active",active);
+        if(active)button.setAttribute("aria-current","page");
+        else button.removeAttribute("aria-current");
+      });
       render();
       refresh();
       return true;
