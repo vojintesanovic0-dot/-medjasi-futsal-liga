@@ -53,7 +53,7 @@ if (
 } else pass("Logout resets auth interaction state on success and failure");
 
 const resetStart = app.indexOf("async function resetPassword()");
-const resetEnd = app.indexOf("/* =========================================================\\n   REGISTER", resetStart);
+const resetEnd = app.indexOf("/* =========================================================\n   REGISTER", resetStart);
 const resetFunction = resetStart >= 0 && resetEnd > resetStart ? app.slice(resetStart, resetEnd) : "";
 const resendStart = app.indexOf("async function resendConfirmation()");
 const resendEnd = app.indexOf("window.resendConfirmation=resendConfirmation;", resendStart);
@@ -98,6 +98,19 @@ if (
 ) {
   fail("News and gallery uploads must validate media types and sizes before storage");
 } else pass("News and gallery uploads validate allowed media formats and sizes");
+
+const seasonFunctionStart = app.indexOf("async function activateSeason(id)");
+const seasonFunctionEnd = app.indexOf("function ensurePushUI()", seasonFunctionStart);
+const seasonFunction = seasonFunctionStart >= 0 && seasonFunctionEnd > seasonFunctionStart ? app.slice(seasonFunctionStart, seasonFunctionEnd) : "";
+if (
+  !seasonFunction.includes("deactivateError") ||
+  !seasonFunction.includes("activateError") ||
+  !seasonFunction.includes("previousActiveIds") ||
+  !seasonFunction.includes("rollbackError")
+) {
+  fail("Changing the active season must handle both update failures and attempt to restore prior state");
+} else pass("Active-season updates check failures and attempt recovery");
+
 
 
 if (
