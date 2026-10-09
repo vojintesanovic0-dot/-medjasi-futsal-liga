@@ -6794,7 +6794,7 @@ function openGoalControl(
 
         <label>Vrijeme gola</label>
 <div class="goal-time-grid">
-<input id="goalMinute" type="number" min="0" value="${match.status==="live" ? getLiveMinute(match) : (match.current_minute || 0)}" aria-label="Minuta gola">
+<input id="goalMinute" type="number" min="0" max="60" step="1" value="${match.status==="live" ? getLiveMinute(match) : (match.current_minute || 0)}" aria-label="Minuta gola">
 <input id="goalSecond" type="number" min="0" max="59" value="${match.status==="live" ? getLiveElapsedSeconds(match)%60 : 0}" aria-label="Sekunda gola">
 </div>
 
@@ -6819,100 +6819,66 @@ function openGoalControl(
    ADD GOAL
 ========================================================= */
 
-async function addGoal(
-  matchId
-){
-
+async function addGoal(matchId){
   if(!canManageMatch()) return;
 
+  const match=getMatch(matchId);
+  if(!match){
+    alert("Utakmica nije pronađena. Osvježi prikaz i pokušaj ponovo.");
+    return;
+  }
 
-  const match =
-    getMatch(matchId);
+  const player_id=document.getElementById("goalPlayer")?.value;
+  const minuteInput=document.getElementById("goalMinute");
+  const secondInput=document.getElementById("goalSecond");
+  const minute=minuteInput ? Number(minuteInput.value) : NaN;
+  const second=secondInput ? Number(secondInput.value || 0) : 0;
 
+  if(!Number.isInteger(minute)||minute<0||minute>60){
+    alert("Minuta gola mora biti cijeli broj od 0 do 60.");
+    return;
+  }
+  if(!Number.isInteger(second)||second<0||second>59){
+    alert("Sekunda gola mora biti cijeli broj od 0 do 59.");
+    return;
+  }
 
-  const player_id =
-    document.getElementById(
-      "goalPlayer"
-    )?.value;
-
-
-  const minute =
-    Number(
-      document.getElementById(
-        "goalMinute"
-      )?.value
-    ) || 0;
-
-  const second=Math.max(0,Math.min(59,Number(document.getElementById("goalSecond")?.value)||0));
-
-
-  const player =
-    getPlayer(player_id);
-
-
+  const player=getPlayer(player_id);
   if(!player){
-
-    alert(
-      "Izaberi igrača."
-    );
-
+    alert("Izaberi igrača.");
     return;
   }
-
-
   if(
-    player.team_id !==
-      match.home_team_id &&
-    player.team_id !==
-      match.away_team_id
+    String(player.team_id)!==String(match.home_team_id) &&
+    String(player.team_id)!==String(match.away_team_id)
   ){
-
-    alert(
-      "Igrač ne pripada ekipama u ovoj utakmici."
-    );
-
+    alert("Igrač ne pripada ekipama u ovoj utakmici.");
     return;
   }
 
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("goals")
-      .insert({
-        match_id:matchId,
-        player_id,
-         minute,
-         second
-       });
-
-
-  if(error){
-
-    alert(error.message);
-
+  let result;
+  try{
+    result=await supabaseClient.from("goals").insert({
+      match_id:matchId,
+      player_id,
+      minute,
+      second
+    });
+  }catch(error){
+    alert(error?.message||"Gol nije sačuvan zbog mrežne greške. Pokušaj ponovo.");
+    return;
+  }
+  if(result.error){
+    alert(result.error.message||"Gol nije sačuvan.");
     return;
   }
 
-
-  /* Score is now derived centrally by the database goal-event trigger. */
-
-
+  /* Score is derived centrally by the database goal-event trigger. */
   hideModal();
-
-
-  toast(
-    "Gol je evidentiran."
-  );
-
-
+  toast("Gol je evidentiran.");
   await loadAll();
-
-
   openMatch(matchId);
 }
-
 
 /* =========================================================
    CARD CONTROL
@@ -7041,6 +7007,8 @@ function openCardControl(
           id="cardMinute"
           type="number"
           min="0"
+          max="60"
+          step="1"
           value="${
             match.current_minute || 0
           }">
@@ -7068,78 +7036,76 @@ function openCardControl(
    ADD CARD
 ========================================================= */
 
-async function addCard(
-  matchId
-){
-
+async function addCard(matchId){
   if(!canManageMatch()) return;
 
+  const match=getMatch(matchId);
+  if(!match){
+    alert("Utakmica nije pronađena. Osvježi prikaz i pokušaj ponovo.");
+    return;
+  }
 
-  const player_id =
-    document.getElementById(
-      "cardPlayer"
-    )?.value;
-
-
-  const card_type =
-    document.getElementById(
-      "cardType"
-    )?.value;
-
-
-  const minute =
-    Number(
-      document.getElementById(
-        "cardMinute"
-      )?.value
-    ) || 0;
-
+  const player_id=document.getElementById("cardPlayer")?.value;
+  const card_type=document.getElementById("cardType")?.value;
+  const minuteInput=document.getElementById("cardMinute");
+  const minute=minuteInput ? Number(minuteInput.value) : NaN;
 
   if(!player_id){
-
-    alert(
-      "Izaberi igrača."
-    );
-
+    alert("Izaberi igrača.");
+    return;
+  }
+  if(!["yellow","red"].includes(card_type)){
+    alert("Izaberi ispravan tip kartona.");
+    return;
+  }
+  if(!Number.isInteger(minute)||minute<0||minute>60){
+    alert("Minuta kartona mora biti cijeli broj od 0 do 60.");
     return;
   }
 
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("cards")
-      .insert({
-        match_id:matchId,
-        player_id,
-        card_type,
-        minute
-      });
-
-
-  if(error){
-
-    alert(error.message);
-
+  const player=getPlayer(player_id);
+  if(!player){
+    alert("Izabrani igrač više nije dostupan. Osvježi postavu.");
+    return;
+  }
+  if(
+    String(player.team_id)!==String(match.home_team_id) &&
+    String(player.team_id)!==String(match.away_team_id)
+  ){
+    alert("Igrač ne pripada ekipama u ovoj utakmici.");
+    return;
+  }
+  const isRegistered=matchPlayers.some(mp=>
+    String(mp.match_id)===String(matchId) &&
+    String(mp.player_id)===String(player_id)
+  );
+  if(!isRegistered){
+    alert("Igrač više nije u postavi ove utakmice. Osvježi postavu.");
     return;
   }
 
+  let result;
+  try{
+    result=await supabaseClient.from("cards").insert({
+      match_id:matchId,
+      player_id,
+      card_type,
+      minute
+    });
+  }catch(error){
+    alert(error?.message||"Karton nije sačuvan zbog mrežne greške. Pokušaj ponovo.");
+    return;
+  }
+  if(result.error){
+    alert(result.error.message||"Karton nije sačuvan.");
+    return;
+  }
 
   hideModal();
-
-
-  toast(
-    "Karton je evidentiran."
-  );
-
-
+  toast("Karton je evidentiran.");
   await loadAll();
-
-
   openMatch(matchId);
 }
-
 
 /* =========================================================
    TEAM MODAL
