@@ -276,8 +276,11 @@ language plpgsql security definer set search_path = public as $$
 declare mt record; n int := 0; r record; sc text; v_name text;
 begin
   if not fan_is_admin() then raise exception 'Samo admin.'; end if;
-  select * into mt from matches where id::text = p_match;
+  select * into mt from matches where id::text = p_match for update;
   if not found then raise exception 'Utakmica ne postoji.'; end if;
+  if mt.status is null or mt.status not in ('scheduled','live') then raise exception 'Ne možeš kreirati kvote za utakmicu koja nije zakazana ili uživo.'; end if;
+  if mt.status = 'scheduled' and mt.match_date is not null and mt.match_date <= now() then raise exception 'Utakmica je trebala početi. Kvote uživo se otvaraju kada utakmica počne.'; end if;
+  if mt.status = 'live' and coalesce(mt.current_minute,0) >= 60 then raise exception 'Utakmica je završila. Nove kvote su zatvorene.'; end if;
 
   insert into fan_markets(match_id, kind, selection, label, odds) values
     (p_match,'result','1','Pobjeda domaćina',2.20),
