@@ -41,6 +41,7 @@
 <link rel="stylesheet" href="./css/production.css?v=20261007v23"><link rel="stylesheet" href="./css/effects.css?v=1"><link rel="stylesheet" href="./css/game.css?v=20261007v02">
 <link rel="stylesheet" href="./css/graphic-engine.css?v=1"><link rel="stylesheet" href="./css/admin-organizer.css?v=5"><link rel="stylesheet" href="./css/medjasi-icons-v1.css?v=20261007v02"><link rel="stylesheet" href="./css/medjasi-home-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-matches-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-league-data-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-community-media-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-fan-profile-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-mobile-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-admin-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-sitewide-v3.css?v=1"><link rel="stylesheet" href="./css/medjasi-design-v11.css?v=20261007v02"><link rel="stylesheet" href="./css/medjasi-design-v13.css?v=20261007v02"><link rel="stylesheet" href="./css/extras.css?v=1"><link rel="stylesheet" href="./css/header-final.css?v=6">
 <link rel="stylesheet" href="./css/medjasi-dashboard-reference-v1.css?v=1">
+<link rel="stylesheet" href="./css/medjasi-dashboard-refinements-v2.css?v=1">
 </head>
 <body>
 <header class="site-header">
@@ -617,6 +618,15 @@
 <button onclick="mobileMoreGo('news')"><span></span><b>Vijesti</b><small>Novosti lige</small></button>
 <button onclick="mobileMoreGo('game')"><span></span><b>Pogodi</b><small>Fan igra i poeni</small></button>
 <button onclick="mobileMoreGo('info')"><span></span><b>Liga info</b><small>Kalendar i prijava ekipe</small></button>
+<button onclick="dashboardOpenGameTab('shop')"><span></span><b>Fan Shop</b><small>Prodavnica navijača</small></button>
+<button onclick="dashboardOpenGameTab('fanbase')"><span></span><b>Fan Base</b><small>Nivoi i pogodnosti</small></button>
+<button onclick="dashboardOpenGameTab('mine')"><span></span><b>Moji tiketi</b><small>Tvoji odabiri</small></button>
+<button onclick="dashboardOpenGameTab('live')"><span></span><b>Live centar</b><small>Utakmice uživo</small></button>
+<button onclick="dashboardOpenGameTab('board')"><span></span><b>Nagrade i poredak</b><small>Rang-lista navijača</small></button>
+<button onclick="dashboardOpenGameTab('collection')"><span></span><b>Kolekcija</b><small>Osvojene oznake</small></button>
+<button onclick="dashboardOpenGameTab('club')"><span></span><b>Moja tribina</b><small>Navijački prostor</small></button>
+<button onclick="dashboardOpenGameTab('mvp')"><span></span><b>MVP</b><small>Igrač utakmice</small></button>
+<button id="dashboardMobileAdminLink" hidden onclick="mobileMoreGo('admin')"><span></span><b>Admin panel</b><small>Upravljanje ligom</small></button>
 </div>
 </div>
 </div>
@@ -726,6 +736,6 @@
 <script src="./js/app.js?v=20261008v07" defer></script>
 <script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=20261007v02" defer></script><script src="./js/growth.js?v=20261008v04" defer></script><script src="./js/community-features.js?v=20261007v02" defer></script><script src="./js/ui-compat.js?v=20261007v03" defer></script><script src="./js/admin-organizer.js?v=13" defer></script>
 <script src="./js/graphic-engine.js?v=1" defer></script><script src="./js/medjasi-v13-ui.js?v=20261007v01" defer></script><script src="./js/extras.js?v=1" defer></script>
-<script src="./js/dashboard-layout-v1.js?v=1" defer></script>
+<script src="./js/dashboard-layout-v1.js?v=2" defer></script>
 </body>
 </html>
