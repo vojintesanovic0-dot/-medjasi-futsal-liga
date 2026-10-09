@@ -3,7 +3,7 @@
 PWA aplikacija za futsal ligu: utakmice uživo, tabela, ekipe, igrači, statistika, vijesti, galerija, chat i push obavještenja.
 
 - **Frontend:** čisti HTML/CSS/JS (`index.html`, `css/`, `js/app.js`)
-- **Backend:** Supabase (baza, autentifikacija, storage, realtime, funkcija `send-push`)
+- **Backend:** Supabase (baza, autentifikacija, storage, realtime, Edge Functions `send-push` i `fan-admin-action`; njihove verzionisane kopije su u `supabase/functions/`)
 - **PWA:** `manifest.json` + `service-worker.js`
 
 ## Važno pri izmjeni koda
@@ -22,6 +22,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 4. `sql/03_rls_performance_hardening.sql`
 5. `sql/04_runtime_hardening.sql`
 6. `sql/05_rate_limit_and_audit.sql`
+7. `sql/06_guard_admin_role_assignment_nulls.sql` – popravlja provjeru administratorske uloge za `NULL` slučajeve i sprečava slučajno uklanjanje posljednjeg administratora.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
