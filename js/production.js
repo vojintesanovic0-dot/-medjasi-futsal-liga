@@ -44,13 +44,15 @@ function run(){
   patchImages();
   patchAccessibility();
 }
-window.addEventListener("load",()=>{
+function bootGalleryFixes(){
   run();
   loadGalleryFixes();
   setTimeout(run,800);
   setTimeout(run,2200);
   setTimeout(loadGalleryFixes,1200);
-});
+}
+window.addEventListener("DOMContentLoaded",bootGalleryFixes,{once:true});
+window.addEventListener("load",bootGalleryFixes,{once:true});
 window.addEventListener("error",e=>console.error("Medjasi runtime:",e.error||e.message));
 window.addEventListener("unhandledrejection",e=>console.error("Medjasi async:",e.reason));
 })();
