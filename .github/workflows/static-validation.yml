@@ -42,7 +42,7 @@ jobs:
           import re
           from pathlib import Path
           html = Path("index.html").read_text(encoding="utf-8")
-          refs = re.findall(r'(?:src|href)=["\\']([^"\\']+\\.(?:js|css)(?:\\?[^"\\']*)?)["\\']', html, re.I)
+          refs = re.findall(r"""(?:src|href)=["']([^"']+\.(?:js|css)(?:\?[^"']*)?)["']""", html, re.I)
           missing = []
           for ref in refs:
               if ref.startswith(("http://", "https://", "//")):
