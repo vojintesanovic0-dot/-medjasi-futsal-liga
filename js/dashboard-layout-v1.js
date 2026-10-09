@@ -192,6 +192,20 @@ window.dashboardOpenGameTab=function(tab){
       );
     }
 
+    // Keep the remaining Fan Zone destinations at the very end of the sidebar,
+    // after the appended Fan Services group, without recreating removed legacy items.
+    if(nav){
+      const fanZoneTitle=[...nav.querySelectorAll(".nav-group-title")].find(el=>/FAN ZONA/i.test(el.textContent||""));
+      const finalButtons=[...nav.querySelectorAll("button")].filter(button=>{
+        const handler=button.getAttribute("onclick")||"";
+        return /showSection\\(['"]game['"]\\)/.test(handler)||/showSection\\(['"]info['"]\\)/.test(handler);
+      });
+      if(fanZoneTitle&&finalButtons.length===2){
+        nav.appendChild(fanZoneTitle);
+        finalButtons.forEach(button=>nav.appendChild(button));
+      }
+    }
+
     const livePanel=sidebar.querySelector(".sidebar-live-panel");
     sidebar.insertBefore(scroll,livePanel);
     const quickPanel=document.createElement("section");
