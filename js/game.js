@@ -143,7 +143,64 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
       if(b.isConnected)b.disabled=false;
       if(!r.error){hideModal();S.sel=null;refresh();}
     }else if(a==="daily"){const r=await rpc("fan_claim_daily",{},"+10 poena! 🎁");if(!r.error)refresh();}else if(a==="buy"){const r=await rpc("fan_buy_item",{p_item:Number(id)},"Kupljeno! 🛍️");if(!r.error)refresh();}else if(a==="equip"){const r=await rpc("fan_equip_item",{p_item:Number(id),p_on:b.dataset.on==="1"});if(!r.error){const uid=user()?.id;if(uid&&window.__fanPublicStyles)delete window.__fanPublicStyles[String(uid)];refresh();}}else if(a==="donate"){const r=await rpc("fan_team_donate",{p_team:$("fgFundTeam").value,p_amount:Number($("fgFundAmt").value)},"Hvala na podršci! 💚");if(!r.error)refresh();}else if(a==="follow"){if(!user())return;if(S.follows.includes(String(id))){const {error}=await sb().from("fan_team_follows").delete().eq("user_id",user().id).eq("team_id",id);if(error)return note(error.message,"error");}else{const {error}=await sb().from("fan_team_follows").insert({user_id:user().id,team_id:id});if(error)return note(error.message,"error");}refresh();}else if(a==="clubDonate"){const r=await rpc("fan_team_donate",{p_team:$("fgClubTeam").value,p_amount:Number($("fgClubAmt").value)},"Hvala na podršci! 💚");if(!r.error)refresh();}else if(a==="mvp"){const r=await rpc("fan_mvp_vote",{p_match:id,p_player:$("mvpP-"+id).value,p_extra:Number($("mvpX-"+id).value)},"Glas je upisan ⭐");if(!r.error)refresh();}else if(a==="gen"){const r=await adminAction("generate_markets",{match_id:id},"Ponuda je otvorena.");if(!r.error)refresh();}else if(a==="settle"){if(confirm("Obračunati poene za ovu utakmicu?")){const r=await adminAction("settle_match",{match_id:id});if(!r.error)refresh();}}else if(a==="grant"){const r=await adminAction("grant",{user_id:$("grU").value,amount:Number($("grA").value),reason:$("grR").value});if(!r.error)refresh();}}
-  function mount(){if($("game"))return;const main=document.querySelector("main");if(!main)return;const sec=document.createElement("section");sec.className="section";sec.id="game";sec.innerHTML=`<h2 class="section-title fg-section-title">Pogodi</h2><div id="gameRoot"></div>`;main.appendChild(sec);document.addEventListener("click",onClick);document.addEventListener("input",e=>{if(["fgStake","fgBoost"].includes(e.target.id))updateWin();});}
-  function boot(){if(!window.showSection||!window.supabaseClient)return setTimeout(boot,250);mount();const orig=window.showSection;window.showSection=function(id){const r=orig.apply(this,arguments);if(id==="game")refresh();return r;};setInterval(()=>{if(document.querySelector(".section.active")?.id==="game")refresh();},10000);window.medjasiGame={refresh};}
+  function mount(){
+    const main=document.querySelector("main");
+    if(!main)return false;
+    let sec=$("game");
+    if(!sec){
+      sec=document.createElement("section");
+      sec.className="section";
+      sec.id="game";
+      sec.innerHTML=`<h2 class="section-title fg-section-title">Pogodi</h2><div id="gameRoot"></div>`;
+      main.appendChild(sec);
+    }else if(!sec.classList.contains("section")){
+      sec.classList.add("section");
+    }
+    if(!$("gameRoot")){
+      const root=document.createElement("div");
+      root.id="gameRoot";
+      sec.appendChild(root);
+    }
+    if(!window.__MEDJASI_GAME_EVENTS_BOUND__){
+      document.addEventListener("click",onClick);
+      document.addEventListener("input",e=>{if(["fgStake","fgBoost"].includes(e.target.id))updateWin();});
+      window.__MEDJASI_GAME_EVENTS_BOUND__=true;
+    }
+    return true;
+  }
+  function boot(){
+    if(!window.showSection){setTimeout(boot,100);return;}
+    if(!mount()){setTimeout(boot,100);return;}
+    if(window.__MEDJASI_GAME_BOOTED__)return;
+    window.__MEDJASI_GAME_BOOTED__=true;
+    const orig=window.showSection;
+    window.showSection=function(id){
+      const result=orig.apply(this,arguments);
+      if(id==="game"){
+        render();
+        refresh();
+      }
+      return result;
+    };
+    const openTab=id=>{
+      const key=String(id||"");
+      const valid=TABS.some(([tab])=>tab===key)||(key==="admin"&&isAdm());
+      if(!valid){
+        console.warn("Nepoznata Fan zona kartica:",key);
+        return false;
+      }
+      S.tab=key;
+      render();
+      refresh();
+      return true;
+    };
+    window.medjasiGame={refresh,openTab,getActiveTab:()=>S.tab};
+    render();
+    refresh();
+    if(!window.__MEDJASI_GAME_REFRESH_TIMER__){
+      window.__MEDJASI_GAME_REFRESH_TIMER__=true;
+      setInterval(()=>{if(document.querySelector(".section.active")?.id==="game")refresh();},10000);
+    }
+  }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
 })();
