@@ -178,6 +178,7 @@ window.dashboardOpenGameTab=function(tab){
     if(nav)scroll.appendChild(nav);
     if(nav&&!nav.querySelector("[data-dashboard-tab]")){
       nav.insertAdjacentHTML("beforeend",
+        '<div class="nav-group-title dashboard-extras-group">FAN SERVISI</div>'+
         '<button type="button" data-dashboard-tab="shop" onclick="dashboardOpenGameTab(\'shop\')"><span></span><span>Fan Shop</span></button>'+
         '<button type="button" data-dashboard-tab="fanbase" onclick="dashboardOpenGameTab(\'fanbase\')"><span></span><span>Fan Base</span></button>'+
         '<button type="button" data-dashboard-tab="mine" onclick="dashboardOpenGameTab(\'mine\')"><span></span><span>Moji tiketi</span></button>'+
