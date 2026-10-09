@@ -7564,7 +7564,8 @@ document.addEventListener(
 function handleLeagueEvent(event){
   const e=event?.new;
   if(!e?.event_type) return;
-  addLeagueNotification({title:e.title||"Novo dešavanje",text:e.body||"",icon:e.event_type==="goal"?"⚽":"🏁",type:e.event_type,key:"league-event:"+e.id,browser:true});
+  const eventIcon=e.event_type==="goal"?"⚽":e.event_type==="card"?"🟨":"🏁";
+  addLeagueNotification({title:e.title||"Novo dešavanje",text:e.body||"",icon:eventIcon,type:e.event_type,key:"league-event:"+e.id,browser:true});
 
   // Push is a privileged broadcast. Do not call a private IIFE function as a
   // global identifier, and do not let an ordinary user's session broadcast.
@@ -7578,7 +7579,7 @@ function handleLeagueEvent(event){
   }
 
   // Refresh still runs even if push is unavailable or denied.
-  loadAll();
+  scheduleLoadAll();
 }
 
 function subscribeRealtime(){
