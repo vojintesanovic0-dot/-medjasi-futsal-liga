@@ -15,6 +15,9 @@ begin
   if to_regprocedure('public.fan_generate_markets(text)') is null then
     raise exception 'public.fan_generate_markets(text) wrapper is missing; restore the authenticated invoker wrapper first.';
   end if;
+  if to_regprocedure('private.fan_reprice_match_odds(text)') is null then
+    raise exception 'private.fan_reprice_match_odds(text) is missing; apply the Fan Game security hardening first.';
+  end if;
 end $preflight$;
 
 alter table public.matches alter column home_team_id set not null;
@@ -62,7 +65,7 @@ begin
       values (p_match,'player_2plus', r.id::text, v_name||' daje 2+ gola', r.id::text, 7.00) on conflict do nothing;
   end loop;
 
-  perform public.fan_reprice_match_odds(p_match);
+  perform private.fan_reprice_match_odds(p_match);
   select count(*) into n from fan_markets where match_id = p_match;
   return n;
 end $fan_market_guard$;
