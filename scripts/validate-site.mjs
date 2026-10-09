@@ -656,6 +656,37 @@ if (
   pass("League-event push wiring and server-side role gate are present");
 }
 
+const pushSubscribeStart = app.indexOf("async function subscribeRealPush()");
+const pushSubscribeEnd = app.indexOf("async function disableRealPush()",pushSubscribeStart);
+const pushSubscribeFunction = pushSubscribeStart >= 0 && pushSubscribeEnd > pushSubscribeStart
+  ? app.slice(pushSubscribeStart,pushSubscribeEnd) : "";
+const pushDisableStart = app.indexOf("async function disableRealPush()");
+const pushDisableEnd = app.indexOf("function renderPushUI()",pushDisableStart);
+const pushDisableFunction = pushDisableStart >= 0 && pushDisableEnd > pushDisableStart
+  ? app.slice(pushDisableStart,pushDisableEnd) : "";
+const pushDisableServerDelete = pushDisableFunction.indexOf(".delete().eq(\"endpoint\",sub.endpoint)");
+const pushDisableUnsubscribe = pushDisableFunction.indexOf("await sub.unsubscribe()");
+const pushDisableLocalClear = pushDisableFunction.indexOf('localStorage.removeItem("medjasi_push_enabled")');
+const pushDisableCatch = pushDisableFunction.indexOf("catch(error)");
+if (
+  !pushSubscribeFunction.includes("Notification.requestPermission()") ||
+  !pushSubscribeFunction.includes("await supabaseClient.from(\"push_subscriptions\").upsert") ||
+  !pushSubscribeFunction.includes("if(error)throw error") ||
+  !pushSubscribeFunction.includes("catch(error)") ||
+  !pushSubscribeFunction.includes("renderPushUI();") ||
+  !pushDisableFunction.includes("if(error)throw error") ||
+  pushDisableServerDelete < 0 ||
+  pushDisableUnsubscribe < pushDisableServerDelete ||
+  pushDisableLocalClear < pushDisableUnsubscribe ||
+  pushDisableCatch < pushDisableLocalClear ||
+  !pushDisableFunction.includes("renderPushUI();") ||
+  !pushDisableFunction.includes("return false")
+) {
+  fail("Push subscription actions must catch failures and only clear enabled state after successful server/browser cleanup");
+} else {
+  pass("Push subscription enable/disable flows preserve truthful state across failures");
+}
+
 const eventIntegritySource = read("sql/15_validate_match_event_integrity.sql");
 if (
   !eventIntegritySource.includes("create trigger trg_medjasi_validate_goal_match_participants") ||
