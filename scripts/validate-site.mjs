@@ -762,6 +762,20 @@ if (
   pass("Database event integrity migration guards goal/card participants and required references");
 }
 
+const communityPollSource = read("js/community-features.js");
+if (
+  !app.includes('data-post-id="${escV(p.id)}"') ||
+  !communityPollSource.includes('querySelectorAll(".v9-post[data-post-id]")') ||
+  communityPollSource.includes('querySelector(".v9-post-menu")') ||
+  !communityPollSource.includes('body.querySelector(":scope > .community-poll")') ||
+  !communityPollSource.includes('.from("community_polls")') ||
+  !communityPollSource.includes('.from("community_poll_options")') ||
+  !communityPollSource.includes('catch(error){\n    console.warn("Community polls:",error);')
+) {
+  fail("Community polls must identify every post independent of ownership, avoid duplicate rendering, and handle query failures");
+} else {
+  pass("Community polls render for regular users and are idempotent with guarded async errors");
+}
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
