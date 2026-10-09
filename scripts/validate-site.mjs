@@ -111,6 +111,31 @@ if (
   fail("Changing the active season must handle both update failures and attempt to restore prior state");
 } else pass("Active-season updates check failures and attempt recovery");
 
+const uploadStart = app.indexOf("async function uploadFile(file,folder)");
+const uploadEnd = app.indexOf("/* =========================================================\\n   ADMIN - TEAM", uploadStart);
+const uploadFunction = uploadStart >= 0 && uploadEnd > uploadStart ? app.slice(uploadStart, uploadEnd) : "";
+if (
+  !app.includes("function isAllowedRasterImage(file)") ||
+  !app.includes("async function hasExpectedMediaSignature(file,mime)") ||
+  !uploadFunction.includes("extensions[mime]") ||
+  !uploadFunction.includes("contentType:mime") ||
+  !uploadFunction.includes("await hasExpectedMediaSignature(file,mime)") ||
+  !uploadFunction.includes("parts.some(part=>!part||! /^[a-z0-9_-]+$/i.test(part))") ||
+  !uploadFunction.includes("file.size>maxBytes")
+) {
+  fail("Storage uploads must validate allowlisted MIME types, file signatures, paths, and size limits");
+} else pass("Storage uploads validate MIME, file signatures, safe paths, and size limits");
+
+if (
+  app.includes("file.type.startsWith('image/')") ||
+  app.includes('file.type.startsWith("image/")') ||
+  app.includes("f.type.startsWith('image/')") ||
+  app.includes('f.type.startsWith("image/")')
+) {
+  fail("Image-upload forms must not accept unrestricted image/* MIME types");
+} else pass("Image-upload forms use the explicit raster-image allowlist");
+
+
 
 
 if (
