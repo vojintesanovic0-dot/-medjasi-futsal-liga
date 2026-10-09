@@ -8230,16 +8230,35 @@ showSection=function(id){
     id=currentUser ? "home" : "login";
   }
   _baseShowSection(id);
-  document.querySelectorAll('#mainNav button[onclick*="showSection"]').forEach(btn=>btn.classList.remove("active"));
-  const activeBtn=document.querySelector(`#mainNav button[onclick*="showSection('${id}')"]`);
-  if(activeBtn) activeBtn.classList.add("active");
+  const activeSection=document.querySelector(".section.active");
+  const actualId=activeSection?.id || "home";
+  window.dashboardSyncHeaderContext?.(actualId);
+  const navButtons=[...document.querySelectorAll("#mainNav button")];
+  navButtons.forEach(btn=>{
+    btn.classList.remove("active");
+    btn.removeAttribute("aria-current");
+  });
+  let activeBtn;
+  if(actualId==="game"){
+    const gameTab=window.medjasiGame?.getActiveTab?.()||"matches";
+    activeBtn=navButtons.find(btn=>btn.getAttribute("data-dashboard-tab")===gameTab) ||
+      navButtons.find(btn=>(btn.getAttribute("onclick")||"").includes("showSection('game')"));
+  }else{
+    activeBtn=navButtons.find(btn=>!btn.hasAttribute("data-dashboard-tab") &&
+      (btn.getAttribute("onclick")||"").includes("showSection('"+actualId+"')"));
+  }
+  activeBtn?.classList.add("active");
+  if(activeBtn?.hasAttribute("data-dashboard-tab"))activeBtn.setAttribute("aria-current","page");
   mobileMenuOpen=false;
-  document.getElementById("mainNav")?.classList.remove("mobile-open");
+  document.getElementById("mainNav")?.classList.remove("mobile-open","open");
   const btn=document.getElementById("mobileMenuBtn");
-  if(btn){btn.textContent="☰";btn.setAttribute("aria-expanded","false");}
-  document.querySelectorAll('.mobile-bottom button').forEach(b=>b.classList.remove('active'));
-  const bottomBtn=document.querySelector(`.mobile-bottom button[onclick*="showSection('${id}')"]`);
-  if(bottomBtn) bottomBtn.classList.add('active');
+  if(btn){btn.textContent="☰";btn.setAttribute("aria-expanded","false");btn.setAttribute("aria-label","Otvori meni");}
+  document.querySelectorAll(".mobile-bottom button").forEach(b=>b.classList.remove("active"));
+  const bottomBtn=[...document.querySelectorAll(".mobile-bottom button")].find(b=>(b.getAttribute("onclick")||"").includes("showSection('"+actualId+"')"));
+  bottomBtn?.classList.add("active");
+  document.querySelectorAll(".mobile-more-grid button").forEach(b=>b.classList.remove("active"));
+  const moreBtn=[...document.querySelectorAll(".mobile-more-grid button")].find(b=>(b.getAttribute("onclick")||"").includes("mobileMoreGo('"+actualId+"')"));
+  moreBtn?.classList.add("active");
 };
 
 document.addEventListener("DOMContentLoaded",()=>{
