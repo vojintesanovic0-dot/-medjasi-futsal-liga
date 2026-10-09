@@ -277,6 +277,17 @@ function canManageMatch(){
   return isAdmin() || isModerator();
 }
 
+async function notifyLeaguePush(type,title,body,matchId){
+  try{
+    const notify=window.medjasiV7?.notifyPush;
+    if(typeof notify!=="function")return false;
+    return await notify(type,title,body,matchId||null);
+  }catch(error){
+    console.warn("Obavještenje lige nije poslano:",error);
+    return false;
+  }
+}
+
 
 
 function teamLogo(team){
@@ -4571,32 +4582,45 @@ function renderAdminMatches(){
    MATCH STATUS
 ========================================================= */
 
-async function changeMatchStatus(
-  id,
-  status
-){
-
-  if(!canManageMatch()) return;
-
-
-  const existing=getMatch(id);
-  const patch={status};
-  if(status==="live" && existing?.status!=="live") patch.live_started_at=new Date().toISOString();
-  else if(status!=="live" && existing?.status==="live") patch.live_started_at=null;
-  const {error}=await supabaseClient.from("matches").update(patch).eq("id",id);
-
-
-  if(error){
-
-    alert(error.message);
-
+async function changeMatchStatus(id,status){
+  if(!canManageMatch())return;
+  if(!["scheduled","live","finished"].includes(status)){
+    alert("Izabran je neispravan status utakmice.");
     return;
   }
 
+  const existing=getMatch(id);
+  if(!existing){
+    alert("Utakmica nije pronađena. Osvježi prikaz i pokušaj ponovo.");
+    return;
+  }
+
+  const changed=existing.status!==status;
+  const patch={status};
+  if(status==="live"&&existing.status!=="live"){
+    patch.live_started_at=new Date().toISOString();
+  }else if(status!=="live"&&existing.status==="live"){
+    patch.live_started_at=null;
+  }
+
+  try{
+    const {error}=await supabaseClient.from("matches").update(patch).eq("id",id);
+    if(error)throw error;
+  }catch(error){
+    alert(error?.message||"Status utakmice nije sačuvan. Pokušaj ponovo.");
+    return;
+  }
 
   await loadAll();
+  // Goals and finished-match push are emitted from the league_events realtime
+  // path. LIVE has no league_events insert, so send its push only here.
+  if(changed&&status==="live"){
+    const current=getMatch(id)||existing;
+    const title="🔴 UTAKMICA UŽIVO — "+teamName(current.home_team_id)+" : "+teamName(current.away_team_id);
+    const body="Rezultat "+(current.home_score||0)+":"+(current.away_score||0)+" · Počela je utakmica uživo.";
+    void notifyLeaguePush("live",title,body,id);
+  }
 }
-
 
 /* =========================================================
    MATCH MINUTE
@@ -7114,7 +7138,7 @@ function openCardControl(
 ========================================================= */
 
 async function addCard(matchId){
-  if(!canManageMatch()) return;
+  if(!canManageMatch())return;
 
   const match=getMatch(matchId);
   if(!match){
@@ -7125,7 +7149,7 @@ async function addCard(matchId){
   const player_id=document.getElementById("cardPlayer")?.value;
   const card_type=document.getElementById("cardType")?.value;
   const minuteInput=document.getElementById("cardMinute");
-  const minute=minuteInput ? Number(minuteInput.value) : NaN;
+  const minute=minuteInput?Number(minuteInput.value):NaN;
 
   if(!player_id){
     alert("Izaberi igrača.");
@@ -7145,38 +7169,42 @@ async function addCard(matchId){
     alert("Izabrani igrač više nije dostupan. Osvježi postavu.");
     return;
   }
-  if(
-    String(player.team_id)!==String(match.home_team_id) &&
-    String(player.team_id)!==String(match.away_team_id)
-  ){
+  if(String(player.team_id)!==String(match.home_team_id)&&String(player.team_id)!==String(match.away_team_id)){
     alert("Igrač ne pripada ekipama u ovoj utakmici.");
     return;
   }
-  const isRegistered=matchPlayers.some(mp=>
-    String(mp.match_id)===String(matchId) &&
-    String(mp.player_id)===String(player_id)
+  const registered=matchPlayers.some(mp=>
+    String(mp.match_id)===String(matchId)&&String(mp.player_id)===String(player_id)
   );
-  if(!isRegistered){
+  if(!registered){
     alert("Igrač više nije u postavi ove utakmice. Osvježi postavu.");
     return;
   }
 
-  let result;
   try{
-    result=await supabaseClient.from("cards").insert({
+    const {error}=await supabaseClient.from("cards").insert({
       match_id:matchId,
       player_id,
       card_type,
       minute
     });
+    if(error)throw error;
   }catch(error){
-    alert(error?.message||"Karton nije sačuvan zbog mrežne greške. Pokušaj ponovo.");
+    alert(error?.message||"Karton nije sačuvan. Pokušaj ponovo.");
     return;
   }
-  if(result.error){
-    alert(result.error.message||"Karton nije sačuvan.");
-    return;
-  }
+
+  // Cards do not currently create a league_events row, so send one push
+  // directly after the database confirms that the card was recorded.
+  const cardLabel=card_type==="red"?"Crveni karton":"Žuti karton";
+  void notifyLeaguePush(
+    "card",
+    (card_type==="red"?"🟥 ":"🟨 ")+cardLabel+" — "+player.name,
+    teamName(player.team_id)+" · "+minute+"' · "+teamName(
+      String(player.team_id)===String(match.home_team_id)?match.home_team_id:match.away_team_id
+    ),
+    matchId
+  );
 
   hideModal();
   toast("Karton je evidentiran.");
