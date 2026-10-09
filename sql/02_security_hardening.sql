@@ -13,25 +13,37 @@ create schema if not exists private;
 revoke all on schema private from public;
 grant usage on schema private to authenticated;
 
-alter function public.fan_admin_grant(uuid, integer, text) set schema private;
-alter function public.fan_buy_item(integer) set schema private;
-alter function public.fan_claim_daily() set schema private;
-alter function public.fan_ensure_wallet() set schema private;
-alter function public.fan_equip_item(integer, boolean) set schema private;
-alter function public.fan_generate_markets(text) set schema private;
-alter function public.fan_leaderboard() set schema private;
-alter function public.fan_market_event_reprice() set schema private;
-alter function public.fan_market_stats(text) set schema private;
-alter function public.fan_mvp_results(text) set schema private;
-alter function public.fan_mvp_vote(text, text, integer) set schema private;
-alter function public.fan_place_pick(uuid, integer, boolean) set schema private;
-alter function public.fan_public_cosmetics(uuid[]) set schema private;
-alter function public.fan_reprice_match(text) set schema private;
-alter function public.fan_reprice_match_event() set schema private;
-alter function public.fan_reprice_match_odds(text) set schema private;
-alter function public.fan_set_odds(uuid, numeric) set schema private;
-alter function public.fan_settle_match(text) set schema private;
-alter function public.fan_team_donate(text, integer) set schema private;
+-- Move the original implementations only on first application.
+-- When run again, public names are invoker wrappers and private implementations
+-- already exist; do not move wrappers over those implementations.
+do $$
+declare r record;
+begin
+  for r in
+    select p.oid::regprocedure as signature
+    from pg_proc p
+    join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public'
+      and p.proname in (
+        'fan_admin_grant','fan_buy_item','fan_claim_daily','fan_ensure_wallet',
+        'fan_equip_item','fan_generate_markets','fan_leaderboard',
+        'fan_market_event_reprice','fan_market_stats','fan_mvp_results',
+        'fan_mvp_vote','fan_place_pick','fan_public_cosmetics',
+        'fan_reprice_match','fan_reprice_match_event','fan_reprice_match_odds',
+        'fan_set_odds','fan_settle_match','fan_team_donate'
+      )
+      and not exists (
+        select 1
+        from pg_proc private_p
+        join pg_namespace private_n on private_n.oid=private_p.pronamespace
+        where private_n.nspname='private'
+          and private_p.proname=p.proname
+          and private_p.proargtypes=p.proargtypes
+      )
+  loop
+    execute format('alter function %s set schema private', r.signature);
+  end loop;
+end $$;
 
 alter function public.fan_is_admin() security invoker;
 alter function public.fan_is_admin() set search_path to public, pg_temp;
