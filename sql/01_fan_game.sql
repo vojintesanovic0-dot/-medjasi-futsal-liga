@@ -231,8 +231,12 @@ begin
   perform fan_ensure_wallet();
   select * into m from fan_markets where id = p_market;
   if not found or m.status <> 'open' then raise exception 'Ovaj pogodak više nije dostupan.'; end if;
+  -- Lock match before market to match finalization lock order.
   select * into mt from matches where id::text = m.match_id for update;
   if not found then raise exception 'Utakmica ne postoji.'; end if;
+  select * into m from fan_markets where id = p_market for update;
+  if not found or m.status <> 'open' then raise exception 'Ovaj pogodak više nije dostupan.'; end if;
+  if m.match_id is distinct from mt.id::text then raise exception 'Tržište utakmice je promijenjeno. Osvježi stranicu i pokušaj ponovo.'; end if;
   if mt.status not in ('scheduled','live') then
     raise exception 'Pogađanje za ovu utakmicu je zatvoreno.';
   end if;
