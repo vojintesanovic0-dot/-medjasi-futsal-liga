@@ -9301,17 +9301,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js")
-      .then(registration => {
-        console.log("Međasi PWA Service Worker aktivan:", registration.scope);
-      })
-      .catch(error => {
-        console.error("PWA Service Worker greška:", error);
-      });
-  });
-}
+/* Service worker registration is handled by the existing push/PWA initializer below. */
 
 
 
