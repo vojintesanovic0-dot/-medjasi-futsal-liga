@@ -656,6 +656,22 @@ if (
   pass("League-event push wiring and server-side role gate are present");
 }
 
+const searchActionStart = app.indexOf("function renderSearch()");
+const searchActionEnd = app.indexOf("// Load wrappers",searchActionStart);
+const searchActionSource = searchActionStart >= 0 && searchActionEnd > searchActionStart
+  ? app.slice(searchActionStart,searchActionEnd) : "";
+if (
+  !searchActionSource.includes("openTeam('\\${escJs(t.id)}')") ||
+  !searchActionSource.includes("openPlayer('\\${escJs(p.id)}')") ||
+  !searchActionSource.includes("medjasiV7.openNews('\\${escJs(n.id)}')") ||
+  searchActionSource.includes("fn:`showSection('teams')`") ||
+  searchActionSource.includes("fn:`showSection('players')`")
+) {
+  fail("Search results must open the exact selected team, player, or news item and escape inline IDs");
+} else {
+  pass("Search results open the selected item with escaped inline identifiers");
+}
+
 const musicLoaderStart = app.indexOf("async function loadMusicSettings()");
 const musicLoaderEnd = app.indexOf("function renderMusicAdmin()",musicLoaderStart);
 const musicLoader = musicLoaderStart >= 0 && musicLoaderEnd > musicLoaderStart
