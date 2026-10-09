@@ -190,6 +190,7 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
         return false;
       }
       S.tab=key;
+      window.dashboardSyncHeaderContext?.("game");
       document.querySelectorAll("#mainNav [data-dashboard-tab]").forEach(button=>{
         const active=button.getAttribute("data-dashboard-tab")===key;
         button.classList.toggle("active",active);
