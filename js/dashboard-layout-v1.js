@@ -198,7 +198,7 @@ window.dashboardOpenGameTab=function(tab){
       const fanZoneTitle=[...nav.querySelectorAll(".nav-group-title")].find(el=>/FAN ZONA/i.test(el.textContent||""));
       const finalButtons=[...nav.querySelectorAll("button")].filter(button=>{
         const handler=button.getAttribute("onclick")||"";
-        return /showSection\\(['"]game['"]\\)/.test(handler)||/showSection\\(['"]info['"]\\)/.test(handler);
+        return /showSection\(['"]game['"]\)/.test(handler)||/showSection\(['"]info['"]\)/.test(handler);
       });
       if(fanZoneTitle&&finalButtons.length===2){
         nav.appendChild(fanZoneTitle);
