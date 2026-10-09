@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
     }else if(action==="settle_match"){
       ({data,error}=await actor.rpc("fan_settle_match",{p_match:String(body.match_id)}));
     }else if(action==="grant"){
-      ({data,error}=await actor.rpc("fan_admin_grant",{p_user:String(body.user_id),p_amount:Number(body.amount),p_note:String(body.reason||"Admin grant")}));
+      ({data,error}=await actor.rpc("fan_admin_grant",{p_user:String(body.user_id),p_amount:Number(body.amount),p_reason:String(body.reason||"Admin grant")}));
     }else if(action==="set_odds"){
       ({data,error}=await actor.rpc("fan_set_odds",{p_market:String(body.market_id),p_odds:Number(body.odds)}));
     }else{
