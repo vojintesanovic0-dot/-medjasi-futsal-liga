@@ -24,6 +24,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 6. `sql/05_rate_limit_and_audit.sql`
 7. `sql/06_guard_admin_role_assignment_nulls.sql` – popravlja provjeru administratorske uloge za `NULL` slučajeve i sprečava slučajno uklanjanje posljednjeg administratora.
 8. `sql/07_recalculate_match_scores.sql` – održava rezultat tačnim nakon izmjene/brisanja gola ili promjene pripadnosti igrača/ekipa.
+9. `sql/08_enforce_message_identity.sql` – postavlja korisničko ime u chat porukama prema profilu, da klijent ne može glumiti drugog korisnika.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
