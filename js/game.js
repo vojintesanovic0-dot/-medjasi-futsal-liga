@@ -250,7 +250,34 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
     showModal('<div class="fg-ticket-modal"><h3>🎟️ Moji tiketi</h3><p class="fg-hint">Sve ostaje u virtuelnim fan poenima. Kvote na tiketu ostaju zaključane na vrijednosti koju si dobio pri uplati.</p>'+(rows||'<p class="fg-hint">Još nemaš nijedan tiket.</p>')+'</div>');
   };
 
-  async function onClick(e){const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act,id=b.dataset.id;if(a==="tab"){S.tab=id;render();}else if(a==="pick")openPick(id);else if(a==="confirm"){
+  function setActiveTab(tab,refreshData){
+    const key=String(tab||"");
+    const valid=TABS.some(([id])=>id===key)||(key==="admin"&&isAdm());
+    if(!valid){console.warn("Nepoznata Fan Game kartica:",key);return false;}
+    S.tab=key;
+    window.dashboardSyncHeaderContext?.("game");
+    const navButtons=[...document.querySelectorAll("#mainNav button")];
+    navButtons.forEach(button=>{
+      button.classList.remove("active");
+      button.removeAttribute("aria-current");
+    });
+    let activeNav=navButtons.find(button=>button.getAttribute("data-dashboard-tab")===key);
+    if(!activeNav){
+      activeNav=navButtons.find(button=>(button.getAttribute("onclick")||"").includes("showSection('game')"));
+    }
+    activeNav?.classList.add("active");
+    if(activeNav?.hasAttribute("data-dashboard-tab"))activeNav.setAttribute("aria-current","page");
+    document.querySelectorAll(".mobile-more-grid button").forEach(button=>{
+      const target=button.getAttribute("onclick")||"";
+      button.classList.toggle("active",target.includes("dashboardOpenGameTab('"+key+"')"));
+    });
+    render();
+    if(refreshData)refresh();
+    return true;
+  }
+  function openTab(tab){return setActiveTab(tab,true);}
+
+  async function onClick(e){const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act,id=b.dataset.id;if(a==="tab"){setActiveTab(id,false);}else if(a==="pick")openPick(id);else if(a==="confirm"){
       if(b.disabled)return;
       const stake=Number($("fgStake")?.value);
       const max=Math.min(50,Number(S.wallet?.balance||0));
@@ -277,7 +304,7 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
         if(sb()&&document.querySelector(".section.active")?.id==="game")refresh();
       },10000);
     }
-    window.medjasiGame={refresh};
+    window.medjasiGame={refresh,openTab,getActiveTab:()=>S.tab};
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
 })();
