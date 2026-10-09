@@ -43,7 +43,7 @@
 <link rel="stylesheet" href="./css/header-final.css?v=9">
 <link rel="stylesheet" href="./css/medjasi-dashboard-reference-v1.css?v=1">
 <link rel="stylesheet" href="./css/medjasi-icons-v2.css?v=20261009v02">
-<link rel="stylesheet" href="./css/medjasi-dashboard-refinements-v2.css?v=4">
+<link rel="stylesheet" href="./css/medjasi-dashboard-refinements-v2.css?v=5">
 
 </head>
 <body>
@@ -304,64 +304,77 @@
 <div class="gallery-grid" id="galleryGrid"></div>
 </section>
 <!-- ================= LOGIN / REGISTER ================= -->
-<section class="section" id="login">
-<div class="grid grid-2" style="max-width:900px;margin:30px auto">
-<div class="card">
-<h2 style="margin-bottom:8px">
-         Prijava
-      </h2>
-<p class="muted" style="margin-bottom:18px">
-        Prijavi se za komentare, chat i sadržaj namijenjen članovima zajednice.
-      </p>
-<div class="form">
-<div class="form-group">
-<label>Email</label>
-<input id="loginEmail" placeholder="Email" type="email"/>
-</div>
-<div class="form-group">
-<label>Lozinka</label>
-<input id="loginPassword" onkeydown="if(event.key==='Enter')login()" placeholder="Lozinka" type="password"/>
-</div>
-<button class="btn btn-green" onclick="login()">
-           Prijavi se
-        </button>
-<button class="btn" onclick="resetPassword()" type="button">
-           Zaboravljena lozinka?
-        </button>
-<p class="muted" id="loginMessage"></p>
-</div>
-</div>
-<div class="card">
-<h2 style="margin-bottom:8px">
-         Registracija
-      </h2>
-<p class="muted" style="margin-bottom:18px">
-        Napravi nalog i učestvuj u komentarima i chatu.
-      </p>
-<div class="form">
-<div class="form-group">
-<label>Korisničko ime</label>
-<input id="registerUsername" maxlength="30" placeholder="npr. MedjasiFan"/>
-</div>
-<div class="form-group">
-<label>Email</label>
-<input id="registerEmail" placeholder="Email" type="email"/>
-</div>
-<div class="form-group">
-<label>Lozinka</label>
-<input id="registerPassword" placeholder="Najmanje 6 znakova" type="password"/>
-</div>
-<div class="form-group">
-<label>Ponovi lozinku</label>
-<input id="registerPasswordConfirm" placeholder="Ponovi lozinku" type="password"/>
-</div>
-<button class="btn btn-green" onclick="register()">
-          Registruj se
-        </button>
-<p class="muted" id="registerMessage"></p>
-</div>
-</div>
-</div>
+<section class="section auth-section" id="login">
+  <div class="auth-page-head">
+    <div class="auth-page-intro">
+      <span class="auth-eyebrow">MEĐASI FUTSAL LIGA · ČLANSTVO</span>
+      <h1>Prijava i registracija</h1>
+      <p>Prijavi se ili napravi nalog za komentare, chat i sadržaj zajednice.</p>
+    </div>
+    <button class="auth-return-btn" type="button" onclick="exitAuthScreen()" aria-label="Vrati se na početnu" title="Nazad na početnu">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>Nazad na početnu</span>
+    </button>
+  </div>
+
+  <div class="grid grid-2 auth-grid">
+    <div class="card auth-card auth-login-card">
+      <div class="auth-card-heading">
+        <span class="auth-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.6-3.6 3-5.5 7-5.5s6.4 1.9 7 5.5"/></svg>
+        </span>
+        <div>
+          <h2>Prijava</h2>
+          <p class="muted">Dobro došao nazad.</p>
+        </div>
+      </div>
+      <div class="form">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input id="loginEmail" autocomplete="email" placeholder="Unesi email adresu" type="email" required/>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Lozinka</label>
+          <input id="loginPassword" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()" placeholder="Unesi lozinku" type="password" required/>
+        </div>
+        <button class="btn btn-green auth-primary-btn" id="loginSubmitButton" type="button" onclick="login()">Prijavi se</button>
+        <button class="btn auth-secondary-btn" type="button" onclick="resetPassword()">Zaboravljena lozinka?</button>
+        <p class="muted auth-message" id="loginMessage" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="card auth-card auth-register-card">
+      <div class="auth-card-heading">
+        <span class="auth-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.5-3.4 2.6-5.2 6.2-5.2 2.2 0 3.8.6 4.8 1.9M17 8v6M14 11h6"/></svg>
+        </span>
+        <div>
+          <h2>Registracija</h2>
+          <p class="muted">Napravi svoj nalog.</p>
+        </div>
+      </div>
+      <div class="form">
+        <div class="form-group">
+          <label for="registerUsername">Korisničko ime</label>
+          <input id="registerUsername" maxlength="30" minlength="3" autocomplete="username" placeholder="npr. MedjasiFan" required/>
+        </div>
+        <div class="form-group">
+          <label for="registerEmail">Email</label>
+          <input id="registerEmail" placeholder="Email adresa" type="email" autocomplete="email" required/>
+        </div>
+        <div class="form-group">
+          <label for="registerPassword">Lozinka</label>
+          <input id="registerPassword" autocomplete="new-password" placeholder="Najmanje 6 znakova" type="password" required/>
+        </div>
+        <div class="form-group">
+          <label for="registerPasswordConfirm">Ponovi lozinku</label>
+          <input id="registerPasswordConfirm" autocomplete="new-password" onkeydown="if(event.key==='Enter')register()" placeholder="Ponovi lozinku" type="password" required/>
+        </div>
+        <button class="btn btn-green auth-primary-btn" type="button" onclick="register()">Registruj se</button>
+        <p class="muted auth-message" id="registerMessage" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
 </section>
 <!-- ================= LEAGUE INFO ================= -->
 <section class="section" id="info">
@@ -736,7 +749,7 @@
 
 
 
-<script src="./js/app.js?v=20261009v14" defer></script>
+<script src="./js/app.js?v=20261009v15" defer></script>
 <script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=20261009v05" defer></script><script src="./js/growth.js?v=20261009v06" defer></script><script src="./js/community-features.js?v=20261007v02" defer></script><script src="./js/ui-compat.js?v=20261009v01" defer></script><script src="./js/admin-organizer.js?v=13" defer></script>
 <script src="./js/graphic-engine.js?v=1" defer></script><script src="./js/medjasi-v13-ui.js?v=20261007v01" defer></script><script src="./js/extras.js?v=1" defer></script>
 <script src="./js/dashboard-layout-v1.js?v=20261009v05" defer></script>

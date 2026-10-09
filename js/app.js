@@ -1238,85 +1238,106 @@ async function checkAuth(){
    LOGIN
 ========================================================= */
 
+function exitAuthScreen(){
+  medjasiAuthInteraction=false;
+  ["loginPassword","registerPassword","registerPasswordConfirm"].forEach(id=>{
+    const input=document.getElementById(id);
+    if(input)input.value="";
+  });
+  ["loginMessage","registerMessage"].forEach(id=>{
+    const message=document.getElementById(id);
+    if(message)message.textContent="";
+  });
+  // Leaving auth never signs the user out; the home screen reflects the
+  // current session and its signed-in account controls.
+  showSection("home");
+}
+
 async function login(){
-  medjasiAuthInteraction = true;
-  const email =
-    document
-      .getElementById("loginEmail")
-      ?.value
-      .trim();
+  const email=document.getElementById("loginEmail")?.value.trim()||"";
+  const password=document.getElementById("loginPassword")?.value||"";
+  const message=document.getElementById("loginMessage");
+  const submit=document.getElementById("loginSubmitButton");
 
-  const password =
-    document
-      .getElementById("loginPassword")
-      ?.value || "";
-
-  const message =
-    document.getElementById("loginMessage");
+  const setBusy=busy=>{
+    if(!submit)return;
+    submit.disabled=busy;
+    submit.setAttribute("aria-busy",String(busy));
+    submit.textContent=busy?"Prijavljivanje…":"Prijavi se";
+  };
+  const showMessage=text=>{
+    if(message)message.textContent=text;
+  };
 
   if(!supabaseClient?.auth){
-    medjasiAuthInteraction = false;
-    if(message) message.textContent = "Servis prijave je trenutno nedostupan. Pokušaj ponovo kasnije.";
+    medjasiAuthInteraction=false;
+    showMessage("Servis prijave je trenutno nedostupan. Pokušaj ponovo kasnije.");
+    return;
+  }
+  if(!email||!password){
+    medjasiAuthInteraction=false;
+    showMessage("Unesi email i lozinku.");
+    return;
+  }
+  if(submit?.disabled)return;
+
+  medjasiAuthInteraction=true;
+  setBusy(true);
+  showMessage("Prijavljivanje…");
+
+  let result;
+  try{
+    result=await supabaseClient.auth.signInWithPassword({email,password});
+  }catch(error){
+    medjasiAuthInteraction=false;
+    setBusy(false);
+    showMessage(error?.message||"Prijava nije uspjela zbog mrežne greške. Pokušaj ponovo.");
     return;
   }
 
-  if(!email || !password){
-
-    if(message){
-      message.textContent =
-        "Unesi email i lozinku.";
-    }
-
-    return;
-  }
-
-
-  if(message){
-    message.textContent =
-      "Prijavljivanje...";
-  }
-
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .auth
-      .signInWithPassword({
-        email,
-        password
-      });
-
-
+  const {data,error}=result||{};
   if(error){
+    medjasiAuthInteraction=false;
+    setBusy(false);
+    const msg=String(error.message||"");
+    showMessage(/confirm|email/i.test(msg)
+      ?"Email još nije potvrđen. Otvori poruku koju smo poslali na email i potvrdi nalog, pa se onda prijavi."
+      :(msg||"Prijava nije uspjela. Provjeri podatke i pokušaj ponovo."));
+    return;
+  }
 
-    if(message){
-      const msg=String(error.message||"");
-      message.textContent=/confirm|email/i.test(msg)?"Email još nije potvrđen. Otvori poruku koju smo poslali na email i potvrdi nalog, pa se onda prijavi.":msg;
-    }
+  if(!data?.user||!data?.session){
+    medjasiAuthInteraction=false;
+    setBusy(false);
+    const unconfirmed=!!data?.user&&!data?.user?.email_confirmed_at;
+    showMessage(unconfirmed
+      ?"Email još nije potvrđen. Otvori poruku koju smo poslali na email i potvrdi nalog, pa se onda prijavi."
+      :"Nije potvrđena aktivna sesija. Pokušaj ponovo.");
+    if(unconfirmed)toast("Potvrdi email prije prijave.","error");
     return;
   }
-  if(data?.user && !data?.session && !data?.user?.email_confirmed_at){
-    if(message) message.textContent="Email još nije potvrđen. Otvori poruku koju smo poslali na email i potvrdi nalog, pa se onda prijavi.";
-    toast("Potvrdi email prije prijave.","error");
-    return;
-  }
+
   currentUser=data.user;
-
-
-  await checkAuth();
-  await loadAll();
-
-
-  if(message){
-    message.textContent =
-      "Uspješna prijava.";
+  try{
+    await checkAuth();
+  }catch(authError){
+    // A profile lookup must not strand a user after Supabase has signed them in.
+    console.error("Provjera profila nakon prijave:",authError);
+    currentUser=data.user;
+    try{updateAuthUI();}catch(uiError){console.error("Prikaz prijavljenog naloga:",uiError);}
   }
+  try{
+    await loadAll();
+  }catch(loadError){
+    console.error("Učitavanje podataka nakon prijave:",loadError);
+  }
+  try{window.medjasiGame?.refresh?.();}catch(gameError){console.warn("Fan Game osvježavanje:",gameError);}
 
-
+  showMessage("Uspješna prijava.");
   toast("Uspješno si prijavljen.");
-
+  setBusy(false);
+  // Explicit destination: after signing in, show the home page with the
+  // authenticated header/account instead of restoring a stale login route.
   showSection("home");
 }
 
@@ -1360,8 +1381,6 @@ async function resetPassword(){
 ========================================================= */
 
 async function register(){
-
-  medjasiAuthInteraction = true;
   const username =
     document
       .getElementById("registerUsername")
@@ -1449,27 +1468,28 @@ async function register(){
     prvi put prijavi nakon potvrde emaila.
   */
 
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .auth
-      .signUp({
-        email,
-        password,
-        options:{
-          data:{username},
-          emailRedirectTo:window.location.origin + window.location.pathname
-        }
-      });
+  medjasiAuthInteraction=true;
+  let signupResult;
+  try{
+    signupResult=await supabaseClient.auth.signUp({
+      email,
+      password,
+      options:{
+        data:{username},
+        emailRedirectTo:window.location.origin+window.location.pathname
+      }
+    });
+  }catch(signupError){
+    medjasiAuthInteraction=false;
+    message.textContent=signupError?.message||"Registracija nije uspjela zbog mrežne greške. Pokušaj ponovo.";
+    return;
+  }
+  const {data,error}=signupResult||{};
 
 
   if(error){
-
-    message.textContent =
-      error.message;
-
+    medjasiAuthInteraction=false;
+    message.textContent=error.message;
     return;
   }
 
@@ -1503,6 +1523,7 @@ async function register(){
     vjerovatno je potrebno potvrditi email.
   */
 
+  medjasiAuthInteraction=false;
   message.innerHTML =
     "Registracija je uspješna. Poslali smo ti potvrdu na email. Otvori poruku i potvrdi nalog.<br><button type=\"button\" class=\"btn btn-small btn-blue\" style=\"margin-top:10px\" onclick=\"resendConfirmation()\">📩 Pošalji potvrdu ponovo</button>";
 
@@ -7848,10 +7869,14 @@ document.addEventListener(
 
     if(event.key==="Escape"){
       const wasOpen=document.getElementById("modal")?.classList.contains("active");
-      hideModal();
       if(wasOpen){
+        hideModal();
         clearInterval(liveRefreshInterval);
         clearInterval(window.__medjasiLiveClock);
+        return;
+      }
+      if(document.getElementById("login")?.classList.contains("active")){
+        exitAuthScreen();
       }
     }
 
@@ -10601,6 +10626,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
 
 /* FINAL PUBLIC UI API — keep inline buttons reliable */
 window.login=login;
+window.exitAuthScreen=exitAuthScreen;
 window.logout=logout;
 window.showSection=showSection;
 window.updateAuthUI=updateAuthUI;

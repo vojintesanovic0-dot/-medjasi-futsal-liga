@@ -23,6 +23,41 @@ const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
 if (duplicates.length) fail(`Duplicate HTML IDs: ${duplicates.join(", ")}`);
 else pass(`No duplicate IDs across ${ids.length} HTML IDs`);
 
+const authStart = html.indexOf('<section class="section auth-section" id="login">');
+const authEnd = html.indexOf("<!-- ================= LEAGUE INFO ================= -->", authStart);
+const authMarkup = authStart >= 0 && authEnd > authStart ? html.slice(authStart, authEnd) : "";
+const loginFunctionStart = app.indexOf("async function login()");
+const loginFunctionEnd = app.indexOf("/* =========================================================\n   RESET PASSWORD", loginFunctionStart);
+const loginFunction = loginFunctionStart >= 0 && loginFunctionEnd > loginFunctionStart ? app.slice(loginFunctionStart, loginFunctionEnd) : "";
+
+if (
+  !authMarkup.includes('onclick="exitAuthScreen()"') ||
+  !authMarkup.includes('class="auth-return-btn"') ||
+  !app.includes("window.exitAuthScreen=exitAuthScreen")
+) {
+  fail("Login/register screen must provide a working return-to-home action");
+} else pass("Login/register screen includes a wired return-to-home action");
+
+if (
+  !loginFunction.includes("signInWithPassword") ||
+  !loginFunction.includes("showSection(\"home\")") ||
+  !loginFunction.includes("currentUser=data.user") ||
+  !loginFunction.includes("medjasiAuthInteraction=false")
+) {
+  fail("Successful login must end on the signed-in home screen and clear failed auth intent");
+} else pass("Login flow has deterministic signed-in destination and error recovery");
+
+const layoutCss = read("css/medjasi-dashboard-refinements-v2.css");
+if (
+  !layoutCss.includes("#login.active") ||
+  !layoutCss.includes("@media(min-width:1181px)") ||
+  !layoutCss.includes("@media(min-width:1025px) and (max-width:1380px)") ||
+  !layoutCss.includes(".auth-return-btn")
+) {
+  fail("Desktop workspace and auth form responsive overrides must remain in the final stylesheet");
+} else pass("Desktop workspace and auth screen have explicit responsive layout rules");
+
+
 // Guard important runtime logic that syntax-only checks cannot detect.
 if (
   !app.includes("function updateAuthUI(renderContent=true)") ||
