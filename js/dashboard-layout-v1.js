@@ -242,7 +242,7 @@ window.dashboardOpenGameTab=function(tab){
       const title=document.getElementById("dashboardHeaderSection");
       const kicker=document.querySelector(".dashboard-header-context-kicker");
       if(title)title.textContent=titles[id]||"Međasi Futsal Liga";
-      if(kicker)kicker.textContent=(groups[id]||"MEĐASI FUTSAL")+" / SEZONA 2026/27";
+      if(kicker)kicker.textContent=groups[id]||"MEĐASI FUTSAL";
       return titles[id]||"Međasi Futsal Liga";
     };
     window.dashboardSyncHeaderContext();
