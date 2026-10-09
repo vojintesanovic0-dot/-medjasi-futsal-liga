@@ -1254,6 +1254,11 @@ async function login(){
   const message =
     document.getElementById("loginMessage");
 
+  if(!supabaseClient?.auth){
+    medjasiAuthInteraction = false;
+    if(message) message.textContent = "Servis prijave je trenutno nedostupan. Pokušaj ponovo kasnije.";
+    return;
+  }
 
   if(!email || !password){
 
@@ -1324,6 +1329,11 @@ async function resetPassword(){
   const email=document.getElementById("loginEmail")?.value.trim() || "";
   const message=document.getElementById("loginMessage");
 
+  if(!supabaseClient?.auth){
+    if(message) message.textContent="Servis za promjenu lozinke je trenutno nedostupan. Pokušaj ponovo kasnije.";
+    return;
+  }
+
   if(!email){
     if(message) message.textContent="Prvo upiši email adresu za koju želiš reset lozinke.";
     return;
@@ -1377,6 +1387,11 @@ async function register(){
   const message =
     document.getElementById("registerMessage");
 
+  if(!supabaseClient?.auth){
+    medjasiAuthInteraction = false;
+    if(message) message.textContent = "Registracija je trenutno nedostupna. Pokušaj ponovo kasnije.";
+    return;
+  }
 
   if(!username || username.length < 3){
 
@@ -1522,6 +1537,10 @@ window.resendConfirmation=resendConfirmation;
 ========================================================= */
 
 async function logout(){
+  if(!supabaseClient?.auth){
+    alert("Odjava je trenutno nedostupna jer servis prijave nije učitan.");
+    return;
+  }
   medjasiAuthInteraction = true;
 
   const {
