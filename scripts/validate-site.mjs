@@ -661,9 +661,9 @@ const searchActionEnd = app.indexOf("// Load wrappers",searchActionStart);
 const searchActionSource = searchActionStart >= 0 && searchActionEnd > searchActionStart
   ? app.slice(searchActionStart,searchActionEnd) : "";
 if (
-  !searchActionSource.includes("openTeam('\\${escJs(t.id)}')") ||
-  !searchActionSource.includes("openPlayer('\\${escJs(p.id)}')") ||
-  !searchActionSource.includes("medjasiV7.openNews('\\${escJs(n.id)}')") ||
+  !searchActionSource.includes("openTeam('${escJs(t.id)}')") ||
+  !searchActionSource.includes("openPlayer('${escJs(p.id)}')") ||
+  !searchActionSource.includes("medjasiV7.openNews('${escJs(n.id)}')") ||
   searchActionSource.includes("fn:`showSection('teams')`") ||
   searchActionSource.includes("fn:`showSection('players')`")
 ) {
