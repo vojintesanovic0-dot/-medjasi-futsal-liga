@@ -41,6 +41,7 @@
         const settleResult = await settleFanMatch(maybeFinished);
         if (settleResult) {
           toast('Fan Game poeni su obračunati.');
+          await window.loadAll?.();
         }
       }
 
