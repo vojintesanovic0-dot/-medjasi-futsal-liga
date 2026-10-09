@@ -71,6 +71,17 @@ jobs:
             seen[$prefix]="$file"
           done
 
+      - name: Setup Deno for Edge Function checks
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check Supabase Edge Functions
+        shell: bash
+        run: |
+          set -euo pipefail
+          deno check supabase/functions/send-push/index.ts supabase/functions/fan-admin-action/index.ts
+
       - name: Validate required entry files
         shell: bash
         run: |
