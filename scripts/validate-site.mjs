@@ -733,6 +733,22 @@ if (
   pass("Push subscription enable/disable flows preserve truthful state across failures");
 }
 
+const mediaUploadMigration = read("sql/16_restrict_liga_images_uploads.sql");
+if (
+  !mediaUploadMigration.includes("file_size_limit = 52428800") ||
+  !mediaUploadMigration.includes("'video/mp4'") ||
+  !mediaUploadMigration.includes("'image/avif'") ||
+  !mediaUploadMigration.includes("create policy liga_images_user_insert") ||
+  !mediaUploadMigration.includes("metadata->>'mimetype'") ||
+  !mediaUploadMigration.includes("metadata->>'size'") ||
+  !mediaUploadMigration.includes("<= 12582912") ||
+  !mediaUploadMigration.includes("drop policy if exists liga_images_user_insert")
+) {
+  fail("Storage must enforce file-size, MIME, and owner-folder restrictions server-side while retaining admin media uploads");
+} else {
+  pass("Storage upload migration enforces file type, size, and user-folder boundaries");
+}
+
 const eventIntegritySource = read("sql/15_validate_match_event_integrity.sql");
 if (
   !eventIntegritySource.includes("create trigger trg_medjasi_validate_goal_match_participants") ||
