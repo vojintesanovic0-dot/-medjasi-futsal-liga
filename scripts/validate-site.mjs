@@ -112,7 +112,7 @@ if (
 } else pass("Active-season updates check failures and attempt recovery");
 
 const uploadStart = app.indexOf("async function uploadFile(file,folder)");
-const uploadEnd = app.indexOf("/* =========================================================\\n   ADMIN - TEAM", uploadStart);
+const uploadEnd = app.indexOf("/* =========================================================\n   ADMIN - TEAM", uploadStart);
 const uploadFunction = uploadStart >= 0 && uploadEnd > uploadStart ? app.slice(uploadStart, uploadEnd) : "";
 if (
   !app.includes("function isAllowedRasterImage(file)") ||
