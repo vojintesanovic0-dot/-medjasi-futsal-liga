@@ -17,20 +17,25 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 
 
 ## SQL redoslijed pokretanja
-1. `sql/00_core_schema_REFERENCE.sql` – opcionalna referenca; dodaje RLS samo tabelama koje nemaju nijednu politiku.
-2. `sql/01_fan_game.sql`
-3. `sql/02_security_hardening.sql`
-4. `sql/03_rls_performance_hardening.sql`
-5. `sql/04_runtime_hardening.sql`
-6. `sql/05_rate_limit_and_audit.sql`
-7. `sql/06_protect_profile_role.sql` – zaključava `profiles.role`, štiti privilegije profila i čuva Fan Game settlement integritet.
-8. `sql/07_admin_rpc_hardening.sql` – premješta admin `SECURITY DEFINER` implementacije u `private` i ostavlja iste javne invoker RPC nazive za postojeći Admin UI.
-9. `sql/08_league_data_integrity.sql` – dodaje serverske `CHECK` zaštite za rezultate, vrijeme gola, asistenta, broj dresa, status i matchup ekipa.
-10. `sql/09_runtime_event_sync.sql` – verzionira live triggere za gol, završetak utakmice i zaštitu `profiles.role`.
-11. `sql/10_match_player_integrity.sql` – server-side provjerava pripadnost igrača utakmici i maksimalno 5 startera po ekipi.
-12. `sql/11_fan_game_data_integrity.sql` – zaključava opseg uloga/kvota, statusa tiketa i nenegativno stanje Fan Game novčanika.
-13. `sql/12_fan_reprice_runtime_sync.sql` – verzionira privatni live repricing za rezultat/gol/karton promjene.
-14. `sql/13_sensitive_data_api_privileges.sql` – smanjuje Data API privilegije osjetljivih tabela uz zadržavanje postojećih RLS politika.
+
+Pokreći skripte po redoslijedu navedenom ispod, nakon što osnovne tabele i kolone aplikacije već postoje. `sql/00_core_schema_REFERENCE.sql` je referentna skripta i nije zamjena za stvarnu baznu šemu.
+
+1. `sql/01_fan_game.sql` – osnovne Fan Game funkcije i tabele.
+2. `sql/02_security_hardening.sql` – sigurnosno učvršćivanje Fan Game sloja.
+3. `sql/03_rls_performance_hardening.sql` – RLS/performance podešavanja.
+4. `sql/04_runtime_hardening.sql` – runtime hardening.
+5. `sql/05_rate_limit_and_audit.sql` – ograničenja slanja i audit.
+6. `sql/06_admin_rpcs.sql` – osnovne, provjerene admin RPC implementacije.
+7. `sql/07_admin_rpc_hardening.sql` – premješta privilegovane implementacije u `private` i ostavlja javne invoker omotače.
+8. `sql/08_league_data_integrity.sql` – server-side integritet ligaških podataka.
+9. `sql/09_runtime_event_sync.sql` – sinhronizacija golova, rezultata, događaja i završetka utakmice.
+10. `sql/10_match_player_integrity.sql` – validacija postave i pripadnosti igrača ekipi.
+11. `sql/11_fan_game_data_integrity.sql` – ograničenja kvota, tiketa i virtualnog novčanika.
+12. `sql/12_fan_reprice_runtime_sync.sql` – promjena Fan Game kvota nakon događaja.
+13. `sql/13_sensitive_data_api_privileges.sql` – minimalne privilegije za osjetljive tabele.
+14. `sql/14_protect_profile_role.sql` – završna zaštita uloga profila i blokada retroaktivnih izmjena nakon settlementa.
+
+`sql/06_admin_rpcs.sql` mora prethoditi RPC hardeningu, a `sql/14_protect_profile_role.sql` se namjerno pokreće na kraju jer koristi funkcije i trigere definisane ranije. Nemoj pokretati stare kopije ovih skripti iz vanjskih backup grana.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
