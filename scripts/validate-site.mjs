@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -97,10 +97,22 @@ for (const path of frontendFiles) {
 }
 if (!failures.some((x) => x.startsWith("Possible privileged Supabase key"))) pass("No service-role key references found in frontend entry files");
 
+// Keep numbered SQL upgrade scripts unique and documented in README.
+const readme = read("README.md");
+const sqlFiles = readdirSync("sql").filter((name) => /^\\d{2}_.+\\.sql$/i.test(name)).sort();
+const sqlPrefixes = sqlFiles.map((name) => name.match(/^(\\d{2})_/)[1]);
+const duplicatePrefixes = [...new Set(sqlPrefixes.filter((prefix, i) => sqlPrefixes.indexOf(prefix) !== i))];
+if (duplicatePrefixes.length) fail(`Duplicate SQL migration prefixes: ${duplicatePrefixes.join(", ")}`);
+else pass(`SQL migration numbering is unique across ${sqlFiles.length} scripts`);
+for (const name of sqlFiles) {
+  if (!readme.includes(`sql/${name}`)) fail(`SQL migration is not documented in README: sql/${name}`);
+}
+if (!failures.some((x) => x.startsWith("SQL migration is not documented"))) pass("All numbered SQL migrations are documented in README");
+
 if (failures.length) {
-  console.error("\nSite validation failed:");
+  console.error("\\nSite validation failed:");
   for (const failure of failures) console.error(`- ${failure}`);
   process.exitCode = 1;
 } else {
-  console.log("\nAll static site checks passed.");
+  console.log("\\nAll static site checks passed.");
 }
