@@ -13,6 +13,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 - `sql/01_fan_game.sql` sada završava sigurnosnim hardeningom; novi deployment više ne zavisi od zasebnog koraka da bi Fan Game RPC-ovi bili premješteni u `private`.
 - `sql/02_security_hardening.sql` ostaje kao idempotentni upgrade za postojeće baze.
 - `js/ui-compat.js` sadrži legacy/community/profile UI kompatibilne patch-e izdvojene iz `js/app.js`; vizuelni sloj i postojeće animacije nisu mijenjani.
+- **Supabase Auth:** uključi `Leaked Password Protection` u Dashboardu pod **Authentication → Password Security**; to je projektna postavka koja se ne mijenja kroz SQL skripte.
 
 
 ## SQL redoslijed pokretanja
