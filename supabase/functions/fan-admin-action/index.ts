@@ -24,17 +24,26 @@ Deno.serve(async (req: Request) => {
     const {data:p}=await admin.from("profiles").select("role").eq("id",u.user.id).maybeSingle();
     if(p?.role!=="admin") return Response.json({error:"Forbidden"},{status:403,headers:corsHeaders});
 
+    const publicKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+    if (!publicKey) throw new Error("Missing Supabase public API key for authenticated RPC calls.");
+
+    // Keep the caller's JWT on RPC requests so auth.uid() and the database's
+    // own administrator checks see the real actor, not the service-role user.
+    const actor = createClient(supabaseUrl, publicKey, {
+      global: { headers: { Authorization: auth } }
+    });
+
     const body=await req.json();
     const action=String(body.action||"");
     let data, error;
     if(action==="generate_markets"){
-      ({data,error}=await admin.rpc("fan_generate_markets",{p_match:String(body.match_id)}));
+      ({data,error}=await actor.rpc("fan_generate_markets",{p_match:String(body.match_id)}));
     }else if(action==="settle_match"){
-      ({data,error}=await admin.rpc("fan_settle_match",{p_match:String(body.match_id)}));
+      ({data,error}=await actor.rpc("fan_settle_match",{p_match:String(body.match_id)}));
     }else if(action==="grant"){
-      ({data,error}=await admin.rpc("fan_admin_grant",{p_user:String(body.user_id),p_amount:Number(body.amount),p_reason:String(body.reason||"Admin grant")}));
+      ({data,error}=await actor.rpc("fan_admin_grant",{p_user:String(body.user_id),p_amount:Number(body.amount),p_reason:String(body.reason||"Admin grant")}));
     }else if(action==="set_odds"){
-      ({data,error}=await admin.rpc("fan_set_odds",{p_market:String(body.market_id),p_odds:Number(body.odds)}));
+      ({data,error}=await actor.rpc("fan_set_odds",{p_market:String(body.market_id),p_odds:Number(body.odds)}));
     }else{
       return Response.json({error:"Unknown action"},{status:400,headers:corsHeaders});
     }

@@ -29,9 +29,11 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 10. `sql/09_fan_pick_match_lock.sql` – zaključava utakmicu pa tržište istim redoslijedom kao finalizacija i ponovo čita kvotu/status prije prihvatanja pogotka.
 11. `sql/10_enforce_message_identity.sql` – postavlja korisničko ime u chat porukama prema profilu, da klijent ne može glumiti drugog korisnika.
 12. `sql/11_allow_community_reaction_updates.sql` – omogućava korisniku promjenu vlastite reakcije bez kršenja ograničenja jedne reakcije po objavi.
+13. `sql/12_fan_set_odds_invoker_wrapper.sql` – vraća siguran invoker RPC za podešavanje kvota, uz provjeru administratorske uloge u privatnoj funkciji.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
 - `js/extras.js` + `css/extras.css`: statistika+ (strijelci, asistenti, fair play), .ics kalendar, dijeljenje rezultata kao slika, opciona tema i admin audit UI.
 - `service-worker.js`: nova verzija cache-a, offline stranica i keširanje jsDelivr Supabase biblioteke.
+- `supabase/functions/fan-admin-action/index.ts`: administratorski RPC pozivi koriste JWT stvarnog administratora kako bi provjere `auth.uid()` ostale ispravne.
 - Vidljivi naziv lige je normalizovan na `Međasi` bez promjene tehničkih identifikatora i ruta.
