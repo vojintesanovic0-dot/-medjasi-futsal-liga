@@ -104,6 +104,109 @@ if (!hasDirectTabRouter && !hasLegacyBoundedTabRouter) {
   fail("Fan Game quick links must wait for asynchronously rendered tabs with a bounded retry");
 } else pass("Fan Game quick links use validated direct routing or a bounded render retry");
 
+const fixtureStart = dashboard.indexOf("function fixtureMarkup(m,phone=false){");
+const fixtureEnd = dashboard.indexOf("function renderNext(){", fixtureStart);
+const fixtureSource = fixtureStart >= 0 && fixtureEnd > fixtureStart ? dashboard.slice(fixtureStart, fixtureEnd) : "";
+if (
+  !fixtureSource.includes("dashboard-upcoming-item") ||
+  !fixtureSource.includes('onclick="openMatch') ||
+  /\(phone\s*\?\s*['"]['"]\s*:\s*['"]\s*onclick=/.test(fixtureSource)
+) {
+  fail("Upcoming match cards must open match details on both desktop and phone layouts");
+} else pass("Upcoming match cards open the selected match on desktop and phone");
+
+if (
+  !dashboard.includes("bindUpcomingCardKeyboard") ||
+  !dashboard.includes("dashboard-upcoming-item[role='button']") ||
+  !dashboard.includes("card.click()")
+) {
+  fail("Phone upcoming match cards must support keyboard activation as well as touch");
+} else pass("Phone upcoming match cards support keyboard and touch activation");
+
+if (
+  !dashboard.includes("window.dashboardOpenGameTab=function(tab)") ||
+  !app.includes("function openMatch(id)") ||
+  !app.includes("function showSection(id)")
+) {
+  fail("Dashboard quick links must resolve to globally callable section and match handlers");
+} else pass("Dashboard quick links resolve to global navigation and match handlers");
+
+const inlineHandlerSources = [app, dashboard, growth, read("js/community-features.js"), read("js/ui-compat.js"), read("js/extras.js")].join("\n");
+const knownInlineHandlers = new Set([
+  ...[...app.matchAll(/\bfunction\s+([A-Za-z_$][\w$]*)\s*\(/g)].map((m) => m[1]),
+  ...[...inlineHandlerSources.matchAll(/(?:window|globalThis)\.([A-Za-z_$][\w$]*)\s*=/g)].map((m) => m[1])
+]);
+const inlineCallNames = new Set();
+for (const match of html.matchAll(/\bonclick\s*=\s*["']([^"']*)["']/gi)) {
+  for (const call of match[1].matchAll(/(?<![.\w$])([A-Za-z_$][\w$]*)\s*\(/g)) {
+    if (!["if", "for", "while", "switch", "function"].includes(call[1])) inlineCallNames.add(call[1]);
+  }
+}
+const unboundInlineCalls = [...inlineCallNames].filter((name) => !knownInlineHandlers.has(name));
+if (unboundInlineCalls.length) fail("HTML inline click handlers have no global target: " + unboundInlineCalls.join(", "));
+else pass("All HTML inline click handlers resolve to a global function");
+
+const clickMarkupSources = [
+  app, game, dashboard, growth,
+  read("js/community-features.js"),
+  read("js/ui-compat.js"),
+  read("js/admin-organizer.js"),
+  read("js/extras.js"),
+  read("js/graphic-engine.js"),
+  read("js/effects.js"),
+  read("js/medjasi-v13-ui.js"),
+  read("js/production.js")
+];
+const clickMarkupSource = clickMarkupSources.join("\n");
+const declaredClickTargets = new Set([
+  ...[...clickMarkupSource.matchAll(/\bfunction\s+([A-Za-z_$][\w$]*)\s*\(/g)].map((m) => m[1]),
+  ...[...clickMarkupSource.matchAll(/(?:window|globalThis)\.([A-Za-z_$][\w$]*)\s*=/g)].map((m) => m[1])
+]);
+if (app.includes("const $=")) declaredClickTargets.add("$");
+const unboundGeneratedCalls = new Set();
+let generatedOnclickCount = 0;
+for (const source of clickMarkupSources) {
+  for (const handler of source.matchAll(/\bonclick\s*=\s*(?:\\?["'])([\s\S]*?)(?:\\?["'])/gi)) {
+    generatedOnclickCount++;
+    for (const call of handler[1].matchAll(/(?<![.\w$])([A-Za-z_$][\w$]*)\s*\(/g)) {
+      const name = call[1];
+      if (!["if", "for", "while", "switch", "function", "return"].includes(name) && !declaredClickTargets.has(name)) {
+        unboundGeneratedCalls.add(name);
+      }
+    }
+  }
+}
+if (unboundGeneratedCalls.size) {
+  fail("Generated inline click handlers have no callable target: " + [...unboundGeneratedCalls].sort().join(", "));
+} else {
+  pass("Generated inline click targets resolve across application modules (" + generatedOnclickCount + " handlers scanned)");
+}
+
+const gameActionValues = [...new Set([...game.matchAll(/data-act\s*=\s*["']([^"']+)["']/g)].map((m) => m[1]))];
+const gameClickStart = game.indexOf("async function onClick");
+const gameClickSource = gameClickStart >= 0 ? game.slice(gameClickStart) : "";
+const gameHandledActions = new Set([...gameClickSource.matchAll(/\ba\s*===\s*["']([^"']+)["']/g)].map((m) => m[1]));
+const unhandledGameActions = gameActionValues.filter((action) => !gameHandledActions.has(action));
+if (unhandledGameActions.length) fail("Fan Game buttons have no click action: " + unhandledGameActions.join(", "));
+else pass("All Fan Game data-act buttons map to click-handler branches");
+
+const growthActionValues = [...new Set([...growth.matchAll(/data-gx\s*=\s*["']([^"']+)["']/g)].map((m) => m[1]))];
+const growthHandledActions = new Set([...growth.matchAll(/\ba\s*===\s*["']([^"']+)["']/g)].map((m) => m[1]));
+const unhandledGrowthActions = growthActionValues.filter((action) => !growthHandledActions.has(action));
+if (unhandledGrowthActions.length) fail("Liga Info buttons have no click action: " + unhandledGrowthActions.join(", "));
+else pass("All Liga Info data-gx buttons map to click-handler branches");
+
+const interactionCss = read("css/medjasi-dashboard-refinements-v2.css");
+if (
+  !interactionCss.includes("#modal.modal") ||
+  !interactionCss.includes("rgba(0,0,0,.87)") ||
+  !interactionCss.includes("#modal .modal-box") ||
+  !interactionCss.includes("rgba(0,0,0,.84)") ||
+  !interactionCss.includes(".mobile-more-drawer .mobile-more-panel")
+) {
+  fail("Modal, mobile drawer, and install dialog backgrounds must stay opaque above the home screen");
+} else pass("Modal and drawer overlays sufficiently obscure the underlying home screen");
+
 if (
   !game.includes("const currentUserKey=()=>user()?.id==null?null:String(user().id)") ||
   !game.includes("resetUserSnapshot(requestedUserKey)") ||
