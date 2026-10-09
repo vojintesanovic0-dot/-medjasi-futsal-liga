@@ -26,12 +26,12 @@ const htmlRefs = [...html.matchAll(/(?:src|href)=["'](\.\/[^"']+)["']/gi)]
   .filter((ref) => /\.(?:css|js|html|json|png|svg|webp|jpe?g|woff2?)(?:[?#]|$)/i.test(ref));
 
 const stylesheetTags = [...html.matchAll(/<link\b[^>]+href=["'][^"']+\.css(?:\?[^"']*)?["'][^>]*>/gi)];
-const finalHeaderIndex = stylesheetTags.findIndex((m) => m[0].includes("header-final.css"));
+const finalLayoutIndex = stylesheetTags.findIndex((m) => m[0].includes("medjasi-dashboard-refinements-v2.css"));
 const lastStylesheetIndex = stylesheetTags.length - 1;
-if (finalHeaderIndex < 0 || finalHeaderIndex !== lastStylesheetIndex) {
-  fail("header-final.css must remain the last stylesheet so navigation overrides win the cascade");
+if (finalLayoutIndex < 0 || finalLayoutIndex !== lastStylesheetIndex) {
+  fail("medjasi-dashboard-refinements-v2.css must remain the last stylesheet so sidebar/layout overrides win the cascade");
 } else {
-  pass("Final header/navigation stylesheet is loaded last");
+  pass("Final dashboard/sidebar layout stylesheet is loaded last");
 }
 
 for (const ref of [...new Set(htmlRefs)]) {

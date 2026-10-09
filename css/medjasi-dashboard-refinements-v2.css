@@ -20,7 +20,7 @@ body>.footer{display:block!important}
 /* --- Desktop grid: dashboard + only the real information rail --- */
 main{
   display:grid!important;
-  grid-template-columns:minmax(0,1fr) 248px!important;
+  grid-template-columns:minmax(0,1fr)!important;
   grid-auto-flow:row!important;
   align-items:start!important;
   column-gap:10px!important;
@@ -175,7 +175,9 @@ main{
 /* --- Header: search gets real space, all controls align on one baseline --- */
 .site-header{
   left:var(--dash-sidebar)!important;
-  right:0!important;top:0!important;
+  right:0!important;
+  width:calc(100% - var(--dash-sidebar))!important;
+  top:0!important;
   height:var(--dash-header)!important;min-height:var(--dash-header)!important;
   border-bottom:1px solid rgba(0,207,225,.22)!important;
   background:linear-gradient(90deg,rgba(2,14,17,.985),rgba(2,10,13,.96))!important;
@@ -266,7 +268,7 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
 /* Tablet and mobile: one actual responsive dashboard, no decorative device panel. */
 @media(max-width:1180px){
   :root{--dash-sidebar:206px}
-  main{grid-template-columns:minmax(0,1fr) 224px!important;padding-left:9px!important;padding-right:9px!important;gap:8px!important}
+  main{grid-template-columns:minmax(0,1fr)!important;padding-left:9px!important;padding-right:9px!important;gap:8px!important}
   .site-header .header-inner{padding:0 10px!important}
   .site-header .v7-search-wrap{max-width:390px!important;min-width:150px!important;flex-basis:260px!important}
   .site-header .header-actions{gap:6px!important}
@@ -427,3 +429,7 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
     height:32px!important;min-height:32px!important;
   }
 }
+
+
+/* The right rail was removed from the intended desktop layout; keep its code/data hooks intact but hide its panel. */
+.dashboard-right-rail{display:none!important;}
