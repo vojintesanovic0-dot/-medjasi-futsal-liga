@@ -688,3 +688,39 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
   .auth-card-heading{margin-bottom:16px!important;padding-bottom:13px!important}
   .auth-card-heading h2{font-size:19px!important}
 }
+
+
+/* Click surfaces and modal layers: keep the league home from bleeding through. */
+#modal.modal{
+  background:rgba(0,0,0,.87)!important;
+  backdrop-filter:blur(10px) saturate(.72)!important;
+  -webkit-backdrop-filter:blur(10px) saturate(.72)!important;
+}
+#modal .modal-box{
+  background:linear-gradient(145deg,#06121b 0%,#07131c 56%,#050e16 100%)!important;
+  background-color:#06121b!important;
+  border-color:rgba(57,245,139,.22)!important;
+  box-shadow:0 30px 100px rgba(0,0,0,.82),0 0 0 1px rgba(0,0,0,.38)!important;
+  opacity:1!important;
+  isolation:isolate;
+}
+#modal .modal-box .card{background-color:rgba(4,12,20,.98)!important}
+.mobile-more-drawer .mobile-more-backdrop,
+.mobile-more-drawer.open .mobile-more-backdrop{
+  background:rgba(0,0,0,.84)!important;
+  backdrop-filter:blur(9px) saturate(.72)!important;
+  -webkit-backdrop-filter:blur(9px) saturate(.72)!important;
+}
+.mobile-more-drawer .mobile-more-panel{
+  background:linear-gradient(180deg,#061119 0%,#03090d 100%)!important;
+}
+.pwa-modal{
+  background:rgba(0,0,0,.84)!important;
+  backdrop-filter:blur(10px) saturate(.72)!important;
+  -webkit-backdrop-filter:blur(10px) saturate(.72)!important;
+}
+.dashboard-upcoming-item[onclick]{cursor:pointer}
+.dashboard-upcoming-item[role="button"]:focus-visible{
+  outline:2px solid rgba(57,245,139,.85)!important;
+  outline-offset:3px!important;
+}
