@@ -171,7 +171,7 @@
             card.id==="adminGallery" ||
             !!card.querySelector?.("#adminGalleryList,#galleryImageFile") ||
             !!card.classList?.contains("admin-gallery-card") ||
-            /^galerija(?:\\b|$)/i.test(heading);
+            (heading==="galerija"||heading.startsWith("galerija "));
         }
       },
       {
@@ -181,7 +181,7 @@
           return card.id==="adminMusicCard" ||
             !!card.querySelector?.("#adminMusicPlaylist") ||
             !!card.classList?.contains("admin-music-card") ||
-            /^(?:playlist|liga muzika|upravljanje muzikom)(?:\\b|$)/i.test(heading);
+            (heading==="playlist"||heading.startsWith("playlist ")||heading==="liga muzika"||heading.startsWith("liga muzika ")||heading==="upravljanje muzikom"||heading.startsWith("upravljanje muzikom "));
         }
       },
       {
@@ -190,7 +190,7 @@
           const heading=headingOf(card);
           return card.id==="v7PushCard" ||
             !!card.querySelector?.("#v7PushCard") ||
-            /^(?:push obavještenja|push notifikacije)(?:\\b|$)/i.test(heading);
+            (heading==="push obavještenja"||heading.startsWith("push obavještenja ")||heading==="push notifikacije"||heading.startsWith("push notifikacije "));
         }
       }
     ];
