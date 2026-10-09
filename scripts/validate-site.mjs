@@ -30,10 +30,10 @@ const loginFunctionStart = app.indexOf("async function login()");
 const loginFunctionEnd = app.indexOf("/* =========================================================\n   RESET PASSWORD", loginFunctionStart);
 const loginFunction = loginFunctionStart >= 0 && loginFunctionEnd > loginFunctionStart ? app.slice(loginFunctionStart, loginFunctionEnd) : "";
 const checkAuthStart = app.indexOf("async function checkAuth()");
-const checkAuthEnd = app.indexOf("/* =========================================================\\n   LOGIN", checkAuthStart);
+const checkAuthEnd = app.indexOf("/* =========================================================\n   LOGIN", checkAuthStart);
 const checkAuthFunction = checkAuthStart >= 0 && checkAuthEnd > checkAuthStart ? app.slice(checkAuthStart, checkAuthEnd) : "";
 const logoutStart = app.indexOf("async function logout()");
-const logoutEnd = app.indexOf("/* =========================================================\\n   AUTH UI", logoutStart);
+const logoutEnd = app.indexOf("/* =========================================================\n   AUTH UI", logoutStart);
 const logoutFunction = logoutStart >= 0 && logoutEnd > logoutStart ? app.slice(logoutStart, logoutEnd) : "";
 
 if (
