@@ -173,6 +173,31 @@ if (
   fail("Push events for LIVE kickoff and saved cards must send only after a successful database write");
 } else pass("LIVE kickoff and saved-card push notifications are wired after database success");
 
+const goalStart = app.indexOf("async function addGoalWithAssist(matchId)");
+const goalEnd = app.indexOf("function decorateCourtRatings(matchId)", goalStart);
+const goalFunction = goalStart >= 0 && goalEnd > goalStart ? app.slice(goalStart, goalEnd) : "";
+const galleryStart = app.indexOf("async function adminAddMedia()");
+const galleryEnd = app.indexOf("function ensureGalleryVideoUI()", galleryStart);
+const galleryFunction = galleryStart >= 0 && galleryEnd > galleryStart ? app.slice(galleryStart, galleryEnd) : "";
+if (
+  !goalFunction.includes('$("v7GoalPlayer")') ||
+  !goalFunction.includes('$("v7GoalMinute")') ||
+  !goalFunction.includes('assist_player_id:assistId') ||
+  !goalFunction.includes("Strijelac mora biti u postavi utakmice") ||
+  !app.includes("V7.addGoal=addGoalWithAssist")
+) {
+  fail("Live goal+assist modal must use its own fields and save the validated scorer/assist");
+} else pass("Live goal+assist modal uses matching fields and stores a validated assist");
+
+if (
+  !galleryFunction.includes("image_url:media_url") ||
+  !galleryFunction.includes("media_url,") ||
+  !galleryFunction.includes("media_type:media.kind")
+) {
+  fail("Video gallery upload must preserve required legacy image_url while storing media metadata");
+} else pass("Gallery video uploads keep legacy required image_url and media metadata");
+
+
 
 
 
