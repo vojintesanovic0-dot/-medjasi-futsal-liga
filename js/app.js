@@ -1337,32 +1337,33 @@ async function login(){
 ========================================================= */
 
 async function resetPassword(){
-  const email=document.getElementById("loginEmail")?.value.trim() || "";
+  const email=document.getElementById("loginEmail")?.value.trim()||"";
   const message=document.getElementById("loginMessage");
 
-  if(!supabaseClient?.auth){
-    if(message) message.textContent="Servis za promjenu lozinke je trenutno nedostupan. Pokušaj ponovo kasnije.";
+  if(!supabaseClient?.auth?.resetPasswordForEmail){
+    if(message)message.textContent="Servis za promjenu lozinke je trenutno nedostupan. Pokušaj ponovo kasnije.";
     return;
   }
-
   if(!email){
-    if(message) message.textContent="Prvo upiši email adresu za koju želiš reset lozinke.";
+    if(message)message.textContent="Prvo upiši email adresu za koju želiš reset lozinke.";
     return;
   }
 
-  if(message) message.textContent="Šaljem link za promjenu lozinke...";
-
-  const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{
-    redirectTo:window.location.origin + window.location.pathname
-  });
-
-  if(error){
-    if(message) message.textContent=error.message;
-    return;
+  if(message)message.textContent="Šaljem link za promjenu lozinke...";
+  try{
+    const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{
+      redirectTo:window.location.origin+window.location.pathname
+    });
+    if(error){
+      if(message)message.textContent=error.message||"Slanje linka nije uspjelo. Pokušaj ponovo.";
+      return;
+    }
+    if(message)message.textContent="Ako nalog postoji, link za promjenu lozinke je poslat na email.";
+    toast("Provjeri email za promjenu lozinke.");
+  }catch(error){
+    console.error("Zahtjev za reset lozinke nije uspio:",error);
+    if(message)message.textContent=error?.message||"Slanje linka nije uspjelo zbog mrežne greške. Pokušaj ponovo.";
   }
-
-  if(message) message.textContent="Ako nalog postoji, link za promjenu lozinke je poslat na email.";
-  toast("Provjeri email za promjenu lozinke.");
 }
 
 
@@ -1489,21 +1490,26 @@ async function register(){
     email confirmation je vjerovatno isključen.
   */
 
-  if(data.session && data.user){
-
-    currentUser =
-      data.user;
-
-    await checkAuth();
-    await loadAll();
-
-    message.textContent =
-      "Registracija uspješna.";
-
+  if(data?.session && data?.user){
+    currentUser=data.user;
+    try{
+      await checkAuth();
+    }catch(authError){
+      // The account/session exists even if the optional profile lookup is temporarily unavailable.
+      console.error("Provjera profila nakon registracije:",authError);
+      currentUser=data.user;
+      try{updateAuthUI();}catch(uiError){console.error("Prikaz naloga nakon registracije:",uiError);}
+    }
+    try{
+      await loadAll();
+    }catch(loadError){
+      console.error("Učitavanje podataka nakon registracije:",loadError);
+    }
+    try{window.medjasiGame?.refresh?.();}catch(gameError){console.warn("Fan Game osvježavanje:",gameError);}
+    medjasiAuthInteraction=false;
+    message.textContent="Registracija uspješna.";
     toast("Nalog je uspješno kreiran.");
-
     showSection("home");
-
     return;
   }
 
@@ -1524,22 +1530,31 @@ async function register(){
 async function resendConfirmation(){
   const email=document.getElementById("registerEmail")?.value.trim()||document.getElementById("loginEmail")?.value.trim()||"";
   const message=document.getElementById("registerMessage")||document.getElementById("loginMessage");
+  if(!supabaseClient?.auth?.resend){
+    if(message)message.textContent="Servis za potvrdu emaila je trenutno nedostupan. Pokušaj ponovo kasnije.";
+    return;
+  }
   if(!email){
-    if(message) message.textContent="Unesi email adresu na koju želiš ponovo poslati potvrdu.";
+    if(message)message.textContent="Unesi email adresu na koju želiš ponovo poslati potvrdu.";
     return;
   }
-  if(message) message.textContent="Šaljem novu potvrdu...";
-  const {error}=await supabaseClient.auth.resend({
-    type:"signup",
-    email,
-    options:{emailRedirectTo:window.location.origin+window.location.pathname}
-  });
-  if(error){
-    if(message) message.textContent=error.message;
-    return;
+  if(message)message.textContent="Šaljem novu potvrdu...";
+  try{
+    const {error}=await supabaseClient.auth.resend({
+      type:"signup",
+      email,
+      options:{emailRedirectTo:window.location.origin+window.location.pathname}
+    });
+    if(error){
+      if(message)message.textContent=error.message||"Slanje potvrde nije uspjelo. Pokušaj ponovo.";
+      return;
+    }
+    if(message)message.textContent="Nova potvrda je poslana. Provjeri Inbox i Spam/Junk folder.";
+    toast("Potvrda je ponovo poslana.");
+  }catch(error){
+    console.error("Ponovno slanje potvrde nije uspjelo:",error);
+    if(message)message.textContent=error?.message||"Slanje potvrde nije uspjelo zbog mrežne greške. Pokušaj ponovo.";
   }
-  if(message) message.textContent="Nova potvrda je poslana. Provjeri Inbox i Spam/Junk folder.";
-  toast("Potvrda je ponovo poslana.");
 }
 window.resendConfirmation=resendConfirmation;
 
