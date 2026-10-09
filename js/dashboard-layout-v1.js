@@ -142,32 +142,23 @@
 
   function sync(){
     syncAdminAccess();
+    window.dashboardSyncHeaderContext?.();
     renderNext();renderUpcoming();renderSidebarLive();syncTable();syncGallery();renderNewsMirror();syncWallet();syncFooter();
   }
 window.dashboardOpenGameTab=function(tab){
+    const key=String(tab||"");
+    const known=["matches","live","mine","fanbase","board","shop","collection","club","mvp","admin"];
+    if(!known.includes(key))return;
+    if(key==="admin"&&window.currentProfile?.role!=="admin")return;
     if(typeof window.showSection==="function")window.showSection("game");
+    const open=()=>window.medjasiGame?.openTab?.(key)===true;
+    if(open())return;
     let attempts=0;
-    const selectTab=()=>{
-      const button=[...document.querySelectorAll("#game [data-act='tab'][data-id]")]
-        .find(item=>item.getAttribute("data-id")===String(tab));
-      if(button){
-        button.click();
-        document.querySelectorAll("#mainNav [data-dashboard-tab]").forEach(item=>{
-          item.classList.toggle("active",item.getAttribute("data-dashboard-tab")===String(tab));
-        });
-        document.querySelectorAll("#mainNav button:not([data-dashboard-tab])").forEach(item=>{
-          if(item.getAttribute("onclick")?.includes("showSection('game')"))item.classList.remove("active");
-        });
-        document.querySelectorAll(".mobile-more-grid button").forEach(item=>{
-          item.classList.toggle("active",item.getAttribute("onclick")?.includes("dashboardOpenGameTab('"+String(tab)+"')")||false);
-        });
-        return;
-      }
-      // The tabs are rendered after the first data refresh; retry briefly but
-      // never leave an unbounded timer running when the service is unavailable.
-      if(attempts++<25)window.setTimeout(selectTab,100);
+    const retry=()=>{
+      if(open()||++attempts>=12)return;
+      window.setTimeout(retry,100);
     };
-    selectTab();
+    window.setTimeout(retry,0);
   };
   window.toggleDashboardGlow=function(){document.body.classList.toggle("dashboard-low-glow");};
   window.dashboardSettings=function(){
@@ -241,10 +232,32 @@ window.dashboardOpenGameTab=function(tab){
     document.body.insertBefore(sidebar,header);
 
     if(headerInner&&actions){
-      const mobileBrand=document.createElement("div");mobileBrand.className="dashboard-mobile-brand";
-      mobileBrand.innerHTML='<img src="./images/icon-192.png" alt=""><div><strong>MEĐASI</strong><span>FUTSAL LIGA</span></div>';
-      headerInner.insertBefore(mobileBrand,actions);
+      if(!headerInner.querySelector(".dashboard-mobile-brand")){
+        const mobileBrand=document.createElement("div");mobileBrand.className="dashboard-mobile-brand";
+        mobileBrand.innerHTML='<img src="./images/icon-192.png" alt=""><div><strong>MEĐASI</strong><span>FUTSAL LIGA</span></div>';
+        headerInner.insertBefore(mobileBrand,actions);
+      }
+      if(!headerInner.querySelector(".dashboard-header-context")){
+        const context=document.createElement("div");
+        context.className="dashboard-header-context";
+        context.innerHTML='<span class="dashboard-header-context-kicker">MEĐASI FUTSAL LIGA</span><strong id="dashboardHeaderSection">Početna</strong>';
+        headerInner.insertBefore(context,actions);
+      }
     }
+
+    window.dashboardSyncHeaderContext=function(sectionId){
+      const id=sectionId||document.querySelector("main > .section.active")?.id||"home";
+      const gameTab=String(window.medjasiGame?.getActiveTab?.()||"matches");
+      const gameTitles={matches:"Pogodi",live:"Live centar",mine:"Moji tiketi",fanbase:"Fan Base",board:"Rang-lista navijača",shop:"Fan Shop",collection:"Kolekcija",club:"Moja tribina",mvp:"MVP",admin:"Upravljanje Fan Gameom"};
+      const titles={home:"Početna",table:"Tabela",matches:"Utakmice",teams:"Ekipe",players:"Igrači",stats:"Statistika",comments:"Komentari",chat:"Chat",gallery:"Galerija",community:"Community",news:"Vijesti",info:"Liga info",login:"Prijava i registracija",admin:"Admin panel",game:gameTitles[gameTab]||"Pogodi"};
+      const groups={home:"DASHBOARD",table:"LIGA",matches:"LIGA",teams:"LIGA",players:"LIGA",stats:"LIGA",comments:"ZAJEDNICA",chat:"ZAJEDNICA",gallery:"ZAJEDNICA",community:"ZAJEDNICA",news:"ZAJEDNICA",info:"FAN ZONA",login:"KORISNIČKI NALOG",admin:"ADMINISTRACIJA",game:"FAN ZONA"};
+      const title=document.getElementById("dashboardHeaderSection");
+      const kicker=document.querySelector(".dashboard-header-context-kicker");
+      if(title)title.textContent=titles[id]||"Međasi Futsal Liga";
+      if(kicker)kicker.textContent=groups[id]||"MEĐASI FUTSAL";
+      return titles[id]||"Međasi Futsal Liga";
+    };
+    window.dashboardSyncHeaderContext();
     if(actions&&!actions.querySelector(".header-chat-button")){
       const chat=document.createElement("button");chat.type="button";chat.className="header-chat-button";chat.setAttribute("aria-label","Otvori chat");chat.title="Chat";
       chat.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v10H9l-4 3z"/><path d="M8 9h8M8 12h5"/></svg>';
