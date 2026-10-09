@@ -149,6 +149,56 @@ for (const path of frontendFiles) {
 }
 if (!failures.some((x) => x.startsWith("Possible privileged Supabase key"))) pass("No service-role key references found in frontend entry files");
 
+// Keep runtime-critical Edge Function RPC contracts aligned with SQL wrappers.
+const fanAdminEdgeSource = read("supabase/functions/fan-admin-action/index.ts");
+const fanGrantWrapperSource = read("sql/07_admin_rpc_wrapper.sql");
+const repricingFixSource = read("sql/14_fix_fan_reprice_match_live_status_alias.sql");
+const pushEdgeSource = read("supabase/functions/send-push/index.ts");
+
+const grantRpcCall = fanAdminEdgeSource.match(/actor\\.rpc\\(["']fan_admin_grant["'],\\s*\\{([^}]*)\\}\\)/s)?.[1] || "";
+if (
+  !grantRpcCall.includes("p_user:") ||
+  !grantRpcCall.includes("p_amount:") ||
+  !grantRpcCall.includes("p_reason:") ||
+  grantRpcCall.includes("p_note:") ||
+  !/fan_admin_grant\\(p_user uuid, p_amount integer, p_reason text\\)/.test(fanGrantWrapperSource)
+) {
+  fail("Fan admin grant Edge RPC arguments must match the SQL wrapper signature");
+} else {
+  pass("Fan admin grant Edge RPC arguments match the SQL wrapper");
+}
+
+if (
+  !fanAdminEdgeSource.includes("global: { headers: { Authorization: auth } }") ||
+  !fanAdminEdgeSource.includes("admin.auth.getUser(token)") ||
+  !fanAdminEdgeSource.includes('if(p?.role!=="admin")')
+) {
+  fail("Fan admin Edge Function must validate admin role and forward the caller JWT to protected RPCs");
+} else {
+  pass("Fan admin Edge Function preserves the caller identity for database authorization");
+}
+
+if (
+  !repricingFixSource.includes("when p.status = ''live'' then") ||
+  !repricingFixSource.includes("when mt.status = ''live'' then") ||
+  !repricingFixSource.includes("private.fan_reprice_match(text)")
+) {
+  fail("Live Fan Game repricing regression fix must remain in the numbered SQL migration");
+} else {
+  pass("Live Fan Game repricing regression fix is documented in SQL migration");
+}
+
+if (
+  !app.includes("V7.notifyPush=notifyPush") ||
+  !app.includes("window.medjasiV7?.notifyPush") ||
+  !pushEdgeSource.includes("admin.auth.getUser(token)") ||
+  !pushEdgeSource.includes('if (role !== "admin" && role !== "moderator")')
+) {
+  fail("League event push notifications must use the exported notifier and enforce admin/moderator authorization");
+} else {
+  pass("League-event push wiring and server-side role gate are present");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
