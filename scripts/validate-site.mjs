@@ -196,6 +196,61 @@ const unhandledGrowthActions = growthActionValues.filter((action) => !growthHand
 if (unhandledGrowthActions.length) fail("Liga Info buttons have no click action: " + unhandledGrowthActions.join(", "));
 else pass("All Liga Info data-gx buttons map to click-handler branches");
 
+const dashboardTabValues = [...new Set([...dashboard.matchAll(/data-dashboard-tab\s*=\s*["']([^"']+)["']/g)].map((m) => m[1]))];
+const gameTabValues = new Set([...game.matchAll(/\["([a-z][a-z0-9_-]*)","[^"]+"\]/g)].map((m) => m[1]));
+const missingDashboardTabs = dashboardTabValues.filter((tab) => !gameTabValues.has(tab));
+if (
+  !dashboard.includes("window.dashboardOpenGameTab=function(tab)") ||
+  !dashboard.includes('#game [data-act=\'tab\'][data-id]') ||
+  missingDashboardTabs.length
+) {
+  fail("Dashboard Fan Game shortcuts must select a tab that exists in the Fan Game panel" + (missingDashboardTabs.length ? ": " + missingDashboardTabs.join(", ") : ""));
+} else pass("All dashboard Fan Game shortcuts resolve to existing Fan Game tabs");
+
+const communityClickAuditSource = read("js/community-features.js");
+if (
+  !communityClickAuditSource.includes('data-community-action="block"') ||
+  !communityClickAuditSource.includes('addEventListener("click",()=>blockUser(id))') ||
+  !communityClickAuditSource.includes('data-community-action="report"') ||
+  !communityClickAuditSource.includes('addEventListener("click",()=>reportTarget("post"')
+) {
+  fail("Community block/report buttons must be bound to the correct post actions");
+} else pass("Community block/report buttons are bound to their matching actions");
+
+if (
+  !communityClickAuditSource.includes('querySelectorAll("button").forEach(b=>b.addEventListener("click",async()=>') ||
+  !communityClickAuditSource.includes('option_id:b.dataset.option')
+) {
+  fail("Community poll option buttons must submit the selected option");
+} else pass("Community poll option buttons submit the selected option");
+
+if (
+  !communityClickAuditSource.includes('querySelectorAll("[data-report-review]")') ||
+  !communityClickAuditSource.includes('b.onclick=async()=>') ||
+  !communityClickAuditSource.includes('eq("id",b.dataset.reportReview)')
+) {
+  fail("Community moderation review buttons must update the selected report");
+} else pass("Community report review buttons update the matching report");
+
+const extrasClickAuditSource = read("js/extras.js");
+const extrasActionValues = [...new Set([...extrasClickAuditSource.matchAll(/data-xt\s*=\s*["']([^"']+)["']/g)].map((m) => m[1]))];
+if (
+  !extrasClickAuditSource.includes('e.target.closest("[data-xt]")') ||
+  !extrasClickAuditSource.includes('b.dataset.xt==="ics"') ||
+  !extrasClickAuditSource.includes("shareResult(id)") ||
+  extrasActionValues.some((action) => !["ics", "share"].includes(action))
+) {
+  fail("Match extras buttons must resolve to calendar export or result sharing");
+} else pass("Match extras buttons resolve to calendar export or result sharing");
+
+if (
+  !extrasClickAuditSource.includes('e.target.closest("[data-xt-tab]")') ||
+  !extrasClickAuditSource.includes("st.tab=b.dataset.xtTab") ||
+  !extrasClickAuditSource.includes("renderStatsPlus()")
+) {
+  fail("Advanced statistics tabs must update their selection and rerender the displayed panel");
+} else pass("Advanced statistics tabs switch their visible content");
+
 const interactionCss = read("css/medjasi-dashboard-refinements-v2.css");
 if (
   !interactionCss.includes("#modal.modal") ||
