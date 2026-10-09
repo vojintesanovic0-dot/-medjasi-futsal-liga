@@ -1,0 +1,106 @@
+import { readFileSync, existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { spawnSync } from "node:child_process";
+
+const failures = [];
+const pass = (message) => console.log(`PASS  ${message}`);
+const fail = (message) => failures.push(message);
+const read = (path) => readFileSync(path, "utf8");
+const pathFromRef = (ref) => {
+  const clean = ref.replace(/^\.\//, "").split(/[?#]/, 1)[0];
+  return clean || "index.html";
+};
+
+const html = read("index.html");
+const sw = read("service-worker.js");
+const app = read("js/app.js");
+const game = read("js/game.js");
+
+const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((m) => m[1]);
+const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
+if (duplicates.length) fail(`Duplicate HTML IDs: ${duplicates.join(", ")}`);
+else pass(`No duplicate IDs across ${ids.length} HTML IDs`);
+
+const htmlRefs = [...html.matchAll(/(?:src|href)=["'](\.\/[^"']+)["']/gi)]
+  .map((m) => m[1])
+  .filter((ref) => /\.(?:css|js|html|json|png|svg|webp|jpe?g|woff2?)(?:[?#]|$)/i.test(ref));
+
+for (const ref of [...new Set(htmlRefs)]) {
+  const path = pathFromRef(ref);
+  if (!existsSync(path)) fail(`Missing local HTML asset: ${ref}`);
+}
+if (!failures.some((x) => x.startsWith("Missing local HTML asset:"))) pass("All local HTML assets exist");
+
+const shellMatch = sw.match(/const APP_SHELL\s*=\s*\[([\s\S]*?)\];/);
+if (!shellMatch) {
+  fail("Could not find APP_SHELL in service-worker.js");
+} else {
+  const shellRefs = [...shellMatch[1].matchAll(/["'](\.\/[^"']+)["']/g)].map((m) => m[1]);
+  for (const ref of shellRefs) {
+    const path = pathFromRef(ref);
+    if (!existsSync(path)) fail(`Missing service-worker asset: ${ref}`);
+  }
+  if (!failures.some((x) => x.startsWith("Missing service-worker asset:"))) pass(`All ${shellRefs.length} service-worker shell assets exist`);
+
+  const shellPaths = new Set(shellRefs.map(pathFromRef));
+  for (const ref of htmlRefs.filter((x) => /\.(?:css|js|html|json)(?:[?#]|$)/i.test(x))) {
+    if (!shellPaths.has(pathFromRef(ref))) fail(`HTML asset is not in APP_SHELL: ${ref}`);
+  }
+  if (!failures.some((x) => x.startsWith("HTML asset is not in APP_SHELL:"))) pass("All local HTML CSS/JS/HTML/JSON assets are represented in APP_SHELL");
+}
+
+const htmlAppVersion = html.match(/src=["']\.\/js\/app\.js\?v=([^"']+)/)?.[1];
+const swAppVersion = sw.match(/\.\/js\/app\.js\?v=([^"']+)/)?.[1];
+if (!htmlAppVersion || htmlAppVersion !== swAppVersion) {
+  fail(`app.js cache version mismatch (index=${htmlAppVersion ?? "missing"}, service-worker=${swAppVersion ?? "missing"})`);
+} else pass(`app.js cache version synchronized: ${htmlAppVersion}`);
+
+const cacheName = sw.match(/const CACHE_NAME\s*=\s*["']([^"']+)["']/)?.[1];
+if (!cacheName || !/\bv\d+$/.test(cacheName)) fail("CACHE_NAME is missing or not versioned");
+else pass(`Service-worker cache is versioned: ${cacheName}`);
+
+const navTargets = [...html.matchAll(/showSection\(["']([^"']+)["']\)/g)].map((m) => m[1]);
+const staticIds = new Set(ids);
+const dynamicSections = new Set();
+if (app.includes("sec.id='news'") || app.includes('sec.id="news"')) dynamicSections.add("news");
+if (game.includes('sec.id="game"') || game.includes("sec.id='game'")) dynamicSections.add("game");
+const missingTargets = [...new Set(navTargets)].filter((id) => !staticIds.has(id) && !dynamicSections.has(id));
+if (missingTargets.length) fail(`Navigation targets have no static/dynamic section: ${missingTargets.join(", ")}`);
+else pass("All literal HTML showSection targets resolve to static or dynamically mounted sections");
+
+const jsRefs = [...new Set(htmlRefs.filter((ref) => /\.js(?:[?#]|$)/i.test(ref)).map(pathFromRef))];
+for (const path of [...jsRefs, "service-worker.js"]) {
+  const result = spawnSync(process.execPath, ["--check", path], { encoding: "utf8" });
+  if (result.status !== 0) fail(`JavaScript syntax error in ${path}: ${(result.stderr || result.stdout).trim()}`);
+}
+if (!failures.some((x) => x.startsWith("JavaScript syntax error"))) pass(`JavaScript syntax checks passed for ${jsRefs.length + 1} files`);
+
+const cssPaths = [...new Set(htmlRefs.filter((ref) => /\.css(?:[?#]|$)/i.test(ref)).map(pathFromRef))];
+for (const path of cssPaths) {
+  const css = read(path);
+  const braces = (css.match(/{/g) || []).length - (css.match(/}/g) || []).length;
+  const comments = (css.match(/\/\*/g) || []).length - (css.match(/\*\//g) || []).length;
+  if (braces !== 0 || comments !== 0) fail(`Unbalanced CSS structure in ${path} (braces=${braces}, comments=${comments})`);
+  const imports = [...css.matchAll(/@import\s+(?:url\()?["']([^"']+)["']/gi)].map((m) => m[1]);
+  for (const ref of imports) {
+    if (/^(?:https?:|data:)/i.test(ref)) continue;
+    const imported = join(dirname(path), pathFromRef(ref));
+    if (!existsSync(imported)) fail(`Missing CSS import in ${path}: ${ref}`);
+  }
+}
+if (!failures.some((x) => x.startsWith("Unbalanced CSS") || x.startsWith("Missing CSS import"))) pass(`CSS structure/import checks passed for ${cssPaths.length} stylesheets`);
+
+const frontendFiles = ["index.html", ...jsRefs];
+for (const path of frontendFiles) {
+  const source = read(path);
+  if (/SUPABASE_SERVICE_ROLE_KEY|service_role/i.test(source)) fail(`Possible privileged Supabase key reference in frontend file: ${path}`);
+}
+if (!failures.some((x) => x.startsWith("Possible privileged Supabase key"))) pass("No service-role key references found in frontend entry files");
+
+if (failures.length) {
+  console.error("\nSite validation failed:");
+  for (const failure of failures) console.error(`- ${failure}`);
+  process.exitCode = 1;
+} else {
+  console.log("\nAll static site checks passed.");
+}
