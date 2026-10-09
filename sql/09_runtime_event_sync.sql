@@ -184,7 +184,7 @@ begin
 
   if tg_op = 'INSERT' then
     if new.role in ('admin', 'moderator')
-       and not coalesce(public.is_admin(), false)
+       and not coalesce(public.medjasi_is_admin(), false)
     then
       raise exception
         'Nedozvoljeno: ne možeš sebi dodijeliti ulogu %',
@@ -193,7 +193,7 @@ begin
 
   elsif tg_op = 'UPDATE' then
     if new.role is distinct from old.role
-       and not coalesce(public.is_admin(), false)
+       and not coalesce(public.medjasi_is_admin(), false)
     then
       raise exception
         'Nedozvoljeno: ulogu može mijenjati samo administrator';
