@@ -8140,9 +8140,9 @@ function injectModeratorPanel(){
 }
 
 const _baseUpdateAuthUI = updateAuthUI;
-updateAuthUI=function(){
+updateAuthUI=function(...args){
   /* UI must never become unusable because a secondary render function fails. */
-  try{ _baseUpdateAuthUI(); }
+  try{ _baseUpdateAuthUI(...args); }
   catch(error){ console.error("Auth UI render:",error); }
 
   const account=document.getElementById("headerAccount");

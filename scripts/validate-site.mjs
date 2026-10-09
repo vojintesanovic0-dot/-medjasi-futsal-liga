@@ -15,11 +15,54 @@ const html = read("index.html");
 const sw = read("service-worker.js");
 const app = read("js/app.js");
 const game = read("js/game.js");
+const dashboard = read("js/dashboard-layout-v1.js");
+const growth = read("js/growth.js");
 
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((m) => m[1]);
 const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
 if (duplicates.length) fail(`Duplicate HTML IDs: ${duplicates.join(", ")}`);
 else pass(`No duplicate IDs across ${ids.length} HTML IDs`);
+
+// Guard important runtime logic that syntax-only checks cannot detect.
+if (
+  !app.includes("function updateAuthUI(renderContent=true)") ||
+  !app.includes("updateAuthUI(false);") ||
+  !app.includes("_baseUpdateAuthUI(...args)")
+) {
+  fail("Auth-only refresh must pass the renderContent flag through the final compatibility wrapper");
+} else pass("Auth-only updates avoid an unnecessary second render pass");
+
+if (game.includes("__MEDJASI_GAME_SECTION_PATCH__")) {
+  fail("Fan Game must not wrap showSection a second time and duplicate section refreshes");
+} else pass("Fan Game section refresh is not double-bound");
+
+if (app.includes("if(after==='community'&&typeof window.loadV9Community==='function')setTimeout")) {
+  fail("Community feed load is duplicated in the history wrapper");
+} else pass("Community feed loading has a single navigation trigger");
+
+if (
+  !app.includes('if(table==="match_players")') ||
+  !app.includes('.order("match_id",{ascending:true}).order("player_id",{ascending:true})')
+) {
+  fail("Optional match_players pagination must use its natural composite key");
+} else pass("Join-table pagination does not assume a synthetic id column");
+
+if (
+  !app.includes('minute>60') ||
+  !app.includes('if(!["yellow","red"].includes(card_type))') ||
+  !app.includes('const isRegistered=matchPlayers.some')
+) {
+  fail("Goal/card entry must validate event time, card type, and match roster");
+} else pass("Goal and card entry validates times and selected match participants");
+
+if (!growth.includes("if(sponsorResult.error)") || !growth.includes("if(seasonResult.error)")) {
+  fail("Liga info must preserve the last valid sponsor/season data when a refresh query fails");
+} else pass("Liga info keeps the last valid state during partial service failures");
+
+if (!dashboard.includes("if(attempts++<25)window.setTimeout(selectTab,100)")) {
+  fail("Fan Game quick links must wait for asynchronously rendered tabs with a bounded retry");
+} else pass("Fan Game quick links wait for tabs without infinite retries");
+
 
 const htmlRefs = [...html.matchAll(/(?:src|href)=["'](\.\/[^"']+)["']/gi)]
   .map((m) => m[1])
