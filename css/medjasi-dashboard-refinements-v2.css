@@ -692,6 +692,7 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
 
 /* Click surfaces and modal layers: keep the league home from bleeding through. */
 #modal.modal{
+  z-index:3000!important;
   background:rgba(0,0,0,.87)!important;
   backdrop-filter:blur(10px) saturate(.72)!important;
   -webkit-backdrop-filter:blur(10px) saturate(.72)!important;

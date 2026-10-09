@@ -257,6 +257,7 @@ if (
 const interactionCss = read("css/medjasi-dashboard-refinements-v2.css");
 if (
   !interactionCss.includes("#modal.modal") ||
+  !interactionCss.includes("z-index:3000!important") ||
   !interactionCss.includes("rgba(0,0,0,.87)") ||
   !interactionCss.includes("#modal .modal-box") ||
   !interactionCss.includes("rgba(0,0,0,.84)") ||
