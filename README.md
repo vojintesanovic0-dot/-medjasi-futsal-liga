@@ -23,10 +23,11 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 5. `sql/04_runtime_hardening.sql`
 6. `sql/05_rate_limit_and_audit.sql`
 7. `sql/06_guard_admin_role_assignment_nulls.sql` – popravlja provjeru administratorske uloge za `NULL` slučajeve i sprečava slučajno uklanjanje posljednjeg administratora.
-8. `sql/07_recalculate_match_scores.sql` – održava rezultat tačnim nakon izmjene/brisanja gola ili promjene pripadnosti igrača/ekipa.
-9. `sql/08_fan_pick_match_lock.sql` – zaključava utakmicu pa tržište istim redoslijedom kao finalizacija i ponovo čita kvotu/status prije prihvatanja pogotka.
-10. `sql/09_enforce_message_identity.sql` – postavlja korisničko ime u chat porukama prema profilu, da klijent ne može glumiti drugog korisnika.
-11. `sql/10_allow_community_reaction_updates.sql` – omogućava korisniku promjenu vlastite reakcije bez kršenja ograničenja jedne reakcije po objavi.
+8. `sql/07_admin_rpc_wrapper.sql` – vraća javni invoker-wrapper za administratorsku dodjelu Fan Game poena, uz privatnu provjeru ovlaštenja.
+9. `sql/08_recalculate_match_scores.sql` – održava rezultat tačnim nakon izmjene/brisanja gola ili promjene pripadnosti igrača/ekipa.
+10. `sql/09_fan_pick_match_lock.sql` – zaključava utakmicu pa tržište istim redoslijedom kao finalizacija i ponovo čita kvotu/status prije prihvatanja pogotka.
+11. `sql/10_enforce_message_identity.sql` – postavlja korisničko ime u chat porukama prema profilu, da klijent ne može glumiti drugog korisnika.
+12. `sql/11_allow_community_reaction_updates.sql` – omogućava korisniku promjenu vlastite reakcije bez kršenja ograničenja jedne reakcije po objavi.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
