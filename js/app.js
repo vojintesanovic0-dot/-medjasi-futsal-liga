@@ -8019,7 +8019,49 @@ function getYoutubeId(url) {
    UČITAJ POSTAVKE IZ SUPABASE
 ----------------------------------------- */
 
-async function loadMusicSettings(){const {data:settings,error:se}=await supabaseClient.from("site_settings").select("youtube_music_enabled").eq("id",1).maybeSingle();if(se)console.error(se);musicSettings=settings||{youtube_music_enabled:false};const {data:tracks,error:te}=await supabaseClient.from("music_tracks").select("id,title,provider,youtube_music_id,spotify_url,sort_order,is_active,created_at").eq("is_active",true).order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(te){console.error(te);musicTracks=[];}else musicTracks=tracks||[];renderMusicAdmin();initMusic();}
+async function loadMusicSettings(){
+  // Treat settings and tracks as independent refreshes: a transient failure in
+  // either query must not make a working playlist disappear or turn itself off.
+  try{
+    const {data:settings,error}=await supabaseClient
+      .from("site_settings")
+      .select("youtube_music_enabled")
+      .eq("id",1)
+      .maybeSingle();
+
+    if(error){
+      console.error("Učitavanje postavki muzike nije uspjelo:",error);
+    }else{
+      musicSettings=settings||{youtube_music_enabled:false};
+    }
+  }catch(error){
+    console.error("Učitavanje postavki muzike nije uspjelo:",error);
+  }
+
+  try{
+    const {data:tracks,error}=await supabaseClient
+      .from("music_tracks")
+      .select("id,title,provider,youtube_music_id,spotify_url,sort_order,is_active,created_at")
+      .eq("is_active",true)
+      .order("sort_order",{ascending:true})
+      .order("created_at",{ascending:true});
+
+    if(error){
+      console.error("Učitavanje playlist-e nije uspjelo:",error);
+    }else{
+      musicTracks=tracks||[];
+    }
+  }catch(error){
+    console.error("Učitavanje playlist-e nije uspjelo:",error);
+  }
+
+  renderMusicAdmin();
+  try{
+    initMusic();
+  }catch(error){
+    console.error("Pokretanje playera muzike nije uspjelo:",error);
+  }
+}
 
 
 /* -----------------------------------------
@@ -10817,6 +10859,9 @@ async function subscribeRealPush(){
     return false;
   }
 
+  let subscription=null;
+  let createdSubscription=false;
+  let serverSaved=false;
   try{
     const permission=await Notification.requestPermission();
     if(permission!=="granted"){
@@ -10829,35 +10874,50 @@ async function subscribeRealPush(){
 
     const reg=await navigator.serviceWorker.register("./service-worker.js",{scope:"./"});
     if(!reg?.pushManager)throw new Error("Service worker nije spreman za push obavještenja.");
-    let sub=await reg.pushManager.getSubscription();
-    if(!sub){
-      sub=await reg.pushManager.subscribe({
+    subscription=await reg.pushManager.getSubscription();
+    if(!subscription){
+      subscription=await reg.pushManager.subscribe({
         userVisibleOnly:true,
         applicationServerKey:b64ToBytes(V7.pushPublicKey)
       });
+      createdSubscription=true;
     }
-    if(!sub?.endpoint)throw new Error("Preglednik nije kreirao važeću push pretplatu.");
+    if(!subscription?.endpoint)throw new Error("Preglednik nije kreirao važeću push pretplatu.");
 
-    const payload=sub.toJSON();
+    const payload=subscription.toJSON();
     if(!payload?.keys?.p256dh||!payload?.keys?.auth){
       throw new Error("Preglednik nije vratio ključeve potrebne za push pretplatu.");
     }
 
     const {error}=await supabaseClient.from("push_subscriptions").upsert({
       user_id:currentUser.id,
-      endpoint:sub.endpoint,
+      endpoint:subscription.endpoint,
       p256dh:payload.keys.p256dh,
       auth:payload.keys.auth,
       user_agent:navigator.userAgent,
       updated_at:new Date().toISOString()
     },{onConflict:"endpoint"});
     if(error)throw error;
+    serverSaved=true;
 
-    localStorage.setItem("medjasi_push_enabled","1");
+    try{
+      localStorage.setItem("medjasi_push_enabled","1");
+    }catch(storageError){
+      console.warn("Lokalni indikator push obavještenja nije sačuvan:",storageError);
+    }
     renderPushUI();
     toastV("🔔 Push obavještenja su uključena.");
     return true;
   }catch(error){
+    // If persistence failed, remove only the orphaned subscription we just
+    // created. A pre-existing subscription is left intact for a safe retry.
+    if(createdSubscription&&!serverSaved&&subscription){
+      try{
+        await subscription.unsubscribe();
+      }catch(cleanupError){
+        console.warn("Čišćenje nepotrebne push pretplate nije uspjelo:",cleanupError);
+      }
+    }
     console.warn("Uključivanje push obavještenja nije uspjelo:",error);
     toastV(error?.message||"Push obavještenja nisu mogla biti uključena. Pokušaj ponovo.","error");
     renderPushUI();
