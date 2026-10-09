@@ -1200,37 +1200,27 @@ async function ensureProfile(user){
 
 
 async function checkAuth(){
-
-  const {
-    data:{
-      session
-    }
-  } =
-    await supabaseClient
-      .auth
-      .getSession();
-
-
-  currentUser =
-    session?.user || null;
-
-
-  if(currentUser){
-
-    currentProfile =
-      await ensureProfile(currentUser);
-
-  }else{
-
-    currentProfile = null;
+  // The static shell must remain usable when the Supabase CDN is unavailable.
+  if(!supabaseClient?.auth?.getSession){
+    currentUser=null;
+    currentProfile=null;
+    updateAuthUI();
+    return null;
   }
 
+  const {data,error}=await supabaseClient.auth.getSession();
+  if(error) throw error;
+
+  currentUser=data?.session?.user||null;
+  currentProfile=currentUser?await ensureProfile(currentUser):null;
 
   updateAuthUI();
 
   if(currentUser && document.getElementById("login")?.classList.contains("active")){
     showSection("home");
   }
+
+  return currentUser;
 }
 
 
@@ -1558,40 +1548,39 @@ window.resendConfirmation=resendConfirmation;
 ========================================================= */
 
 async function logout(){
-  if(!supabaseClient?.auth){
+  if(!supabaseClient?.auth?.signOut){
     alert("Odjava je trenutno nedostupna jer servis prijave nije učitan.");
     return;
   }
-  medjasiAuthInteraction = true;
 
-  const {
-    error
-  } =
-    await supabaseClient
-      .auth
-      .signOut();
+  medjasiAuthInteraction=true;
+  try{
+    const {error}=await supabaseClient.auth.signOut();
+    if(error){
+      medjasiAuthInteraction=false;
+      alert(error.message||"Odjava nije uspjela. Pokušaj ponovo.");
+      return;
+    }
 
+    currentUser=null;
+    currentProfile=null;
+    updateAuthUI();
+    toast("Odjavljen si.");
+    showSection("home");
 
-  if(error){
-
-    alert(error.message);
-
-    return;
+    try{
+      await loadAll();
+    }catch(loadError){
+      // Signing out has succeeded; a refresh failure must not undo the UI state.
+      console.error("Osvježavanje nakon odjave nije uspjelo:",loadError);
+    }
+  }catch(error){
+    medjasiAuthInteraction=false;
+    console.error("Odjava nije uspjela:",error);
+    alert(error?.message||"Odjava nije uspjela zbog mrežne greške. Pokušaj ponovo.");
+  }finally{
+    medjasiAuthInteraction=false;
   }
-
-
-  currentUser = null;
-  currentProfile = null;
-
-
-  updateAuthUI();
-
-
-  toast("Odjavljen si.");
-
-  showSection("home");
-
-  await loadAll();
 }
 
 
