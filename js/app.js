@@ -10806,8 +10806,102 @@ async function notifyPush(type,title,body,matchId=null){
   }
 }
 function b64ToBytes(s){const pad='='.repeat((4-s.length%4)%4),raw=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
-async function subscribeRealPush(){if(!currentUser)return toastV('Prvo se prijavi.','error');if(!('serviceWorker' in navigator)||!('PushManager' in window))return toastV('Ovaj browser ne podržava push.','error');const perm=await Notification.requestPermission();if(perm!=='granted')return toastV('Dozvola za obavještenja nije odobrena.','error');const reg=await navigator.serviceWorker.register('./service-worker.js',{scope:'./'});let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToBytes(V7.pushPublicKey)});const j=sub.toJSON();const {error}=await supabaseClient.from('push_subscriptions').upsert({user_id:currentUser.id,endpoint:sub.endpoint,p256dh:j.keys?.p256dh,auth:j.keys?.auth,user_agent:navigator.userAgent,updated_at:new Date().toISOString()},{onConflict:'endpoint'});if(error)return toastV(error.message,'error');localStorage.setItem('medjasi_push_enabled','1');renderPushUI();toastV('🔔 Push obavještenja su uključena.')}
-async function disableRealPush(){try{const reg=await navigator.serviceWorker.getRegistration('./');const sub=await reg?.pushManager.getSubscription();if(sub){await supabaseClient.from('push_subscriptions').delete().eq('endpoint',sub.endpoint);await sub.unsubscribe()}}catch(e){console.warn(e)}localStorage.removeItem('medjasi_push_enabled');renderPushUI()}
+async function subscribeRealPush(){
+  if(!currentUser)return toastV("Prvo se prijavi.","error"),false;
+  if(!("serviceWorker" in navigator)||!("PushManager" in window)||!("Notification" in window)){
+    toastV("Ovaj browser ne podržava push obavještenja.","error");
+    return false;
+  }
+  if(!supabaseClient?.from){
+    toastV("Servis za obavještenja trenutno nije dostupan.","error");
+    return false;
+  }
+
+  try{
+    const permission=await Notification.requestPermission();
+    if(permission!=="granted"){
+      toastV("Dozvola za obavještenja nije odobrena.","error");
+      return false;
+    }
+    if(typeof V7.pushPublicKey!=="string"||!V7.pushPublicKey.trim()){
+      throw new Error("Nedostaje javni VAPID ključ za push obavještenja.");
+    }
+
+    const reg=await navigator.serviceWorker.register("./service-worker.js",{scope:"./"});
+    if(!reg?.pushManager)throw new Error("Service worker nije spreman za push obavještenja.");
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:b64ToBytes(V7.pushPublicKey)
+      });
+    }
+    if(!sub?.endpoint)throw new Error("Preglednik nije kreirao važeću push pretplatu.");
+
+    const payload=sub.toJSON();
+    if(!payload?.keys?.p256dh||!payload?.keys?.auth){
+      throw new Error("Preglednik nije vratio ključeve potrebne za push pretplatu.");
+    }
+
+    const {error}=await supabaseClient.from("push_subscriptions").upsert({
+      user_id:currentUser.id,
+      endpoint:sub.endpoint,
+      p256dh:payload.keys.p256dh,
+      auth:payload.keys.auth,
+      user_agent:navigator.userAgent,
+      updated_at:new Date().toISOString()
+    },{onConflict:"endpoint"});
+    if(error)throw error;
+
+    localStorage.setItem("medjasi_push_enabled","1");
+    renderPushUI();
+    toastV("🔔 Push obavještenja su uključena.");
+    return true;
+  }catch(error){
+    console.warn("Uključivanje push obavještenja nije uspjelo:",error);
+    toastV(error?.message||"Push obavještenja nisu mogla biti uključena. Pokušaj ponovo.","error");
+    renderPushUI();
+    return false;
+  }
+}
+
+async function disableRealPush(){
+  if(!("serviceWorker" in navigator)||!("PushManager" in window)){
+    toastV("Ovaj browser ne podržava upravljanje push pretplatama.","error");
+    return false;
+  }
+  if(!supabaseClient?.from){
+    toastV("Servis za obavještenja trenutno nije dostupan.","error");
+    return false;
+  }
+
+  try{
+    const reg=await navigator.serviceWorker.getRegistration("./");
+    const sub=await reg?.pushManager?.getSubscription();
+    if(sub){
+      const {error}=await supabaseClient.from("push_subscriptions")
+        .delete().eq("endpoint",sub.endpoint);
+      if(error)throw error;
+
+      const unsubscribed=await sub.unsubscribe();
+      if(!unsubscribed){
+        throw new Error("Preglednik nije potvrdio isključivanje push pretplate. Pokušaj ponovo.");
+      }
+    }
+
+    localStorage.removeItem("medjasi_push_enabled");
+    renderPushUI();
+    toastV("Push obavještenja su isključena.");
+    return true;
+  }catch(error){
+    // Keep the enabled indicator until both the server row and browser
+    // subscription have been removed successfully; the user can retry.
+    console.warn("Isključivanje push obavještenja nije uspjelo:",error);
+    renderPushUI();
+    toastV(error?.message||"Push obavještenja nisu mogla biti isključena. Pokušaj ponovo.","error");
+    return false;
+  }
+}
 function renderPushUI(){if(!$('v7PushStatus')||!$('v7PushButton'))return;const on=localStorage.getItem('medjasi_push_enabled')==='1';$('v7PushStatus').textContent=on?'🔔 Push obavještenja su uključena.':'Push obavještenja nisu uključena.';$('v7PushStatus').className='v7-push-status '+(on?'ok':'');$('v7PushButton').textContent=on?'🔕 Isključi push':'🔔 Uključi push';$('v7PushButton').onclick=on?disableRealPush:subscribeRealPush}
 function ensureSeasonAdmin(){if(!$('adminContent')||!isAdm()||$('v7SeasonCard'))return;const c=document.createElement('div');c.id='v7SeasonCard';c.className='card';c.style.marginTop='20px';c.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SEZONE</span><h3>🏆 Upravljanje sezonama</h3><p class="muted">Aktivna sezona se automatski dodjeljuje novim utakmicama.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="actions"><input id="v7SeasonName" placeholder="npr. 2026/27" style="max-width:220px"><button class="btn btn-green" onclick="medjasiV7.addSeason()">＋ Nova sezona</button></div><div id="v7SeasonList" style="margin-top:12px"></div>`;$('adminContent').appendChild(c);renderSeasons()}
 async function loadSeasons(){
