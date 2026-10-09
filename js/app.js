@@ -1617,7 +1617,9 @@ async function loadAll(){
         all=all.concat(data||[]);
         if(!data||data.length<PAGE) break;
         from+=PAGE;
-        if(from>20000) break;
+        if(from>20000){
+          return {data:null,error:new Error("Podaci prelaze sigurni limit od 21.000 redova; rezultat nije skraćen tiho.")};
+        }
       }
       return {data:all,error:null};
     };

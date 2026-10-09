@@ -661,6 +661,10 @@ alter function private.fan_team_donate(text, integer) set search_path to private
 
 revoke all on all functions in schema private from public, anon, authenticated;
 
+create or replace function public.fan_admin_grant(p_user uuid, p_amount integer, p_reason text)
+returns integer language sql security invoker set search_path to public, pg_temp
+as $ select private.fan_admin_grant(p_user, p_amount, p_reason); $;
+
 create or replace function public.fan_buy_item(p_item integer)
 returns integer language sql security invoker set search_path to public, pg_temp
 as $$ select private.fan_buy_item(p_item); $$;
@@ -717,6 +721,7 @@ create or replace function public.fan_team_donate(p_team text, p_amount integer)
 returns integer language sql security invoker set search_path to public, pg_temp
 as $$ select private.fan_team_donate(p_team, p_amount); $$;
 
+revoke all on function public.fan_admin_grant(uuid, integer, text) from public, anon;
 revoke all on function public.fan_buy_item(integer) from public, anon;
 revoke all on function public.fan_claim_daily() from public, anon;
 revoke all on function public.fan_ensure_wallet() from public, anon;
@@ -731,6 +736,7 @@ revoke all on function public.fan_public_cosmetics(uuid[]) from public, anon;
 revoke all on function public.fan_settle_match(text) from public, anon;
 revoke all on function public.fan_team_donate(text, integer) from public, anon;
 
+grant execute on function public.fan_admin_grant(uuid, integer, text) to authenticated;
 grant execute on function public.fan_buy_item(integer) to authenticated;
 grant execute on function public.fan_claim_daily() to authenticated;
 grant execute on function public.fan_ensure_wallet() to authenticated;
@@ -745,6 +751,7 @@ grant execute on function public.fan_public_cosmetics(uuid[]) to authenticated;
 grant execute on function public.fan_settle_match(text) to authenticated;
 grant execute on function public.fan_team_donate(text, integer) to authenticated;
 
+grant execute on function private.fan_admin_grant(uuid, integer, text) to authenticated;
 grant execute on function private.fan_buy_item(integer) to authenticated;
 grant execute on function private.fan_claim_daily() to authenticated;
 grant execute on function private.fan_ensure_wallet() to authenticated;
