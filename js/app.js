@@ -7185,10 +7185,10 @@ async function addCard(matchId){
     alert("Igrač ne pripada ekipama u ovoj utakmici.");
     return;
   }
-  const registered=matchPlayers.some(mp=>
+  const isRegistered=matchPlayers.some(mp=>
     String(mp.match_id)===String(matchId)&&String(mp.player_id)===String(player_id)
   );
-  if(!registered){
+  if(!isRegistered){
     alert("Igrač više nije u postavi ove utakmice. Osvježi postavu.");
     return;
   }
