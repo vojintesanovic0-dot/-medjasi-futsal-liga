@@ -4,6 +4,11 @@
 
 begin;
 
+-- Make this script safe for a clean install as well as an existing database.
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to authenticated;
+
 create or replace function private.admin_set_user_role(
   target_user_id uuid,
   new_role text
@@ -60,5 +65,23 @@ begin
   end if;
 end;
 $function$;
+
+-- The public API remains an invoker wrapper; privileged logic stays private.
+create or replace function public.admin_set_user_role(
+  target_user_id uuid,
+  new_role text
+)
+returns void
+language sql
+security invoker
+set search_path = public, pg_temp
+as $function$
+  select private.admin_set_user_role(target_user_id, new_role);
+$function$;
+
+revoke all on function private.admin_set_user_role(uuid, text) from public, anon;
+grant execute on function private.admin_set_user_role(uuid, text) to authenticated;
+revoke all on function public.admin_set_user_role(uuid, text) from public, anon;
+grant execute on function public.admin_set_user_role(uuid, text) to authenticated;
 
 commit;
