@@ -400,3 +400,9 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
   .dashboard-kpi strong{font-size:17px!important}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+
+/* Prevent the compact mobile brand from forcing the header actions off-screen. */
+@media(max-width:1024px){
+  .site-header .header-actions{width:auto!important;flex:1 1 0!important;max-width:none!important;min-width:0!important}
+  .site-header .v7-search-wrap{max-width:none!important;flex:1 1 0!important}
+}
