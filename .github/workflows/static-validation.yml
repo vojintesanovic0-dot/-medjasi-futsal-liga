@@ -32,6 +32,45 @@ jobs:
             node --check "$file"
           done
 
+
+      - name: Validate local HTML assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+          html = Path("index.html").read_text(encoding="utf-8")
+          refs = re.findall(r'(?:src|href)=["\\']([^"\\']+\\.(?:js|css)(?:\\?[^"\\']*)?)["\\']', html, re.I)
+          missing = []
+          for ref in refs:
+              if ref.startswith(("http://", "https://", "//")):
+                  continue
+              path = ref.split("?", 1)[0].removeprefix("./")
+              if not os.path.isfile(path):
+                  missing.append(ref)
+          if missing:
+              raise SystemExit("Missing local script/style assets: " + ", ".join(missing))
+          print(f"Validated {len(refs)} local/remote script and stylesheet references.")
+          PY
+
+      - name: Validate SQL script order
+        shell: bash
+        run: |
+          set -euo pipefail
+          declare -A seen=()
+          for file in sql/[0-9][0-9]_*.sql; do
+            test -f "$file" || continue
+            prefix="${file##*/}"
+            prefix="${prefix:0:2}"
+            if [[ -n "${seen[$prefix]:-}" ]]; then
+              echo "Duplicate SQL order prefix $prefix: ${seen[$prefix]} and $file"
+              exit 1
+            fi
+            seen[$prefix]="$file"
+          done
+
       - name: Validate required entry files
         shell: bash
         run: |
