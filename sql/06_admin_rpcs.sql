@@ -7,6 +7,24 @@
 
 begin;
 
+-- Canonical admin predicate: safe for missing profiles and non-admin users.
+create or replace function public.medjasi_is_admin()
+returns boolean
+language sql
+stable
+security invoker
+set search_path = public, pg_temp
+as $function$
+  select exists (
+    select 1
+    from public.profiles
+    where id = (select auth.uid())
+      and role = 'admin'
+  );
+$function$;
+revoke all on function public.medjasi_is_admin() from public, anon;
+grant execute on function public.medjasi_is_admin() to authenticated, service_role;
+
 create or replace function public.admin_set_user_role(target_user_id uuid, new_role text)
 returns void
 language plpgsql
