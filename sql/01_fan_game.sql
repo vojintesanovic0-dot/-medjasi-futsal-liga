@@ -231,7 +231,7 @@ begin
   perform fan_ensure_wallet();
   select * into m from fan_markets where id = p_market;
   if not found or m.status <> 'open' then raise exception 'Ovaj pogodak više nije dostupan.'; end if;
-  select * into mt from matches where id::text = m.match_id;
+  select * into mt from matches where id::text = m.match_id for update;
   if not found then raise exception 'Utakmica ne postoji.'; end if;
   if mt.status not in ('scheduled','live') then
     raise exception 'Pogađanje za ovu utakmicu je zatvoreno.';
