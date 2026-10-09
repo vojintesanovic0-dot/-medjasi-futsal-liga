@@ -29,6 +29,28 @@ const authMarkup = authStart >= 0 && authEnd > authStart ? html.slice(authStart,
 const loginFunctionStart = app.indexOf("async function login()");
 const loginFunctionEnd = app.indexOf("/* =========================================================\n   RESET PASSWORD", loginFunctionStart);
 const loginFunction = loginFunctionStart >= 0 && loginFunctionEnd > loginFunctionStart ? app.slice(loginFunctionStart, loginFunctionEnd) : "";
+const checkAuthStart = app.indexOf("async function checkAuth()");
+const checkAuthEnd = app.indexOf("/* =========================================================\\n   LOGIN", checkAuthStart);
+const checkAuthFunction = checkAuthStart >= 0 && checkAuthEnd > checkAuthStart ? app.slice(checkAuthStart, checkAuthEnd) : "";
+const logoutStart = app.indexOf("async function logout()");
+const logoutEnd = app.indexOf("/* =========================================================\\n   AUTH UI", logoutStart);
+const logoutFunction = logoutStart >= 0 && logoutEnd > logoutStart ? app.slice(logoutStart, logoutEnd) : "";
+
+if (
+  !checkAuthFunction.includes("if(!supabaseClient?.auth?.getSession)") ||
+  !checkAuthFunction.includes("currentProfile=null") ||
+  !checkAuthFunction.includes("updateAuthUI()")
+) {
+  fail("Auth initialization must handle a missing Supabase SDK without leaving stale user state");
+} else pass("Auth initialization safely handles an unavailable Supabase SDK");
+
+if (
+  !logoutFunction.includes("medjasiAuthInteraction=false") ||
+  !logoutFunction.includes("catch(error)") ||
+  !logoutFunction.includes("finally")
+) {
+  fail("Logout failures must reset the auth interaction flag and report network errors");
+} else pass("Logout resets auth interaction state on success and failure");
 
 if (
   !authMarkup.includes('onclick="exitAuthScreen()"') ||
