@@ -25,7 +25,7 @@ const htmlRefs = [...html.matchAll(/(?:src|href)=["'](\.\/[^"']+)["']/gi)]
   .map((m) => m[1])
   .filter((ref) => /\.(?:css|js|html|json|png|svg|webp|jpe?g|woff2?)(?:[?#]|$)/i.test(ref));
 
-const stylesheetTags = [...html.matchAll(/<link\\b[^>]+href=["'][^"']+\\.css(?:\\?[^"']*)?["'][^>]*>/gi)];
+const stylesheetTags = [...html.matchAll(/<link\b[^>]+href=["'][^"']+\.css(?:\?[^"']*)?["'][^>]*>/gi)];
 const finalHeaderIndex = stylesheetTags.findIndex((m) => m[0].includes("header-final.css"));
 const lastStylesheetIndex = stylesheetTags.length - 1;
 if (finalHeaderIndex < 0 || finalHeaderIndex !== lastStylesheetIndex) {
