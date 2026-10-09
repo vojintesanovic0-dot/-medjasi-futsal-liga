@@ -123,6 +123,29 @@ function isAllowedRasterImage(file){
   ].includes(String(file.type||"").toLowerCase());
 }
 
+async function hasExpectedMediaSignature(file,mime){
+  try{
+    const bytes=new Uint8Array(await file.slice(0,64).arrayBuffer());
+    const ascii=(start,length)=>String.fromCharCode(...bytes.slice(start,start+length));
+    const starts=(...values)=>values.every((value,index)=>bytes[index]===value);
+    switch(mime){
+      case "image/jpeg": return starts(0xff,0xd8,0xff);
+      case "image/png": return starts(0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a);
+      case "image/gif": return ["GIF87a","GIF89a"].includes(ascii(0,6));
+      case "image/webp": return ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP";
+      case "image/avif": return ascii(4,4)==="ftyp"&&
+        ["avif","avis"].some(brand=>Array.from(bytes).some((_,i)=>i>=8&&ascii(i,4)===brand));
+      case "video/mp4": return ascii(4,4)==="ftyp";
+      case "video/webm": return starts(0x1a,0x45,0xdf,0xa3);
+      case "video/ogg": return ascii(0,4)==="OggS";
+      default: return false;
+    }
+  }catch(error){
+    console.warn("Provjera formata datoteke nije uspjela:",error);
+    return false;
+  }
+}
+
 function escJs(value){
   return String(value ?? "")
     .replace(/\\/g,"\\\\")
@@ -3965,6 +3988,9 @@ async function uploadFile(file,folder){
   const maxBytes=isVideo?50*1024*1024:15*1024*1024;
   if(!Number.isFinite(file.size)||file.size<=0||file.size>maxBytes){
     throw new Error(isVideo?"Video mora imati najviše 50 MB.":"Slika mora imati najviše 15 MB.");
+  }
+  if(!await hasExpectedMediaSignature(file,mime)){
+    throw new Error("Sadržaj datoteke ne odgovara prijavljenom formatu. Izaberi stvarnu sliku ili podržani video.");
   }
 
   if(typeof crypto?.randomUUID!=="function"){
