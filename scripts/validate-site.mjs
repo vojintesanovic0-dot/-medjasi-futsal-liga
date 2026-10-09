@@ -42,11 +42,11 @@ if (!shellMatch) {
   }
   if (!failures.some((x) => x.startsWith("Missing service-worker asset:"))) pass(`All ${shellRefs.length} service-worker shell assets exist`);
 
-  const shellPaths = new Set(shellRefs.map(pathFromRef));
+  const shellExactRefs = new Set(shellRefs);
   for (const ref of htmlRefs.filter((x) => /\.(?:css|js|html|json)(?:[?#]|$)/i.test(x))) {
-    if (!shellPaths.has(pathFromRef(ref))) fail(`HTML asset is not in APP_SHELL: ${ref}`);
+    if (!shellExactRefs.has(ref)) fail(`HTML asset URL/version is not in APP_SHELL: ${ref}`);
   }
-  if (!failures.some((x) => x.startsWith("HTML asset is not in APP_SHELL:"))) pass("All local HTML CSS/JS/HTML/JSON assets are represented in APP_SHELL");
+  if (!failures.some((x) => x.startsWith("HTML asset URL/version is not in APP_SHELL:"))) pass("All local HTML asset URLs and cache versions match APP_SHELL exactly");
 }
 
 const htmlAppVersion = html.match(/src=["']\.\/js\/app\.js\?v=([^"']+)/)?.[1];
