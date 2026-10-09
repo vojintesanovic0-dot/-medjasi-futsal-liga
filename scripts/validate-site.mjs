@@ -189,6 +189,22 @@ if (
   fail("Live goal+assist modal must use its own fields and save the validated scorer/assist");
 } else pass("Live goal+assist modal uses matching fields and stores a validated assist");
 
+const loadStatsStart = app.indexOf("async function loadStats()");
+const loadStatsEnd = app.indexOf("async function addSave(", loadStatsStart);
+const loadStatsFunction = loadStatsStart >= 0 && loadStatsEnd > loadStatsStart ? app.slice(loadStatsStart, loadStatsEnd) : "";
+const finishSaveStart = app.indexOf("async function finishAndSave(matchId)");
+const finishSaveEnd = app.indexOf("async function saveRatings(matchId)", finishSaveStart);
+const finishSaveFunction = finishSaveStart >= 0 && finishSaveEnd > finishSaveStart ? app.slice(finishSaveStart, finishSaveEnd) : "";
+if (
+  !loadStatsFunction.includes("if(error)throw error") ||
+  !loadStatsFunction.includes("return V7.stats") ||
+  !finishSaveFunction.includes("await loadStats()") ||
+  !finishSaveFunction.includes("await saveRatings(matchId)")
+) {
+  fail("Match finalization must not overwrite existing player stats when the current stats read fails");
+} else pass("Match finalization confirms the existing stats read before writing ratings");
+
+
 if (
   !galleryVideoTestFunction.includes("image_url:media_url") ||
   !galleryVideoTestFunction.includes("media_url,") ||
