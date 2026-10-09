@@ -1578,7 +1578,35 @@ async function logout(){
    AUTH UI
 ========================================================= */
 
-function updateAuthUI(){const logged=!!currentUser;const username=currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik";const account=document.getElementById("headerAccount");if(account)account.innerHTML=logged?`<button class="account-btn" onclick="openV9Profile('${currentUser.id}')"><span class="account-name">👤 ${esc(username)}</span>${isAdmin()?'<span class="account-admin">Admin</span>':''}</button><button class="account-btn" onclick="logout()">↪</button>`:`<button class="account-btn" onclick="showSection('login')">🔐 Prijava</button>`;document.getElementById("commentForm")?.classList.toggle("hidden",!logged);const chatForm=document.getElementById("chatForm");const chatLoginText=document.getElementById("chatLoginText");chatForm?.classList.toggle("hidden",!logged);chatLoginText?.classList.toggle("hidden",logged);renderHome();renderTable();renderMatches();renderTeams();renderPlayers();renderStats();renderComments();renderChat();renderAdminMatches();fillTeamSelects();}
+function updateAuthUI(renderContent=true){
+  const logged=!!currentUser;
+  const username=currentProfile?.username||currentUser?.user_metadata?.username||"Korisnik";
+  const account=document.getElementById("headerAccount");
+  if(account){
+    account.innerHTML=logged
+      ? `<button class="account-btn" onclick="openV9Profile('${currentUser.id}')"><span class="account-name">👤 ${esc(username)}</span>${isAdmin()?'<span class="account-admin">Admin</span>':''}</button><button class="account-btn" onclick="logout()">↪</button>`
+      : `<button class="account-btn" onclick="showSection('login')">🔐 Prijava</button>`;
+  }
+  document.getElementById("commentForm")?.classList.toggle("hidden",!logged);
+  const chatForm=document.getElementById("chatForm");
+  const chatLoginText=document.getElementById("chatLoginText");
+  chatForm?.classList.toggle("hidden",!logged);
+  chatLoginText?.classList.toggle("hidden",logged);
+
+  // renderAll already refreshed these views. Auth-only updates can avoid a
+  // second expensive render pass across tables, chat, and admin controls.
+  if(!renderContent)return;
+  renderHome();
+  renderTable();
+  renderMatches();
+  renderTeams();
+  renderPlayers();
+  renderStats();
+  renderComments();
+  renderChat();
+  renderAdminMatches();
+  fillTeamSelects();
+}
 
 /* =========================================================
    LOAD ALL DATA
@@ -1635,8 +1663,14 @@ async function loadAll(){
       for(;;){
         let q=supabaseClient.from(table).select("*");
         if(orderCol) q=q.order(orderCol,{ascending:true});
-        // Stable tie-breaker prevents duplicate/missing rows between paginated requests.
-        q=q.order("id",{ascending:true});
+        // Stable tie-breakers prevent gaps between pages. The optional
+        // match_players join table is keyed by match_id/player_id and may not
+        // have a synthetic id column like the entity tables do.
+        if(table==="match_players"){
+          q=q.order("match_id",{ascending:true}).order("player_id",{ascending:true});
+        }else{
+          q=q.order("id",{ascending:true});
+        }
         const {data,error}=await q.range(from,from+PAGE-1);
         if(error) return {data:null,error};
         all=all.concat(data||[]);
@@ -1735,7 +1769,7 @@ function renderAll(){
 
   fillTeamSelects();
 
-  updateAuthUI();
+  updateAuthUI(false);
 }
 
 

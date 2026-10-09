@@ -10,7 +10,7 @@ const TM=()=>typeof teams!=="undefined"?teams:[];
 const team=id=>TM().find(t=>String(t.id)===String(id));
 const tname=id=>team(id)?.name||"Ekipa";
 const note=(m,t="success")=>typeof toast==="function"?toast(m,t):alert(m);
-let follows=new Set(), sponsors=[], seasons=[];
+let follows=new Set(), sponsors=[], seasons=[], followsUserId=null;
 function standings(){
   const m=new Map(TM().map(t=>[String(t.id),{name:t.name,played:0,wins:0,draws:0,losses:0,gf:0,ga:0,pts:0}]));
   MT().filter(x=>x.status==="finished").forEach(x=>{
@@ -37,11 +37,42 @@ function downloadICS(list){
   a.download="medjasi-futsal-liga.ics";a.click();
 }
 async function load(){
-  if(!sb())return;
-  const f=user()?await sb().from("fan_team_follows").select("team_id").eq("user_id",user().id):{data:[]};
-  const s=await sb().from("sponsors").select("*").eq("active",true).order("sort_order");
-  const se=await sb().from("seasons").select("*");
-  follows=new Set((f.data||[]).map(x=>String(x.team_id))); sponsors=s.data||[]; seasons=se.data||[];
+  const client=sb();
+  if(!client)return;
+  const current=user();
+  const [followResult,sponsorResult,seasonResult]=await Promise.all([
+    current
+      ? client.from("fan_team_follows").select("team_id").eq("user_id",current.id)
+      : Promise.resolve({data:[],error:null}),
+    client.from("sponsors").select("*").eq("active",true).order("sort_order"),
+    client.from("seasons").select("*")
+  ]);
+
+  if(!current){
+    follows=new Set();
+    followsUserId=null;
+  }else if(followResult.error){
+    console.warn("Liga info follows temporarily unavailable:",followResult.error);
+    // Never show another account's cached follow state after an auth change.
+    if(followsUserId!==String(current.id)){
+      follows=new Set();
+      followsUserId=String(current.id);
+    }
+  }else{
+    follows=new Set((followResult.data||[]).map(row=>String(row.team_id)));
+    followsUserId=String(current.id);
+  }
+
+  if(sponsorResult.error){
+    console.warn("Liga info sponsors temporarily unavailable:",sponsorResult.error);
+  }else{
+    sponsors=sponsorResult.data||[];
+  }
+  if(seasonResult.error){
+    console.warn("Liga info seasons temporarily unavailable:",seasonResult.error);
+  }else{
+    seasons=seasonResult.data||[];
+  }
   renderSponsors();
 }
 function info(){
