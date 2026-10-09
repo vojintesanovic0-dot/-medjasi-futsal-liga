@@ -47,7 +47,7 @@ async function load(){
 function info(){
   const r=$("gxInfoRoot"); if(!r)return;
   const st=standings(),u=user();
-  let html='<div class="gx-grid"><div class="card"><h3> Tabela</h3><table class="gx-table"><thead><tr><th>#</th><th>Ekipa</th><th>U</th><th>Gol</th><th>Bod</th></tr></thead><tbody>';
+  let html=(!sb()?'<div class="card gx-unavailable"><h3>Podaci su privremeno nedostupni</h3><p>Tabela i kalendar će se prikazati iz dostupnih podataka; prijava i čuvanje promjena zahtijevaju vezu sa servisom.</p></div>':'')+'<div class="gx-grid"><div class="card"><h3> Tabela</h3><table class="gx-table"><thead><tr><th>#</th><th>Ekipa</th><th>U</th><th>Gol</th><th>Bod</th></tr></thead><tbody>';
   st.forEach((x,i)=>{html+="<tr><td>"+(i+1)+"</td><td>"+E(x.name)+"</td><td>"+x.played+"</td><td>"+x.gf+":"+x.ga+"</td><td><b>"+x.pts+"</b></td></tr>";});
   html+='</tbody></table></div><div class="card"><h3> Kalendar</h3><button class="btn btn-green" data-gx="ics-all">Dodaj utakmice u kalendar</button></div></div>';
   html+='<div class="card"><h3> Prati ekipe</h3>';
@@ -111,11 +111,28 @@ function mount(){
   const h=$("home");if(h&&!$("gxSponsors")){const s=document.createElement("section");s.id="gxSponsors";s.className="gx-sponsors";h.appendChild(s);}
   if(!window.__MEDJASI_GROWTH_CLICK_BOUND__){window.__MEDJASI_GROWTH_CLICK_BOUND__=true;document.addEventListener("click",click);}
 }
+let bootAttempts=0;
 function boot(){
-  if(!window.showSection||!window.supabaseClient)return setTimeout(boot,250);
-  mount();const orig=window.showSection;
-  window.showSection=function(id){const r=orig.apply(this,arguments);if(id==="info"){info();load().then(info);}return r;};
-  load();
+  if(!window.showSection){
+    if(bootAttempts++<20)setTimeout(boot,250);
+    return;
+  }
+  mount();
+  if(!window.__MEDJASI_GROWTH_SECTION_PATCH__){
+    window.__MEDJASI_GROWTH_SECTION_PATCH__=true;
+    const orig=window.showSection;
+    window.showSection=function(id){
+      const r=orig.apply(this,arguments);
+      if(id==="info"){
+        info();
+        if(sb())load().then(info).catch(error=>console.warn("Liga info refresh:",error));
+      }
+      return r;
+    };
+  }
+  info();
+  if(sb())load().then(info).catch(error=>console.warn("Liga info initialization:",error));
+  else renderSponsors();
 }
 window.medjasiGrowth={standings,buildICS};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
