@@ -201,7 +201,10 @@ const gameTabValues = new Set([...game.matchAll(/\["([a-z][a-z0-9_-]*)","[^"]+"\
 const missingDashboardTabs = dashboardTabValues.filter((tab) => !gameTabValues.has(tab));
 if (
   !dashboard.includes("window.dashboardOpenGameTab=function(tab)") ||
-  !dashboard.includes('#game [data-act=\'tab\'][data-id]') ||
+  !(
+    dashboard.includes("window.medjasiGame?.openTab?.(key)===true") ||
+    dashboard.includes('#game [data-act=\'tab\'][data-id]')
+  ) ||
   missingDashboardTabs.length
 ) {
   fail("Dashboard Fan Game shortcuts must select a tab that exists in the Fan Game panel" + (missingDashboardTabs.length ? ": " + missingDashboardTabs.join(", ") : ""));
