@@ -14,28 +14,38 @@ language plpgsql
 security definer
 set search_path = public, pg_temp
 as $function$
+declare
+  calculated_home_score integer;
+  calculated_away_score integer;
 begin
   if p_match_id is null then
     return;
   end if;
 
-  update public.matches m
-  set
-    home_score = coalesce((
-      select count(*)::integer
-      from public.goals g
-      join public.players p on p.id = g.player_id
-      where g.match_id = m.id
-        and p.team_id = m.home_team_id
-    ), 0),
-    away_score = coalesce((
-      select count(*)::integer
-      from public.goals g
-      join public.players p on p.id = g.player_id
-      where g.match_id = m.id
-        and p.team_id = m.away_team_id
-    ), 0)
-  where m.id = p_match_id;
+  select count(*)::integer
+    into calculated_home_score
+  from public.goals g
+  join public.players p on p.id = g.player_id
+  join public.matches m on m.id = g.match_id
+  where g.match_id = p_match_id
+    and p.team_id = m.home_team_id;
+
+  select count(*)::integer
+    into calculated_away_score
+  from public.goals g
+  join public.players p on p.id = g.player_id
+  join public.matches m on m.id = g.match_id
+  where g.match_id = p_match_id
+    and p.team_id = m.away_team_id;
+
+  update public.matches
+  set home_score = coalesce(calculated_home_score, 0),
+      away_score = coalesce(calculated_away_score, 0)
+  where id = p_match_id
+    and (
+      home_score is distinct from coalesce(calculated_home_score, 0)
+      or away_score is distinct from coalesce(calculated_away_score, 0)
+    );
 end;
 $function$;
 
