@@ -7201,78 +7201,82 @@ function openCardControl(
 
 async function addCard(matchId){
   if(!canManageMatch())return;
-
   const match=getMatch(matchId);
-  if(!match){
-    alert("Utakmica nije pronađena. Osvježi prikaz i pokušaj ponovo.");
-    return;
-  }
+  if(!match)return alert("Utakmica nije pronađena. Osvježi prikaz i pokušaj ponovo.");
 
   const player_id=document.getElementById("cardPlayer")?.value;
   const card_type=document.getElementById("cardType")?.value;
   const minuteInput=document.getElementById("cardMinute");
   const minute=minuteInput?Number(minuteInput.value):NaN;
 
-  if(!player_id){
-    alert("Izaberi igrača.");
-    return;
-  }
-  if(!["yellow","red"].includes(card_type)){
-    alert("Izaberi ispravan tip kartona.");
-    return;
-  }
-  if(!Number.isInteger(minute)||minute<0||minute>60){
-    alert("Minuta kartona mora biti cijeli broj od 0 do 60.");
-    return;
-  }
+  if(!player_id)return alert("Izaberi igrača.");
+  if(!["yellow","red"].includes(card_type))return alert("Izaberi ispravan tip kartona.");
+  if(!Number.isInteger(minute)||minute<0||minute>60)return alert("Minuta kartona mora biti cijeli broj od 0 do 60.");
 
   const player=getPlayer(player_id);
-  if(!player){
-    alert("Izabrani igrač više nije dostupan. Osvježi postavu.");
-    return;
-  }
+  if(!player)return alert("Izabrani igrač više nije dostupan. Osvježi postavu.");
   if(String(player.team_id)!==String(match.home_team_id)&&String(player.team_id)!==String(match.away_team_id)){
-    alert("Igrač ne pripada ekipama u ovoj utakmici.");
-    return;
+    return alert("Igrač ne pripada ekipama u ovoj utakmici.");
   }
   const isRegistered=matchPlayers.some(mp=>
     String(mp.match_id)===String(matchId)&&String(mp.player_id)===String(player_id)
   );
-  if(!isRegistered){
-    alert("Igrač više nije u postavi ove utakmice. Osvježi postavu.");
-    return;
-  }
+  if(!isRegistered)return alert("Igrač više nije u postavi ove utakmice. Osvježi postavu.");
+
+  const submitButton=[...document.querySelectorAll("#modalContent button")]
+    .find(button=>/addCard\s*\(/.test(button.getAttribute("onclick")||""));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
 
   try{
     const {error}=await supabaseClient.from("cards").insert({
-      match_id:matchId,
-      player_id,
-      card_type,
-      minute
+      match_id:matchId,player_id,card_type,minute
     });
     if(error)throw error;
   }catch(error){
+    if(submitButton?.isConnected)submitButton.disabled=false;
     alert(error?.message||"Karton nije sačuvan. Pokušaj ponovo.");
     return;
   }
 
-  // Cards do not currently create a league_events row, so send one push
-  // directly after the database confirms that the card was recorded.
+  hideModal();
+  toast("Karton je evidentiran.");
+
+  let confirmedMatch=null;
+  try{
+    confirmedMatch=await refreshLiveMatchSnapshot(String(matchId));
+    if(!confirmedMatch)throw new Error("Utakmica nije pronađena nakon snimanja kartona.");
+  }catch(refreshError){
+    console.error("Karton je sačuvan, ali rezultat nije potvrđen:",refreshError);
+    toastV("Karton je sačuvan, ali nije moguće potvrditi osvježeni rezultat. Push nije poslan; ponovo otvori utakmicu.","error");
+    try{await loadAll();}catch(error){console.warn("Osvježavanje nakon kartona:",error);}
+    return;
+  }
+
   const cardLabel=card_type==="red"?"Crveni karton":"Žuti karton";
-  const playerIsHome=String(player.team_id)===String(match.home_team_id);
-  const opponentName=teamName(playerIsHome?match.away_team_id:match.home_team_id);
-  const liveScore=(match.home_score||0)+":"+(match.away_score||0);
-  void notifyLeaguePush(
+  const playerIsHome=String(player.team_id)===String(confirmedMatch.home_team_id);
+  const opponentName=teamName(playerIsHome?confirmedMatch.away_team_id:confirmedMatch.home_team_id);
+  const liveScore=Number(confirmedMatch.home_score||0)+":"+Number(confirmedMatch.away_score||0);
+  const pushOk=await notifyLeaguePush(
     "card",
     (card_type==="red"?"🟥 ":"🟨 ")+cardLabel+" — "+player.name,
     teamName(player.team_id)+" – "+opponentName+" · "+minute+"' · rezultat "+liveScore,
     matchId
   );
+  if(!pushOk)toastV("Karton je sačuvan, ali push obavještenje nije potvrđeno.","error");
 
-  hideModal();
-  toast("Karton je evidentiran.");
-  await loadAll();
-  openMatch(matchId);
+  try{
+    const fullyRefreshed=await loadAll();
+    if(fullyRefreshed!==true){
+      toastV("Karton je sačuvan, ali dio prikaza nije osvježen. Ponovo otvori utakmicu.","error");
+      return;
+    }
+    if(confirmedMatch.status==="live")openMatch(matchId);
+    else openFinished(matchId);
+  }catch(refreshError){
+    console.warn("Osvježavanje nakon kartona nije uspjelo:",refreshError);
+    toastV("Karton je sačuvan, ali prikaz nije osvježen. Ponovo otvori utakmicu.","error");
+  }
 }
 
 /* =========================================================
