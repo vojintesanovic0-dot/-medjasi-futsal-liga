@@ -764,6 +764,20 @@ if (
   pass("Database event integrity migration guards goal/card participants and required references");
 }
 
+const fanGameSource = read("js/game.js");
+if (
+  !fanGameSource.includes("const MARKET_STATS_TTL=30000") ||
+  !fanGameSource.includes("const MVP_RESULTS_TTL=60000") ||
+  !fanGameSource.includes("marketStatsFetchedAt=0") ||
+  !fanGameSource.includes("mvpResultsFetchedAt=0") ||
+  !fanGameSource.includes("Fan Game market counts are temporarily unavailable:") ||
+  !fanGameSource.includes("Fan Game MVP results are temporarily unavailable:")
+) {
+  fail("Fan Game must cache non-live aggregate counters, invalidate after related actions, and preserve the last good counts when optional RPCs fail");
+} else {
+  pass("Fan Game limits repeat aggregate RPCs while retaining refreshes for changed picks and MVP votes");
+}
+
 const communityPollSource = read("js/community-features.js");
 if (
   !app.includes('data-post-id="${escV(p.id)}"') ||
