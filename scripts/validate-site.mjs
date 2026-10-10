@@ -821,6 +821,21 @@ if (
   pass("Fan Game limits repeat aggregate RPCs while retaining refreshes for changed picks and MVP votes");
 }
 
+const communityPublishApp = app.slice(app.indexOf("window.publishV9Post=async function()"),app.indexOf("window.openV9StoryComposer=function()",app.indexOf("window.publishV9Post=async function()")));
+const communityPublishPatch = communityClickAuditSource.slice(communityClickAuditSource.indexOf("function patchPublish()"),communityClickAuditSource.indexOf("async function renderPolls()",communityClickAuditSource.indexOf("function patchPublish()")));
+if (
+  !communityPublishApp.includes('.insert({') ||
+  !communityPublishApp.includes('.select("id").single()') ||
+  !communityPublishApp.includes("return String(created.id)") ||
+  !communityPublishPatch.includes("postId=await old.apply(this,arguments)") ||
+  !communityPublishPatch.includes("await publishExtras(postId)") ||
+  communityPublishPatch.includes('.order("created_at",{ascending:false})')
+) {
+  fail("Community poll/link extras must attach to the exact successfully inserted post, not guess the newest post after a failed publish");
+} else {
+  pass("Community extras attach to the confirmed inserted post ID");
+}
+
 const communityPollSource = read("js/community-features.js");
 if (
   !app.includes('data-post-id="${escV(p.id)}"') ||
