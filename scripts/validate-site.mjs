@@ -903,19 +903,26 @@ const adminNewsPublishEnd = app.indexOf("async function deleteNews(", adminNewsP
 const adminNewsPublishFunction = adminNewsPublishStart >= 0 && adminNewsPublishEnd > adminNewsPublishStart
   ? app.slice(adminNewsPublishStart, adminNewsPublishEnd) : "";
 if (
+  !adminLeagueMediaMigration.includes("drop policy if exists liga_images_admin_insert") ||
+  !adminLeagueMediaMigration.includes("drop policy if exists liga_images_admin_update") ||
+  !adminLeagueMediaMigration.includes("drop policy if exists liga_images_admin_delete") ||
   !adminLeagueMediaMigration.includes("create policy liga_images_admin_media_insert") ||
+  !adminLeagueMediaMigration.includes("create policy liga_images_admin_media_update") ||
   !adminLeagueMediaMigration.includes("create policy liga_images_admin_media_delete") ||
   !adminLeagueMediaMigration.includes("public.fan_is_admin()") ||
-  !adminLeagueMediaMigration.includes("name ~ '^(gallery|news)/") ||
+  !adminLeagueMediaMigration.includes("^(gallery|news|teams|players)/") ||
+  !adminLeagueMediaMigration.includes("^players/[A-Za-z0-9_-]+/") ||
   !adminLeagueMediaMigration.includes("metadata->>'mimetype'") ||
   !adminLeagueMediaMigration.includes("15728640") ||
   !adminLeagueMediaMigration.includes("52428800") ||
   !adminGalleryUploadFunction.includes('uploadFile(file,"gallery")') ||
-  !adminNewsPublishFunction.includes('uploadFile(file,"news")')
+  !adminNewsPublishFunction.includes('uploadFile(file,"news")') ||
+  !app.includes('"teams"') ||
+  !app.includes('"players"')
 ) {
-  fail("Admin gallery/news media Storage policies must match the app upload paths, verify admin access, enforce media/size limits, and permit cleanup");
+  fail("Admin Storage policies must replace the legacy bucket-wide grants, preserve teams/player photo paths, restrict file types/sizes, and permit admin cleanup");
 } else {
-  pass("Admin gallery/news uploads and cleanup are covered by role-gated, size-limited Storage policies");
+  pass("Admin Storage policies replace broad grants while preserving team/player/gallery/news media flows");
 }
 
 const eventIntegritySource = read("sql/15_validate_match_event_integrity.sql");
