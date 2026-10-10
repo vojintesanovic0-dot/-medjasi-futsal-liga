@@ -7868,8 +7868,8 @@ function subscribeRealtime(){
         )
 
 
-        .on("postgres_changes",{event:"*",schema:"public",table:"site_settings"},()=>loadMusicSettings())
-        .on("postgres_changes",{event:"*",schema:"public",table:"music_tracks"},()=>loadMusicSettings())
+        .on("postgres_changes",{event:"*",schema:"public",table:"site_settings"},()=>scheduleMusicSettingsRefresh())
+        .on("postgres_changes",{event:"*",schema:"public",table:"music_tracks"},()=>scheduleMusicSettingsRefresh())
         .on("postgres_changes",{event:"*",schema:"public",table:"news"},()=>window.medjasiV7?.loadNews?.())
 
 
@@ -8079,7 +8079,8 @@ function getYoutubeId(url) {
    UČITAJ POSTAVKE IZ SUPABASE
 ----------------------------------------- */
 
-async function loadMusicSettings(){
+async function loadMusicSettingsOnce(){
+  let successful=true;
   // Treat settings and tracks as independent refreshes: a transient failure in
   // either query must not make a working playlist disappear or turn itself off.
   try{
@@ -8090,11 +8091,13 @@ async function loadMusicSettings(){
       .maybeSingle();
 
     if(error){
+      successful=false;
       console.error("Učitavanje postavki muzike nije uspjelo:",error);
     }else{
       musicSettings=settings||{youtube_music_enabled:false};
     }
   }catch(error){
+    successful=false;
     console.error("Učitavanje postavki muzike nije uspjelo:",error);
   }
 
@@ -8107,11 +8110,13 @@ async function loadMusicSettings(){
       .order("created_at",{ascending:true});
 
     if(error){
+      successful=false;
       console.error("Učitavanje playlist-e nije uspjelo:",error);
     }else{
       musicTracks=tracks||[];
     }
   }catch(error){
+    successful=false;
     console.error("Učitavanje playlist-e nije uspjelo:",error);
   }
 
@@ -8121,6 +8126,63 @@ async function loadMusicSettings(){
   }catch(error){
     console.error("Pokretanje playera muzike nije uspjelo:",error);
   }
+  return successful;
+}
+
+let musicSettingsLoadPromise=null;
+let musicSettingsLoadQueued=false;
+let musicSettingsRealtimeTimer=0;
+let musicSettingsFailureCount=0;
+let musicSettingsRetryAt=0;
+
+async function loadMusicSettings({force=false}={}){
+  if(!force&&Date.now()<musicSettingsRetryAt)return false;
+  if(musicSettingsLoadPromise){
+    musicSettingsLoadQueued=true;
+    return musicSettingsLoadPromise;
+  }
+
+  musicSettingsLoadPromise=(async()=>{
+    let attempts=0;
+    let successful=false;
+    do{
+      musicSettingsLoadQueued=false;
+      successful=await loadMusicSettingsOnce();
+      attempts++;
+      if(successful){
+        musicSettingsFailureCount=0;
+        musicSettingsRetryAt=0;
+      }else{
+        musicSettingsFailureCount=Math.min(musicSettingsFailureCount+1,4);
+        musicSettingsRetryAt=Date.now()+Math.min(120000,10000*Math.pow(2,musicSettingsFailureCount-1));
+      }
+    }while(musicSettingsLoadQueued&&attempts<2&&successful);
+
+    if(musicSettingsLoadQueued){
+      musicSettingsLoadQueued=false;
+      scheduleMusicSettingsRefresh(Math.max(500,musicSettingsRetryAt-Date.now()));
+    }
+    return successful;
+  })();
+
+  try{
+    return await musicSettingsLoadPromise;
+  }finally{
+    musicSettingsLoadPromise=null;
+  }
+}
+
+function scheduleMusicSettingsRefresh(delay=450){
+  clearTimeout(musicSettingsRealtimeTimer);
+  musicSettingsRealtimeTimer=setTimeout(()=>{
+    musicSettingsRealtimeTimer=0;
+    const wait=musicSettingsRetryAt-Date.now();
+    if(wait>0){
+      scheduleMusicSettingsRefresh(wait);
+      return;
+    }
+    void loadMusicSettings();
+  },Math.max(0,Number(delay)||0));
 }
 
 
@@ -8273,9 +8335,9 @@ function removeCommentImage(){
   remove?.classList.add("hidden");
 }
 
-async function addMusicTrack(){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}const input=document.getElementById("adminYoutubeUrl"),title=document.getElementById("adminYoutubeTitle"),provider=document.getElementById("adminMusicProvider")?.value||"youtube",raw=(input?.value||"").trim();let payload=null;if(provider==="spotify"){if(!getSpotifyEmbed(raw)){toast("Unesi ispravan Spotify link.","error");return;}payload={provider:"spotify",spotify_url:raw,youtube_music_id:null};}else{const id=getYoutubeId(raw);if(!id){toast("Unesi ispravan YouTube link.","error");return;}payload={provider:"youtube",youtube_music_id:id,spotify_url:null};}const next=Math.max(0,...musicTracks.map(t=>Number(t.sort_order)||0))+1;const {error}=await supabaseClient.from("music_tracks").insert({...payload,title:(title?.value||"").trim()||"Pjesma",sort_order:next,is_active:true});if(error){toast(error.message,"error");return;}if(input)input.value="";if(title)title.value="";await loadMusicSettings();toast("Pjesma je dodata u playlistu.","success");}
-async function deleteMusicTrack(id){if(!isAdmin())return;if(!confirm("Obrisati ovu pjesmu iz playliste?"))return;const {error}=await supabaseClient.from("music_tracks").delete().eq("id",id);if(error){toast(error.message,"error");return;}await loadMusicSettings();toast("Pjesma je obrisana.","success");}
-async function moveMusicTrack(id,direction){if(!isAdmin())return;const list=[...musicTracks],idx=list.findIndex(t=>t.id===id),target=idx+direction;if(idx<0||target<0||target>=list.length)return;[list[idx],list[target]]=[list[target],list[idx]];for(let i=0;i<list.length;i++){const {error}=await supabaseClient.from("music_tracks").update({sort_order:i+1}).eq("id",list[i].id);if(error){toast(error.message,"error");return;}}await loadMusicSettings();}
+async function addMusicTrack(){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}const input=document.getElementById("adminYoutubeUrl"),title=document.getElementById("adminYoutubeTitle"),provider=document.getElementById("adminMusicProvider")?.value||"youtube",raw=(input?.value||"").trim();let payload=null;if(provider==="spotify"){if(!getSpotifyEmbed(raw)){toast("Unesi ispravan Spotify link.","error");return;}payload={provider:"spotify",spotify_url:raw,youtube_music_id:null};}else{const id=getYoutubeId(raw);if(!id){toast("Unesi ispravan YouTube link.","error");return;}payload={provider:"youtube",youtube_music_id:id,spotify_url:null};}const next=Math.max(0,...musicTracks.map(t=>Number(t.sort_order)||0))+1;const {error}=await supabaseClient.from("music_tracks").insert({...payload,title:(title?.value||"").trim()||"Pjesma",sort_order:next,is_active:true});if(error){toast(error.message,"error");return;}if(input)input.value="";if(title)title.value="";await loadMusicSettings({force:true});toast("Pjesma je dodata u playlistu.","success");}
+async function deleteMusicTrack(id){if(!isAdmin())return;if(!confirm("Obrisati ovu pjesmu iz playliste?"))return;const {error}=await supabaseClient.from("music_tracks").delete().eq("id",id);if(error){toast(error.message,"error");return;}await loadMusicSettings({force:true});toast("Pjesma je obrisana.","success");}
+async function moveMusicTrack(id,direction){if(!isAdmin())return;const list=[...musicTracks],idx=list.findIndex(t=>t.id===id),target=idx+direction;if(idx<0||target<0||target>=list.length)return;[list[idx],list[target]]=[list[target],list[idx]];for(let i=0;i<list.length;i++){const {error}=await supabaseClient.from("music_tracks").update({sort_order:i+1}).eq("id",list[i].id);if(error){toast(error.message,"error");return;}}await loadMusicSettings({force:true});}
 async function toggleMusicPlaylist(enabled){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}if(enabled&&!musicTracks.length){toast("Prvo dodaj barem jednu pjesmu.","error");return;}const {error}=await supabaseClient.from("site_settings").update({youtube_music_enabled:enabled}).eq("id",1);if(error){toast(error.message,"error");return;}musicSettings.youtube_music_enabled=enabled;currentMusicSignature="";initMusic();renderMusicAdmin();toast(enabled?"Playlist je uključena.":"Muzika je zaustavljena.","success");}
 async function loadModeratorUsers(){
   if(!isAdmin()) return;

@@ -746,21 +746,30 @@ if (
   pass("Search results open the selected item with escaped inline identifiers");
 }
 
-const musicLoaderStart = app.indexOf("async function loadMusicSettings()");
+const musicLoaderStart = app.indexOf("async function loadMusicSettingsOnce()");
 const musicLoaderEnd = app.indexOf("function renderMusicAdmin()",musicLoaderStart);
 const musicLoader = musicLoaderStart >= 0 && musicLoaderEnd > musicLoaderStart
   ? app.slice(musicLoaderStart,musicLoaderEnd) : "";
 if (
+  !musicLoader.includes("async function loadMusicSettingsOnce()") ||
+  !musicLoader.includes("let musicSettingsLoadPromise=null;") ||
+  !musicLoader.includes("let musicSettingsLoadQueued=false;") ||
+  !musicLoader.includes("function scheduleMusicSettingsRefresh(delay=450)") ||
+  !musicLoader.includes("musicSettingsRetryAt=Date.now()+Math.min(120000,10000*Math.pow(2,musicSettingsFailureCount-1))") ||
   !musicLoader.includes('else{\n      musicSettings=settings||{youtube_music_enabled:false};') ||
-  !musicLoader.includes('musicTracks=tracks||[];') ||
-  !musicLoader.includes('Učitavanje playlist-e nije uspjelo:') ||
-  !musicLoader.includes('Učitavanje postavki muzike nije uspjelo:') ||
+  !musicLoader.includes("musicTracks=tracks||[];") ||
+  !musicLoader.includes("Učitavanje playlist-e nije uspjelo:") ||
+  !musicLoader.includes("Učitavanje postavki muzike nije uspjelo:") ||
   (musicLoader.match(/catch\(error\)/g)||[]).length<2 ||
-  musicLoader.includes('musicTracks=[];')
+  musicLoader.includes("musicTracks=[];") ||
+  !app.includes('table:"site_settings"},()=>scheduleMusicSettingsRefresh())') ||
+  !app.includes('table:"music_tracks"},()=>scheduleMusicSettingsRefresh())') ||
+  !app.includes('await loadMusicSettings({force:true});toast("Pjesma je dodata u playlistu."') ||
+  !app.includes('await loadMusicSettings({force:true});toast("Pjesma je obrisana.')
 ) {
-  fail("Music/settings refresh must preserve the last working playlist when either Supabase query fails");
+  fail("Music/settings refresh must deduplicate concurrent calls, debounce Realtime bursts, back off on pool failures, and preserve last known-good data");
 } else {
-  pass("Music and playlist refreshes retain last known-good data after transient failures");
+  pass("Music/settings refresh is coalesced, throttled after failures, and preserves the last known-good playlist");
 }
 
 const pushSubscribeStart = app.indexOf("async function subscribeRealPush()");
