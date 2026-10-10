@@ -6650,7 +6650,9 @@ function openMatch(id){
 
 /* =========================================================
    LIVE AUTO REFRESH
-=============================async function refreshLiveMatchSnapshot(matchId){
+========================================================= */
+
+async function refreshLiveMatchSnapshot(matchId){
   if(!supabaseClient?.from)throw new Error("Supabase nije dostupan za osvježavanje utakmice.");
   const [matchResult,goalsResult,cardsResult,playersResult]=await Promise.all([
     supabaseClient.from("matches").select("*").eq("id",matchId).maybeSingle(),
@@ -6746,14 +6748,66 @@ function startLiveRefresh(matchId){
       console.warn("Osvježavanje utakmice uživo nije uspjelo:",error);
     }finally{
       liveRefreshInFlight=false;
+      const pending=pendingLiveModalRefreshId;
+      pendingLiveModalRefreshId=null;
+      if(pending&&isViewingLiveMatchModal(pending))scheduleLiveModalRefresh(pending,180);
     }
-  },10000);
+  },30000);
   liveRefreshInterval=intervalId;
 }
 
-      },
-      10000
-    );
+let liveModalRefreshTimer=0;
+let pendingLiveModalRefreshId=null;
+
+function scheduleLiveModalRefresh(matchId,delay=180){
+  const id=String(matchId||"");
+  if(!id||!isViewingLiveMatchModal(id))return;
+  pendingLiveModalRefreshId=id;
+  clearTimeout(liveModalRefreshTimer);
+  liveModalRefreshTimer=setTimeout(()=>{
+    liveModalRefreshTimer=0;
+    const pending=pendingLiveModalRefreshId;
+    pendingLiveModalRefreshId=null;
+    if(pending)void refreshLiveModalFromRealtime(pending);
+  },Math.max(0,Number(delay)||0));
+}
+
+async function refreshLiveModalFromRealtime(matchId){
+  const id=String(matchId||"");
+  if(!id||!isViewingLiveMatchModal(id))return;
+  if(liveRefreshInFlight){
+    pendingLiveModalRefreshId=id;
+    return;
+  }
+
+  liveRefreshInFlight=true;
+  try{
+    const updated=await refreshLiveMatchSnapshot(id);
+    if(!updated){
+      stopLiveRefreshForMatch(liveRefreshInterval,window.__medjasiLiveClock);
+      return;
+    }
+    if(!isViewingLiveMatchModal(id))return;
+
+    if(updated.status!=="live"){
+      stopLiveRefreshForMatch(liveRefreshInterval,window.__medjasiLiveClock);
+      if(updated.status==="finished")openFinished(id);
+      else openMatch(id);
+      return;
+    }
+
+    const content=document.getElementById("modalContent");
+    const selectedTab=content?.querySelector(".match-tab.active")?.dataset.tab||"overview";
+    openMatch(id);
+    if(selectedTab!=="overview")switchMatchTab(selectedTab);
+  }catch(error){
+    console.warn("Osvježavanje prikazane utakmice nakon Realtime događaja nije uspjelo:",error);
+  }finally{
+    liveRefreshInFlight=false;
+    const pending=pendingLiveModalRefreshId;
+    pendingLiveModalRefreshId=null;
+    if(pending&&isViewingLiveMatchModal(pending))scheduleLiveModalRefresh(pending,180);
+  }
 }
 
 
@@ -7718,8 +7772,10 @@ function subscribeRealtime(){
             schema:"public",
             table:"matches"
           },
-          () =>
-            scheduleLoadAll()
+          payload => {
+            scheduleLoadAll();
+            scheduleLiveModalRefresh(payload?.new?.id||payload?.old?.id);
+          }
         )
 
 
@@ -7741,8 +7797,10 @@ function subscribeRealtime(){
             schema:"public",
             table:"goals"
           },
-          () =>
-            scheduleLoadAll()
+          payload => {
+            scheduleLoadAll();
+            scheduleLiveModalRefresh(payload?.new?.match_id||payload?.old?.match_id);
+          }
         )
 
 
@@ -7753,8 +7811,10 @@ function subscribeRealtime(){
             schema:"public",
             table:"cards"
           },
-          () =>
-            scheduleLoadAll()
+          payload => {
+            scheduleLoadAll();
+            scheduleLiveModalRefresh(payload?.new?.match_id||payload?.old?.match_id);
+          }
         )
 
 
@@ -7765,8 +7825,10 @@ function subscribeRealtime(){
             schema:"public",
             table:"match_players"
           },
-          () =>
-            scheduleLoadAll()
+          payload => {
+            scheduleLoadAll();
+            scheduleLiveModalRefresh(payload?.new?.match_id||payload?.old?.match_id);
+          }
         )
 
 
