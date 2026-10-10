@@ -29,6 +29,267 @@ const authMarkup = authStart >= 0 && authEnd > authStart ? html.slice(authStart,
 const loginFunctionStart = app.indexOf("async function login()");
 const loginFunctionEnd = app.indexOf("/* =========================================================\n   RESET PASSWORD", loginFunctionStart);
 const loginFunction = loginFunctionStart >= 0 && loginFunctionEnd > loginFunctionStart ? app.slice(loginFunctionStart, loginFunctionEnd) : "";
+const checkAuthStart = app.indexOf("async function checkAuth()");
+const checkAuthEnd = app.indexOf("/* =========================================================\n   LOGIN", checkAuthStart);
+const checkAuthFunction = checkAuthStart >= 0 && checkAuthEnd > checkAuthStart ? app.slice(checkAuthStart, checkAuthEnd) : "";
+const logoutStart = app.indexOf("async function logout()");
+const logoutEnd = app.indexOf("/* =========================================================\n   AUTH UI", logoutStart);
+const logoutFunction = logoutStart >= 0 && logoutEnd > logoutStart ? app.slice(logoutStart, logoutEnd) : "";
+
+if (
+  !checkAuthFunction.includes("if(!supabaseClient?.auth?.getSession)") ||
+  !checkAuthFunction.includes("currentProfile=null") ||
+  !checkAuthFunction.includes("updateAuthUI()")
+) {
+  fail("Auth initialization must handle a missing Supabase SDK without leaving stale user state");
+} else pass("Auth initialization safely handles an unavailable Supabase SDK");
+
+if (
+  !logoutFunction.includes("medjasiAuthInteraction=false") ||
+  !logoutFunction.includes("catch(error)") ||
+  !logoutFunction.includes("finally")
+) {
+  fail("Logout failures must reset the auth interaction flag and report network errors");
+} else pass("Logout resets auth interaction state on success and failure");
+
+const resetStart = app.indexOf("async function resetPassword()");
+const resetEnd = app.indexOf("/* =========================================================\n   REGISTER", resetStart);
+const resetFunction = resetStart >= 0 && resetEnd > resetStart ? app.slice(resetStart, resetEnd) : "";
+const resendStart = app.indexOf("async function resendConfirmation()");
+const resendEnd = app.indexOf("window.resendConfirmation=resendConfirmation;", resendStart);
+const resendFunction = resendStart >= 0 && resendEnd > resendStart ? app.slice(resendStart, resendEnd) : "";
+if (
+  !resetFunction.includes("resetPasswordForEmail") ||
+  !resetFunction.includes("catch(error)") ||
+  !resetFunction.includes("if(!supabaseClient?.auth?.resetPasswordForEmail)")
+) {
+  fail("Password reset must handle a missing Auth SDK and rejected network requests");
+} else pass("Password reset handles unavailable services and network failures");
+
+if (
+  !resendFunction.includes("supabaseClient?.auth?.resend") ||
+  !resendFunction.includes("catch(error)") ||
+  !resendFunction.includes("if(!supabaseClient?.auth?.resend)")
+) {
+  fail("Confirmation resend must handle an unavailable Auth SDK and request failures");
+} else pass("Confirmation resend handles unavailable services and network failures");
+
+const finishStart = app.indexOf("async function finishAndSave(matchId)");
+const saveStart = app.indexOf("async function saveRatings(matchId)", finishStart);
+const goalStart = app.indexOf("function openGoal(matchId)", saveStart);
+const finishFunction = finishStart >= 0 && saveStart > finishStart ? app.slice(finishStart, saveStart) : "";
+const saveFunction = saveStart >= 0 && goalStart > saveStart ? app.slice(saveStart, goalStart) : "";
+if (
+  !finishFunction.includes("await refreshLiveMatchSnapshot(id)") ||
+  !finishFunction.includes("await loadStats()") ||
+  !finishFunction.includes("await saveRatings(id)") ||
+  !finishFunction.includes('.select("*")') ||
+  !finishFunction.includes("readConfirmedMatch(id,updated)") ||
+  !finishFunction.includes('confirmed.status!=="finished"') ||
+  !finishFunction.includes('Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)') ||
+  !finishFunction.includes("if(!wasAlreadyFinished)") ||
+  !finishFunction.includes("finishMatchInFlight.has(id)") ||
+  !finishFunction.includes("finishMatchInFlight.delete(id)") ||
+  !saveFunction.includes("if(error)throw error") ||
+  !saveFunction.includes("clearMvp.error")
+) {
+  fail("Match finalization must refresh the selected match first, serialize duplicate submits, verify the persisted final score/status, and only broadcast the first confirmed finish");
+} else pass("Match finalization confirms fresh stats and the persisted result before one-time push and Fan Game settlement");
+
+
+if (
+  !app.includes("function supportedLeagueMedia(file)") ||
+  !app.includes("const media=supportedLeagueMedia(file)") ||
+  !app.includes("file.size>media.maxBytes") ||
+  !app.includes("async function publishNews()") ||
+  !app.includes("async function adminAddMedia()")
+) {
+  fail("News and gallery uploads must validate media types and sizes before storage");
+} else pass("News and gallery uploads validate allowed media formats and sizes");
+
+const seasonFunctionStart = app.indexOf("async function activateSeason(id)");
+const seasonFunctionEnd = app.indexOf("function ensurePushUI()", seasonFunctionStart);
+const seasonFunction = seasonFunctionStart >= 0 && seasonFunctionEnd > seasonFunctionStart ? app.slice(seasonFunctionStart, seasonFunctionEnd) : "";
+if (
+  !seasonFunction.includes("deactivateError") ||
+  !seasonFunction.includes("activateError") ||
+  !seasonFunction.includes("previousActiveIds") ||
+  !seasonFunction.includes("rollbackError")
+) {
+  fail("Changing the active season must handle both update failures and attempt to restore prior state");
+} else pass("Active-season updates check failures and attempt recovery");
+
+const uploadStart = app.indexOf("async function uploadFile(file,folder)");
+const uploadEnd = app.indexOf("/* =========================================================\n   ADMIN - TEAM", uploadStart);
+const uploadFunction = uploadStart >= 0 && uploadEnd > uploadStart ? app.slice(uploadStart, uploadEnd) : "";
+if (
+  !app.includes("function isAllowedRasterImage(file)") ||
+  !app.includes("async function hasExpectedMediaSignature(file,mime)") ||
+  !uploadFunction.includes("extensions[mime]") ||
+  !uploadFunction.includes("contentType:mime") ||
+  !uploadFunction.includes("await hasExpectedMediaSignature(file,mime)") ||
+  !uploadFunction.includes("parts.some(part=>!part||!/^[a-z0-9_-]+$/i.test(part))") ||
+  !uploadFunction.includes("file.size>maxBytes")
+) {
+  fail("Storage uploads must validate allowlisted MIME types, file signatures, paths, and size limits");
+} else pass("Storage uploads validate MIME, file signatures, safe paths, and size limits");
+
+if (
+  app.includes("file.type.startsWith('image/')") ||
+  app.includes('file.type.startsWith("image/")') ||
+  app.includes("f.type.startsWith('image/')") ||
+  app.includes('f.type.startsWith("image/")')
+) {
+  fail("Image-upload forms must not accept unrestricted image/* MIME types");
+} else pass("Image-upload forms use the explicit raster-image allowlist");
+
+const pushStart = app.indexOf("async function notifyPush(");
+const pushEnd = app.indexOf("function b64ToBytes", pushStart);
+const pushFunction = pushStart >= 0 && pushEnd > pushStart ? app.slice(pushStart, pushEnd) : "";
+const publishStart = app.indexOf("async function publishNews()");
+const publishEnd = app.indexOf("async function deleteNews(id)", publishStart);
+const publishFunction = publishStart >= 0 && publishEnd > publishStart ? app.slice(publishStart, publishEnd) : "";
+if (
+  !pushFunction.includes("if(!response.ok)") ||
+  !pushFunction.includes("return false") ||
+  !pushFunction.includes("return true")
+) {
+  fail("Push helper must surface HTTP delivery failure to callers");
+} else pass("Push helper returns explicit delivery success/failure");
+
+if (
+  !publishFunction.includes("let pushSent=true") ||
+  !publishFunction.includes("Vijest je objavljena, ali push obavještenje nije poslano")
+) {
+  fail("News publishing must not be reported as failed solely because push delivery failed");
+} else pass("News publishing reports storage and push outcomes separately");
+
+const substitutionHistorySource = app.slice(
+  app.indexOf("async function makeSubstitution("),
+  app.indexOf("/* =========================================================\n   LINEUP / BENCH",app.indexOf("async function makeSubstitution("))
+);
+const substitutionCompatWrapperStart = app.indexOf("const oldMakeSubstitution=window.makeSubstitution");
+const substitutionCompatWrapperEnd = app.indexOf("\nfunction renderMvp(matchId)",substitutionCompatWrapperStart);
+const substitutionCompatWrapper = substitutionCompatWrapperStart>=0&&substitutionCompatWrapperEnd>substitutionCompatWrapperStart
+  ? app.slice(substitutionCompatWrapperStart,substitutionCompatWrapperEnd) : "";
+if (
+  (app.match(/from\(["']match_substitutions["']\)\.insert/g)||[]).length!==1 ||
+  !substitutionHistorySource.includes('.from("match_substitutions").insert({') ||
+  !substitutionCompatWrapper.includes("oldMakeSubstitution.apply(this,[matchId,side])") ||
+  substitutionCompatWrapper.includes("match_substitutions")
+) {
+  fail("Each substitution must write its history row exactly once; the compatibility wrapper must not repeat the database insert");
+} else {
+  pass("Substitution history is written exactly once through the guarded handler");
+}
+
+const addMatchStart = app.indexOf("async function addMatch()");
+const adminMatchesStart = app.indexOf("function renderAdminMatches()", addMatchStart);
+const addMatchFunction = addMatchStart >= 0 && adminMatchesStart > addMatchStart ? app.slice(addMatchStart, adminMatchesStart) : "";
+const saveLineupStart = app.indexOf("async function saveLineup(");
+const substitutionsStart = app.indexOf("/* =========================================================\n   SUBSTITUTIONS", saveLineupStart);
+const saveLineupFunction = saveLineupStart >= 0 && substitutionsStart > saveLineupStart ? app.slice(saveLineupStart, substitutionsStart) : "";
+const substitutionStart = app.indexOf("async function makeSubstitution(");
+const lineupBenchStart = app.indexOf("/* =========================================================\n   LINEUP / BENCH", substitutionStart);
+const substitutionFunction = substitutionStart >= 0 && lineupBenchStart > substitutionStart ? app.slice(substitutionStart, lineupBenchStart) : "";
+if (
+  !addMatchFunction.includes("try{") ||
+  !addMatchFunction.includes('.select("*").maybeSingle()') ||
+  !addMatchFunction.includes("submitButton.disabled=true") ||
+  !saveLineupFunction.includes('.upsert(rows,{onConflict:"match_id,player_id"})') ||
+  !saveLineupFunction.includes("const {data:existingRows,error:readError}") ||
+  !saveLineupFunction.includes("catch(error)") ||
+  saveLineupFunction.indexOf(".upsert(rows")>saveLineupFunction.indexOf(".delete()") ||
+  !substitutionFunction.includes('.eq("is_active",true)') ||
+  !substitutionFunction.includes('.eq("is_active",false)') ||
+  !substitutionFunction.includes("rollbackFailed") ||
+  !substitutionFunction.includes("historyError")
+) {
+  fail("Match creation, lineup, and substitutions must catch network errors and avoid deleting/changing roster state before guarded writes succeed");
+} else {
+  pass("Match creation, lineup and substitution writes are guarded, validated, and recover from partial failures");
+}
+
+const matchStatusStart = app.indexOf("async function changeMatchStatus(id,status)");
+const matchMinuteStart = app.indexOf("async function changeMinute(id,minute)", matchStatusStart);
+const matchLineupStart = app.indexOf("async function openLineupControl(", matchMinuteStart);
+const matchStatusFunction = matchStatusStart >= 0 && matchMinuteStart > matchStatusStart ? app.slice(matchStatusStart, matchMinuteStart) : "";
+const matchMinuteFunction = matchMinuteStart >= 0 && matchLineupStart > matchMinuteStart ? app.slice(matchMinuteStart, matchLineupStart) : "";
+const addCardStart = app.indexOf("async function addCard(matchId)");
+const addCardEnd = app.indexOf("\n/* =========================================================\n   TEAM MODAL", addCardStart);
+const addCardFunction = addCardStart >= 0 && addCardEnd > addCardStart ? app.slice(addCardStart, addCardEnd) : "";
+if (
+  !app.includes("async function notifyLeaguePush(type,title,body,matchId)") ||
+  !matchStatusFunction.includes("await readConfirmedMatch(id,existing)") ||
+  !matchStatusFunction.includes('confirmed.status!==status') ||
+  !matchStatusFunction.includes('const pushOk=await notifyLeaguePush("live",title,body,id)') ||
+  !matchStatusFunction.includes('const pushOk=await notifyLeaguePush("match_finished",title,"Utakmica je završena.",id)') ||
+  !addCardFunction.includes('const {error}=await supabaseClient.from("cards").insert') ||
+  !addCardFunction.includes("await refreshLiveMatchSnapshot(String(matchId))") ||
+  !addCardFunction.includes("const pushOk=await notifyLeaguePush(") ||
+  addCardFunction.indexOf("const pushOk=await notifyLeaguePush(")<addCardFunction.indexOf("await refreshLiveMatchSnapshot(String(matchId))")
+) {
+  fail("LIVE/status and saved-card push events must follow successful writes and match-scoped score confirmation");
+} else pass("LIVE/status and saved-card push notifications use confirmed database state");
+
+const v7AssistGoalStart = app.indexOf("async function addGoalWithAssist(matchId)");
+const v7AssistGoalEnd = app.indexOf("function decorateCourtRatings(matchId)", v7AssistGoalStart);
+const v7AssistGoalFunction = v7AssistGoalStart >= 0 && v7AssistGoalEnd > v7AssistGoalStart ? app.slice(v7AssistGoalStart, v7AssistGoalEnd) : "";
+const galleryVideoTestStart = app.indexOf("async function adminAddMedia()");
+const galleryVideoTestEnd = app.indexOf("function ensureGalleryVideoUI()", galleryVideoTestStart);
+const galleryVideoTestFunction = galleryVideoTestStart >= 0 && galleryVideoTestEnd > galleryVideoTestStart ? app.slice(galleryVideoTestStart, galleryVideoTestEnd) : "";
+if (
+  !v7AssistGoalFunction.includes('$("v7GoalPlayer")') ||
+  !v7AssistGoalFunction.includes('$("v7GoalMinute")') ||
+  !v7AssistGoalFunction.includes('assist_player_id:assistId') ||
+  !v7AssistGoalFunction.includes("Strijelac mora biti u postavi utakmice") ||
+  !app.includes("V7.addGoal=addGoalWithAssist")
+) {
+  fail("Live goal+assist modal must use its own fields and save the validated scorer/assist");
+} else pass("Live goal+assist modal uses matching fields and stores a validated assist");
+
+const loadStatsStart = app.indexOf("async function loadStats()");
+const loadStatsEnd = app.indexOf("async function addSave(", loadStatsStart);
+const loadStatsFunction = loadStatsStart >= 0 && loadStatsEnd > loadStatsStart ? app.slice(loadStatsStart, loadStatsEnd) : "";
+const finishSaveStart = app.indexOf("async function finishAndSave(matchId)");
+const finishSaveEnd = app.indexOf("async function saveRatings(matchId)", finishSaveStart);
+const finishSaveFunction = finishSaveStart >= 0 && finishSaveEnd > finishSaveStart ? app.slice(finishSaveStart, finishSaveEnd) : "";
+if (
+  !loadStatsFunction.includes("if(error)throw error") ||
+  !loadStatsFunction.includes("return V7.stats") ||
+  !finishSaveFunction.includes("await loadStats()") ||
+  !finishSaveFunction.includes("await saveRatings(id)")
+) {
+  fail("Match finalization must not overwrite existing player stats when the current stats read fails");
+} else pass("Match finalization confirms the existing stats read before writing ratings");
+
+
+if (
+  !galleryVideoTestFunction.includes("image_url:media_url") ||
+  !galleryVideoTestFunction.includes("media_url,") ||
+  !galleryVideoTestFunction.includes("media_type:media.kind")
+) {
+  fail("Video gallery upload must preserve required legacy image_url while storing media metadata");
+} else pass("Gallery video uploads keep legacy required image_url and media metadata");
+
+const galleryRenderStart = app.indexOf("function renderGalleryV7()");
+const galleryRenderEnd = app.indexOf("function openMedia(", galleryRenderStart);
+const galleryRenderFunction = galleryRenderStart >= 0 && galleryRenderEnd > galleryRenderStart ? app.slice(galleryRenderStart, galleryRenderEnd) : "";
+if (
+  !galleryRenderFunction.includes("escJs(url)") ||
+  !galleryRenderFunction.includes("escJs(x.title||'Video')") ||
+  !galleryRenderFunction.includes("escJs(x.title||'Galerija')") ||
+  galleryRenderFunction.includes("openImagePreview('${escV(url)}'")
+) {
+  fail("Gallery inline event handlers must JavaScript-escape dynamic URLs and titles");
+} else pass("Gallery inline event handlers safely escape dynamic URLs and titles");
+
+
+
+
+
+
+
 
 if (
   !authMarkup.includes('onclick="exitAuthScreen()"') ||
@@ -221,11 +482,13 @@ if (
 } else pass("Community block/report buttons are bound to their matching actions");
 
 if (
-  !communityClickAuditSource.includes('querySelectorAll("button").forEach(b=>b.addEventListener("click",async()=>') ||
-  !communityClickAuditSource.includes('option_id:b.dataset.option')
+  !communityClickAuditSource.includes('button.addEventListener("click",async()=>') ||
+  !communityClickAuditSource.includes("option_id:button.dataset.option") ||
+  !communityClickAuditSource.includes('.from("community_poll_votes").insert({') ||
+  !communityClickAuditSource.includes('error?.code==="23505"')
 ) {
-  fail("Community poll option buttons must submit the selected option");
-} else pass("Community poll option buttons submit the selected option");
+  fail("Community poll option buttons must submit the selected option and handle duplicate votes");
+} else pass("Community poll option buttons submit selected votes and handle duplicate submissions");
 
 if (
   !communityClickAuditSource.includes('querySelectorAll("[data-report-review]")') ||
@@ -454,6 +717,182 @@ if (
   pass("League-event push wiring and server-side role gate are present");
 }
 
+const adminOrganizerSource = read("js/admin-organizer.js");
+if (
+  !adminOrganizerSource.includes("function dedupeUniqueContentCards") ||
+  !adminOrganizerSource.includes("const headingOf=card=>") ||
+  !adminOrganizerSource.includes('card.querySelector?.("#adminGalleryList,#galleryImageFile")') ||
+  adminOrganizerSource.includes('/\\bgalerija\\b/i.test(card.textContent||"")') ||
+  adminOrganizerSource.includes('/push notifikacije/i.test(card.textContent||"")')
+) {
+  fail("Admin duplicate cleanup must identify actual Gallery/Playlist/Push cards without hiding unrelated cards that merely mention them");
+} else {
+  pass("Admin deduplication is restricted to actual Gallery/Playlist/Push cards");
+}
+
+const searchActionStart = app.indexOf("function renderSearch()");
+const searchActionEnd = app.indexOf("// Load wrappers",searchActionStart);
+const searchActionSource = searchActionStart >= 0 && searchActionEnd > searchActionStart
+  ? app.slice(searchActionStart,searchActionEnd) : "";
+if (
+  !searchActionSource.includes("openTeam('${escJs(t.id)}')") ||
+  !searchActionSource.includes("openPlayer('${escJs(p.id)}')") ||
+  !searchActionSource.includes("medjasiV7.openNews('${escJs(n.id)}')") ||
+  searchActionSource.includes("fn:`showSection('teams')`") ||
+  searchActionSource.includes("fn:`showSection('players')`")
+) {
+  fail("Search results must open the exact selected team, player, or news item and escape inline IDs");
+} else {
+  pass("Search results open the selected item with escaped inline identifiers");
+}
+
+const musicLoaderStart = app.indexOf("async function loadMusicSettings()");
+const musicLoaderEnd = app.indexOf("function renderMusicAdmin()",musicLoaderStart);
+const musicLoader = musicLoaderStart >= 0 && musicLoaderEnd > musicLoaderStart
+  ? app.slice(musicLoaderStart,musicLoaderEnd) : "";
+if (
+  !musicLoader.includes('else{\n      musicSettings=settings||{youtube_music_enabled:false};') ||
+  !musicLoader.includes('musicTracks=tracks||[];') ||
+  !musicLoader.includes('Učitavanje playlist-e nije uspjelo:') ||
+  !musicLoader.includes('Učitavanje postavki muzike nije uspjelo:') ||
+  (musicLoader.match(/catch\(error\)/g)||[]).length<2 ||
+  musicLoader.includes('musicTracks=[];')
+) {
+  fail("Music/settings refresh must preserve the last working playlist when either Supabase query fails");
+} else {
+  pass("Music and playlist refreshes retain last known-good data after transient failures");
+}
+
+const pushSubscribeStart = app.indexOf("async function subscribeRealPush()");
+const pushSubscribeEnd = app.indexOf("async function disableRealPush()",pushSubscribeStart);
+const pushSubscribeFunction = pushSubscribeStart >= 0 && pushSubscribeEnd > pushSubscribeStart
+  ? app.slice(pushSubscribeStart,pushSubscribeEnd) : "";
+const pushDisableStart = app.indexOf("async function disableRealPush()");
+const pushDisableEnd = app.indexOf("function renderPushUI()",pushDisableStart);
+const pushDisableFunction = pushDisableStart >= 0 && pushDisableEnd > pushDisableStart
+  ? app.slice(pushDisableStart,pushDisableEnd) : "";
+const pushDisableServerDelete = pushDisableFunction.indexOf(".delete().eq(\"endpoint\",sub.endpoint)");
+const pushDisableUnsubscribe = pushDisableFunction.indexOf("await sub.unsubscribe()");
+const pushDisableLocalClear = pushDisableFunction.indexOf('localStorage.removeItem("medjasi_push_enabled")');
+const pushDisableCatch = pushDisableFunction.indexOf("catch(error)");
+if (
+  !pushSubscribeFunction.includes("Notification.requestPermission()") ||
+  !pushSubscribeFunction.includes("await supabaseClient.from(\"push_subscriptions\").upsert") ||
+  !pushSubscribeFunction.includes("if(error)throw error") ||
+  !pushSubscribeFunction.includes("catch(error)") ||
+  !pushSubscribeFunction.includes("renderPushUI();") ||
+  !pushDisableFunction.includes("if(error)throw error") ||
+  pushDisableServerDelete < 0 ||
+  pushDisableUnsubscribe < pushDisableServerDelete ||
+  pushDisableLocalClear < pushDisableUnsubscribe ||
+  pushDisableCatch < pushDisableLocalClear ||
+  !pushDisableFunction.includes("renderPushUI();") ||
+  !pushDisableFunction.includes("return false")
+) {
+  fail("Push subscription actions must catch failures and only clear enabled state after successful server/browser cleanup");
+} else {
+  pass("Push subscription enable/disable flows preserve truthful state across failures");
+}
+
+const uploadTick=String.fromCharCode(96);
+const userIdPlaceholder="$"+"{currentUser.id}";
+const expectedChatOwnerPath="uploadFile(file,"+uploadTick+"chat/"+userIdPlaceholder+uploadTick+")";
+const expectedCommentOwnerPath="uploadFile(file,"+uploadTick+"comments/"+userIdPlaceholder+uploadTick+")";
+const storageUploadPolicyMigration=read("sql/16_restrict_liga_images_uploads.sql");
+if (
+  (app.split(expectedChatOwnerPath).length-1)!==2 ||
+  !app.includes(expectedCommentOwnerPath) ||
+  app.includes('uploadFile(file,"chat")') ||
+  app.includes('uploadFile(file,"comments")') ||
+  !storageUploadPolicyMigration.includes("name like ('comments/' || (select auth.uid())::text || '/%')") ||
+  !storageUploadPolicyMigration.includes("name like ('chat/' || (select auth.uid())::text || '/%')")
+) {
+  fail("Chat/comment image upload paths must match the owner-scoped Storage policies for the signed-in user");
+} else {
+  pass("Chat and comment uploads use owner-scoped paths accepted by Storage RLS");
+}
+
+const storageDeleteHelper = app.slice(
+  app.indexOf("function leagueMediaObjectPath(publicUrl,expectedFolder)"),
+  app.indexOf("async function adminDeleteGalleryImage(id)")
+);
+const galleryDeleteSource = app.slice(
+  app.indexOf("async function adminDeleteGalleryImage(id)"),
+  app.indexOf("/* =========================================================\\n   TEAM MODAL",app.indexOf("async function adminDeleteGalleryImage(id)"))
+);
+const newsDeleteStart = app.indexOf("async function deleteNews(id)");
+const newsDeleteEnd = app.indexOf("async function setNewsPublished(id,published)",newsDeleteStart);
+const newsDeleteSource = newsDeleteStart >= 0 && newsDeleteEnd > newsDeleteStart ? app.slice(newsDeleteStart,newsDeleteEnd) : "";
+if (
+  !storageDeleteHelper.includes('url.origin!==base.origin') ||
+  !storageDeleteHelper.includes('"/storage/v1/object/public/liga-images/"') ||
+  !storageDeleteHelper.includes('parts[0]!==expectedFolder') ||
+  !storageDeleteHelper.includes('storage.from("liga-images").remove([path])') ||
+  !galleryDeleteSource.includes("await removeLeagueMediaObject(item.media_url||item.image_url,\"gallery\")") ||
+  !galleryDeleteSource.includes("catch(error)") ||
+  !newsDeleteSource.includes('select("id,media_url")') ||
+  !newsDeleteSource.includes('await removeLeagueMediaObject(item.media_url,"news")') ||
+  !newsDeleteSource.includes("catch(error)")
+) {
+  fail("Gallery/news deletion must remove only same-project Storage objects after a successful row delete and report cleanup failures");
+} else {
+  pass("Gallery/news deletions safely clean same-project uploaded media and report partial failures");
+}
+
+const matchStatusStart2 = app.indexOf("async function changeMatchStatus(id,status)");
+const matchMinuteStart2 = app.indexOf("async function changeMinute(id,minute)",matchStatusStart2);
+const matchLineupStart2 = app.indexOf("async function openLineupControl(",matchMinuteStart2);
+const matchStatusFunction2 = matchStatusStart2 >= 0 && matchMinuteStart2 > matchStatusStart2 ? app.slice(matchStatusStart2,matchMinuteStart2) : "";
+const matchMinuteFunction2 = matchMinuteStart2 >= 0 && matchLineupStart2 > matchMinuteStart2 ? app.slice(matchMinuteStart2,matchLineupStart2) : "";
+if (
+  !matchStatusFunction2.includes("await readConfirmedMatch(id,existing)") ||
+  !matchStatusFunction2.includes(".select(\"*\")") ||
+  !matchStatusFunction2.includes("confirmed.status!==status") ||
+  !matchStatusFunction2.includes('Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)') ||
+  !matchStatusFunction2.includes("const pushOk=await notifyLeaguePush(") ||
+  !matchMinuteFunction2.includes("Number.isInteger(value)") ||
+  !matchMinuteFunction2.includes("value>60") ||
+  !matchMinuteFunction2.includes(".select(\"id,current_minute\")") ||
+  !matchMinuteFunction2.includes("catch(error)")
+) {
+  fail("Match status/minute edits must validate inputs, confirm persisted values, and broadcast only the confirmed match state");
+} else {
+  pass("Match status/minute edits validate values and use database-confirmed state before push");
+}
+
+const cardSaveSource = app.slice(
+  app.indexOf("async function addCard(matchId)"),
+  app.indexOf("/* =========================================================\\n   TEAM MODAL",app.indexOf("async function addCard(matchId)"))
+);
+if (
+  !cardSaveSource.includes("submitButton.disabled=true") ||
+  !cardSaveSource.includes("refreshLiveMatchSnapshot(String(matchId)") ||
+  !cardSaveSource.includes('if(!confirmedMatch)throw new Error') ||
+  !cardSaveSource.includes('if(!pushOk)toastV(') ||
+  !cardSaveSource.includes('fullyRefreshed!==true') ||
+  !cardSaveSource.includes("Push nije poslan")
+) {
+  fail("Card entry must prevent double submits, confirm persisted match data before push, and distinguish save success from refresh/push failures");
+} else {
+  pass("Card entry prevents duplicate clicks and only broadcasts a confirmed match score");
+}
+
+const mediaUploadMigration = read("sql/16_restrict_liga_images_uploads.sql");
+if (
+  !mediaUploadMigration.includes("file_size_limit = 52428800") ||
+  !mediaUploadMigration.includes("'video/mp4'") ||
+  !mediaUploadMigration.includes("'image/avif'") ||
+  !mediaUploadMigration.includes("create policy liga_images_user_insert") ||
+  !mediaUploadMigration.includes("metadata->>'mimetype'") ||
+  !mediaUploadMigration.includes("metadata->>'size'") ||
+  !mediaUploadMigration.includes("<= 12582912") ||
+  !mediaUploadMigration.includes("drop policy if exists liga_images_user_insert")
+) {
+  fail("Storage must enforce file-size, MIME, and owner-folder restrictions server-side while retaining admin media uploads");
+} else {
+  pass("Storage upload migration enforces file type, size, and user-folder boundaries");
+}
+
 const eventIntegritySource = read("sql/15_validate_match_event_integrity.sql");
 if (
   !eventIntegritySource.includes("create trigger trg_medjasi_validate_goal_match_participants") ||
@@ -465,6 +904,326 @@ if (
   fail("Database event integrity migration must reject missing participants and non-participant goals/cards");
 } else {
   pass("Database event integrity migration guards goal/card participants and required references");
+}
+
+const liveRefreshSource = app.slice(
+  app.indexOf("async function refreshLiveMatchSnapshot(matchId)"),
+  app.indexOf("/* =========================================================\n   GOAL CONTROL",app.indexOf("async function refreshLiveMatchSnapshot(matchId)"))
+);
+if (
+  !liveRefreshSource.includes('.from("matches").select("*").eq("id",matchId).maybeSingle()') ||
+  !liveRefreshSource.includes('.from("goals").select("*").eq("match_id",matchId)') ||
+  !liveRefreshSource.includes('.from("cards").select("*").eq("match_id",matchId)') ||
+  !liveRefreshSource.includes('.from("match_players").select("*").eq("match_id",matchId)') ||
+  liveRefreshSource.includes("await loadAll()") ||
+  !liveRefreshSource.includes("isViewingLiveMatchModal(matchId)") ||
+  !liveRefreshSource.includes("selectedTab!==\"overview\"") ||
+  !liveRefreshSource.includes("liveRefreshInFlight")
+) {
+  fail("Live match fallback must refresh only match-scoped data and must not hijack other modals or reset the active tab");
+} else {
+  pass("Live match refresh is match-scoped, deduplicated, and preserves the user's modal/tab");
+}
+
+const goalEventSource = app.slice(
+  app.indexOf("async function addGoal(matchId)"),
+  app.indexOf("/* =========================================================\n   CARD CONTROL",app.indexOf("async function addGoal(matchId)"))
+);
+const goalAssistSource = app.slice(
+  app.indexOf("async function addGoalWithAssist(matchId)"),
+  app.indexOf("function decorateCourtRatings",app.indexOf("async function addGoalWithAssist(matchId)"))
+);
+const loadAllSource = app.slice(app.indexOf("async function loadAll(){"),app.indexOf("\n/* =====================================",app.indexOf("async function loadAll(){")));
+
+if (
+  !loadAllSource.includes("const LOAD_QUERY_CONCURRENCY=4") ||
+  !loadAllSource.includes("const results=[];") ||
+  !loadAllSource.includes("for(let i=0;i<loadTasks.length;i+=LOAD_QUERY_CONCURRENCY)") ||
+  !loadAllSource.includes("results.push(...batch)") ||
+  !loadAllSource.includes("loadTasks.slice(i,i+LOAD_QUERY_CONCURRENCY).map(task=>task())")
+) {
+  fail("Base refresh must bound simultaneous REST requests while preserving the original result order");
+} else {
+  pass("Base database refresh limits its parallel request burst to four queries");
+}
+
+if (
+  !loadAllSource.includes("return !hadLoadErrors;") ||
+  !app.includes("async function readConfirmedMatch(matchId,fallback)") ||
+  !goalEventSource.includes("(await loadAll())===true") ||
+  !goalEventSource.includes("readConfirmedMatch(matchId,match)") ||
+  !goalEventSource.includes("submitButton.disabled=true") ||
+  !goalAssistSource.includes("(await loadAll())===true") ||
+  !goalAssistSource.includes("readConfirmedMatch(matchId,match)") ||
+  !goalAssistSource.includes("submitButton.disabled=true") ||
+  !goalEventSource.includes("Push obavještenje nije poslano") ||
+  !goalAssistSource.includes("Push obavještenje nije poslano")
+) {
+  fail("Goal entry must prevent double submission and confirm the persisted match score before broadcasting when a bulk refresh is incomplete");
+} else {
+  pass("Goal entry blocks duplicate clicks and avoids broadcasting an unconfirmed score after partial refresh failures");
+}
+
+const fanGameSource = read("js/game.js");
+if (
+  !fanGameSource.includes("const MARKET_STATS_TTL=30000") ||
+  !fanGameSource.includes("const MVP_RESULTS_TTL=60000") ||
+  !fanGameSource.includes("marketStatsFetchedAt=0") ||
+  !fanGameSource.includes("mvpResultsFetchedAt=0") ||
+  !fanGameSource.includes("marketStatsFetchedAt=counterNow;") ||
+  !fanGameSource.includes("mvpResultsFetchedAt=counterNow;") ||
+  fanGameSource.includes("needsNewMvpResult") ||
+  !fanGameSource.includes("Fan Game market counts are temporarily unavailable:") ||
+  !fanGameSource.includes("Fan Game MVP results are temporarily unavailable:")
+) {
+  fail("Fan Game must cache non-live aggregate counters, invalidate after related actions, and preserve the last good counts when optional RPCs fail");
+} else {
+  pass("Fan Game limits repeat aggregate RPCs while retaining refreshes for changed picks and MVP votes");
+}
+
+const communityActionSafety = communityClickAuditSource.slice(0,communityClickAuditSource.indexOf("async function getBlocked()"));
+const favoriteSource = communityClickAuditSource.slice(
+  communityClickAuditSource.indexOf("async function toggleFavorite(type,id)"),
+  communityClickAuditSource.indexOf("function decorateFavorite(type,id)")
+);
+const favoriteDecorateSource = communityClickAuditSource.slice(
+  communityClickAuditSource.indexOf("function decorateFavorite(type,id)"),
+  communityClickAuditSource.indexOf("function patchFavorites()")
+);
+if (
+  !communityActionSafety.includes("catch(error)") ||
+  !communityActionSafety.includes('toastX(error?.message||"Prijava nije uspjela. Pokušaj ponovo.","error")') ||
+  !communityActionSafety.includes("await window.loadV9Community?.()") ||
+  !favoriteSource.includes("if(readError)throw readError") ||
+  !favoriteSource.includes("if(error)throw error") ||
+  !favoriteDecorateSource.includes("const next=await toggleFavorite(type,id)") ||
+  favoriteDecorateSource.includes("b.textContent=(await client()")
+) {
+  fail("Community report/block/favorite actions must handle failures and update favorite UI from confirmed mutation results");
+} else {
+  pass("Community report/block/favorite actions handle request failures and retain truthful UI state");
+}
+
+const galleryAlbumPatchSource = communityClickAuditSource.slice(
+  communityClickAuditSource.indexOf("function patchGalleryUpload()"),
+  communityClickAuditSource.indexOf("function patchGallery()",communityClickAuditSource.indexOf("function patchGalleryUpload()"))
+);
+if (
+  !galleryAlbumPatchSource.includes("typeof result!==\"string\"") ||
+  !galleryAlbumPatchSource.includes('.eq("id",result)') ||
+  !galleryAlbumPatchSource.includes('.eq("created_by",uid())') ||
+  galleryAlbumPatchSource.includes('.order("created_at",{ascending:false}).limit(1)')
+) {
+  fail("Gallery album selection must update only the exact newly uploaded image, never fall back to the newest existing image");
+} else {
+  pass("Gallery upload applies albums only to the exact successfully inserted image ID");
+}
+
+const communityExtrasSource = communityClickAuditSource.slice(
+  communityClickAuditSource.indexOf("async function publishExtras(postId)"),
+  communityClickAuditSource.indexOf("function patchPublish()",communityClickAuditSource.indexOf("async function publishExtras(postId)"))
+);
+if (
+  !communityExtrasSource.includes("question.length<3||question.length>300") ||
+  !communityExtrasSource.includes("options.length<2||options.length>8") ||
+  !communityExtrasSource.includes("options.some(label=>label.length>120)") ||
+  !communityExtrasSource.includes("if(pollError)throw pollError") ||
+  !communityExtrasSource.includes("if(optionsError)throw optionsError") ||
+  !communityExtrasSource.includes("if(error)throw error")
+) {
+  fail("Community post links and poll saves must validate schema limits and surface Supabase write failures");
+} else {
+  pass("Community poll/link extras validate limits and surface failed writes instead of silently skipping them");
+}
+
+const communityPublishApp = app.slice(app.indexOf("window.publishV9Post=async function()"),app.indexOf("window.openV9StoryComposer=function()",app.indexOf("window.publishV9Post=async function()")));
+const communityPublishPatch = communityClickAuditSource.slice(communityClickAuditSource.indexOf("function patchPublish()"),communityClickAuditSource.indexOf("async function renderPolls()",communityClickAuditSource.indexOf("function patchPublish()")));
+if (
+  !communityPublishApp.includes('.insert({') ||
+  !communityPublishApp.includes('.select("id").single()') ||
+  !communityPublishApp.includes("return String(created.id)") ||
+  !communityPublishPatch.includes("postId=await old.apply(this,arguments)") ||
+  !communityPublishPatch.includes("await publishExtras(postId)") ||
+  communityPublishPatch.includes('.order("created_at",{ascending:false})')
+) {
+  fail("Community poll/link extras must attach to the exact successfully inserted post, not guess the newest post after a failed publish");
+} else {
+  pass("Community extras attach to the confirmed inserted post ID");
+}
+
+const communityPollSource = read("js/community-features.js");
+if (
+  !app.includes('data-post-id="${escV(p.id)}"') ||
+  !communityPollSource.includes('querySelectorAll(".v9-post[data-post-id]")') ||
+  communityPollSource.includes('querySelector(".v9-post-menu")') ||
+  !communityPollSource.includes('body.querySelector(":scope > .community-poll")') ||
+  !communityPollSource.includes('.from("community_polls")') ||
+  !communityPollSource.includes('.from("community_poll_options")') ||
+  !communityPollSource.includes('catch(error){\n    console.warn("Community polls:",error);')
+) {
+  fail("Community polls must identify every post independent of ownership, avoid duplicate rendering, and handle query failures");
+} else {
+  pass("Community polls render for regular users and are idempotent with guarded async errors");
+}
+const communityFeedStart = app.indexOf("async function renderFeed()");
+const communityProfileStart = app.indexOf("async function renderMyProfile()",communityFeedStart);
+const communityFeedMetaSource = communityFeedStart>=0&&communityProfileStart>communityFeedStart
+  ? app.slice(communityFeedStart,communityProfileStart) : "";
+const communityBootstrapStart = app.indexOf("window.loadV9Community=load");
+const communityBootstrapEnd = app.indexOf("/* FINAL PUBLIC UI API",communityBootstrapStart);
+const communityBootstrapSource = communityBootstrapStart>=0&&communityBootstrapEnd>communityBootstrapStart
+  ? app.slice(communityBootstrapStart,communityBootstrapEnd) : "";
+if (
+  !communityFeedMetaSource.includes("async function refreshPostMetaBatch(ids)") ||
+  !communityFeedMetaSource.includes("await refreshPostMetaBatch(V.posts.map(p=>p.id))") ||
+  communityFeedMetaSource.includes("Promise.all(V.posts.map(p=>refreshPostMeta(p.id)))") ||
+  !communityFeedMetaSource.includes('readPostRows("community_reactions","id,post_id,user_id,reaction")') ||
+  !communityFeedMetaSource.includes('readPostRows("community_comments","id,post_id")') ||
+  !communityFeedMetaSource.includes('.in("post_id",unique)') ||
+  !communityFeedMetaSource.includes("PAGE_SIZE=1000") ||
+  !communityFeedMetaSource.includes("MAX_ROWS=10000") ||
+  !communityBootstrapSource.includes("if(q('community')?.classList.contains('active'))void load()")
+) {
+  fail("Community feed should load on demand and fetch reaction/comment metadata in bounded batches rather than issuing two requests per post on every page load");
+} else {
+  pass("Community loading is demand-driven and post metadata uses bounded batched queries");
+}
+
+if (
+  !app.includes("if(r!==true)return r;") ||
+  !app.includes("let backgroundRefreshFailures=0;") ||
+  !app.includes("backgroundRefreshFailures=Math.min(backgroundRefreshFailures+1,3)") ||
+  !app.includes("scheduleBackgroundRefresh(retryDelay)")
+) {
+  fail("Background refresh must skip optional queries after a failed/in-flight core load and exponentially back off during API failures");
+} else {
+  pass("Background refresh backs off during backend failures and avoids duplicate optional fetches");
+}
+
+const gameRefreshStart = game.indexOf("async function refresh(options={})");
+const gameRefreshEnd = game.indexOf("function group(",gameRefreshStart);
+const gameRefreshSource = gameRefreshStart>=0&&gameRefreshEnd>gameRefreshStart
+  ? game.slice(gameRefreshStart,gameRefreshEnd) : "";
+const gamePollingStart = game.indexOf("window.__MEDJASI_GAME_REFRESH_TIMER__=setInterval");
+const gamePollingSource = gamePollingStart>=0 ? game.slice(gamePollingStart,gamePollingStart+250) : "";
+if (
+  !gameRefreshSource.includes("const force=options?.force!==false") ||
+  !gameRefreshSource.includes("if(!force&&Date.now()<refreshRetryAt)return") ||
+  !gameRefreshSource.includes("if(force)refreshPending=true") ||
+  !gameRefreshSource.includes("refreshFailureCount=Math.min(refreshFailureCount+1,4)") ||
+  !gameRefreshSource.includes("refreshRetryAt=Date.now()+Math.min(60000,10000*Math.pow(2,refreshFailureCount-1))") ||
+  !gameRefreshSource.includes("refreshFailureCount=0") ||
+  !gamePollingSource.includes("refresh({force:false})")
+) {
+  fail("Fan Game live polling must back off after backend failures and must not queue redundant timer refreshes while another request is in flight");
+} else {
+  pass("Fan Game refresh uses bounded exponential backoff while preserving forced user-triggered refreshes");
+}
+
+const communityLoadStart = app.indexOf("async function load(options={})",app.indexOf("function fanCommunityIdentityHTML"));
+const communityLoadEnd = app.indexOf("function communityTrack",communityLoadStart);
+const communityLoadSource = communityLoadStart>=0&&communityLoadEnd>communityLoadStart
+  ? app.slice(communityLoadStart,communityLoadEnd) : "";
+if (
+  !communityLoadSource.includes("if(loadInFlight)return loadInFlight;") ||
+  !communityLoadSource.includes("if(!options.force&&Date.now()<loadRetryAt)return false;") ||
+  !communityLoadSource.includes("loadFailureCount=Math.min(loadFailureCount+1,4)") ||
+  !communityLoadSource.includes("loadRetryAt=Date.now()+Math.min(60000,5000*Math.pow(2,loadFailureCount-1))") ||
+  !communityLoadSource.includes("if(!V.loaded)") ||
+  communityLoadSource.includes("V.posts=[];V.stories=[];render()") ||
+  !app.includes("await load({force:true});")
+) {
+  fail("Community feed must avoid overlapping loads, back off during failures, preserve the last good snapshot, and force refresh after successful mutations");
+} else {
+  pass("Community feed preserves the last good snapshot and backs off failed loads without blocking saved-content refreshes");
+}
+
+const publicPrivilegesMigration = read("sql/17_revoke_excess_public_table_privileges.sql");
+if (
+  !publicPrivilegesMigration.includes("revoke insert, update, delete, truncate, references, trigger, maintain on table") ||
+  !publicPrivilegesMigration.includes("from anon") ||
+  !publicPrivilegesMigration.includes("revoke truncate, references, trigger, maintain on table") ||
+  !publicPrivilegesMigration.includes("from authenticated") ||
+  !publicPrivilegesMigration.includes("alter default privileges for role postgres in schema public") ||
+  !publicPrivilegesMigration.includes("revoke insert, update, delete, truncate, references, trigger, maintain on tables from anon") ||
+  !publicPrivilegesMigration.includes("revoke truncate, references, trigger, maintain on tables from authenticated")
+) {
+  fail("Public tables must retain existing read/CRUD behavior while unnecessary client maintenance grants are removed for current and future tables");
+} else {
+  pass("Least-privilege migration removes unnecessary public table grants and tightens postgres default privileges");
+}
+
+const communityFeaturesSource = read("js/community-features.js");
+const communitySafetyStart = communityFeaturesSource.indexOf("function patchLoad()");
+const communitySafetyEnd = communityFeaturesSource.indexOf("function patchComposer()",communitySafetyStart);
+const communitySafetySource = communitySafetyStart>=0&&communitySafetyEnd>communitySafetyStart
+  ? communityFeaturesSource.slice(communitySafetyStart,communitySafetyEnd) : "";
+const communityGalleryStart = communityFeaturesSource.indexOf("async function injectGalleryAlbums()");
+const communityGalleryEnd = communityFeaturesSource.indexOf("let galleryAlbumSelectInFlight",communityGalleryStart);
+const communityGallerySource = communityGalleryStart>=0&&communityGalleryEnd>communityGalleryStart
+  ? communityFeaturesSource.slice(communityGalleryStart,communityGalleryEnd) : "";
+const communityBootStart = communityFeaturesSource.indexOf("function boot(){");
+const communityBootEnd = communityFeaturesSource.indexOf("boot();",communityBootStart);
+const communityBootSource = communityBootStart>=0&&communityBootEnd>communityBootStart
+  ? communityFeaturesSource.slice(communityBootStart,communityBootEnd) : "";
+const communityAdminBootStart = communityFeaturesSource.indexOf("function boot2(){");
+const communityAdminBootEnd = communityFeaturesSource.indexOf("boot2();",communityAdminBootStart);
+const communityAdminBootSource = communityAdminBootStart>=0&&communityAdminBootEnd>communityAdminBootStart
+  ? communityFeaturesSource.slice(communityAdminBootStart,communityAdminBootEnd) : "";
+if (
+  !communitySafetySource.includes("if(result===true&&q(\"community\")?.classList.contains(\"active\"))") ||
+  !communitySafetySource.includes("await enhanceFeed();await renderPolls()") ||
+  communityBootSource.includes("setTimeout(async()=>{await enhanceFeed();await renderPolls()},700") ||
+  !communityGallerySource.includes('if(!host||!q("gallery")?.classList.contains("active"))return;') ||
+  !communityGallerySource.includes('if(!q("gallery")?.classList.contains("active"))return;') ||
+  !communityAdminBootSource.includes('if(q("gallery")?.classList.contains("active"))void injectGalleryAlbums()') ||
+  !communityAdminBootSource.includes('if(admin()&&q("admin")?.classList.contains("active"))') ||
+  communityAdminBootSource.includes('injectGalleryAlbums();injectAdminAlbumTools();ensureGalleryAlbumSelect();injectAdminReports()},1200')
+) {
+  fail("Community/Gallery/Admin add-on queries must run only for the active section, share requests, and render polls after a successful feed refresh");
+} else {
+  pass("Community/Gallery/Admin add-ons avoid hidden-section startup queries and render polls after a successful Community refresh");
+}
+
+const internalFanMathMigration = read("sql/20_revoke_public_math_helper_execute.sql");
+if (
+  !internalFanMathMigration.includes("public.fan_odds_from_prob(numeric, numeric)") ||
+  !internalFanMathMigration.includes("public.fan_poisson_prob(numeric, integer)") ||
+  !internalFanMathMigration.includes("from public, anon, authenticated")
+) {
+  fail("Internal Fan Game probability helpers must not be callable as public/anonymous/authenticated RPCs");
+} else {
+  pass("Fan Game math helpers are restricted to internal execution while preserving the repricing function");
+}
+
+const defaultFunctionGrantMigration = read("sql/19_revoke_default_function_execute.sql");
+if (
+  !defaultFunctionGrantMigration.includes("alter default privileges for role postgres") ||
+  !defaultFunctionGrantMigration.includes("revoke execute on functions from public") ||
+  !defaultFunctionGrantMigration.includes("alter default privileges for role postgres in schema public") ||
+  !defaultFunctionGrantMigration.includes("revoke execute on functions from anon, authenticated")
+) {
+  fail("New PostgreSQL functions must not inherit public/client EXECUTE by default; existing functions are unaffected");
+} else {
+  pass("Future function grants require explicit execution access instead of public defaults");
+}
+
+const policyAlignedGrantsMigration = read("sql/18_tighten_public_dml_and_sequence_grants.sql");
+if (
+  !policyAlignedGrantsMigration.includes("has_table_privilege(") ||
+  !policyAlignedGrantsMigration.includes("from pg_policies p") ||
+  !policyAlignedGrantsMigration.includes("p.cmd in (c.cmd, 'ALL')") ||
+  !policyAlignedGrantsMigration.includes("or p.roles @> array['public']::name[]") ||
+  !policyAlignedGrantsMigration.includes("revoke all on all sequences in schema public from anon") ||
+  !policyAlignedGrantsMigration.includes("grant usage on sequence") ||
+  !policyAlignedGrantsMigration.includes("public.fan_shop_items_id_seq") ||
+  !policyAlignedGrantsMigration.includes("public.sponsors_id_seq") ||
+  !policyAlignedGrantsMigration.includes("public.team_applications_id_seq") ||
+  !policyAlignedGrantsMigration.includes("revoke insert, update, delete on tables from authenticated")
+) {
+  fail("Authenticated table DML must be limited to commands allowed by RLS policies, and sequence rights must be minimal");
+} else {
+  pass("Policy-aligned DML and sequence grant migration keeps required CRUD while revoking unused direct mutations");
 }
 
 // Keep numbered SQL upgrade scripts unique and documented in README.

@@ -1,4 +1,4 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v101";
+const CACHE_NAME = "medjasi-futsal-pwa-v130";
 const CDN_CACHE = "medjasi-cdn-v1";
 
 const APP_SHELL = [
@@ -6,16 +6,16 @@ const APP_SHELL = [
   "./index.html",
   "./manifest.json",
   "./css/app.css?v=20261006v21",
-  "./js/app.js?v=20261009v16",
+  "./js/app.js?v=20261010v35",
   "./js/effects.js?v=1",
   "./css/production.css?v=20261007v23",
   "./css/visual-redesign-v1.css?v=1",
   "./css/effects.css?v=1",
   "./css/game.css?v=20261007v02",
   "./js/production.js?v=20261005",
-  "./js/game.js?v=20261009v06",
+  "./js/game.js?v=20261010v09",
   "./js/growth.js?v=20261009v06",
-  "./js/community-features.js?v=20261007v02",
+  "./js/community-features.js?v=20261010v09",
   "./js/ui-compat.js?v=20261009v01",
   "./css/admin-organizer.css?v=5",
   "./css/graphic-engine.css?v=1",
@@ -39,7 +39,7 @@ const APP_SHELL = [
   "./js/dashboard-layout-v1.js?v=20261009v7",
   "./css/medjasi-design-v11.css?v=20261007v02",
   "./css/medjasi-design-v13.css?v=20261007v02",
-  "./js/admin-organizer.js?v=13",
+  "./js/admin-organizer.js?v=15",
   "./js/graphic-engine.js?v=1",
   "./js/medjasi-v13-ui.js?v=20261007v01",
   "./images/icon-192.png",

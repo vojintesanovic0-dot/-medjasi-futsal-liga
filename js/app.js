@@ -46,7 +46,9 @@ let gallery = [];
 let matchPlayers = [];
 
 let currentMatchId = null;
+let finishMatchInFlight = new Set();
 let liveRefreshInterval = null;
+let liveRefreshInFlight = false;
 let realtimeChannel = null;
 let musicInitialized = false;
 let selectedCommentImage = null;
@@ -117,6 +119,35 @@ function safeUrl(value,fallback=""){
 }
 
 /* Escape values that are embedded inside inline JavaScript string literals. */
+function isAllowedRasterImage(file){
+  return !!file && [
+    "image/jpeg","image/png","image/webp","image/gif","image/avif"
+  ].includes(String(file.type||"").toLowerCase());
+}
+
+async function hasExpectedMediaSignature(file,mime){
+  try{
+    const bytes=new Uint8Array(await file.slice(0,64).arrayBuffer());
+    const ascii=(start,length)=>String.fromCharCode(...bytes.slice(start,start+length));
+    const starts=(...values)=>values.every((value,index)=>bytes[index]===value);
+    switch(mime){
+      case "image/jpeg": return starts(0xff,0xd8,0xff);
+      case "image/png": return starts(0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a);
+      case "image/gif": return ["GIF87a","GIF89a"].includes(ascii(0,6));
+      case "image/webp": return ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP";
+      case "image/avif": return ascii(4,4)==="ftyp"&&
+        ["avif","avis"].some(brand=>Array.from(bytes).some((_,i)=>i>=8&&ascii(i,4)===brand));
+      case "video/mp4": return ascii(4,4)==="ftyp";
+      case "video/webm": return starts(0x1a,0x45,0xdf,0xa3);
+      case "video/ogg": return ascii(0,4)==="OggS";
+      default: return false;
+    }
+  }catch(error){
+    console.warn("Provjera formata datoteke nije uspjela:",error);
+    return false;
+  }
+}
+
 function escJs(value){
   return String(value ?? "")
     .replace(/\\/g,"\\\\")
@@ -248,7 +279,34 @@ function canManageMatch(){
   return isAdmin() || isModerator();
 }
 
+async function notifyLeaguePush(type,title,body,matchId){
+  try{
+    const notify=window.medjasiV7?.notifyPush;
+    if(typeof notify!=="function")return false;
+    return await notify(type,title,body,matchId||null);
+  }catch(error){
+    console.warn("Obavještenje lige nije poslano:",error);
+    return false;
+  }
+}
 
+
+
+async function readConfirmedMatch(matchId,fallback){
+  const {data,error}=await supabaseClient
+    .from("matches")
+    .select("*")
+    .eq("id",matchId)
+    .maybeSingle();
+  if(error)throw error;
+  if(!data)throw new Error("Rezultat utakmice nije moguće potvrditi u bazi.");
+
+  const snapshot={...(fallback||{}),...data};
+  const index=matches.findIndex(match=>String(match.id)===String(matchId));
+  if(index>=0)matches[index]=snapshot;
+  else matches.push(snapshot);
+  return snapshot;
+}
 
 function teamLogo(team){
 
@@ -1102,10 +1160,10 @@ async function ensureProfile(user){
       .maybeSingle();
 
   if(selectError){
-    console.error(
-      "Greška pri učitavanju profila:",
-      selectError
-    );
+    console.error("Greška pri učitavanju profila:",selectError);
+    // Do not create a profile when the read failed for another reason, and
+    // do not leave the previous account's profile/role in memory.
+    throw selectError;
   }
 
   if(existing){
@@ -1200,37 +1258,45 @@ async function ensureProfile(user){
 
 
 async function checkAuth(){
-
-  const {
-    data:{
-      session
-    }
-  } =
-    await supabaseClient
-      .auth
-      .getSession();
-
-
-  currentUser =
-    session?.user || null;
-
-
-  if(currentUser){
-
-    currentProfile =
-      await ensureProfile(currentUser);
-
-  }else{
-
-    currentProfile = null;
+  // Fail closed: a stale profile must never carry admin privileges across account changes.
+  if(!supabaseClient?.auth?.getSession){
+    currentUser=null;
+    currentProfile=null;
+    updateAuthUI();
+    return null;
   }
 
+  let sessionResult;
+  try{
+    sessionResult=await supabaseClient.auth.getSession();
+  }catch(error){
+    currentUser=null;
+    currentProfile=null;
+    updateAuthUI();
+    throw error;
+  }
+
+  const {data,error}=sessionResult||{};
+  if(error){
+    currentUser=null;
+    currentProfile=null;
+    updateAuthUI();
+    throw error;
+  }
+
+  currentUser=data?.session?.user||null;
+  currentProfile=null;
+  if(currentUser){
+    currentProfile=await ensureProfile(currentUser);
+  }
 
   updateAuthUI();
 
   if(currentUser && document.getElementById("login")?.classList.contains("active")){
     showSection("home");
   }
+
+  return currentUser;
 }
 
 
@@ -1347,32 +1413,33 @@ async function login(){
 ========================================================= */
 
 async function resetPassword(){
-  const email=document.getElementById("loginEmail")?.value.trim() || "";
+  const email=document.getElementById("loginEmail")?.value.trim()||"";
   const message=document.getElementById("loginMessage");
 
-  if(!supabaseClient?.auth){
-    if(message) message.textContent="Servis za promjenu lozinke je trenutno nedostupan. Pokušaj ponovo kasnije.";
+  if(!supabaseClient?.auth?.resetPasswordForEmail){
+    if(message)message.textContent="Servis za promjenu lozinke je trenutno nedostupan. Pokušaj ponovo kasnije.";
     return;
   }
-
   if(!email){
-    if(message) message.textContent="Prvo upiši email adresu za koju želiš reset lozinke.";
+    if(message)message.textContent="Prvo upiši email adresu za koju želiš reset lozinke.";
     return;
   }
 
-  if(message) message.textContent="Šaljem link za promjenu lozinke...";
-
-  const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{
-    redirectTo:window.location.origin + window.location.pathname
-  });
-
-  if(error){
-    if(message) message.textContent=error.message;
-    return;
+  if(message)message.textContent="Šaljem link za promjenu lozinke...";
+  try{
+    const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{
+      redirectTo:window.location.origin+window.location.pathname
+    });
+    if(error){
+      if(message)message.textContent=error.message||"Slanje linka nije uspjelo. Pokušaj ponovo.";
+      return;
+    }
+    if(message)message.textContent="Ako nalog postoji, link za promjenu lozinke je poslat na email.";
+    toast("Provjeri email za promjenu lozinke.");
+  }catch(error){
+    console.error("Zahtjev za reset lozinke nije uspio:",error);
+    if(message)message.textContent=error?.message||"Slanje linka nije uspjelo zbog mrežne greške. Pokušaj ponovo.";
   }
-
-  if(message) message.textContent="Ako nalog postoji, link za promjenu lozinke je poslat na email.";
-  toast("Provjeri email za promjenu lozinke.");
 }
 
 
@@ -1499,21 +1566,26 @@ async function register(){
     email confirmation je vjerovatno isključen.
   */
 
-  if(data.session && data.user){
-
-    currentUser =
-      data.user;
-
-    await checkAuth();
-    await loadAll();
-
-    message.textContent =
-      "Registracija uspješna.";
-
+  if(data?.session && data?.user){
+    currentUser=data.user;
+    try{
+      await checkAuth();
+    }catch(authError){
+      // The account/session exists even if the optional profile lookup is temporarily unavailable.
+      console.error("Provjera profila nakon registracije:",authError);
+      currentUser=data.user;
+      try{updateAuthUI();}catch(uiError){console.error("Prikaz naloga nakon registracije:",uiError);}
+    }
+    try{
+      await loadAll();
+    }catch(loadError){
+      console.error("Učitavanje podataka nakon registracije:",loadError);
+    }
+    try{window.medjasiGame?.refresh?.();}catch(gameError){console.warn("Fan Game osvježavanje:",gameError);}
+    medjasiAuthInteraction=false;
+    message.textContent="Registracija uspješna.";
     toast("Nalog je uspješno kreiran.");
-
     showSection("home");
-
     return;
   }
 
@@ -1534,22 +1606,31 @@ async function register(){
 async function resendConfirmation(){
   const email=document.getElementById("registerEmail")?.value.trim()||document.getElementById("loginEmail")?.value.trim()||"";
   const message=document.getElementById("registerMessage")||document.getElementById("loginMessage");
+  if(!supabaseClient?.auth?.resend){
+    if(message)message.textContent="Servis za potvrdu emaila je trenutno nedostupan. Pokušaj ponovo kasnije.";
+    return;
+  }
   if(!email){
-    if(message) message.textContent="Unesi email adresu na koju želiš ponovo poslati potvrdu.";
+    if(message)message.textContent="Unesi email adresu na koju želiš ponovo poslati potvrdu.";
     return;
   }
-  if(message) message.textContent="Šaljem novu potvrdu...";
-  const {error}=await supabaseClient.auth.resend({
-    type:"signup",
-    email,
-    options:{emailRedirectTo:window.location.origin+window.location.pathname}
-  });
-  if(error){
-    if(message) message.textContent=error.message;
-    return;
+  if(message)message.textContent="Šaljem novu potvrdu...";
+  try{
+    const {error}=await supabaseClient.auth.resend({
+      type:"signup",
+      email,
+      options:{emailRedirectTo:window.location.origin+window.location.pathname}
+    });
+    if(error){
+      if(message)message.textContent=error.message||"Slanje potvrde nije uspjelo. Pokušaj ponovo.";
+      return;
+    }
+    if(message)message.textContent="Nova potvrda je poslana. Provjeri Inbox i Spam/Junk folder.";
+    toast("Potvrda je ponovo poslana.");
+  }catch(error){
+    console.error("Ponovno slanje potvrde nije uspjelo:",error);
+    if(message)message.textContent=error?.message||"Slanje potvrde nije uspjelo zbog mrežne greške. Pokušaj ponovo.";
   }
-  if(message) message.textContent="Nova potvrda je poslana. Provjeri Inbox i Spam/Junk folder.";
-  toast("Potvrda je ponovo poslana.");
 }
 window.resendConfirmation=resendConfirmation;
 
@@ -1558,40 +1639,39 @@ window.resendConfirmation=resendConfirmation;
 ========================================================= */
 
 async function logout(){
-  if(!supabaseClient?.auth){
+  if(!supabaseClient?.auth?.signOut){
     alert("Odjava je trenutno nedostupna jer servis prijave nije učitan.");
     return;
   }
-  medjasiAuthInteraction = true;
 
-  const {
-    error
-  } =
-    await supabaseClient
-      .auth
-      .signOut();
+  medjasiAuthInteraction=true;
+  try{
+    const {error}=await supabaseClient.auth.signOut();
+    if(error){
+      medjasiAuthInteraction=false;
+      alert(error.message||"Odjava nije uspjela. Pokušaj ponovo.");
+      return;
+    }
 
+    currentUser=null;
+    currentProfile=null;
+    updateAuthUI();
+    toast("Odjavljen si.");
+    showSection("home");
 
-  if(error){
-
-    alert(error.message);
-
-    return;
+    try{
+      await loadAll();
+    }catch(loadError){
+      // Signing out has succeeded; a refresh failure must not undo the UI state.
+      console.error("Osvježavanje nakon odjave nije uspjelo:",loadError);
+    }
+  }catch(error){
+    medjasiAuthInteraction=false;
+    console.error("Odjava nije uspjela:",error);
+    alert(error?.message||"Odjava nije uspjela zbog mrežne greške. Pokušaj ponovo.");
+  }finally{
+    medjasiAuthInteraction=false;
   }
-
-
-  currentUser = null;
-  currentProfile = null;
-
-
-  updateAuthUI();
-
-
-  toast("Odjavljen si.");
-
-  showSection("home");
-
-  await loadAll();
 }
 
 
@@ -1675,6 +1755,7 @@ async function loadAll(){
     return;
   }
   loadAllActive=true;
+  let hadLoadErrors=false;
 
   try{
     /* Supabase vraća max 1000 redova po upitu: velike tabele čitamo stranicu po stranicu. */
@@ -1714,19 +1795,31 @@ async function loadAll(){
       return {data:error?null:(data||[]),error};
     };
 
-    const results=await Promise.all([
-      fetchAllRows("teams","name"),
-      fetchAllRows("players","jersey_number"),
-      fetchAllRows("matches","match_date"),
-      fetchAllRows("goals","minute"),
-      fetchAllRows("cards","minute"),
-      fetchRecent("comments",300),
-      fetchRecent("messages",300),
-      fetchRecent("gallery",200),
-      fetchAllRows("match_players",null)
-    ]);
+    // Bound the initial burst of REST requests. A pool timeout is a shared
+    // service failure; nine simultaneous table queries per browser multiplied
+    // across visitors needlessly amplifies it. Keep the original result order.
+    const loadTasks=[
+      ()=>fetchAllRows("teams","name"),
+      ()=>fetchAllRows("players","jersey_number"),
+      ()=>fetchAllRows("matches","match_date"),
+      ()=>fetchAllRows("goals","minute"),
+      ()=>fetchAllRows("cards","minute"),
+      ()=>fetchRecent("comments",300),
+      ()=>fetchRecent("messages",300),
+      ()=>fetchRecent("gallery",200),
+      ()=>fetchAllRows("match_players",null)
+    ];
+    const results=[];
+    const LOAD_QUERY_CONCURRENCY=4;
+    for(let i=0;i<loadTasks.length;i+=LOAD_QUERY_CONCURRENCY){
+      const batch=await Promise.all(
+        loadTasks.slice(i,i+LOAD_QUERY_CONCURRENCY).map(task=>task())
+      );
+      results.push(...batch);
+    }
 
     const [teamsResult,playersResult,matchesResult,goalsResult,cardsResult,commentsResult,messagesResult,galleryResult,matchPlayersResult]=results;
+    hadLoadErrors=results.some(r=>!!r.error);
     results.forEach(r=>{if(r.error) console.error(r.error)});
 
     /* Ako upit padne, zadržavamo prethodne podatke umjesto da ispraznimo ekran. */
@@ -1745,6 +1838,7 @@ async function loadAll(){
     processLeagueNotifications();
     renderAll();
   }catch(error){
+    hadLoadErrors=true;
     console.error("Greška pri učitavanju:",error);
   }finally{
     loadAllActive=false;
@@ -1753,6 +1847,7 @@ async function loadAll(){
       queueMicrotask(()=>{void loadAll()});
     }
   }
+  return !hadLoadErrors;
 }
 
 /* =========================================================
@@ -3506,7 +3601,7 @@ async function addComment(){
   }
 
   if(file){
-    if(!file.type.startsWith("image/")){
+    if(!isAllowedRasterImage(file)){
       alert("Dozvoljene su samo slike.");
       return;
     }
@@ -3525,7 +3620,7 @@ async function addComment(){
 
   try{
     if(file){
-      image_url=await uploadFile(file,"comments");
+      image_url=await uploadFile(file,`comments/${currentUser.id}`);
     }
 
     const {error}=await supabaseClient
@@ -3692,7 +3787,7 @@ function setupChatImageUI(){
     const meta=document.getElementById("chatImageMeta");
 
     if(!file){ clearChatImage(); return; }
-    if(!file.type.startsWith("image/") || file.size>5*1024*1024){
+    if(!isAllowedRasterImage(file) || file.size>5*1024*1024){
       alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB.");
       clearChatImage();
       return;
@@ -3734,13 +3829,13 @@ async function sendChat(){
 
   if(!content && !file){ alert("Napiši poruku ili dodaj sliku."); return; }
   if(content.length>1000){ alert("Poruka može imati najviše 1000 znakova."); return; }
-  if(file && (!file.type.startsWith("image/") || file.size>5*1024*1024)){
+  if(file && (!isAllowedRasterImage(file) || file.size>5*1024*1024)){
     alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB."); return;
   }
 
   try{
     let image_url=null;
-    if(file) image_url=await uploadFile(file,"chat");
+    if(file) image_url=await uploadFile(file,`chat/${currentUser.id}`);
 
     const username=currentProfile?.username || currentUser.user_metadata?.username || currentUser.email?.split("@")[0] || "Korisnik";
 
@@ -3858,7 +3953,7 @@ async function adminAddGalleryImage(){
   const description=document.getElementById("galleryDescription")?.value.trim() || "";
 
   if(!file){ alert("Izaberi fotografiju."); return; }
-  if(!file.type.startsWith("image/") || file.size>8*1024*1024){ alert("Dozvoljene su slike do 8 MB."); return; }
+  if(!isAllowedRasterImage(file) || file.size>8*1024*1024){ alert("Dozvoljene su slike do 8 MB."); return; }
 
   try{
     const image_url=await uploadFile(file,"gallery");
@@ -3883,16 +3978,66 @@ async function adminAddGalleryImage(){
   }
 }
 
-async function adminDeleteGalleryImage(id){
-  if(!isAdmin()) return;
-  const item=gallery.find(g=>String(g.id)===String(id));
-  if(!item) return;
-  if(!confirm(`Obrisati "${item.title || "ovu fotografiju"}" iz galerije?`)) return;
+function leagueMediaObjectPath(publicUrl,expectedFolder){
+  if(!publicUrl||!["gallery","news"].includes(expectedFolder))return null;
+  try{
+    const url=new URL(String(publicUrl));
+    const base=new URL(SUPABASE_URL);
+    const prefix="/storage/v1/object/public/liga-images/";
+    if(url.origin!==base.origin||url.protocol!=="https:"||!url.pathname.startsWith(prefix))return null;
+    const objectPath=decodeURIComponent(url.pathname.slice(prefix.length));
+    const parts=objectPath.split("/");
+    if(parts[0]!==expectedFolder||parts.length<2||
+       parts.some(part=>!part||part==="."||part===".."||part.includes("\\")||part.includes("\0")))return null;
+    return objectPath;
+  }catch(error){
+    return null;
+  }
+}
 
-  const {error}=await supabaseClient.from("gallery").delete().eq("id",id);
-  if(error){ alert(error.message); return; }
-  toast("Fotografija je obrisana.","success");
-  await loadAll();
+async function removeLeagueMediaObject(publicUrl,expectedFolder){
+  const path=leagueMediaObjectPath(publicUrl,expectedFolder);
+  if(!path)return false;
+  if(!supabaseClient?.storage)throw new Error("Skladište datoteka trenutno nije dostupno.");
+  const {error}=await supabaseClient.storage.from("liga-images").remove([path]);
+  if(error)throw error;
+  return true;
+}
+
+async function adminDeleteGalleryImage(id){
+  if(!isAdmin())return;
+  const item=gallery.find(g=>String(g.id)===String(id));
+  if(!item)return;
+  if(!confirm(`Obrisati "${item.title||"ovu fotografiju"}" iz galerije?`))return;
+
+  try{
+    const {error}=await supabaseClient.from("gallery").delete().eq("id",id);
+    if(error)throw error;
+  }catch(error){
+    console.error("Brisanje galerijske stavke nije uspjelo:",error);
+    alert(error?.message||"Fotografija nije obrisana.");
+    return;
+  }
+
+  let storageCleanupFailed=false;
+  try{
+    await removeLeagueMediaObject(item.media_url||item.image_url,"gallery");
+  }catch(error){
+    storageCleanupFailed=true;
+    console.warn("Galerijska stavka je obrisana, ali Storage fajl nije:",error);
+  }
+
+  let refreshed=false;
+  try{refreshed=(await loadAll())===true;}
+  catch(error){console.warn("Galerija je obrisana, ali prikaz nije osvježen:",error);}
+
+  if(storageCleanupFailed){
+    toast("Galerijska stavka je obrisana, ali fajl u skladištu nije očišćen. Provjeri Storage.","error");
+  }else if(!refreshed){
+    toast("Fotografija je obrisana, ali prikaz nije potpuno osvježen. Ponovo učitaj galeriju.","error");
+  }else{
+    toast("Fotografija je obrisana.","success");
+  }
 }
 
 function openImagePreview(url,title="Fotografija"){
@@ -3906,51 +4051,56 @@ function openImagePreview(url,title="Fotografija"){
 ========================================================= */
 
 async function uploadFile(file,folder){
+  if(!file)return null;
+  if(!supabaseClient?.storage)throw new Error("Skladište datoteka trenutno nije dostupno.");
 
-  if(!file) return null;
+  const mime=String(file.type||"").toLowerCase();
+  const extensions={
+    "image/jpeg":"jpg",
+    "image/png":"png",
+    "image/webp":"webp",
+    "image/gif":"gif",
+    "image/avif":"avif",
+    "video/mp4":"mp4",
+    "video/webm":"webm",
+    "video/ogg":"ogv"
+  };
+  const extension=extensions[mime];
+  if(!extension)throw new Error("Format datoteke nije podržan. Koristi JPG, PNG, WebP, GIF, AVIF ili podržani video format.");
 
+  const parts=String(folder||"").replace(/\\/g,"/").split("/");
+  if(!parts.length||parts.some(part=>!part||!/^[a-z0-9_-]+$/i.test(part))){
+    throw new Error("Odredište datoteke nije ispravno.");
+  }
 
-  const extension =
-    file.name
-      .split(".")
-      .pop()
-      .toLowerCase();
+  const isVideo=mime.startsWith("video/");
+  const root=parts[0].toLowerCase();
+  if(isVideo&&!["gallery","news"].includes(root)){
+    throw new Error("Video se može dodati samo u galeriju ili vijesti.");
+  }
 
+  const maxBytes=isVideo?50*1024*1024:15*1024*1024;
+  if(!Number.isFinite(file.size)||file.size<=0||file.size>maxBytes){
+    throw new Error(isVideo?"Video mora imati najviše 50 MB.":"Slika mora imati najviše 15 MB.");
+  }
+  if(!await hasExpectedMediaSignature(file,mime)){
+    throw new Error("Sadržaj datoteke ne odgovara prijavljenom formatu. Izaberi stvarnu sliku ili podržani video.");
+  }
 
-  const filename =
-    `${folder}/${crypto.randomUUID()}.${extension}`;
+  if(typeof crypto?.randomUUID!=="function"){
+    throw new Error("Sigurno generisanje naziva datoteke nije dostupno u ovom pregledniku.");
+  }
 
+  const filename=parts.join("/")+"/"+crypto.randomUUID()+"."+extension;
+  const {error}=await supabaseClient.storage.from("liga-images").upload(
+    filename,file,{upsert:false,contentType:mime}
+  );
+  if(error)throw error;
 
-  const {
-    error
-  } =
-    await supabaseClient
-      .storage
-      .from("liga-images")
-      .upload(
-        filename,
-        file,
-        {
-          upsert:false
-        }
-      );
-
-
-  if(error) throw error;
-
-
-  const {
-    data
-  } =
-    supabaseClient
-      .storage
-      .from("liga-images")
-      .getPublicUrl(filename);
-
-
+  const {data}=supabaseClient.storage.from("liga-images").getPublicUrl(filename);
+  if(!data?.publicUrl)throw new Error("Skladište nije vratilo javni URL datoteke.");
   return data.publicUrl;
 }
-
 
 /* =========================================================
    ADMIN - TEAM
@@ -4209,107 +4359,58 @@ async function addPlayer(){
 ========================================================= */
 
 async function addMatch(){
+  if(!isAdmin())return alert("Nemaš admin ovlaštenje.");
 
-  if(!isAdmin()){
+  const home=document.getElementById("matchHome")?.value||"";
+  const away=document.getElementById("matchAway")?.value||"";
+  const date=document.getElementById("matchDate")?.value||"";
+  const round=document.getElementById("matchRound")?.value||"";
 
-    alert(
-      "Nemaš admin ovlaštenje."
-    );
+  if(!home||!away||!date)return alert("Popuni sva polja.");
+  if(String(home)===String(away))return alert("Domaćin i gost ne mogu biti ista ekipa.");
 
-    return;
+  const dateValue=new Date(date);
+  if(Number.isNaN(dateValue.getTime()))return alert("Datum utakmice nije ispravan.");
+
+  const submitButton=[...document.querySelectorAll("#adminContent button")]
+    .find(button=>/addMatch\s*\(/.test(button.getAttribute("onclick")||""));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
+
+  try{
+    const {data:created,error}=await supabaseClient.from("matches").insert({
+      home_team_id:home,
+      away_team_id:away,
+      match_date:dateValue.toISOString(),
+      round:round||null,
+      home_score:0,
+      away_score:0,
+      status:"scheduled",
+      current_minute:0
+    }).select("*").maybeSingle();
+    if(error)throw error;
+    if(!created?.id)throw new Error("Baza nije potvrdila kreiranje utakmice.");
+
+    if(!matches.some(match=>String(match.id)===String(created.id)))matches.push(created);
+    document.getElementById("matchDate").value="";
+    document.getElementById("matchRound").value="";
+
+    let refreshed=false;
+    try{refreshed=(await loadAll())===true;}
+    catch(refreshError){console.warn("Utakmica je sačuvana, ali osvježavanje nije uspjelo:",refreshError);}
+
+    if(refreshed){
+      toast("Utakmica je dodana.","success");
+    }else{
+      toast("Utakmica je dodana, ali lista nije potpuno osvježena. Ponovo učitaj admin panel.","error");
+    }
+  }catch(error){
+    console.error("Dodavanje utakmice nije uspjelo:",error);
+    alert(error?.message||"Utakmica nije sačuvana. Provjeri listu utakmica prije ponovnog pokušaja.");
+  }finally{
+    if(submitButton?.isConnected)submitButton.disabled=false;
   }
-
-
-  const home =
-    document
-      .getElementById("matchHome")
-      .value;
-
-
-  const away =
-    document
-      .getElementById("matchAway")
-      .value;
-
-
-  const date =
-    document
-      .getElementById("matchDate")
-      .value;
-
-
-  const round =
-    document
-      .getElementById("matchRound")
-      .value;
-
-
-  if(!home || !away || !date){
-
-    alert(
-      "Popuni sva polja."
-    );
-
-    return;
-  }
-
-
-  if(home === away){
-
-    alert(
-      "Domaćin i gost ne mogu biti ista ekipa."
-    );
-
-    return;
-  }
-
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("matches")
-      .insert({
-        home_team_id:home,
-        away_team_id:away,
-        match_date:
-          new Date(date).toISOString(),
-        round:
-          round || null,
-        home_score:0,
-        away_score:0,
-        status:"scheduled",
-        current_minute:0
-      });
-
-
-  if(error){
-
-    alert(error.message);
-
-    return;
-  }
-
-
-  document.getElementById(
-    "matchDate"
-  ).value = "";
-
-
-  document.getElementById(
-    "matchRound"
-  ).value = "";
-
-
-  toast(
-    "Utakmica je dodana."
-  );
-
-
-  await loadAll();
 }
-
-
 /* =========================================================
    ADMIN MATCHES
 ========================================================= */
@@ -4515,72 +4616,129 @@ function renderAdminMatches(){
    MATCH STATUS
 ========================================================= */
 
-async function changeMatchStatus(
-  id,
-  status
-){
-
-  if(!canManageMatch()) return;
-
+async function changeMatchStatus(id,status){
+  if(!canManageMatch())return;
+  if(!["scheduled","live","finished"].includes(status)){
+    alert("Izabran je neispravan status utakmice.");
+    return;
+  }
 
   const existing=getMatch(id);
+  if(!existing){
+    alert("Utakmica nije pronađena. Osvježi prikaz i pokušaj ponovo.");
+    return;
+  }
+
+  let before;
+  try{
+    before=await readConfirmedMatch(id,existing);
+  }catch(error){
+    console.error("Početni status utakmice nije moguće potvrditi:",error);
+    alert("Status utakmice nije moguće potvrditi iz baze. Promjena nije poslana; pokušaj ponovo.");
+    return;
+  }
+
+  const changed=before.status!==status;
+  if(!changed){
+    try{await loadAll();}catch(error){console.warn("Osvježavanje statusa:",error);}
+    return;
+  }
+
   const patch={status};
-  if(status==="live" && existing?.status!=="live") patch.live_started_at=new Date().toISOString();
-  else if(status!=="live" && existing?.status==="live") patch.live_started_at=null;
-  const {error}=await supabaseClient.from("matches").update(patch).eq("id",id);
+  if(status==="live"&&before.status!=="live"){
+    patch.live_started_at=new Date().toISOString();
+  }else if(status!=="live"&&before.status==="live"){
+    patch.live_started_at=null;
+  }
 
-
-  if(error){
-
-    alert(error.message);
-
+  let updateResult;
+  try{
+    updateResult=await supabaseClient.from("matches")
+      .update(patch)
+      .eq("id",id)
+      .select("*")
+      .maybeSingle();
+    if(updateResult.error)throw updateResult.error;
+    if(!updateResult.data)throw new Error("Baza nije potvrdila promjenu statusa utakmice.");
+  }catch(error){
+    alert(error?.message||"Status utakmice nije sačuvan. Pokušaj ponovo.");
     return;
   }
 
-
-  await loadAll();
-}
-
-
-/* =========================================================
-   MATCH MINUTE
-========================================================= */
-
-async function changeMinute(
-  id,
-  minute
-){
-
-  if(!canManageMatch()) return;
-
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("matches")
-      .update({
-        current_minute:
-          Number(minute) || 0
-      })
-      .eq("id",id);
-
-
-  if(error){
-
-    alert(error.message);
-
+  let confirmed;
+  try{
+    confirmed=await readConfirmedMatch(id,updateResult.data);
+    if(confirmed.status!==status){
+      throw new Error("Sačuvani status se razlikuje od izabranog statusa.");
+    }
+  }catch(error){
+    console.error("Status je poslan, ali promjena nije potvrđena:",error);
+    alert("Status je poslan, ali nije moguće potvrditi novo stanje iz baze. Push nije poslan; osvježi utakmicu.");
+    try{await loadAll();}catch(refreshError){console.warn("Osvježavanje nakon promjene statusa:",refreshError);}
     return;
   }
 
+  let fullyRefreshed=false;
+  try{fullyRefreshed=(await loadAll())===true;}
+  catch(error){console.warn("Osvježavanje nakon promjene statusa:",error);}
+  if(!fullyRefreshed){
+    toast("Status je sačuvan, ali dio prikaza nije osvježen.","error");
+  }
 
-  await loadAll();
+  // Only a confirmed transition emits push, using the score returned by the DB.
+  if(status==="live"){
+    const title="🔴 UTAKMICA UŽIVO — "+teamName(confirmed.home_team_id)+" : "+teamName(confirmed.away_team_id);
+    const body="Rezultat "+Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)+" · Počela je utakmica uživo.";
+    const pushOk=await notifyLeaguePush("live",title,body,id);
+    if(!pushOk)toast("Status je promijenjen, ali push nije potvrđen.","error");
+  }else if(status==="finished"){
+    const title="🏁 KRAJ — "+teamName(confirmed.home_team_id)+" "+Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)+" "+teamName(confirmed.away_team_id);
+    const pushOk=await notifyLeaguePush("match_finished",title,"Utakmica je završena.",id);
+    if(!pushOk)toast("Utakmica je završena, ali push nije potvrđen.","error");
+  }
 }
 
+async function changeMinute(id,minute){
+  if(!canManageMatch())return;
+  if(String(minute??"").trim()===""){
+    alert("Unesi minutu utakmice.");
+    return;
+  }
+  const value=Number(minute);
+  if(!Number.isInteger(value)||value<0||value>60){
+    alert("Minuta utakmice mora biti cijeli broj od 0 do 60.");
+    return;
+  }
 
-/* =========================================================
-   LINEUP CONTROL
-========================================================= */
+  const match=getMatch(id);
+  if(!match)return alert("Utakmica nije pronađena.");
+
+  try{
+    const {data,error}=await supabaseClient.from("matches")
+      .update({current_minute:value})
+      .eq("id",id)
+      .select("id,current_minute")
+      .maybeSingle();
+    if(error)throw error;
+    if(!data)throw new Error("Baza nije potvrdila promjenu minute.");
+
+    const local=matches.find(x=>String(x.id)===String(id));
+    if(local)local.current_minute=data.current_minute;
+
+    try{
+      const refreshed=await loadAll();
+      if(refreshed!==true){
+        toast("Minuta je sačuvana, ali dio prikaza nije osvježen.","error");
+      }
+    }catch(refreshError){
+      console.warn("Minuta je sačuvana, ali osvježavanje nije uspjelo:",refreshError);
+      toast("Minuta je sačuvana, ali prikaz nije osvježen.","error");
+    }
+  }catch(error){
+    console.error("Promjena minute nije uspjela:",error);
+    alert(error?.message||"Minuta nije sačuvana. Pokušaj ponovo.");
+  }
+}
 
 async function openLineupControl(
   matchId
@@ -4817,234 +4975,106 @@ async function openLineupControl(
    SAVE LINEUP
 ========================================================= */
 
-async function saveLineup(
-  matchId
-){
+async function saveLineup(matchId){
+  if(!canManageMatch())return;
+  const match=getMatch(matchId);
+  if(!match)return alert("Utakmica nije pronađena. Osvježi prikaz.");
 
-  if(!canManageMatch()) return;
+  const registered=[...document.querySelectorAll(".registered-player:checked")].map(x=>String(x.dataset.player||""));
+  const starting=[...document.querySelectorAll(".starting-player:checked")].map(x=>String(x.dataset.player||""));
 
+  const isTeamPlayer=(id,teamId)=>String(getPlayer(id)?.team_id)===String(teamId);
+  const homeRegistered=registered.filter(id=>isTeamPlayer(id,match.home_team_id));
+  const awayRegistered=registered.filter(id=>isTeamPlayer(id,match.away_team_id));
+  const homeStarting=starting.filter(id=>isTeamPlayer(id,match.home_team_id));
+  const awayStarting=starting.filter(id=>isTeamPlayer(id,match.away_team_id));
 
-  const match =
-    getMatch(matchId);
-
-
-  if(!match) return;
-
-
-  const registered =
-    [
-      ...document.querySelectorAll(
-        ".registered-player:checked"
-      )
-    ]
-    .map(
-      x =>
-        x.dataset.player
-    );
-
-
-  const starting =
-    [
-      ...document.querySelectorAll(
-        ".starting-player:checked"
-      )
-    ]
-    .map(
-      x =>
-        x.dataset.player
-    );
-
-
-  const homeStarting =
-    starting.filter(
-      id =>
-        getPlayer(id)?.team_id ===
-        match.home_team_id
-    );
-
-
-  const awayStarting =
-    starting.filter(
-      id =>
-        getPlayer(id)?.team_id ===
-        match.away_team_id
-    );
-
-
-  const homeRegistered =
-    registered.filter(
-      id =>
-        getPlayer(id)?.team_id ===
-        match.home_team_id
-    );
-
-
-  const awayRegistered =
-    registered.filter(
-      id =>
-        getPlayer(id)?.team_id ===
-        match.away_team_id
-    );
-
-
-  if(
-    homeRegistered.length < 5 ||
-    awayRegistered.length < 5
-  ){
-
-    alert(
-      "Svaka ekipa mora imati najmanje 5 prijavljenih igrača."
-    );
-
+  if(homeRegistered.length<5||awayRegistered.length<5){
+    alert("Svaka ekipa mora imati najmanje 5 prijavljenih igrača.");
+    return;
+  }
+  if(homeStarting.length!==5||awayStarting.length!==5){
+    alert("Moraš izabrati tačno 5 početnih igrača za svaku ekipu.");
+    return;
+  }
+  if(!homeStarting.some(id=>getPlayer(id)?.position==="Golman")||
+     !awayStarting.some(id=>getPlayer(id)?.position==="Golman")){
+    alert("Početna petorka mora sadržati golmana za obje ekipe.");
+    return;
+  }
+  if(starting.some(id=>!registered.includes(id))){
+    alert("Svaki početni igrač mora biti označen kao prijavljen.");
     return;
   }
 
-
-  if(
-    homeStarting.length !== 5 ||
-    awayStarting.length !== 5
-  ){
-
-    alert(
-      "Moraš izabrati tačno 5 početnih igrača za svaku ekipu."
-    );
-
+  const allRegistered=[...new Set([...homeRegistered,...awayRegistered])];
+  const allStarting=new Set([...homeStarting,...awayStarting]);
+  if(allRegistered.length!==homeRegistered.length+awayRegistered.length){
+    alert("Postava sadrži ponovljenog ili neispravnog igrača. Osvježi postavu.");
     return;
   }
+  const rows=allRegistered.map(player_id=>({
+    match_id:matchId,
+    player_id,
+    is_starting:allStarting.has(player_id),
+    is_active:allStarting.has(player_id)
+  }));
 
+  const submitButton=[...document.querySelectorAll("#modalContent button")]
+    .find(button=>/saveLineup\s*\(/.test(button.getAttribute("onclick")||""));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
 
-  const homeGoalkeeper =
-    homeStarting.some(
-      id =>
-        getPlayer(id)?.position ===
-        "Golman"
-    );
-
-
-  const awayGoalkeeper =
-    awayStarting.some(
-      id =>
-        getPlayer(id)?.position ===
-        "Golman"
-    );
-
-
-  if(
-    !homeGoalkeeper ||
-    !awayGoalkeeper
-  ){
-
-    alert(
-      "Početna petorka mora sadržati golmana za obje ekipe."
-    );
-
-    return;
-  }
-
-
-  /*
-    Početni igrači moraju biti registrovani.
-  */
-
-  const startingNotRegistered =
-    starting.filter(
-      id =>
-        !registered.includes(id)
-    );
-
-
-  if(startingNotRegistered.length){
-
-    alert(
-      "Svaki početni igrač mora biti označen kao prijavljen."
-    );
-
-    return;
-  }
-
-
-  const allStarting =
-    [
-      ...homeStarting,
-      ...awayStarting
-    ];
-
-
-  const allRegistered =
-    [
-      ...new Set([
-        ...homeRegistered,
-        ...awayRegistered
-      ])
-    ];
-
-
-  const rows =
-    allRegistered.map(
-      player_id => ({
-        match_id:matchId,
-        player_id,
-        is_starting:
-          allStarting.includes(
-            player_id
-          ),
-        is_active:
-          allStarting.includes(
-            player_id
-          )
-      })
-    );
-
-
-  const {
-    error:deleteError
-  } =
-    await supabaseClient
-      .from("match_players")
-      .delete()
+  try{
+    // Read server truth first; never delete the roster before a successful upsert.
+    const {data:existingRows,error:readError}=await supabaseClient.from("match_players")
+      .select("player_id")
       .eq("match_id",matchId);
+    if(readError)throw readError;
 
+    const {error:upsertError}=await supabaseClient.from("match_players")
+      .upsert(rows,{onConflict:"match_id,player_id"});
+    if(upsertError)throw upsertError;
 
-  if(deleteError){
+    const selectedIds=new Set(allRegistered.map(String));
+    const toRemove=(existingRows||[])
+      .map(row=>String(row.player_id))
+      .filter(id=>!selectedIds.has(id));
+    let cleanupError=null;
+    for(const playerId of [...new Set(toRemove)]){
+      try{
+        const {error}=await supabaseClient.from("match_players")
+          .delete()
+          .eq("match_id",matchId)
+          .eq("player_id",playerId);
+        if(error)throw error;
+      }catch(error){
+        cleanupError=error;
+        console.error("Uklanjanje odjavljenog igrača nije uspjelo:",error);
+        break;
+      }
+    }
 
-    alert(
-      deleteError.message
-    );
+    hideModal();
+    let refreshed=false;
+    try{refreshed=(await loadAll())===true;}
+    catch(refreshError){console.warn("Osvježavanje postave nije uspjelo:",refreshError);}
 
-    return;
+    if(cleanupError){
+      toast("Postava je sačuvana, ali uklanjanje jednog ili više odjavljenih igrača nije dovršeno. Provjeri postavu.","error");
+    }else if(!refreshed){
+      toast("Postava je sačuvana, ali prikaz nije potpuno osvježen. Ponovo otvori utakmicu.","error");
+    }else{
+      toast("Postava je sačuvana.","success");
+    }
+    if(String(currentMatchId)===String(matchId)&&refreshed)openMatch(matchId);
+  }catch(error){
+    console.error("Čuvanje postave nije uspjelo:",error);
+    alert(error?.message||"Postava nije sačuvana. Postojeći zapisi nisu unaprijed obrisani.");
+  }finally{
+    if(submitButton?.isConnected)submitButton.disabled=false;
   }
-
-
-  const {
-    error:insertError
-  } =
-    await supabaseClient
-      .from("match_players")
-      .insert(rows);
-
-
-  if(insertError){
-
-    alert(
-      insertError.message
-    );
-
-    return;
-  }
-
-
-  hideModal();
-
-
-  toast(
-    "Postava je sačuvana."
-  );
-
-
-  await loadAll();
 }
-
-
 /* =========================================================
    SUBSTITUTIONS
 ========================================================= */
@@ -5277,141 +5307,121 @@ async function openSubstitutionControl(
    MAKE SUBSTITUTION
 ========================================================= */
 
-async function makeSubstitution(
-  matchId,
-  side
-){
+async function makeSubstitution(matchId,side){
+  if(!canManageMatch())return;
+  if(!["home","away"].includes(side))return alert("Izabrana strana utakmice nije ispravna.");
 
-  if(!canManageMatch()) return;
+  const match=getMatch(matchId);
+  if(!match)return alert("Utakmica nije pronađena.");
+  if(match.status!=="live")return alert("Izmjene su dostupne samo tokom utakmice uživo.");
 
+  const outEl=document.getElementById(side==="home"?"subHomeOut":"subAwayOut");
+  const inEl=document.getElementById(side==="home"?"subHomeIn":"subAwayIn");
+  const out=String(outEl?.value||"");
+  const incoming=String(inEl?.value||"");
+  if(!out||!incoming)return alert("Izaberi oba igrača.");
+  if(out===incoming)return alert("Igrač koji izlazi i igrač koji ulazi moraju biti različiti.");
 
-  const outEl =
-    document.getElementById(
-      side === "home"
-        ? "subHomeOut"
-        : "subAwayOut"
-    );
-
-
-  const inEl =
-    document.getElementById(
-      side === "home"
-        ? "subHomeIn"
-        : "subAwayIn"
-    );
-
-
-  const out =
-    outEl?.value;
-
-
-  const incoming =
-    inEl?.value;
-
-
-  if(!out || !incoming){
-
-    alert(
-      "Izaberi oba igrača."
-    );
-
-    return;
+  const sideTeam=side==="home"?match.home_team_id:match.away_team_id;
+  const outPlayer=getPlayer(out);
+  const inPlayer=getPlayer(incoming);
+  if(!outPlayer||!inPlayer)return alert("Jedan od izabranih igrača nije dostupan. Osvježi postavu.");
+  if(String(outPlayer.team_id)!==String(sideTeam)||String(inPlayer.team_id)!==String(sideTeam)){
+    return alert("Oba igrača moraju pripadati izabranoj ekipi.");
   }
 
+  const submitButton=[...document.querySelectorAll("#modalContent button")]
+    .find(button=>(button.getAttribute("onclick")||"").includes("makeSubstitution("));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
 
-  if(out === incoming){
-
-    alert(
-      "Igrač koji izlazi i igrač koji ulazi moraju biti različiti."
-    );
-
-    return;
-  }
-
-
-  const {
-    error:outError
-  } =
-    await supabaseClient
-      .from("match_players")
-      .update({
-        is_active:false
-      })
-      .eq("match_id",matchId)      .eq("player_id",out);
-
-
-  if(outError){
-
-    alert(
-      outError.message
-    );
-
-    return;
-  }
-
-
-  const {
-    error:inError
-  } =
-    await supabaseClient
-      .from("match_players")
-      .update({
-        is_active:true
-      })
+  let outgoingChanged=false;
+  let incomingChanged=false;
+  try{
+    const {data:rows,error:readError}=await supabaseClient.from("match_players")
+      .select("player_id,is_active")
       .eq("match_id",matchId)
-      .eq("player_id",incoming);
+      .in("player_id",[out,incoming]);
+    if(readError)throw readError;
 
+    const outRow=(rows||[]).find(row=>String(row.player_id)===out);
+    const inRow=(rows||[]).find(row=>String(row.player_id)===incoming);
+    if(!outRow||!inRow)throw new Error("Oba igrača moraju biti prijavljena u postavi utakmice.");
+    if(!outRow.is_active)throw new Error("Igrač koji izlazi više nije aktivan. Osvježi postavu.");
+    if(inRow.is_active)throw new Error("Igrač koji ulazi već je aktivan. Osvježi postavu.");
 
-  if(inError){
+    const {data:outUpdated,error:outError}=await supabaseClient.from("match_players")
+      .update({is_active:false})
+      .eq("match_id",matchId)
+      .eq("player_id",out)
+      .eq("is_active",true)
+      .select("player_id")
+      .maybeSingle();
+    if(outError)throw outError;
+    if(!outUpdated)throw new Error("Igrač koji izlazi promijenio je status. Osvježi postavu.");
+    outgoingChanged=true;
 
-    alert(
-      inError.message
-    );
+    const {data:inUpdated,error:inError}=await supabaseClient.from("match_players")
+      .update({is_active:true})
+      .eq("match_id",matchId)
+      .eq("player_id",incoming)
+      .eq("is_active",false)
+      .select("player_id")
+      .maybeSingle();
+    if(inError)throw inError;
+    if(!inUpdated)throw new Error("Igrač koji ulazi promijenio je status. Osvježi postavu.");
+    incomingChanged=true;
 
+    const {error:historyError}=await supabaseClient.from("match_substitutions").insert({
+      match_id:matchId,
+      team_id:sideTeam,
+      player_out_id:out,
+      player_in_id:incoming,
+      minute:Number(match.current_minute||0)
+    });
+    if(historyError)throw historyError;
+  }catch(error){
+    let rollbackFailed=false;
+    if(incomingChanged){
+      try{
+        const {error}=await supabaseClient.from("match_players").update({is_active:false})
+          .eq("match_id",matchId).eq("player_id",incoming).eq("is_active",true);
+        if(error)throw error;
+      }catch(rollbackError){
+        rollbackFailed=true;
+        console.error("Povratak aktivnog statusa zamjene nije uspio:",rollbackError);
+      }
+    }
+    if(outgoingChanged){
+      try{
+        const {error}=await supabaseClient.from("match_players").update({is_active:true})
+          .eq("match_id",matchId).eq("player_id",out).eq("is_active",false);
+        if(error)throw error;
+      }catch(rollbackError){
+        rollbackFailed=true;
+        console.error("Povratak izlaznog igrača nije uspio:",rollbackError);
+      }
+    }
+    if(submitButton?.isConnected)submitButton.disabled=false;
+    console.error("Izmjena nije sačuvana:",error);
+    alert((error?.message||"Izmjena nije sačuvana.")+(rollbackFailed?" Vraćanje prethodne postave nije potpuno; odmah osvježi utakmicu i provjeri postavu.":""));
+    try{await loadAll();}catch(refreshError){console.warn("Osvježavanje nakon neuspjele izmjene:",refreshError);}
     return;
   }
-
-  /* Evidentiraj izmjenu i u istoriji utakmice. */
-  const outPlayer = getPlayer(out);
-  const inPlayer = getPlayer(incoming);
-  const teamId = outPlayer?.team_id || inPlayer?.team_id;
-  if (teamId) {
-    const { error: substitutionError } = await supabaseClient
-      .from("match_substitutions")
-      .insert({
-        match_id: matchId,
-        team_id: teamId,
-        player_out_id: out,
-        player_in_id: incoming,
-        minute: Number(matches.find(m => String(m.id) === String(matchId))?.current_minute || 0)
-      });
-    if (substitutionError) {
-      console.warn("Istorija izmjene nije sačuvana:", substitutionError);
-    }
-  }
-
 
   hideModal();
-
-
-  toast(
-    "Izmjena je evidentirana."
-  );
-
-
-  await loadAll();
-
-
-  if(
-    String(currentMatchId) ===
-    String(matchId)
-  ){
-
-    openMatch(matchId);
+  const refreshed=await loadAll().catch(error=>{
+    console.warn("Izmjena je sačuvana, ali osvježavanje nije uspjelo:",error);
+    return false;
+  });
+  if(refreshed!==true){
+    toast("Izmjena je sačuvana, ali prikaz nije potpuno osvježen.","error");
+  }else{
+    toast("Izmjena je evidentirana.","success");
   }
+  if(String(currentMatchId)===String(matchId)&&refreshed===true)openMatch(matchId);
+  if(submitButton?.isConnected)submitButton.disabled=false;
 }
-
-
 /* =========================================================
    LINEUP / BENCH
 ========================================================= */
@@ -6627,87 +6637,106 @@ function openMatch(id){
 
 /* =========================================================
    LIVE AUTO REFRESH
-========================================================= */
+=============================async function refreshLiveMatchSnapshot(matchId){
+  if(!supabaseClient?.from)throw new Error("Supabase nije dostupan za osvježavanje utakmice.");
+  const [matchResult,goalsResult,cardsResult,playersResult]=await Promise.all([
+    supabaseClient.from("matches").select("*").eq("id",matchId).maybeSingle(),
+    supabaseClient.from("goals").select("*").eq("match_id",matchId)
+      .order("minute",{ascending:true}).order("second",{ascending:true}),
+    supabaseClient.from("cards").select("*").eq("match_id",matchId)
+      .order("minute",{ascending:true}),
+    supabaseClient.from("match_players").select("*").eq("match_id",matchId)
+      .order("player_id",{ascending:true})
+  ]);
+  const failed=[matchResult,goalsResult,cardsResult,playersResult].find(result=>result.error);
+  if(failed)throw failed.error;
+  if(!matchResult.data)return null;
 
-function startLiveRefresh(
-  matchId
-){
+  const id=String(matchId);
+  const updatedMatch=matchResult.data;
+  const matchIndex=matches.findIndex(match=>String(match.id)===id);
+  if(matchIndex>=0)matches[matchIndex]=updatedMatch;
+  else matches.push(updatedMatch);
+
+  goals=[...goals.filter(goal=>String(goal.match_id)!==id),...(goalsResult.data||[])];
+  cards=[...cards.filter(card=>String(card.match_id)!==id),...(cardsResult.data||[])];
+  matchPlayers=[...matchPlayers.filter(player=>String(player.match_id)!==id),...(playersResult.data||[])];
+  return updatedMatch;
+}
+
+function isViewingLiveMatchModal(matchId){
+  const modal=document.getElementById("modal");
+  const content=document.getElementById("modalContent");
+  return !!modal?.classList.contains("active") &&
+    String(currentMatchId)===String(matchId) &&
+    !!content?.querySelector(".live-header");
+}
+
+function stopLiveRefreshForMatch(intervalId,clockId){
+  clearInterval(intervalId);
+  if(liveRefreshInterval===intervalId)liveRefreshInterval=null;
+  clearInterval(clockId);
+  if(window.__medjasiLiveClock===clockId)window.__medjasiLiveClock=null;
+}
+
+function startLiveRefresh(matchId){
+  clearInterval(liveRefreshInterval);
   clearInterval(window.__medjasiLiveClock);
-  window.__medjasiLiveClock=setInterval(()=>{
+  liveRefreshInterval=null;
+  window.__medjasiLiveClock=null;
+
+  const initial=getMatch(matchId);
+  if(!initial||initial.status!=="live")return;
+
+  const clockId=setInterval(()=>{
     const current=getMatch(matchId);
-    if(!current || current.status!=="live"){
-      clearInterval(window.__medjasiLiveClock);
+    if(!current||current.status!=="live"){
+      clearInterval(clockId);
+      if(window.__medjasiLiveClock===clockId)window.__medjasiLiveClock=null;
       return;
     }
+    // Only update the clock when the modal still shows this exact match.
+    if(!isViewingLiveMatchModal(matchId))return;
     const el=document.querySelector(".live-time");
-    if(el) el.textContent=formatLiveClock(getLiveElapsedSeconds(current));
+    if(el)el.textContent=formatLiveClock(getLiveElapsedSeconds(current));
   },1000);
+  window.__medjasiLiveClock=clockId;
 
-  clearInterval(
-    liveRefreshInterval
-  );
-
-
-  const match =
-    getMatch(matchId);
-
-
-  if(
-    !match ||
-    match.status !== "live"
-  ){
-    return;
-  }
-
-
-  liveRefreshInterval =
-    setInterval(
-      async()=>{
-
-        await loadAll();
-
-
-        const updated =
-          getMatch(matchId);
-
-
-        if(!updated){
-
-          clearInterval(
-            liveRefreshInterval
-          );
-
-          return;
+  const intervalId=setInterval(async()=>{
+    // A single live snapshot refresh at a time across all open match modals.
+    if(liveRefreshInFlight)return;
+    liveRefreshInFlight=true;
+    try{
+      const updated=await refreshLiveMatchSnapshot(matchId);
+      if(!updated){
+        stopLiveRefreshForMatch(intervalId,clockId);
+        return;
+      }
+      if(updated.status!=="live"){
+        stopLiveRefreshForMatch(intervalId,clockId);
+        if(isViewingLiveMatchModal(matchId)){
+          if(updated.status==="finished")openFinished(matchId);
+          else openMatch(matchId);
         }
+        return;
+      }
 
-
-        if(
-          updated.status !==
-          "live"
-        ){
-
-          clearInterval(
-            liveRefreshInterval
-          );
-
-          return;
-        }
-
-
-        /*
-          Ponovo otvorimo samo ako je modal
-          još uvijek otvoren.
-        */
-
-        if(
-          document
-            .getElementById("modal")
-            ?.classList
-            .contains("active")
-        ){
-
-          openMatch(matchId);
-        }
+      if(isViewingLiveMatchModal(matchId)){
+        const content=document.getElementById("modalContent");
+        const selectedTab=content?.querySelector(".match-tab.active")?.dataset.tab||"overview";
+        openMatch(matchId);
+        if(selectedTab!=="overview")switchMatchTab(selectedTab);
+      }
+    }catch(error){
+      // This interval is only a fallback to realtime; retain the open view and
+      // retry on the next tick instead of refreshing every table in the app.
+      console.warn("Osvježavanje utakmice uživo nije uspjelo:",error);
+    }finally{
+      liveRefreshInFlight=false;
+    }
+  },10000);
+  liveRefreshInterval=intervalId;
+}
 
       },
       10000
@@ -6841,8 +6870,7 @@ function openGoalControl(
 ========================================================= */
 
 async function addGoal(matchId){
-  if(!canManageMatch()) return;
-
+  if(!canManageMatch())return;
   const match=getMatch(matchId);
   if(!match){
     alert("Utakmica nije pronađena. Osvježi prikaz i pokušaj ponovo.");
@@ -6852,9 +6880,8 @@ async function addGoal(matchId){
   const player_id=document.getElementById("goalPlayer")?.value;
   const minuteInput=document.getElementById("goalMinute");
   const secondInput=document.getElementById("goalSecond");
-  const minute=minuteInput ? Number(minuteInput.value) : NaN;
-  const second=secondInput ? Number(secondInput.value || 0) : 0;
-
+  const minute=minuteInput?Number(minuteInput.value):NaN;
+  const second=secondInput?Number(secondInput.value||0):0;
   if(!Number.isInteger(minute)||minute<0||minute>60){
     alert("Minuta gola mora biti cijeli broj od 0 do 60.");
     return;
@@ -6865,39 +6892,59 @@ async function addGoal(matchId){
   }
 
   const player=getPlayer(player_id);
-  if(!player){
-    alert("Izaberi igrača.");
-    return;
-  }
+  if(!player){alert("Izaberi igrača.");return;}
   if(
-    String(player.team_id)!==String(match.home_team_id) &&
+    String(player.team_id)!==String(match.home_team_id)&&
     String(player.team_id)!==String(match.away_team_id)
   ){
     alert("Igrač ne pripada ekipama u ovoj utakmici.");
     return;
   }
 
+  const submitButton=[...document.querySelectorAll("#modalContent button")]
+    .find(button=>/\baddGoal\s*\(/.test(button.getAttribute("onclick")||""));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
+
   let result;
   try{
     result=await supabaseClient.from("goals").insert({
-      match_id:matchId,
-      player_id,
-      minute,
-      second
+      match_id:matchId,player_id,minute,second
     });
   }catch(error){
+    if(submitButton?.isConnected)submitButton.disabled=false;
     alert(error?.message||"Gol nije sačuvan zbog mrežne greške. Pokušaj ponovo.");
     return;
   }
   if(result.error){
+    if(submitButton?.isConnected)submitButton.disabled=false;
     alert(result.error.message||"Gol nije sačuvan.");
     return;
   }
 
-  /* Score is derived centrally by the database goal-event trigger. */
   hideModal();
   toast("Gol je evidentiran.");
-  await loadAll();
+  let refreshed= false;
+  try{refreshed=(await loadAll())===true;}
+  catch(error){console.warn("Osvježavanje nakon gola nije uspjelo:",error);}
+
+  let updatedMatch=getMatch(matchId)||match;
+  if(!refreshed){
+    try{
+      updatedMatch=await readConfirmedMatch(matchId,match);
+    }catch(error){
+      console.error("Gol je sačuvan, ali rezultat nije potvrđen:",error);
+      toastV("Gol je sačuvan, ali rezultat nije moguće potvrditi. Push obavještenje nije poslano; osvježi utakmicu.","error");
+      openMatch(matchId);
+      return;
+    }
+  }
+
+  const updatedPlayer=getPlayer(player_id)||player;
+  const score=Number(updatedMatch.home_score||0)+":"+Number(updatedMatch.away_score||0);
+  const goalTitle="⚽ GOL — "+teamName(updatedPlayer.team_id);
+  const goalBody=updatedPlayer.name+" · "+score+" · "+minute+"'"+(second?String(second).padStart(2,"0")+"s":"");
+  void notifyLeaguePush("goal",goalTitle,goalBody,matchId);
   openMatch(matchId);
 }
 
@@ -7058,74 +7105,83 @@ function openCardControl(
 ========================================================= */
 
 async function addCard(matchId){
-  if(!canManageMatch()) return;
-
+  if(!canManageMatch())return;
   const match=getMatch(matchId);
-  if(!match){
-    alert("Utakmica nije pronađena. Osvježi prikaz i pokušaj ponovo.");
-    return;
-  }
+  if(!match)return alert("Utakmica nije pronađena. Osvježi prikaz i pokušaj ponovo.");
 
   const player_id=document.getElementById("cardPlayer")?.value;
   const card_type=document.getElementById("cardType")?.value;
   const minuteInput=document.getElementById("cardMinute");
-  const minute=minuteInput ? Number(minuteInput.value) : NaN;
+  const minute=minuteInput?Number(minuteInput.value):NaN;
 
-  if(!player_id){
-    alert("Izaberi igrača.");
-    return;
-  }
-  if(!["yellow","red"].includes(card_type)){
-    alert("Izaberi ispravan tip kartona.");
-    return;
-  }
-  if(!Number.isInteger(minute)||minute<0||minute>60){
-    alert("Minuta kartona mora biti cijeli broj od 0 do 60.");
-    return;
-  }
+  if(!player_id)return alert("Izaberi igrača.");
+  if(!["yellow","red"].includes(card_type))return alert("Izaberi ispravan tip kartona.");
+  if(!Number.isInteger(minute)||minute<0||minute>60)return alert("Minuta kartona mora biti cijeli broj od 0 do 60.");
 
   const player=getPlayer(player_id);
-  if(!player){
-    alert("Izabrani igrač više nije dostupan. Osvježi postavu.");
-    return;
-  }
-  if(
-    String(player.team_id)!==String(match.home_team_id) &&
-    String(player.team_id)!==String(match.away_team_id)
-  ){
-    alert("Igrač ne pripada ekipama u ovoj utakmici.");
-    return;
+  if(!player)return alert("Izabrani igrač više nije dostupan. Osvježi postavu.");
+  if(String(player.team_id)!==String(match.home_team_id)&&String(player.team_id)!==String(match.away_team_id)){
+    return alert("Igrač ne pripada ekipama u ovoj utakmici.");
   }
   const isRegistered=matchPlayers.some(mp=>
-    String(mp.match_id)===String(matchId) &&
-    String(mp.player_id)===String(player_id)
+    String(mp.match_id)===String(matchId)&&String(mp.player_id)===String(player_id)
   );
-  if(!isRegistered){
-    alert("Igrač više nije u postavi ove utakmice. Osvježi postavu.");
-    return;
-  }
+  if(!isRegistered)return alert("Igrač više nije u postavi ove utakmice. Osvježi postavu.");
 
-  let result;
+  const submitButton=[...document.querySelectorAll("#modalContent button")]
+    .find(button=>/addCard\s*\(/.test(button.getAttribute("onclick")||""));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
+
   try{
-    result=await supabaseClient.from("cards").insert({
-      match_id:matchId,
-      player_id,
-      card_type,
-      minute
+    const {error}=await supabaseClient.from("cards").insert({
+      match_id:matchId,player_id,card_type,minute
     });
+    if(error)throw error;
   }catch(error){
-    alert(error?.message||"Karton nije sačuvan zbog mrežne greške. Pokušaj ponovo.");
-    return;
-  }
-  if(result.error){
-    alert(result.error.message||"Karton nije sačuvan.");
+    if(submitButton?.isConnected)submitButton.disabled=false;
+    alert(error?.message||"Karton nije sačuvan. Pokušaj ponovo.");
     return;
   }
 
   hideModal();
   toast("Karton je evidentiran.");
-  await loadAll();
-  openMatch(matchId);
+
+  let confirmedMatch=null;
+  try{
+    confirmedMatch=await refreshLiveMatchSnapshot(String(matchId));
+    if(!confirmedMatch)throw new Error("Utakmica nije pronađena nakon snimanja kartona.");
+  }catch(refreshError){
+    console.error("Karton je sačuvan, ali rezultat nije potvrđen:",refreshError);
+    toastV("Karton je sačuvan, ali nije moguće potvrditi osvježeni rezultat. Push nije poslan; ponovo otvori utakmicu.","error");
+    try{await loadAll();}catch(error){console.warn("Osvježavanje nakon kartona:",error);}
+    return;
+  }
+
+  const cardLabel=card_type==="red"?"Crveni karton":"Žuti karton";
+  const playerIsHome=String(player.team_id)===String(confirmedMatch.home_team_id);
+  const opponentName=teamName(playerIsHome?confirmedMatch.away_team_id:confirmedMatch.home_team_id);
+  const liveScore=Number(confirmedMatch.home_score||0)+":"+Number(confirmedMatch.away_score||0);
+  const pushOk=await notifyLeaguePush(
+    "card",
+    (card_type==="red"?"🟥 ":"🟨 ")+cardLabel+" — "+player.name,
+    teamName(player.team_id)+" – "+opponentName+" · "+minute+"' · rezultat "+liveScore,
+    matchId
+  );
+  if(!pushOk)toastV("Karton je sačuvan, ali push obavještenje nije potvrđeno.","error");
+
+  try{
+    const fullyRefreshed=await loadAll();
+    if(fullyRefreshed!==true){
+      toastV("Karton je sačuvan, ali dio prikaza nije osvježen. Ponovo otvori utakmicu.","error");
+      return;
+    }
+    if(confirmedMatch.status==="live")openMatch(matchId);
+    else openFinished(matchId);
+  }catch(refreshError){
+    console.warn("Osvježavanje nakon kartona nije uspjelo:",refreshError);
+    toastV("Karton je sačuvan, ali prikaz nije osvježen. Ponovo otvori utakmicu.","error");
+  }
 }
 
 /* =========================================================
@@ -7616,18 +7672,9 @@ function handleLeagueEvent(event){
   const eventIcon=e.event_type==="goal"?"⚽":e.event_type==="card"?"🟨":"🏁";
   addLeagueNotification({title:e.title||"Novo dešavanje",text:e.body||"",icon:eventIcon,type:e.event_type,key:"league-event:"+e.id,browser:true});
 
-  // Push is a privileged broadcast. Do not call a private IIFE function as a
-  // global identifier, and do not let an ordinary user's session broadcast.
-  if(currentUser && (isAdmin() || isModerator()) && window.medjasiV7?.notifyPush){
-    window.medjasiV7.notifyPush(
-      e.event_type,
-      e.title||"Novo dešavanje",
-      e.body||"",
-      e.match_id||null
-    ).catch(()=>{});
-  }
-
-  // Refresh still runs even if push is unavailable or denied.
+  // The acting UI sends the single push after its database write succeeds.
+  // Keep realtime responsible for in-app notifications and data refresh only,
+  // otherwise every open admin/moderator tab could broadcast the same event.
   scheduleLoadAll();
 }
 
@@ -7844,18 +7891,44 @@ async function init(){
     if(!document.hidden) scheduleLoadAll(200);
   });
 
-  setInterval(
-    async()=>{
-      if(document.hidden) return;
-      await loadAll();
-      try {
+  let backgroundRefreshFailures=0;
+  let backgroundRefreshTimer=0;
+  const scheduleBackgroundRefresh=delay=>{
+    clearTimeout(backgroundRefreshTimer);
+    backgroundRefreshTimer=setTimeout(runBackgroundRefresh,delay);
+  };
+  const runBackgroundRefresh=async()=>{
+    if(document.hidden){
+      scheduleBackgroundRefresh(60000);
+      return;
+    }
+
+    let refreshed=false;
+    try{
+      refreshed=(await loadAll())===true;
+    }catch(error){
+      console.error("Medjasi background refresh:",error);
+    }
+
+    if(refreshed){
+      backgroundRefreshFailures=0;
+      try{
         await loadMusicSettings();
-      } catch (error) {
-        console.error("Medjasi background music refresh:", error);
+      }catch(error){
+        console.error("Medjasi background music refresh:",error);
       }
-    },
-    60000
-  );
+      scheduleBackgroundRefresh(60000);
+      return;
+    }
+
+    // Back off during a backend outage instead of repeatedly firing a full
+    // parallel fetch set every minute. User-triggered actions can still retry.
+    backgroundRefreshFailures=Math.min(backgroundRefreshFailures+1,3);
+    const retryDelay=Math.min(300000,60000*Math.pow(2,backgroundRefreshFailures));
+    console.warn("Medjasi background refresh failed; next retry in",Math.round(retryDelay/1000),"seconds.");
+    scheduleBackgroundRefresh(retryDelay);
+  };
+  scheduleBackgroundRefresh(60000);
 }
 
 
@@ -7931,7 +8004,49 @@ function getYoutubeId(url) {
    UČITAJ POSTAVKE IZ SUPABASE
 ----------------------------------------- */
 
-async function loadMusicSettings(){const {data:settings,error:se}=await supabaseClient.from("site_settings").select("youtube_music_enabled").eq("id",1).maybeSingle();if(se)console.error(se);musicSettings=settings||{youtube_music_enabled:false};const {data:tracks,error:te}=await supabaseClient.from("music_tracks").select("id,title,provider,youtube_music_id,spotify_url,sort_order,is_active,created_at").eq("is_active",true).order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(te){console.error(te);musicTracks=[];}else musicTracks=tracks||[];renderMusicAdmin();initMusic();}
+async function loadMusicSettings(){
+  // Treat settings and tracks as independent refreshes: a transient failure in
+  // either query must not make a working playlist disappear or turn itself off.
+  try{
+    const {data:settings,error}=await supabaseClient
+      .from("site_settings")
+      .select("youtube_music_enabled")
+      .eq("id",1)
+      .maybeSingle();
+
+    if(error){
+      console.error("Učitavanje postavki muzike nije uspjelo:",error);
+    }else{
+      musicSettings=settings||{youtube_music_enabled:false};
+    }
+  }catch(error){
+    console.error("Učitavanje postavki muzike nije uspjelo:",error);
+  }
+
+  try{
+    const {data:tracks,error}=await supabaseClient
+      .from("music_tracks")
+      .select("id,title,provider,youtube_music_id,spotify_url,sort_order,is_active,created_at")
+      .eq("is_active",true)
+      .order("sort_order",{ascending:true})
+      .order("created_at",{ascending:true});
+
+    if(error){
+      console.error("Učitavanje playlist-e nije uspjelo:",error);
+    }else{
+      musicTracks=tracks||[];
+    }
+  }catch(error){
+    console.error("Učitavanje playlist-e nije uspjelo:",error);
+  }
+
+  renderMusicAdmin();
+  try{
+    initMusic();
+  }catch(error){
+    console.error("Pokretanje playera muzike nije uspjelo:",error);
+  }
+}
 
 
 /* -----------------------------------------
@@ -8045,7 +8160,7 @@ function setupCommentImageUI(){
       removeCommentImage();
       return;
     }
-    if(!file.type.startsWith("image/") || file.size>5*1024*1024){
+    if(!isAllowedRasterImage(file) || file.size>5*1024*1024){
       alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB.");
       input.value="";
       removeCommentImage();
@@ -10110,14 +10225,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     if(!content && !file){alert("Napiši poruku ili dodaj sliku.");return;}
     if(content.length>1000){alert("Poruka može imati najviše 1000 znakova.");return;}
-    if(file && (!file.type.startsWith("image/") || file.size>5*1024*1024)){
+    if(file && (!isAllowedRasterImage(file) || file.size>5*1024*1024)){
       alert("Slika mora biti JPG, PNG, WEBP ili GIF i imati najviše 5 MB.");
       return;
     }
 
     try{
       let image_url=null;
-      if(file && typeof uploadFile==="function") image_url=await uploadFile(file,"chat");
+      if(file && typeof uploadFile==="function") image_url=await uploadFile(file,`chat/${currentUser.id}`);
 
       const username=window.currentProfile?.username ||
         window.currentUser.user_metadata?.username ||
@@ -10426,22 +10541,111 @@ function renderNews(){
 }
 function openNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n)return;showModal(`<div class="modal-title"><span class="hero-kicker">${escV(n.kicker||'VIJEST')}</span><h2>${escV(n.title)}</h2><p class="muted">${formatV(n.created_at)} · ${escV(n.author_name||'Međasi Futsal Liga')}</p></div><div class="v7-news-media" style="border-radius:16px">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div style="white-space:pre-wrap;line-height:1.75;margin-top:18px">${escV(n.body||n.lead||'')}</div><div class="actions" style="margin-top:18px"><button class="btn btn-green" onclick="medjasiV7.shareNews('${n.id}')">💬 Podijeli u chat</button></div>`)}
 async function shareNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n||!currentUser){showSection('login');toastV('Prijavi se da bi podijelio vijest.','error');return}const text=`📰 ${n.title}\n${n.lead||''}`.trim();const {error}=await supabaseClient.from('messages').insert({user_id:currentUser.id,username:currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik',content:text,image_url:n.media_type==='image'?(n.media_url||n.image_url):null});if(error){toastV(error.message,'error');return}hideModal();showSection('chat');await loadAll();toastV('Vijest je podijeljena u chat.');}
-async function publishNews(){if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');const title=$('v7NewsTitle')?.value.trim(),lead=$('v7NewsLead')?.value.trim(),body=$('v7NewsBody')?.value.trim(),kicker=$('v7NewsKicker')?.value.trim()||'VIJEST',published=$('v7NewsPublished')?.value==='true',file=$('v7NewsFile')?.files?.[0];if(!title||!body){toastV('Unesi naslov i sadržaj vijesti.','error');return}let media_url=null,media_type=null;if(file){if(file.size>50*1024*1024){toastV('Fajl je prevelik. Maksimum je 50 MB.','error');return}media_url=await uploadFile(file,'news');media_type=file.type.startsWith('video/')?'video':'image'}const {error}=await supabaseClient.from('news').insert({title,lead,body,kicker,author_id:currentUser.id,author_name:currentProfile?.username||currentUser.email?.split('@')[0]||'Admin',media_url,media_type,published});if(error){toastV(error.message,'error');return}if(published) await notifyPush('news',`📰 ${title}`,lead||'Nova vijest na sajtu.');['v7NewsTitle','v7NewsLead','v7NewsBody','v7NewsKicker'].forEach(id=>{if($(id))$(id).value=''});if($('v7NewsFile'))$('v7NewsFile').value='';await loadNews();toastV('Vijest je objavljena.');}
-async function deleteNews(id){if(!isAdm())return; if(!confirm('Obrisati ovu vijest?'))return;const {error}=await supabaseClient.from('news').delete().eq('id',id);if(error)return toastV(error.message,'error');await loadNews();toastV('Vijest je obrisana.');}
-function renderAdminNews(){
-  const box=$('v7NewsAdminList');
-  if(!box||!isAdm())return;
-  box.innerHTML=V7.news.length?V7.news.map(n=>`<div class="v7-admin-news-row">
-    <div class="v7-news-row-media">${n.media_url?mediaHtml(n.media_url,n.media_type,n.title):''}</div>
-    <div class="v7-news-row-main">
-      <strong>${escV(n.title)}</strong>
-      <small class="muted">${formatV(n.created_at)} · ${n.published?'JAVNO':'SKICA'}</small>
-    </div>
-    <div class="v7-news-row-actions">
-      <button class="btn btn-small ${n.published?'btn-yellow':'btn-green'}" onclick="medjasiV7.setNewsPublished('${n.id}',${!n.published})">${n.published?'Sakrij':'Objavi'}</button>
-      <button class="btn btn-red btn-small" onclick="medjasiV7.deleteNews('${n.id}')">🗑️</button>
-    </div>
-  </div>`).join(''):'<div class="muted">Nema vijesti.</div>';
+function supportedLeagueMedia(file){
+  if(!file)return null;
+  const type=String(file.type||"").toLowerCase();
+  if(["image/jpeg","image/png","image/webp","image/gif","image/avif"].includes(type)){
+    return {kind:"image",maxBytes:15*1024*1024};
+  }
+  if(["video/mp4","video/webm","video/ogg"].includes(type)){
+    return {kind:"video",maxBytes:50*1024*1024};
+  }
+  return null;
+}
+
+async function publishNews(){
+  if(!isAdm())return toastV("Nemaš admin ovlaštenje.","error");
+  const title=$("v7NewsTitle")?.value.trim()||"";
+  const lead=$("v7NewsLead")?.value.trim()||"";
+  const body=$("v7NewsBody")?.value.trim()||"";
+  const kicker=$("v7NewsKicker")?.value.trim()||"VIJEST";
+  const published=$("v7NewsPublished")?.value==="true";
+  const file=$("v7NewsFile")?.files?.[0];
+
+  if(!title||!body)return toastV("Unesi naslov i sadržaj vijesti.","error");
+
+  try{
+    let media_url=null,media_type=null;
+    if(file){
+      const media=supportedLeagueMedia(file);
+      if(!media)return toastV("Podržani su JPG, PNG, WebP, GIF, AVIF, MP4, WebM i Ogg fajlovi.","error");
+      if(file.size>media.maxBytes)return toastV(media.kind==="video"?"Video može imati najviše 50 MB.":"Slika može imati najviše 15 MB.","error");
+      media_url=await uploadFile(file,"news");
+      media_type=media.kind;
+    }
+
+    const {error}=await supabaseClient.from("news").insert({
+      title:title.slice(0,150),
+      lead:lead.slice(0,400),
+      body:body.slice(0,10000),
+      kicker:kicker.slice(0,50),
+      author_id:currentUser.id,
+      author_name:currentProfile?.username||currentUser.email?.split("@")[0]||"Admin",
+      media_url,
+      media_type,
+      published
+    });
+    if(error)throw error;
+
+    let pushSent=true;
+    if(published)pushSent=await notifyPush("news",`📰 ${title}`,lead||"Nova vijest na sajtu.");
+    ["v7NewsTitle","v7NewsLead","v7NewsBody","v7NewsKicker"].forEach(id=>{if($(id))$(id).value="";});
+    if($("v7NewsFile"))$("v7NewsFile").value="";
+    await loadNews();
+    if(!published){
+      toastV("Skica vijesti je sačuvana.");
+    }else if(pushSent){
+      toastV("Vijest je objavljena i push obavještenje je poslano.");
+    }else{
+      toastV("Vijest je objavljena, ali push obavještenje nije poslano. Možeš pokušati ponovo iz administracije.","error");
+    }
+  }catch(error){
+    console.error("Objava vijesti nije uspjela:",error);
+    toastV(error?.message||"Vijest nije sačuvana. Pokušaj ponovo.","error");
+  }
+}
+async function deleteNews(id){
+  if(!isAdm())return;
+  if(!confirm("Obrisati ovu vijest?"))return;
+
+  try{
+    const {data:item,error:readError}=await supabaseClient.from("news")
+      .select("id,media_url")
+      .eq("id",id)
+      .maybeSingle();
+    if(readError)throw readError;
+    if(!item){
+      await loadNews();
+      return toastV("Vijest više nije dostupna.","error");
+    }
+
+    const {error}=await supabaseClient.from("news").delete().eq("id",id);
+    if(error)throw error;
+
+    let storageCleanupFailed=false;
+    try{
+      await removeLeagueMediaObject(item.media_url,"news");
+    }catch(cleanupError){
+      storageCleanupFailed=true;
+      console.warn("Vijest je obrisana, ali Storage fajl nije:",cleanupError);
+    }
+
+    try{
+      await loadNews();
+    }catch(refreshError){
+      console.warn("Vijest je obrisana, ali prikaz nije osvježen:",refreshError);
+      return toastV("Vijest je obrisana, ali lista nije osvježena. Ponovo otvori vijesti.","error");
+    }
+
+    if(storageCleanupFailed){
+      toastV("Vijest je obrisana, ali fajl u skladištu nije očišćen. Provjeri Storage.","error");
+    }else{
+      toastV("Vijest je obrisana.");
+    }
+  }catch(error){
+    console.error("Brisanje vijesti nije uspjelo:",error);
+    toastV(error?.message||"Vijest nije obrisana. Pokušaj ponovo.","error");
+  }
 }
 async function setNewsPublished(id,published){
   if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');
@@ -10455,13 +10659,223 @@ function ratingClass(r){return r>=7.5?'good':r>=6?'mid':'low'}
 function matchRating(matchId,pid){const p=playerV(pid),m=matches.find(x=>String(x.id)===String(matchId));if(!p||!m)return 6;const gs=goals.filter(g=>String(g.match_id)===String(matchId));const cs=cards.filter(c=>String(c.match_id)===String(matchId));const g=gs.filter(x=>String(x.player_id)===String(pid)).length;const a=gs.filter(x=>String(x.assist_player_id)===String(pid)).length;const yc=cs.filter(x=>String(x.player_id)===String(pid)&&String(x.card_type).toLowerCase().includes('yellow')).length;const rc=cs.filter(x=>String(x.player_id)===String(pid)&&String(x.card_type).toLowerCase().includes('red')).length;const side=p.team_id===m.home_team_id?'home':p.team_id===m.away_team_id?'away':null;let r=6+g*1.0+a*.7-yc*.35-rc*2;if(side){const hs=+m.home_score||0,as=+m.away_score||0;if(hs!==as)r+=(side==='home'?(hs>as?.35:-.2):(as>hs?.35:-.2))}const st=V7.stats.find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(pid));if(st)r+=Math.min(2,(+st.saves||0)*.12);return Math.max(3,Math.min(10,Math.round(r*10)/10))}
 function playerRatingLine(matchId,pid){const r=matchRating(matchId,pid);return `<span class="v7-rating ${ratingClass(r)}">${r.toFixed(1)}</span>`}
 function ratingRows(matchId,teamId){const ids=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===teamId);return ids.map(mp=>{const p=playerV(mp.player_id);return p?`<tr><td>#${escV(p.jersey_number??'-')} ${escV(p.name)}</td><td>${playerRatingLine(matchId,p.id)}</td><td>${goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.player_id)===String(p.id)).length}</td><td>${goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.assist_player_id)===String(p.id)).length}</td><td>${V7.stats.find(s=>String(s.match_id)===String(matchId)&&String(s.player_id)===String(p.id))?.saves||0}</td></tr>`:''}).join('')}
-async function loadStats(){const {data,error}=await supabaseClient.from('match_player_stats').select('*');if(!error)V7.stats=data||[]}
-async function addSave(matchId,pid){if(!canManageMatch())return;const existing=V7.stats.find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(pid));const saves=(+existing?.saves||0)+1;const {error}=await supabaseClient.from('match_player_stats').upsert({match_id:matchId,player_id:pid,saves,updated_at:new Date().toISOString()},{onConflict:'match_id,player_id'});if(error)return toastV(error.message,'error');await loadStats();await renderEnhancedLive(matchId);}
+async function loadStats(){
+  const {data,error}=await supabaseClient.from("match_player_stats").select("*");
+  if(error)throw error;
+  V7.stats=data||[];
+  return V7.stats;
+}
+async function addSave(matchId,pid){
+  if(!canManageMatch())return;
+  const existing=V7.stats.find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(pid));
+  const saves=(+existing?.saves||0)+1;
+  const {error}=await supabaseClient.from("match_player_stats").upsert({
+    match_id:matchId,player_id:pid,saves,updated_at:new Date().toISOString()
+  },{onConflict:"match_id,player_id"});
+  if(error)return toastV(error.message,"error");
+  try{
+    await loadStats();
+    await renderEnhancedLive(matchId);
+  }catch(refreshError){
+    console.error("Odbrana je sačuvana, ali statistika nije osvježena:",refreshError);
+    toastV("Odbrana je sačuvana, ali prikaz statistike nije osvježen. Ponovo otvori utakmicu.","error");
+  }
+}
 function renderEnhancedLive(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m||m.status!=='live')return;const host=$('modalContent');if(!host)return;host.querySelectorAll('.v7-live-rating-table').forEach(x=>x.remove());const h=teamV(m.home_team_id),a=teamV(m.away_team_id);const block=(team,label)=>`<div class="card v7-live-rating-table" style="margin-top:14px"><h3>${label} · ocjene</h3><div class="table-wrap" style="margin-top:10px"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Ocjena</th><th>G</th><th>A</th><th>O</th></tr></thead><tbody>${ratingRows(matchId,team.id)||'<tr><td colspan="5">Nema postave.</td></tr>'}</tbody></table></div></div>`;host.insertAdjacentHTML('beforeend',block(h,escV(h?.name||'Domaćin'))+block(a,escV(a?.name||'Gost')))}
 async function openFinished(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const hp=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.home_team_id);const ap=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.away_team_id);showModal(`<div class="modal-title"><h2>🏁 Završetak utakmice · statistika</h2><p class="muted">${escV(teamV(m.home_team_id)?.name)} ${m.home_score||0}:${m.away_score||0} ${escV(teamV(m.away_team_id)?.name)}</p></div><div class="v7-finished-grid"><div class="card"><h3>⚽ Golovi i asistencije</h3><p class="muted" style="margin:6px 0 12px">Ako statistiku unosiš naknadno, možeš evidentirati svaki gol i asistenta.</p><div class="actions"><button class="btn btn-green" onclick="medjasiV7.openGoal('${matchId}')">＋ Dodaj gol</button></div><div style="margin-top:12px">${goals.filter(g=>String(g.match_id)===String(matchId)).sort((x,y)=>(+x.minute||0)-(+y.minute||0)).map(g=>`<div class="event"><span class="event-minute">${g.minute||0}'</span><span class="event-icon">⚽</span><div><b>${escV(playerV(g.player_id)?.name||'Igrač')}</b>${g.assist_player_id?` <span class="muted">assist: ${escV(playerV(g.assist_player_id)?.name||'')}</span>`:''}</div></div>`).join('')||'<div class="empty compact">Nema golova.</div>'}</div></div><div class="card"><h3>📊 Ocjene igrača</h3><div class="table-wrap" style="margin-top:10px"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Ocjena</th><th>G</th><th>A</th><th>O</th></tr></thead><tbody>${ratingRows(matchId,m.home_team_id)}${ratingRows(matchId,m.away_team_id)}</tbody></table></div></div></div>${renderMvp(matchId)}<div class="actions" style="margin-top:16px"><button class="btn btn-blue" onclick="medjasiV7.finishAndSave('${matchId}')">💾 Sačuvaj statistiku i završi</button></div>`)}
-async function finishAndSave(matchId){if(!canManageMatch())return;const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;await saveRatings(matchId);const {error}=await supabaseClient.from('matches').update({status:'finished'}).eq('id',matchId);if(error)return toastV(error.message,'error');/* Push for match completion is sent once from the league_events realtime handler. */await loadAll();hideModal();toastV('Utakmica je završena i statistika je sačuvana.');}
-async function saveRatings(matchId){const ids=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)).map(mp=>mp.player_id);for(const pid of ids){const gs=goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.player_id)===String(pid)).length;const as=goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.assist_player_id)===String(pid)).length;const st=V7.stats.find(s=>String(s.match_id)===String(matchId)&&String(s.player_id)===String(pid));const rating=matchRating(matchId,pid);const {error}=await supabaseClient.from('match_player_stats').upsert({match_id:matchId,player_id:pid,goals:gs,assists:as,saves:+st?.saves||0,rating,is_mvp:false,updated_at:new Date().toISOString()},{onConflict:'match_id,player_id'});if(error)console.warn(error)}const all=ids.map(pid=>({pid,r:matchRating(matchId,pid)})).sort((a,b)=>b.r-a.r);if(all[0])await supabaseClient.from('match_player_stats').update({is_mvp:true}).eq('match_id',matchId).eq('player_id',all[0].pid)}
+async function finishAndSave(matchId){
+  if(!canManageMatch())return;
+  const id=String(matchId);
+  const m=matches.find(x=>String(x.id)===id);
+  if(!m)return toastV("Utakmica nije pronađena.","error");
+
+  // Prevent double-clicks from racing two rating/MVP finalizations.
+  if(finishMatchInFlight.has(id))return;
+  finishMatchInFlight.add(id);
+  let wasAlreadyFinished=m.status==="finished";
+
+  try{
+    // Refresh match-scoped data before calculating ratings, so goals,
+    // assists, substitutions, and saves aren't taken from an old modal.
+    const latest=await refreshLiveMatchSnapshot(id);
+    if(!latest)throw new Error("Utakmica nije pronađena u bazi.");
+    wasAlreadyFinished=latest.status==="finished";
+
+    await loadStats();
+    await saveRatings(id);
+
+    const {data:updated,error}=await supabaseClient.from("matches")
+      .update({status:"finished"})
+      .eq("id",id)
+      .select("*")
+      .maybeSingle();
+    if(error)throw error;
+    if(!updated)throw new Error("Baza nije potvrdila promjenu statusa utakmice.");
+
+    let confirmed=updated;
+    try{
+      confirmed=await readConfirmedMatch(id,updated);
+    }catch(verifyError){
+      // A successful update returned a saved row, but do not broadcast until
+      // an explicit read confirms the final score and status.
+      console.error("Dodatna provjera završnog rezultata nije uspjela:",verifyError);
+      hideModal();
+      toastV("Utakmica je završena i sačuvana, ali dodatna provjera rezultata nije uspjela. Push nije poslan; osvježi prikaz.","error");
+      try{await loadAll();}catch(refreshError){console.warn("Osvježavanje nakon završetka:",refreshError);}
+      return;
+    }
+
+    if(confirmed.status!=="finished"){
+      hideModal();
+      toastV("Status završene utakmice nije potvrđen nakon ponovnog čitanja. Push nije poslan; provjeri utakmicu.","error");
+      try{await loadAll();}catch(refreshError){console.warn("Osvježavanje nakon završetka:",refreshError);}
+      return;
+    }
+
+    hideModal();
+    toastV("Utakmica je završena i statistika je sačuvana.");
+
+    // Only the first transition broadcasts the finish notification. Use the
+    // confirmed database score and don't repeat it when an admin re-saves stats.
+    if(!wasAlreadyFinished){
+      const pushOk=await notifyLeaguePush(
+        "match_finished",
+        "🏁 KRAJ — "+teamV(confirmed.home_team_id)?.name+" "+
+          Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)+" "+
+          teamV(confirmed.away_team_id)?.name,
+        "Utakmica je završena.",
+        id
+      );
+      if(!pushOk){
+        toastV("Utakmica je završena, ali push nije potvrđen (možda nema aktivnih pretplata).","error");
+      }
+    }
+
+    try{
+      const fullyRefreshed=await loadAll();
+      if(fullyRefreshed!==true){
+        toastV("Utakmica je završena; dio prikaza nije osvježen. Ponovo otvori utakmicu.","error");
+      }
+    }catch(refreshError){
+      console.warn("Osvježavanje nakon završetka utakmice nije uspjelo:",refreshError);
+      toastV("Utakmica je završena, ali prikaz nije osvježen. Ponovo učitaj stranicu.","error");
+    }
+  }catch(error){
+    console.error("Završetak utakmice nije mogao biti sačuvan:",error);
+    toastV(error?.message||"Statistika nije potpuno sačuvana; provjeri stanje i pokušaj ponovo.","error");
+  }finally{
+    finishMatchInFlight.delete(id);
+  }
+}
+async function saveRatings(matchId){
+  const ids=matchPlayers
+    .filter(mp=>String(mp.match_id)===String(matchId))
+    .map(mp=>mp.player_id);
+
+  for(const pid of ids){
+    const gs=goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.player_id)===String(pid)).length;
+    const as=goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.assist_player_id)===String(pid)).length;
+    const st=V7.stats.find(s=>String(s.match_id)===String(matchId)&&String(s.player_id)===String(pid));
+    const rating=matchRating(matchId,pid);
+    const {error}=await supabaseClient.from("match_player_stats").upsert({
+      match_id:matchId,
+      player_id:pid,
+      goals:gs,
+      assists:as,
+      saves:+st?.saves||0,
+      rating,
+      is_mvp:false,
+      updated_at:new Date().toISOString()
+    },{onConflict:"match_id,player_id"});
+    if(error)throw error;
+  }
+
+  const all=ids.map(pid=>({pid,r:matchRating(matchId,pid)})).sort((a,b)=>b.r-a.r);
+  const clearMvp=await supabaseClient.from("match_player_stats").update({is_mvp:false}).eq("match_id",matchId);
+  if(clearMvp.error)throw clearMvp.error;
+  if(all[0]){
+    const setMvp=await supabaseClient.from("match_player_stats").update({is_mvp:true}).eq("match_id",matchId).eq("player_id",all[0].pid);
+    if(setMvp.error)throw setMvp.error;
+  }
+}
 function openGoal(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const reg=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)).map(mp=>playerV(mp.player_id)).filter(Boolean);const opts=reg.map(p=>`<option value="${p.id}">${escV(teamV(p.team_id)?.name||'')} · #${p.jersey_number??'-'} · ${escV(p.name)}</option>`).join('');showModal(`<div class="modal-title"><h2>⚽ Dodaj gol</h2><p class="muted">Možeš odmah odabrati asistenta.</p></div><div class="form"><div class="form-group"><label>Strijelac</label><select id="v7GoalPlayer">${opts}</select></div><div class="form-group"><label>Minuta</label><input id="v7GoalMinute" type="number" min="0" value="${m.current_minute||0}"></div><div class="form-group"><label>Asistencija?</label><select id="v7GoalAssist"><option value="">Bez asistencije</option>${opts}</select></div><button class="btn btn-green" onclick="medjasiV7.addGoal('${matchId}')">⚽ Evidentiraj gol</button></div>`)}
+
+async function addGoalWithAssist(matchId){
+  if(!canManageMatch())return;
+  const match=matches.find(x=>String(x.id)===String(matchId));
+  if(!match)return toastV("Utakmica nije pronađena. Osvježi prikaz i pokušaj ponovo.","error");
+
+  const playerId=$("v7GoalPlayer")?.value||"";
+  const assistId=$("v7GoalAssist")?.value||null;
+  const minute=Number($("v7GoalMinute")?.value);
+  if(!Number.isInteger(minute)||minute<0||minute>60){
+    return toastV("Minuta gola mora biti cijeli broj od 0 do 60.","error");
+  }
+
+  const scorer=playerV(playerId);
+  if(!scorer)return toastV("Izaberi strijelca.","error");
+  if(![String(match.home_team_id),String(match.away_team_id)].includes(String(scorer.team_id))){
+    return toastV("Strijelac mora pripadati jednoj od ekipa u ovoj utakmici.","error");
+  }
+  if(!matchPlayers.some(mp=>String(mp.match_id)===String(matchId)&&String(mp.player_id)===String(playerId))){
+    return toastV("Strijelac mora biti u postavi utakmice.","error");
+  }
+
+  let assist=null;
+  if(assistId){
+    assist=playerV(assistId);
+    if(!assist)return toastV("Izabrani asistent nije dostupan.","error");
+    if(String(assist.id)===String(scorer.id))return toastV("Strijelac ne može asistirati sam sebi.","error");
+    if(String(assist.team_id)!==String(scorer.team_id))return toastV("Asistent mora biti iz iste ekipe kao strijelac.","error");
+    if(!matchPlayers.some(mp=>String(mp.match_id)===String(matchId)&&String(mp.player_id)===String(assistId))){
+      return toastV("Asistent mora biti u postavi utakmice.","error");
+    }
+  }
+
+  const submitButton=[...document.querySelectorAll("#modalContent button")]
+    .find(button=>/medjasiV7\.addGoal\s*\(/.test(button.getAttribute("onclick")||""));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
+
+  try{
+    const {error}=await supabaseClient.from("goals").insert({
+      match_id:matchId,player_id:playerId,assist_player_id:assistId,minute,second:0
+    });
+    if(error)throw error;
+  }catch(error){
+    if(submitButton?.isConnected)submitButton.disabled=false;
+    console.error("Unos gola nije uspio:",error);
+    toastV(error?.message||"Gol nije sačuvan. Pokušaj ponovo.","error");
+    return;
+  }
+
+  hideModal();
+  toastV("Gol i asistencija su evidentirani.");
+  let refreshed=false;
+  try{refreshed=(await loadAll())===true;}
+  catch(error){console.warn("Osvježavanje nakon gola nije uspjelo:",error);}
+
+  let updatedMatch=matches.find(x=>String(x.id)===String(matchId))||match;
+  if(!refreshed){
+    try{
+      updatedMatch=await readConfirmedMatch(matchId,match);
+    }catch(error){
+      console.error("Gol je sačuvan, ali rezultat nije potvrđen:",error);
+      toastV("Gol je sačuvan, ali rezultat nije moguće potvrditi. Push obavještenje nije poslano; osvježi utakmicu.","error");
+      if(updatedMatch.status==="live")openMatch(matchId);
+      else openFinished(matchId);
+      return;
+    }
+  }
+
+  const updatedScorer=playerV(playerId)||scorer;
+  const score=Number(updatedMatch.home_score||0)+":"+Number(updatedMatch.away_score||0);
+  const goalBody=updatedScorer.name+(assist?" · asistencija: "+assist.name:"")+" · "+score+" · "+minute+"'";
+  void notifyLeaguePush("goal","⚽ GOL — "+teamV(updatedScorer.team_id)?.name,goalBody,matchId);
+
+  if(updatedMatch.status==="live")openMatch(matchId);
+  else openFinished(matchId);
+}
 
 function decorateCourtRatings(matchId){document.querySelectorAll('.player-on-court').forEach(el=>{const nameEl=el.querySelector('.player-court-name');if(!nameEl)return;const text=nameEl.textContent.trim();const p=players.find(x=>text.includes(String(x.name||'')));if(!p)return;const old=el.querySelector('.v7-player-rating-bubble');if(old)old.remove();const bubble=document.createElement('span');bubble.className='v7-player-rating-bubble';bubble.textContent=matchRating(matchId,p.id).toFixed(1);el.querySelector('.player-circle')?.parentElement?.classList.add('v7-player-circle-wrap');el.appendChild(bubble)})}
 function addSaveButtonToLive(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const regs=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&mp.is_active).map(mp=>playerV(mp.player_id)).filter(p=>p&&p.position&&String(p.position).toLowerCase().includes('golman'));if(!regs.length)return;const host=$('modalContent');if(!host)return;const old=host.querySelector('.v7-live-actions');if(old)old.remove();const el=document.createElement('div');el.className='v7-live-actions';el.innerHTML=regs.map(p=>`<button class="btn btn-blue btn-small" onclick="medjasiV7.addSave('${matchId}','${p.id}')">🧤 Odbrana · ${escV(p.name)}</button>`).join('')+`<button class="btn btn-green btn-small" onclick="medjasiV7.openGoal('${matchId}')">⚽ Gol + asistencija</button><button class="btn btn-yellow btn-small" onclick="openCardControl('${matchId}')">🟨 Karton</button><button class="btn btn-small" onclick="openSubstitutionControl('${matchId}')">🔄 Izmjena</button>`;host.querySelector('.live-scoreboard')?.after(el)}
@@ -10469,33 +10883,269 @@ function addSaveButtonToLive(matchId){const m=matches.find(x=>String(x.id)===Str
 async function finishMatchWithStats(id){openFinished(id)}
 function openSeasonStats(){const by={};(V7.stats||[]).forEach(s=>{const p=playerV(s.player_id);if(!p)return;(by[p.id]??={p,g:0,a:0,o:0,r:0,n:0}).g+=+s.goals||0;by[p.id].a+=+s.assists||0;by[p.id].o+=+s.saves||0;by[p.id].r+=+s.rating||0;by[p.id].n++});const rows=Object.values(by).sort((a,b)=>(b.g-b.a*0.1)-(a.g-a.a*0.1));showModal(`<div class="modal-title"><h2>📊 Statistika sezone</h2></div><div class="table-wrap"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Golovi</th><th>Asist.</th><th>Odbrane</th><th>Prosj. ocjena</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${escV(x.p.name)}</td><td>${x.g}</td><td>${x.a}</td><td>${x.o}</td><td>${(x.r/Math.max(1,x.n)).toFixed(1)}</td></tr>`).join('')}</tbody></table></div>`)}
 
-async function notifyPush(type,title,body,matchId=null){try{if(!currentUser)return;const sessionResult=await supabaseClient.auth.getSession();const token=sessionResult.data?.session?.access_token;if(!token)return;await fetch(V7.pushEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({type,title,body,match_id:matchId||currentMatchId||null})})}catch(e){console.warn('Push notify:',e)}}
+async function notifyPush(type,title,body,matchId=null){
+  try{
+    if(!currentUser||!supabaseClient?.auth?.getSession||!V7.pushEndpoint)return false;
+    const sessionResult=await supabaseClient.auth.getSession();
+    const token=sessionResult?.data?.session?.access_token;
+    if(sessionResult?.error||!token)return false;
+
+    const response=await fetch(V7.pushEndpoint,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":`Bearer ${token}`
+      },
+      body:JSON.stringify({
+        type,
+        title:String(title||"").slice(0,160),
+        body:String(body||"").slice(0,1000),
+        match_id:matchId||currentMatchId||null
+      })
+    });
+    if(!response.ok){
+      console.warn("Push notify: servis je vratio HTTP",response.status);
+      return false;
+    }
+    const delivery=await response.json().catch(()=>null);
+    if(!delivery?.ok){
+      console.warn("Push notify: servis nije potvrdio slanje.");
+      return false;
+    }
+    const sent=Number(delivery.sent)||0;
+    if(sent<1){
+      console.warn("Push notify: nema aktivnih pretplata kojima je obavještenje poslano.");
+      return false;
+    }
+    if(Number(delivery.failed)>0){
+      console.warn("Push notify: djelimično slanje.",{sent,failed:Number(delivery.failed)||0});
+    }
+    return true;
+  }catch(error){
+    console.warn("Push notify:",error);
+    return false;
+  }
+}
 function b64ToBytes(s){const pad='='.repeat((4-s.length%4)%4),raw=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
-async function subscribeRealPush(){if(!currentUser)return toastV('Prvo se prijavi.','error');if(!('serviceWorker' in navigator)||!('PushManager' in window))return toastV('Ovaj browser ne podržava push.','error');const perm=await Notification.requestPermission();if(perm!=='granted')return toastV('Dozvola za obavještenja nije odobrena.','error');const reg=await navigator.serviceWorker.register('./service-worker.js',{scope:'./'});let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToBytes(V7.pushPublicKey)});const j=sub.toJSON();const {error}=await supabaseClient.from('push_subscriptions').upsert({user_id:currentUser.id,endpoint:sub.endpoint,p256dh:j.keys?.p256dh,auth:j.keys?.auth,user_agent:navigator.userAgent,updated_at:new Date().toISOString()},{onConflict:'endpoint'});if(error)return toastV(error.message,'error');localStorage.setItem('medjasi_push_enabled','1');renderPushUI();toastV('🔔 Push obavještenja su uključena.')}
-async function disableRealPush(){try{const reg=await navigator.serviceWorker.getRegistration('./');const sub=await reg?.pushManager.getSubscription();if(sub){await supabaseClient.from('push_subscriptions').delete().eq('endpoint',sub.endpoint);await sub.unsubscribe()}}catch(e){console.warn(e)}localStorage.removeItem('medjasi_push_enabled');renderPushUI()}
+async function subscribeRealPush(){
+  if(!currentUser)return toastV("Prvo se prijavi.","error"),false;
+  if(!("serviceWorker" in navigator)||!("PushManager" in window)||!("Notification" in window)){
+    toastV("Ovaj browser ne podržava push obavještenja.","error");
+    return false;
+  }
+  if(!supabaseClient?.from){
+    toastV("Servis za obavještenja trenutno nije dostupan.","error");
+    return false;
+  }
+
+  let subscription=null;
+  let createdSubscription=false;
+  let serverSaved=false;
+  try{
+    const permission=await Notification.requestPermission();
+    if(permission!=="granted"){
+      toastV("Dozvola za obavještenja nije odobrena.","error");
+      return false;
+    }
+    if(typeof V7.pushPublicKey!=="string"||!V7.pushPublicKey.trim()){
+      throw new Error("Nedostaje javni VAPID ključ za push obavještenja.");
+    }
+
+    const reg=await navigator.serviceWorker.register("./service-worker.js",{scope:"./"});
+    if(!reg?.pushManager)throw new Error("Service worker nije spreman za push obavještenja.");
+    subscription=await reg.pushManager.getSubscription();
+    if(!subscription){
+      subscription=await reg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:b64ToBytes(V7.pushPublicKey)
+      });
+      createdSubscription=true;
+    }
+    if(!subscription?.endpoint)throw new Error("Preglednik nije kreirao važeću push pretplatu.");
+
+    const payload=subscription.toJSON();
+    if(!payload?.keys?.p256dh||!payload?.keys?.auth){
+      throw new Error("Preglednik nije vratio ključeve potrebne za push pretplatu.");
+    }
+
+    const {error}=await supabaseClient.from("push_subscriptions").upsert({
+      user_id:currentUser.id,
+      endpoint:subscription.endpoint,
+      p256dh:payload.keys.p256dh,
+      auth:payload.keys.auth,
+      user_agent:navigator.userAgent,
+      updated_at:new Date().toISOString()
+    },{onConflict:"endpoint"});
+    if(error)throw error;
+    serverSaved=true;
+
+    try{
+      localStorage.setItem("medjasi_push_enabled","1");
+    }catch(storageError){
+      console.warn("Lokalni indikator push obavještenja nije sačuvan:",storageError);
+    }
+    renderPushUI();
+    toastV("🔔 Push obavještenja su uključena.");
+    return true;
+  }catch(error){
+    // If persistence failed, remove only the orphaned subscription we just
+    // created. A pre-existing subscription is left intact for a safe retry.
+    if(createdSubscription&&!serverSaved&&subscription){
+      try{
+        await subscription.unsubscribe();
+      }catch(cleanupError){
+        console.warn("Čišćenje nepotrebne push pretplate nije uspjelo:",cleanupError);
+      }
+    }
+    console.warn("Uključivanje push obavještenja nije uspjelo:",error);
+    toastV(error?.message||"Push obavještenja nisu mogla biti uključena. Pokušaj ponovo.","error");
+    renderPushUI();
+    return false;
+  }
+}
+
+async function disableRealPush(){
+  if(!("serviceWorker" in navigator)||!("PushManager" in window)){
+    toastV("Ovaj browser ne podržava upravljanje push pretplatama.","error");
+    return false;
+  }
+  if(!supabaseClient?.from){
+    toastV("Servis za obavještenja trenutno nije dostupan.","error");
+    return false;
+  }
+
+  try{
+    const reg=await navigator.serviceWorker.getRegistration("./");
+    const sub=await reg?.pushManager?.getSubscription();
+    if(sub){
+      const {error}=await supabaseClient.from("push_subscriptions")
+        .delete().eq("endpoint",sub.endpoint);
+      if(error)throw error;
+
+      const unsubscribed=await sub.unsubscribe();
+      if(!unsubscribed){
+        throw new Error("Preglednik nije potvrdio isključivanje push pretplate. Pokušaj ponovo.");
+      }
+    }
+
+    localStorage.removeItem("medjasi_push_enabled");
+    renderPushUI();
+    toastV("Push obavještenja su isključena.");
+    return true;
+  }catch(error){
+    // Keep the enabled indicator until both the server row and browser
+    // subscription have been removed successfully; the user can retry.
+    console.warn("Isključivanje push obavještenja nije uspjelo:",error);
+    renderPushUI();
+    toastV(error?.message||"Push obavještenja nisu mogla biti isključena. Pokušaj ponovo.","error");
+    return false;
+  }
+}
 function renderPushUI(){if(!$('v7PushStatus')||!$('v7PushButton'))return;const on=localStorage.getItem('medjasi_push_enabled')==='1';$('v7PushStatus').textContent=on?'🔔 Push obavještenja su uključena.':'Push obavještenja nisu uključena.';$('v7PushStatus').className='v7-push-status '+(on?'ok':'');$('v7PushButton').textContent=on?'🔕 Isključi push':'🔔 Uključi push';$('v7PushButton').onclick=on?disableRealPush:subscribeRealPush}
 function ensureSeasonAdmin(){if(!$('adminContent')||!isAdm()||$('v7SeasonCard'))return;const c=document.createElement('div');c.id='v7SeasonCard';c.className='card';c.style.marginTop='20px';c.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SEZONE</span><h3>🏆 Upravljanje sezonama</h3><p class="muted">Aktivna sezona se automatski dodjeljuje novim utakmicama.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="actions"><input id="v7SeasonName" placeholder="npr. 2026/27" style="max-width:220px"><button class="btn btn-green" onclick="medjasiV7.addSeason()">＋ Nova sezona</button></div><div id="v7SeasonList" style="margin-top:12px"></div>`;$('adminContent').appendChild(c);renderSeasons()}
-async function loadSeasons(){const {data,error}=await supabaseClient.from('seasons').select('*').order('created_at',{ascending:false});if(!error)V7.seasons=data||[];renderSeasons()}
+async function loadSeasons(){
+  try{
+    const {data,error}=await supabaseClient.from("seasons").select("*").order("created_at",{ascending:false});
+    if(error)throw error;
+    V7.seasons=data||[];
+    renderSeasons();
+    return true;
+  }catch(error){
+    console.error("Učitavanje sezona nije uspjelo:",error);
+    toastV(error?.message||"Sezone trenutno nisu dostupne.","error");
+    renderSeasons();
+    return false;
+  }
+}
 function renderSeasons(){const box=$('v7SeasonList');if(!box)return;box.innerHTML=(V7.seasons||[]).map(s=>`<div class="admin-match" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><strong>${escV(s.name)}</strong><small class="muted" style="display:block;margin-top:3px">${s.is_active?'AKTIVNA':'Arhiva'}</small></div>${s.is_active?'':'<button class="btn btn-small" onclick="medjasiV7.activateSeason(\''+s.id+'\')">Postavi aktivnu</button>'}</div>`).join('')||'<div class="muted">Nema sezona.</div>'}
 async function addSeason(){if(!isAdm())return;const name=$('v7SeasonName')?.value.trim();if(!name)return;const {error}=await supabaseClient.from('seasons').insert({name,is_active:false});if(error)return toastV(error.message,'error');$('v7SeasonName').value='';await loadSeasons()}
-async function activateSeason(id){if(!isAdm())return;await supabaseClient.from('seasons').update({is_active:false}).neq('id','00000000-0000-0000-0000-000000000000');const {error}=await supabaseClient.from('seasons').update({is_active:true}).eq('id',id);if(error)return toastV(error.message,'error');await loadSeasons();toastV('Aktivna sezona je promijenjena.')} 
+async function activateSeason(id){
+  if(!isAdm())return;
+  const target=V7.seasons.find(season=>String(season.id)===String(id));
+  if(!target)return toastV("Sezona nije pronađena. Osvježi prikaz i pokušaj ponovo.","error");
+  if(target.is_active)return toastV("Ova sezona je već aktivna.");
+
+  const previousActiveIds=V7.seasons.filter(season=>season.is_active).map(season=>season.id);
+  try{
+    const {error:deactivateError}=await supabaseClient
+      .from("seasons")
+      .update({is_active:false})
+      .neq("id","00000000-0000-0000-0000-000000000000");
+    if(deactivateError)throw deactivateError;
+
+    const {error:activateError}=await supabaseClient
+      .from("seasons")
+      .update({is_active:true})
+      .eq("id",id);
+    if(activateError){
+      // Best-effort rollback so a failed activation does not leave the league without its previous active season.
+      if(previousActiveIds.length){
+        const {error:rollbackError}=await supabaseClient
+          .from("seasons")
+          .update({is_active:true})
+          .in("id",previousActiveIds);
+        if(rollbackError)console.error("Vraćanje prethodne aktivne sezone nije uspjelo:",rollbackError);
+      }
+      throw activateError;
+    }
+
+    if(await loadSeasons()){
+      toastV("Aktivna sezona je promijenjena.");
+    }
+  }catch(error){
+    console.error("Promjena aktivne sezone nije uspjela:",error);
+    toastV(error?.message||"Aktivna sezona nije promijenjena. Pokušaj ponovo.","error");
+    await loadSeasons();
+  }
+} 
 function ensurePushUI(){if(!$('adminContent')||!isAdm()||$('v7PushCard'))return;const c=document.createElement('div');c.id='v7PushCard';c.className='card v7-push-card';c.innerHTML=`<div class="v7-push-row"><div><strong>🔔 Push notifikacije</strong><div id="v7PushStatus" class="v7-push-status">Provjera...</div></div><button id="v7PushButton" class="btn btn-blue">🔔 Uključi push</button></div>`;$('adminContent').appendChild(c);renderPushUI()}
 
 // Gallery: image + video compatibility layer. Existing image_url rows continue to work.
-function renderGalleryV7(){const grid=$('galleryGrid'),count=$('galleryCount');if(!grid)return;const arr=gallery||[];if(count)count.textContent=`${arr.length} ${arr.length===1?'medij':'medija'}`;if(!arr.length){grid.innerHTML='<div class="empty gallery-empty">📸 Galerija je trenutno prazna.</div>';return}grid.innerHTML=arr.map(x=>{const url=x.media_url||x.image_url,type=x.media_type||'image';return `<article class="gallery-item"><button class="gallery-photo" type="button" onclick="${type==='video'?`medjasiV7.openMedia('${escV(url)}','video','${escV(x.title||'Video')}')`:`openImagePreview('${escV(url)}','${escV(x.title||'Galerija')}')`}">${type==='video'?`<video muted playsinline preload="metadata" src="${escV(url)}"></video>`:`<img src="${escV(url)}" alt="${escV(x.title||'Fotografija')}" loading="lazy">`}<span class="gallery-overlay">${type==='video'?'▶️ Pusti video':'🔍 Pregledaj'}</span></button><div class="gallery-caption"><strong>${escV(x.title||'Medij lige')}</strong>${x.description?`<p>${escV(x.description)}</p>`:''}<small class="muted">${formatV(x.created_at)}</small></div></article>`}).join('')}
+function renderGalleryV7(){const grid=$('galleryGrid'),count=$('galleryCount');if(!grid)return;const arr=gallery||[];if(count)count.textContent=`${arr.length} ${arr.length===1?'medij':'medija'}`;if(!arr.length){grid.innerHTML='<div class="empty gallery-empty">📸 Galerija je trenutno prazna.</div>';return}grid.innerHTML=arr.map(x=>{const url=x.media_url||x.image_url,type=x.media_type||'image';return `<article class="gallery-item"><button class="gallery-photo" type="button" onclick="${type==='video'?`medjasiV7.openMedia('${escJs(url)}','video','${escJs(x.title||'Video')}')`:`openImagePreview('${escJs(url)}','${escJs(x.title||'Galerija')}')`}">${type==='video'?`<video muted playsinline preload="metadata" src="${escV(url)}"></video>`:`<img src="${escV(url)}" alt="${escV(x.title||'Fotografija')}" loading="lazy">`}<span class="gallery-overlay">${type==='video'?'▶️ Pusti video':'🔍 Pregledaj'}</span></button><div class="gallery-caption"><strong>${escV(x.title||'Medij lige')}</strong>${x.description?`<p>${escV(x.description)}</p>`:''}<small class="muted">${formatV(x.created_at)}</small></div></article>`}).join('')}
 function openMedia(url,type,title){showModal(`<div class="modal-title"><h2>${escV(title)}</h2></div>${type==='video'?`<video controls autoplay playsinline style="display:block;width:100%;max-height:75vh;border-radius:14px;background:#000" src="${escV(url)}"></video>`:`<img src="${escV(url)}" style="display:block;max-width:100%;max-height:75vh;margin:auto;border-radius:14px">`}`)}
-async function adminAddMedia(){if(!isAdm())return;const file=$('galleryImageFile')?.files?.[0],title=$('galleryTitle')?.value.trim()||'',description=$('galleryDescription')?.value.trim()||'';if(!file)return toastV('Izaberi sliku ili video.','error');if(file.size>50*1024*1024)return toastV('Maksimum je 50 MB.','error');try{const media_url=await uploadFile(file,'gallery');const media_type=file.type.startsWith('video/')?'video':'image';const {error}=await supabaseClient.from('gallery').insert({image_url:media_type==='image'?media_url:null,media_url,media_type,title:title.slice(0,100)||'Medij lige',description:description.slice(0,250),created_by:currentUser.id});if(error)throw error;$('galleryImageFile').value='';$('galleryTitle').value='';$('galleryDescription').value='';await loadAll();toastV('Medij je objavljen.')}catch(e){toastV(e.message||'Greška pri uploadu.','error')}}
-function ensureGalleryVideoUI(){const input=$('galleryImageFile');if(!input)return;input.accept='image/*,video/mp4,video/webm,video/ogg';const label=input.closest('.form-group')?.querySelector('label');if(label)label.textContent='Fotografija ili video'}
+async function adminAddMedia(){
+  if(!isAdm())return;
+  const file=$("galleryImageFile")?.files?.[0];
+  const title=$("galleryTitle")?.value.trim()||"";
+  const description=$("galleryDescription")?.value.trim()||"";
+  if(!file)return toastV("Izaberi sliku ili video.","error");
+
+  const media=supportedLeagueMedia(file);
+  if(!media)return toastV("Podržani su JPG, PNG, WebP, GIF, AVIF, MP4, WebM i Ogg fajlovi.","error");
+  if(file.size>media.maxBytes)return toastV(media.kind==="video"?"Video može imati najviše 50 MB.":"Slika može imati najviše 15 MB.","error");
+
+  try{
+    const media_url=await uploadFile(file,"gallery");
+    const {error}=await supabaseClient.from("gallery").insert({
+      image_url:media_url,
+      media_url,
+      media_type:media.kind,
+      title:title.slice(0,100)||"Medij lige",
+      description:description.slice(0,250),
+      created_by:currentUser.id
+    });
+    if(error)throw error;
+    $("galleryImageFile").value="";
+    $("galleryTitle").value="";
+    $("galleryDescription").value="";
+    await loadAll();
+    toastV("Medij je objavljen.");
+  }catch(error){
+    console.error("Objava medija nije uspjela:",error);
+    toastV(error?.message||"Greška pri uploadu medija.","error");
+  }
+}
+function ensureGalleryVideoUI(){const input=$('galleryImageFile');if(!input)return;input.accept='image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/ogg';const label=input.closest('.form-group')?.querySelector('label');if(label)label.textContent='Fotografija ili video'}
 
 // Search: teams, players, matches and news.
 function ensureSearch(){if($('v7Search'))return;const actions=document.querySelector('.header-actions');if(!actions)return;const wrap=document.createElement('div');wrap.className='v7-search-wrap';wrap.innerHTML='<input id="v7Search" type="search" placeholder="🔎 Pretraži..." autocomplete="off"><div id="v7SearchResults" class="v7-search-results"></div>';actions.insertBefore(wrap,actions.firstChild);$('v7Search').addEventListener('input',renderSearch);document.addEventListener('click',e=>{if(!wrap.contains(e.target))$('v7SearchResults').classList.remove('open')})}
-function renderSearch(){const q=$('v7Search')?.value.trim().toLowerCase(),box=$('v7SearchResults');if(!box)return;if(q.length<2){box.classList.remove('open');return}const res=[];teams.filter(t=>String(t.name||'').toLowerCase().includes(q)).slice(0,5).forEach(t=>res.push({i:'🛡️',t:t.name,s:'Ekipa',fn:`showSection('teams')`}));players.filter(p=>String(p.name||'').toLowerCase().includes(q)).slice(0,5).forEach(p=>res.push({i:'👤',t:p.name,s:`Igrač · ${teamV(p.team_id)?.name||''}`,fn:`showSection('players')`}));V7.news.filter(n=>String(n.title||'').toLowerCase().includes(q)).slice(0,5).forEach(n=>res.push({i:'📰',t:n.title,s:'Vijest',fn:`medjasiV7.openNews('${n.id}')`}));box.innerHTML=res.length?res.map(x=>`<button class="v7-search-item" onclick="${x.fn};$('v7SearchResults').classList.remove('open')"><span>${x.i}</span><span><b>${escV(x.t)}</b><small class="muted" style="display:block;margin-top:2px">${escV(x.s)}</small></span></button>`).join(''):'<div class="v7-news-empty">Nema rezultata.</div>';box.classList.add('open')}
+function renderSearch(){const q=$('v7Search')?.value.trim().toLowerCase(),box=$('v7SearchResults');if(!box)return;if(q.length<2){box.classList.remove('open');return}const res=[];teams.filter(t=>String(t.name||'').toLowerCase().includes(q)).slice(0,5).forEach(t=>res.push({i:'🛡️',t:t.name,s:'Ekipa',fn:`openTeam('${escJs(t.id)}')`}));players.filter(p=>String(p.name||'').toLowerCase().includes(q)).slice(0,5).forEach(p=>res.push({i:'👤',t:p.name,s:`Igrač · ${teamV(p.team_id)?.name||''}`,fn:`openPlayer('${escJs(p.id)}')`}));V7.news.filter(n=>String(n.title||'').toLowerCase().includes(q)).slice(0,5).forEach(n=>res.push({i:'📰',t:n.title,s:'Vijest',fn:`medjasiV7.openNews('${escJs(n.id)}')`}));box.innerHTML=res.length?res.map(x=>`<button class="v7-search-item" onclick="${x.fn};$('v7SearchResults').classList.remove('open')"><span>${x.i}</span><span><b>${escV(x.t)}</b><small class="muted" style="display:block;margin-top:2px">${escV(x.s)}</small></span></button>`).join(''):'<div class="v7-news-empty">Nema rezultata.</div>';box.classList.add('open')}
 
 // Load wrappers
 const originalLoadAll=window.loadAll;
-window.loadAll=async function(...args){const r=await originalLoadAll.apply(this,args);try{await loadStats();await loadNews()}catch(e){console.warn('V7 load:',e)}try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();renderGalleryV7()}catch(e){console.warn(e)}return r};
+window.loadAll=async function(...args){const r=await originalLoadAll.apply(this,args);if(r!==true)return r;try{await loadStats();await loadNews()}catch(e){console.warn('V7 load:',e)}try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();renderGalleryV7()}catch(e){console.warn(e)}return r};
 // Realtime safety wrapper; original subscription remains but news/stats refresh independently.
-V7.ensureNewsUI=ensureNewsUI;V7.loadNews=loadNews;V7.notifyPush=notifyPush;window.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoal;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
+V7.ensureNewsUI=ensureNewsUI;V7.loadNews=loadNews;V7.notifyPush=notifyPush;window.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoalWithAssist;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
 window.openGoalControl=function(id){return openGoal(id)};
 window.adminAddGalleryImage=adminAddMedia;
 window.renderAdminNews=renderAdminNews;
@@ -10503,7 +11153,7 @@ window.renderAdminGallery=function(){const box=$('adminGalleryList');if(!box||!i
 
 
 // Add finish button to admin match cards without replacing the existing manager.
-const oldMakeSubstitution=window.makeSubstitution;window.makeSubstitution=async function(matchId,side){const out=$(side==='home'?'subHomeOut':'subAwayOut')?.value,incoming=$(side==='home'?'subHomeIn':'subAwayIn')?.value;const m=matches.find(x=>String(x.id)===String(matchId));const teamId=side==='home'?m?.home_team_id:m?.away_team_id;const minute=Number(m?.current_minute||0);const result=await oldMakeSubstitution?.(matchId,side);if(out&&incoming&&m&&isAdm()){await supabaseClient.from('match_substitutions').insert({match_id:matchId,team_id:teamId,player_out_id:out,player_in_id:incoming,minute})}return result};
+const oldMakeSubstitution=window.makeSubstitution;window.makeSubstitution=async function(matchId,side){if(typeof oldMakeSubstitution!=="function")return;return await oldMakeSubstitution.apply(this,[matchId,side]);};
 function renderMvp(matchId){const ids=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)).map(mp=>mp.player_id);const top=ids.map(pid=>({pid,r:matchRating(matchId,pid)})).sort((a,b)=>b.r-a.r)[0];return top?`<div class="v7-mvp" style="margin-top:14px">🏅 <strong>MVP utakmice</strong><div style="margin-top:4px">${escV(playerV(top.pid)?.name||'Igrač')} · <span class="v7-rating good">${top.r.toFixed(1)}</span></div></div>`:''}
 const oldRenderAdminMatches=window.renderAdminMatches;window.renderAdminMatches=function(){oldRenderAdminMatches?.();document.querySelectorAll('#adminMatches .admin-match').forEach((el,i)=>{const m=matches[i];if(m&&!el.querySelector('.v7-finish-btn')){const b=document.createElement('button');b.className='btn btn-blue btn-small v7-finish-btn';b.textContent='🏁 Statistika / završi';b.onclick=()=>openFinished(m.id);el.querySelector('.admin-controls')?.appendChild(b)}})};
 
@@ -10553,17 +11203,56 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     (data||[]).forEach(p=>V.profiles[String(p.id)]=p);
     await loadFanPublicStyles(unique);
   }
-  async function load(){
-    try{
-      const [{data:posts,error:pe},{data:stories,error:se}]=await Promise.all([
-        supabaseClient.from('community_posts').select('id,user_id,image_url,caption,created_at,music_track_id').order('created_at',{ascending:false}).limit(50),
-        supabaseClient.from('community_stories').select('id,user_id,image_url,caption,created_at,expires_at,music_track_id').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(40)
-      ]);
-      if(pe)throw pe; V.posts=posts||[];
-      if(se)console.warn('Community stories:',se); V.stories=stories||[];
-      await loadProfiles([...V.posts,...V.stories].map(x=>x.user_id));
-      await render(); V.loaded=true;
-    }catch(err){console.warn('Community load:',err); V.posts=[];V.stories=[];render();}
+  let loadInFlight=null;
+  let loadFailureCount=0;
+  let loadRetryAt=0;
+  async function load(options={}){
+    if(loadInFlight)return loadInFlight;
+    if(!options.force&&Date.now()<loadRetryAt)return false;
+
+    loadInFlight=(async()=>{
+      try{
+        const [{data:posts,error:postError},{data:stories,error:storyError}]=await Promise.all([
+          supabaseClient.from('community_posts')
+            .select('id,user_id,image_url,caption,created_at,music_track_id')
+            .order('created_at',{ascending:false}).limit(50),
+          supabaseClient.from('community_stories')
+            .select('id,user_id,image_url,caption,created_at,expires_at,music_track_id')
+            .gt('expires_at',new Date().toISOString())
+            .order('created_at',{ascending:false}).limit(40)
+        ]);
+
+        if(postError)throw postError;
+        // Commit the post snapshot only after its read succeeded. A failed
+        // optional Stories query must not make previously loaded Stories vanish.
+        V.posts=posts||[];
+        if(storyError){
+          console.warn('Community stories:',storyError);
+        }else{
+          V.stories=stories||[];
+        }
+
+        await loadProfiles([...V.posts,...V.stories].map(x=>x.user_id));
+        await render();
+        V.loaded=true;
+        loadFailureCount=0;
+        loadRetryAt=0;
+        return true;
+      }catch(error){
+        console.warn('Community load:',error);
+        loadFailureCount=Math.min(loadFailureCount+1,4);
+        loadRetryAt=Date.now()+Math.min(60000,5000*Math.pow(2,loadFailureCount-1));
+        // Keep the last successful snapshot and DOM during transient 503s.
+        // On first load, render the empty states so navigation still completes.
+        if(!V.loaded){
+          try{await render()}catch(renderError){console.warn('Community initial render:',renderError)}
+        }
+        return false;
+      }finally{
+        loadInFlight=null;
+      }
+    })();
+    return loadInFlight;
   }
   function communityTrack(id){return musicTracks.find(t=>String(t.id)===String(id))||null;}
   function communityMusicChip(id){const t=communityTrack(id);if(!t)return "";return `<button type="button" class="v9-music-chip" onclick="event.stopPropagation();playCommunityMusic('${escV(t.id)}')">🎵 ${escV(t.title||"Muzika")} <small>· ${t.provider==="spotify"?"Spotify":"YouTube"}</small><span>▶</span></button>`;}
@@ -10580,14 +11269,69 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   async function renderFeed(){
     const host=q('v9Feed');if(!host)return;
     if(!V.posts.length){host.innerHTML='<div class="v9-empty">Još nema objava. Budi prvi koji će objaviti fotografiju. 📸</div>';return}
-    host.innerHTML=V.posts.map((p,i)=>{const a=V.profiles[String(p.user_id)]||{};const own=logged()&&String(p.user_id)===String(currentUser.id);return `<article class="v9-post" style="animation-delay:${Math.min(i,8)*35}ms"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(a)}" alt="" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer"><div><div class="v9-post-author" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer">${fanCommunityIdentityHTML(a,String(p.user_id))}</div><div class="v9-post-meta">${fmt(p.created_at)}</div></div>${own||typeof isAdmin==='function'&&isAdmin()?`<button class="btn btn-small v9-post-menu" onclick="deleteV9Post('${escV(p.id)}')">Obriši</button>`:''}</div><img class="v9-post-image" src="${escV(p.image_url)}" alt="${escV(p.caption||'Fotografija')}" loading="lazy" onclick="openV9Lightbox('${escV(p.image_url)}')"><div class="v9-post-body">${p.caption?`<div class="v9-post-caption">${escV(p.caption)}</div>`:''}${communityMusicChip(p.music_track_id)}<div class="v9-post-actions"><button id="v9r-${escV(p.id)}" class="v9-reaction" onclick="toggleV9Reaction('${escV(p.id)}','❤️')">❤️ <span>0</span></button><button class="v9-reaction" onclick="toggleV9Comments('${escV(p.id)}')">💬 <span id="v9cnum-${escV(p.id)}">0</span></button></div><div id="v9comments-${escV(p.id)}" class="v9-comments" hidden></div></div></article>`}).join('');
-    await Promise.all(V.posts.map(p=>refreshPostMeta(p.id)));
+    host.innerHTML=V.posts.map((p,i)=>{const a=V.profiles[String(p.user_id)]||{};const own=logged()&&String(p.user_id)===String(currentUser.id);return `<article class="v9-post" data-post-id="${escV(p.id)}" style="animation-delay:${Math.min(i,8)*35}ms"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(a)}" alt="" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer"><div><div class="v9-post-author" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer">${fanCommunityIdentityHTML(a,String(p.user_id))}</div><div class="v9-post-meta">${fmt(p.created_at)}</div></div>${own||typeof isAdmin==='function'&&isAdmin()?`<button class="btn btn-small v9-post-menu" onclick="deleteV9Post('${escV(p.id)}')">Obriši</button>`:''}</div><img class="v9-post-image" src="${escV(p.image_url)}" alt="${escV(p.caption||'Fotografija')}" loading="lazy" onclick="openV9Lightbox('${escV(p.image_url)}')"><div class="v9-post-body">${p.caption?`<div class="v9-post-caption">${escV(p.caption)}</div>`:''}${communityMusicChip(p.music_track_id)}<div class="v9-post-actions"><button id="v9r-${escV(p.id)}" class="v9-reaction" onclick="toggleV9Reaction('${escV(p.id)}','❤️')">❤️ <span>0</span></button><button class="v9-reaction" onclick="toggleV9Comments('${escV(p.id)}')">💬 <span id="v9cnum-${escV(p.id)}">0</span></button></div><div id="v9comments-${escV(p.id)}" class="v9-comments" hidden></div></div></article>`}).join('');
+    await refreshPostMetaBatch(V.posts.map(p=>p.id));
+  }
+  async function refreshPostMetaBatch(ids){
+    const unique=[...new Set((ids||[]).filter(Boolean).map(String))];
+    if(!unique.length)return;
+
+    const PAGE_SIZE=1000;
+    const MAX_ROWS=10000;
+    const readPostRows=async(table,columns)=>{
+      const rows=[];
+      let offset=0;
+      for(;;){
+        const {data,error}=await supabaseClient.from(table)
+          .select(columns)
+          .in("post_id",unique)
+          .order("post_id",{ascending:true})
+          .order("id",{ascending:true})
+          .range(offset,offset+PAGE_SIZE-1);
+        if(error)throw error;
+        const page=data||[];
+        rows.push(...page);
+        if(page.length<PAGE_SIZE)break;
+        offset+=PAGE_SIZE;
+        if(offset>MAX_ROWS)throw new Error("Community statistika prelazi sigurni limit; stari prikaz je zadržan.");
+      }
+      return rows;
+    };
+
+    try{
+      const [reactions,comments]=await Promise.all([
+        readPostRows("community_reactions","id,post_id,user_id,reaction"),
+        readPostRows("community_comments","id,post_id")
+      ]);
+      const reactionCounts=new Map();
+      const commentCounts=new Map();
+      const myReactions=new Set();
+      for(const row of reactions){
+        const id=String(row.post_id);
+        reactionCounts.set(id,(reactionCounts.get(id)||0)+1);
+        if(logged()&&String(row.user_id)===String(currentUser.id))myReactions.add(id);
+      }
+      for(const row of comments){
+        const id=String(row.post_id);
+        commentCounts.set(id,(commentCounts.get(id)||0)+1);
+      }
+      for(const id of unique){
+        const button=q('v9r-'+id);
+        const count=button?.querySelector('span');
+        if(count)count.textContent=String(reactionCounts.get(id)||0);
+        if(button){
+          if(myReactions.has(id))button.classList.add('active');
+          else button.classList.remove('active');
+        }
+        const commentCount=q('v9cnum-'+id);
+        if(commentCount)commentCount.textContent=String(commentCounts.get(id)||0);
+      }
+    }catch(error){
+      console.warn("Community statistika:",error);
+    }
   }
   async function refreshPostMeta(id){
-    const [{data:r,error:re},{data:c,error:ce}]=await Promise.all([supabaseClient.from('community_reactions').select('id,user_id,reaction').eq('post_id',id),supabaseClient.from('community_comments').select('id').eq('post_id',id)]);
-    if(re||ce)return;
-    const b=q('v9r-'+id);if(b){b.querySelector('span').textContent=(r||[]).length;if(logged()&&r?.some(x=>String(x.user_id)===String(currentUser.id)))b.classList.add('active');else b.classList.remove('active')}
-    const cnum=q('v9cnum-'+id);if(cnum)cnum.textContent=(c||[]).length;
+    return refreshPostMetaBatch([id]);
   }
   async function renderMyProfile(){
     const host=q('v9MyProfileCard');if(!host)return;
@@ -10596,21 +11340,54 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     host.innerHTML=`<div class="v9-profile-top"><img class="v9-profile-avatar" src="${avatar(p)}" alt=""><h3>${escV(p.username||'Korisnik')}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h3><div class="v9-profile-bio">${escV(p.bio||'Dodaj kratak opis svog profila.')}</div></div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${postCount}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${storyCount}</b><span>Priče</span></div></div><button class="btn btn-blue" style="width:100%" onclick="openV9Profile('${escV(currentUser.id)}')">Moj profil</button><button class="btn" style="width:100%;margin-top:7px" onclick="openV9EditProfile()">Uredi profil</button>`;
   }
   function filePreview(fileId,imgId){q(fileId)?.addEventListener('change',()=>{const f=q(fileId)?.files?.[0],im=q(imgId);if(f&&im){im.src=URL.createObjectURL(f);im.style.display='block'}})}
-  window.openV9PostComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>📸 Nova objava</h2><p class="muted">Dodaj fotografiju, opis i po želji muziku.</p></div><div class="form"><label class="v9-drop" for="v9PostFile">📷 Izaberi fotografiju<input id="v9PostFile" type="file" accept="image/*" hidden></label><img id="v9PostPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9PostCaption" maxlength="1000" placeholder="Napiši nešto..."></textarea></div>'+communityMusicPicker("v9PostMusic")+'<button class="btn btn-green" onclick="publishV9Post()">Objavi fotografiju</button></div></div>');filePreview('v9PostFile','v9PostPreview')};
-  window.publishV9Post=async function(){if(!guard())return;const f=q('v9PostFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`community/${currentUser.id}`);const {error}=await supabaseClient.from('community_posts').insert({user_id:currentUser.id,image_url:url,caption:q('v9PostCaption')?.value.trim()||null,music_track_id:q('v9PostMusic')?.value?Number(q('v9PostMusic').value):null});if(error)throw error;hideModal();await load();toastV('Objava je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
-  window.openV9StoryComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/*" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div>'+communityMusicPicker("v9StoryMusic")+'<button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>');filePreview('v9StoryFile','v9StoryPreview')};
-  window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!f.type.startsWith('image/'))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null,music_track_id:q('v9StoryMusic')?.value?Number(q('v9StoryMusic').value):null});if(error)throw error;hideModal();await load();toastV('Priča je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
+  window.openV9PostComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>📸 Nova objava</h2><p class="muted">Dodaj fotografiju, opis i po želji muziku.</p></div><div class="form"><label class="v9-drop" for="v9PostFile">📷 Izaberi fotografiju<input id="v9PostFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden></label><img id="v9PostPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9PostCaption" maxlength="1000" placeholder="Napiši nešto..."></textarea></div>'+communityMusicPicker("v9PostMusic")+'<button class="btn btn-green" onclick="publishV9Post()">Objavi fotografiju</button></div></div>');filePreview('v9PostFile','v9PostPreview')};
+  window.publishV9Post=async function(){
+  if(!guard())return null;
+  const f=q("v9PostFile")?.files?.[0];
+  if(!f)return toastV("Izaberi fotografiju.","error"),null;
+  if(!isAllowedRasterImage(f))return toastV("Dozvoljene su samo slike.","error"),null;
+  if(f.size>12*1024*1024)return toastV("Fotografija može imati najviše 12 MB.","error"),null;
+
+  try{
+    const url=await uploadFile(f,`community/${currentUser.id}`);
+    const {data:created,error}=await supabaseClient.from("community_posts").insert({
+      user_id:currentUser.id,
+      image_url:url,
+      caption:q("v9PostCaption")?.value.trim()||null,
+      music_track_id:q("v9PostMusic")?.value?Number(q("v9PostMusic").value):null
+    }).select("id").single();
+    if(error)throw error;
+    if(!created?.id)throw new Error("Objava je sačuvana, ali njen ID nije vraćen.");
+
+    hideModal();
+    try{
+      await load({force:true});
+    }catch(refreshError){
+      console.warn("Objava je sačuvana, ali feed nije osvježen:",refreshError);
+      toastV("Objava je sačuvana, ali prikaz nije osvježen. Pokušaj ponovo učitati Community.","error");
+      return String(created.id);
+    }
+    toastV("Objava je objavljena.");
+    return String(created.id);
+  }catch(err){
+    console.error("Objava u Community nije uspjela:",err);
+    toastV(err?.message||"Greška pri objavi.","error");
+    return null;
+  }
+};
+  window.openV9StoryComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div>'+communityMusicPicker("v9StoryMusic")+'<button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>');filePreview('v9StoryFile','v9StoryPreview')};
+  window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!isAllowedRasterImage(f))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null,music_track_id:q('v9StoryMusic')?.value?Number(q('v9StoryMusic').value):null});if(error)throw error;hideModal();await load({force:true});toastV('Priča je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
   window.openV9Story=function(id){const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=V.profiles[String(s.user_id)]||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${fanCommunityIdentityHTML(p,String(s.user_id))}</b><div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${escV(s.image_url)}" alt=""><div class="v9-story-caption">${escV(s.caption||'')}</div>${communityMusicChip(s.music_track_id)}${logged()&&(String(s.user_id)===String(currentUser.id)||typeof isAdmin==='function'&&isAdmin())?`<button class="btn btn-small" onclick="deleteV9Story('${escV(s.id)}')">Obriši priču</button>`:''}</div>`) };
-  window.deleteV9Story=async function(id){if(!guard())return;const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;if(String(s.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu priču?'))return;const {error}=await supabaseClient.from('community_stories').delete().eq('id',id);if(error)return toastV(error.message,'error');hideModal();await load();toastV('Priča je obrisana.')};
+  window.deleteV9Story=async function(id){if(!guard())return;const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;if(String(s.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu priču?'))return;const {error}=await supabaseClient.from('community_stories').delete().eq('id',id);if(error)return toastV(error.message,'error');hideModal();await load({force:true});toastV('Priča je obrisana.')};
   window.openV9Profile=async function(id){
     await loadFanPublicStyles([id]);
     const {data:p,error}=await supabaseClient.from('profiles').select('id,username,avatar_url,bio,role').eq('id',id).maybeSingle();if(error||!p)return toastV('Profil nije pronađen.','error');
     const [{data:posts},{data:stories}]=await Promise.all([supabaseClient.from('community_posts').select('id,user_id,image_url,caption,created_at').eq('user_id',id).order('created_at',{ascending:false}).limit(30),supabaseClient.from('community_stories').select('id,user_id,image_url,caption,created_at,expires_at').eq('user_id',id).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false})]);
     showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${fanCommunityIdentityHTML(p,String(id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${escV(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&String(id)===String(currentUser.id)?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button><button class="btn" onclick="window.openFanTickets?.()">🎟️ Moji tiketi</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<div><img class="v9-post-image" style="border-radius:16px" src="${escV(x.image_url)}" alt="${escV(x.caption||'')}" onclick="openV9Lightbox('${escV(x.image_url)}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${escV(x.caption)}</div>`:''}</div>`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
   };
-  window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/*" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${escV(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${escV(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);filePreview('v9AvatarFile','v9AvatarPreview')};
-  window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!f.type.startsWith('image/'))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await supabaseClient.from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV('Profil je ažuriran.')}catch(err){toastV(err.message||'Greška pri čuvanju profila.','error')}};
-  window.deleteV9Post=async function(id){if(!guard())return;const p=V.posts.find(x=>String(x.id)===String(id));if(!p||String(p.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);if(error)return toastV(error.message,'error');await load();toastV('Objava je obrisana.')};
+  window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${escV(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${escV(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);filePreview('v9AvatarFile','v9AvatarPreview')};
+  window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!isAllowedRasterImage(f))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await supabaseClient.from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV('Profil je ažuriran.')}catch(err){toastV(err.message||'Greška pri čuvanju profila.','error')}};
+  window.deleteV9Post=async function(id){if(!guard())return;const p=V.posts.find(x=>String(x.id)===String(id));if(!p||String(p.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);if(error)return toastV(error.message,'error');await load({force:true});toastV('Objava je obrisana.')};
   window.toggleV9Reaction=async function(postId,type){
     if(!guard())return;
     const {data:existing,error:ee}=await supabaseClient.from('community_reactions').select('id,reaction').eq('post_id',postId).eq('user_id',currentUser.id).maybeSingle();
@@ -10639,7 +11416,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     };
   }
   window.loadV9Community=load;
-  window.addEventListener('load',()=>setTimeout(()=>{patchAuth();load()},450));
+  window.addEventListener('load',()=>setTimeout(()=>{patchAuth();if(q('community')?.classList.contains('active'))void load()},450));
   setTimeout(()=>{patchAuth()},900);
 })();
 
