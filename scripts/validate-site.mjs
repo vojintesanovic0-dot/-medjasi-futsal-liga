@@ -423,11 +423,13 @@ if (
 } else pass("Community block/report buttons are bound to their matching actions");
 
 if (
-  !communityClickAuditSource.includes('querySelectorAll("button").forEach(b=>b.addEventListener("click",async()=>') ||
-  !communityClickAuditSource.includes('option_id:b.dataset.option')
+  !communityClickAuditSource.includes('button.addEventListener("click",async()=>') ||
+  !communityClickAuditSource.includes("option_id:button.dataset.option") ||
+  !communityClickAuditSource.includes('.from("community_poll_votes").insert({') ||
+  !communityClickAuditSource.includes('error?.code==="23505"')
 ) {
-  fail("Community poll option buttons must submit the selected option");
-} else pass("Community poll option buttons submit the selected option");
+  fail("Community poll option buttons must submit the selected option and handle duplicate votes");
+} else pass("Community poll option buttons submit selected votes and handle duplicate submissions");
 
 if (
   !communityClickAuditSource.includes('querySelectorAll("[data-report-review]")') ||
