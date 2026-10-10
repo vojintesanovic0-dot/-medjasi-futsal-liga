@@ -735,6 +735,19 @@ if (
   pass("Push subscription enable/disable flows preserve truthful state across failures");
 }
 
+if (
+  app.includes('uploadFile(file,"comments")') ||
+  app.includes('uploadFile(file,"chat")') ||
+  (app.match(/uploadFile\\(file,\\`chat\\/\\$\\{currentUser\\.id\\}\\`\\)/g)||[]).length!==2 ||
+  !app.includes('uploadFile(file,\`comments/${currentUser.id}\`)') ||
+  !app.includes("name like ('comments/' || (select auth.uid())::text || '/%')") ||
+  !app.includes("name like ('chat/' || (select auth.uid())::text || '/%')")
+) {
+  fail("Chat/comment image upload paths must match the owner-scoped Storage policies for the signed-in user");
+} else {
+  pass("Chat and comment uploads use owner-scoped paths accepted by Storage RLS");
+}
+
 const mediaUploadMigration = read("sql/16_restrict_liga_images_uploads.sql");
 if (
   !mediaUploadMigration.includes("file_size_limit = 52428800") ||
