@@ -3967,16 +3967,66 @@ async function adminAddGalleryImage(){
   }
 }
 
-async function adminDeleteGalleryImage(id){
-  if(!isAdmin()) return;
-  const item=gallery.find(g=>String(g.id)===String(id));
-  if(!item) return;
-  if(!confirm(`Obrisati "${item.title || "ovu fotografiju"}" iz galerije?`)) return;
+function leagueMediaObjectPath(publicUrl,expectedFolder){
+  if(!publicUrl||!["gallery","news"].includes(expectedFolder))return null;
+  try{
+    const url=new URL(String(publicUrl));
+    const base=new URL(SUPABASE_URL);
+    const prefix="/storage/v1/object/public/liga-images/";
+    if(url.origin!==base.origin||url.protocol!=="https:"||!url.pathname.startsWith(prefix))return null;
+    const objectPath=decodeURIComponent(url.pathname.slice(prefix.length));
+    const parts=objectPath.split("/");
+    if(parts[0]!==expectedFolder||parts.length<2||
+       parts.some(part=>!part||part==="."||part===".."||part.includes("\\")||part.includes("\0")))return null;
+    return objectPath;
+  }catch(error){
+    return null;
+  }
+}
 
-  const {error}=await supabaseClient.from("gallery").delete().eq("id",id);
-  if(error){ alert(error.message); return; }
-  toast("Fotografija je obrisana.","success");
-  await loadAll();
+async function removeLeagueMediaObject(publicUrl,expectedFolder){
+  const path=leagueMediaObjectPath(publicUrl,expectedFolder);
+  if(!path)return false;
+  if(!supabaseClient?.storage)throw new Error("Skladište datoteka trenutno nije dostupno.");
+  const {error}=await supabaseClient.storage.from("liga-images").remove([path]);
+  if(error)throw error;
+  return true;
+}
+
+async function adminDeleteGalleryImage(id){
+  if(!isAdmin())return;
+  const item=gallery.find(g=>String(g.id)===String(id));
+  if(!item)return;
+  if(!confirm(`Obrisati "${item.title||"ovu fotografiju"}" iz galerije?`))return;
+
+  try{
+    const {error}=await supabaseClient.from("gallery").delete().eq("id",id);
+    if(error)throw error;
+  }catch(error){
+    console.error("Brisanje galerijske stavke nije uspjelo:",error);
+    alert(error?.message||"Fotografija nije obrisana.");
+    return;
+  }
+
+  let storageCleanupFailed=false;
+  try{
+    await removeLeagueMediaObject(item.media_url||item.image_url,"gallery");
+  }catch(error){
+    storageCleanupFailed=true;
+    console.warn("Galerijska stavka je obrisana, ali Storage fajl nije:",error);
+  }
+
+  let refreshed=false;
+  try{refreshed=(await loadAll())===true;}
+  catch(error){console.warn("Galerija je obrisana, ali prikaz nije osvježen:",error);}
+
+  if(storageCleanupFailed){
+    toast("Galerijska stavka je obrisana, ali fajl u skladištu nije očišćen. Provjeri Storage.","error");
+  }else if(!refreshed){
+    toast("Fotografija je obrisana, ali prikaz nije potpuno osvježen. Ponovo učitaj galeriju.","error");
+  }else{
+    toast("Fotografija je obrisana.","success");
+  }
 }
 
 function openImagePreview(url,title="Fotografija"){
@@ -10673,21 +10723,48 @@ async function publishNews(){
     toastV(error?.message||"Vijest nije sačuvana. Pokušaj ponovo.","error");
   }
 }
-async function deleteNews(id){if(!isAdm())return; if(!confirm('Obrisati ovu vijest?'))return;const {error}=await supabaseClient.from('news').delete().eq('id',id);if(error)return toastV(error.message,'error');await loadNews();toastV('Vijest je obrisana.');}
-function renderAdminNews(){
-  const box=$('v7NewsAdminList');
-  if(!box||!isAdm())return;
-  box.innerHTML=V7.news.length?V7.news.map(n=>`<div class="v7-admin-news-row">
-    <div class="v7-news-row-media">${n.media_url?mediaHtml(n.media_url,n.media_type,n.title):''}</div>
-    <div class="v7-news-row-main">
-      <strong>${escV(n.title)}</strong>
-      <small class="muted">${formatV(n.created_at)} · ${n.published?'JAVNO':'SKICA'}</small>
-    </div>
-    <div class="v7-news-row-actions">
-      <button class="btn btn-small ${n.published?'btn-yellow':'btn-green'}" onclick="medjasiV7.setNewsPublished('${n.id}',${!n.published})">${n.published?'Sakrij':'Objavi'}</button>
-      <button class="btn btn-red btn-small" onclick="medjasiV7.deleteNews('${n.id}')">🗑️</button>
-    </div>
-  </div>`).join(''):'<div class="muted">Nema vijesti.</div>';
+async function deleteNews(id){
+  if(!isAdm())return;
+  if(!confirm("Obrisati ovu vijest?"))return;
+
+  try{
+    const {data:item,error:readError}=await supabaseClient.from("news")
+      .select("id,media_url")
+      .eq("id",id)
+      .maybeSingle();
+    if(readError)throw readError;
+    if(!item){
+      await loadNews();
+      return toastV("Vijest više nije dostupna.","error");
+    }
+
+    const {error}=await supabaseClient.from("news").delete().eq("id",id);
+    if(error)throw error;
+
+    let storageCleanupFailed=false;
+    try{
+      await removeLeagueMediaObject(item.media_url,"news");
+    }catch(cleanupError){
+      storageCleanupFailed=true;
+      console.warn("Vijest je obrisana, ali Storage fajl nije:",cleanupError);
+    }
+
+    try{
+      await loadNews();
+    }catch(refreshError){
+      console.warn("Vijest je obrisana, ali prikaz nije osvježen:",refreshError);
+      return toastV("Vijest je obrisana, ali lista nije osvježena. Ponovo otvori vijesti.","error");
+    }
+
+    if(storageCleanupFailed){
+      toastV("Vijest je obrisana, ali fajl u skladištu nije očišćen. Provjeri Storage.","error");
+    }else{
+      toastV("Vijest je obrisana.");
+    }
+  }catch(error){
+    console.error("Brisanje vijesti nije uspjelo:",error);
+    toastV(error?.message||"Vijest nije obrisana. Pokušaj ponovo.","error");
+  }
 }
 async function setNewsPublished(id,published){
   if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');
