@@ -1023,8 +1023,8 @@ if (
 
 const fanGameSource = read("js/game.js");
 if (
-  !fanGameSource.includes("const MARKET_STATS_TTL=30000") ||
-  !fanGameSource.includes("const MVP_RESULTS_TTL=60000") ||
+  !fanGameSource.includes("const MARKET_STATS_TTL=60000") ||
+  !fanGameSource.includes("const MVP_RESULTS_TTL=120000") ||
   !fanGameSource.includes("marketStatsFetchedAt=0") ||
   !fanGameSource.includes("mvpResultsFetchedAt=0") ||
   !fanGameSource.includes("marketStatsFetchedAt=counterNow;") ||
