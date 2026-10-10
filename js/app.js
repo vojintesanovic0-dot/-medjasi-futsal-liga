@@ -6748,6 +6748,9 @@ function startLiveRefresh(matchId){
       console.warn("Osvježavanje utakmice uživo nije uspjelo:",error);
     }finally{
       liveRefreshInFlight=false;
+      const pending=pendingLiveModalRefreshId;
+      pendingLiveModalRefreshId=null;
+      if(pending&&isViewingLiveMatchModal(pending))scheduleLiveModalRefresh(pending,180);
     }
   },30000);
   liveRefreshInterval=intervalId;
@@ -7769,8 +7772,10 @@ function subscribeRealtime(){
             schema:"public",
             table:"matches"
           },
-          () =>
-            scheduleLoadAll()
+          payload => {
+            scheduleLoadAll();
+            scheduleLiveModalRefresh(payload?.new?.id||payload?.old?.id);
+          }
         )
 
 
@@ -7792,8 +7797,10 @@ function subscribeRealtime(){
             schema:"public",
             table:"goals"
           },
-          () =>
-            scheduleLoadAll()
+          payload => {
+            scheduleLoadAll();
+            scheduleLiveModalRefresh(payload?.new?.match_id||payload?.old?.match_id);
+          }
         )
 
 
@@ -7804,8 +7811,10 @@ function subscribeRealtime(){
             schema:"public",
             table:"cards"
           },
-          () =>
-            scheduleLoadAll()
+          payload => {
+            scheduleLoadAll();
+            scheduleLiveModalRefresh(payload?.new?.match_id||payload?.old?.match_id);
+          }
         )
 
 
@@ -7816,8 +7825,10 @@ function subscribeRealtime(){
             schema:"public",
             table:"match_players"
           },
-          () =>
-            scheduleLoadAll()
+          payload => {
+            scheduleLoadAll();
+            scheduleLiveModalRefresh(payload?.new?.match_id||payload?.old?.match_id);
+          }
         )
 
 
