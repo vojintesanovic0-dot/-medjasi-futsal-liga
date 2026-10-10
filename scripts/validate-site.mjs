@@ -925,6 +925,30 @@ if (
   pass("Admin Storage policies replace broad grants while preserving team/player/gallery/news media flows");
 }
 
+const v7BootstrapStart = app.indexOf("// News + media + push bootstrap");
+const v7BootstrapEnd = app.indexOf("window.addEventListener('load'",v7BootstrapStart);
+const v7BootstrapSource = v7BootstrapStart>=0&&v7BootstrapEnd>v7BootstrapStart
+  ? app.slice(v7BootstrapStart,v7BootstrapEnd) : "";
+if (
+  !v7BootstrapSource.includes("await loadSeasons()") ||
+  v7BootstrapSource.includes("await loadStats()") ||
+  v7BootstrapSource.includes("await loadNews()")
+) {
+  fail("V7 startup must not duplicate stats/news REST reads already performed by the successful core refresh");
+} else {
+  pass("V7 startup avoids duplicate stats/news REST reads");
+}
+
+if (
+  !app.includes("function scheduleGameRefresh(delay=450)") ||
+  !app.includes("if(refreshedSuccessfully)scheduleGameRefresh(250)") ||
+  !app.includes('if(document.hidden||!document.querySelector("#game.section.active"))return;')
+) {
+  fail("Fan Game snapshots must be refreshed after a successful league snapshot, only while the Game section is visible");
+} else {
+  pass("Fan Game refresh follows successful league snapshots and skips hidden/non-Game sections");
+}
+
 const eventIntegritySource = read("sql/15_validate_match_event_integrity.sql");
 if (
   !eventIntegritySource.includes("create trigger trg_medjasi_validate_goal_match_participants") ||
@@ -968,7 +992,7 @@ const goalAssistSource = app.slice(
 const loadAllSource = app.slice(app.indexOf("async function loadAll(){"),app.indexOf("\n/* =====================================",app.indexOf("async function loadAll(){")));
 
 if (
-  !loadAllSource.includes("const LOAD_QUERY_CONCURRENCY=4") ||
+  !loadAllSource.includes("const LOAD_QUERY_CONCURRENCY=2") ||
   !loadAllSource.includes("const results=[];") ||
   !loadAllSource.includes("for(let i=0;i<loadTasks.length;i+=LOAD_QUERY_CONCURRENCY)") ||
   !loadAllSource.includes("results.push(...batch)") ||
@@ -976,11 +1000,12 @@ if (
 ) {
   fail("Base refresh must bound simultaneous REST requests while preserving the original result order");
 } else {
-  pass("Base database refresh limits its parallel request burst to four queries");
+  pass("Base database refresh limits its parallel request burst to two queries");
 }
 
 if (
-  !loadAllSource.includes("return !hadLoadErrors;") ||
+  !loadAllSource.includes("const refreshedSuccessfully=!hadLoadErrors;") ||
+  !loadAllSource.includes("if(refreshedSuccessfully)scheduleGameRefresh(250)") ||
   !app.includes("async function readConfirmedMatch(matchId,fallback)") ||
   !goalEventSource.includes("(await loadAll())===true") ||
   !goalEventSource.includes("readConfirmedMatch(matchId,match)") ||
@@ -1125,7 +1150,9 @@ if (
   !app.includes("if(r!==true)return r;") ||
   !app.includes("let backgroundRefreshFailures=0;") ||
   !app.includes("backgroundRefreshFailures=Math.min(backgroundRefreshFailures+1,3)") ||
-  !app.includes("scheduleBackgroundRefresh(retryDelay)")
+  !app.includes("scheduleBackgroundRefresh(retryDelay)") ||
+  !app.includes("scheduleBackgroundRefresh(120000)") ||
+  !app.includes("const LOAD_QUERY_CONCURRENCY=2")
 ) {
   fail("Background refresh must skip optional queries after a failed/in-flight core load and exponentially back off during API failures");
 } else {
@@ -1145,7 +1172,11 @@ if (
   !gameRefreshSource.includes("refreshFailureCount=Math.min(refreshFailureCount+1,4)") ||
   !gameRefreshSource.includes("refreshRetryAt=Date.now()+Math.min(60000,10000*Math.pow(2,refreshFailureCount-1))") ||
   !gameRefreshSource.includes("refreshFailureCount=0") ||
-  !gamePollingSource.includes("refresh({force:false})")
+  !gamePollingSource.includes("refresh({force:false})") ||
+  !gamePollingSource.includes("!document.hidden") ||
+  !gamePollingSource.includes("30000") ||
+  !game.includes("const MARKET_STATS_TTL=60000") ||
+  !game.includes("const MVP_RESULTS_TTL=120000")
 ) {
   fail("Fan Game live polling must back off after backend failures and must not queue redundant timer refreshes while another request is in flight");
 } else {
