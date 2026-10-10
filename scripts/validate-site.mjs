@@ -893,6 +893,38 @@ if (
   pass("Storage upload migration enforces file type, size, and user-folder boundaries");
 }
 
+const adminLeagueMediaMigration = read("sql/21_allow_admin_gallery_news_media.sql");
+const adminGalleryUploadStart = app.indexOf("async function adminAddMedia()");
+const adminGalleryUploadEnd = app.indexOf("function ensureGalleryVideoUI()", adminGalleryUploadStart);
+const adminGalleryUploadFunction = adminGalleryUploadStart >= 0 && adminGalleryUploadEnd > adminGalleryUploadStart
+  ? app.slice(adminGalleryUploadStart, adminGalleryUploadEnd) : "";
+const adminNewsPublishStart = app.indexOf("async function publishNews()");
+const adminNewsPublishEnd = app.indexOf("async function deleteNews(", adminNewsPublishStart);
+const adminNewsPublishFunction = adminNewsPublishStart >= 0 && adminNewsPublishEnd > adminNewsPublishStart
+  ? app.slice(adminNewsPublishStart, adminNewsPublishEnd) : "";
+if (
+  !adminLeagueMediaMigration.includes("drop policy if exists liga_images_admin_insert") ||
+  !adminLeagueMediaMigration.includes("drop policy if exists liga_images_admin_update") ||
+  !adminLeagueMediaMigration.includes("drop policy if exists liga_images_admin_delete") ||
+  !adminLeagueMediaMigration.includes("create policy liga_images_admin_media_insert") ||
+  !adminLeagueMediaMigration.includes("create policy liga_images_admin_media_update") ||
+  !adminLeagueMediaMigration.includes("create policy liga_images_admin_media_delete") ||
+  !adminLeagueMediaMigration.includes("public.fan_is_admin()") ||
+  !adminLeagueMediaMigration.includes("^(gallery|news|teams|players)/") ||
+  !adminLeagueMediaMigration.includes("^players/[A-Za-z0-9_-]+/") ||
+  !adminLeagueMediaMigration.includes("metadata->>'mimetype'") ||
+  !adminLeagueMediaMigration.includes("15728640") ||
+  !adminLeagueMediaMigration.includes("52428800") ||
+  !adminGalleryUploadFunction.includes('uploadFile(file,"gallery")') ||
+  !adminNewsPublishFunction.includes('uploadFile(file,"news")') ||
+  !app.includes('"teams"') ||
+  !app.includes('"players"')
+) {
+  fail("Admin Storage policies must replace the legacy bucket-wide grants, preserve teams/player photo paths, restrict file types/sizes, and permit admin cleanup");
+} else {
+  pass("Admin Storage policies replace broad grants while preserving team/player/gallery/news media flows");
+}
+
 const eventIntegritySource = read("sql/15_validate_match_event_integrity.sql");
 if (
   !eventIntegritySource.includes("create trigger trg_medjasi_validate_goal_match_participants") ||
