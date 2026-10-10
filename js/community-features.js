@@ -106,7 +106,18 @@ function patchLoad(){
   window.__COMMUNITY_SAFETY_PATCH__=true;
   const old=window.loadV9Community;
   if(typeof old==="function"){
-    window.loadV9Community=async function(){const r=await old.apply(this,arguments);setTimeout(enhanceFeed,0);return r};
+    window.loadV9Community=async function(){
+      const result=await old.apply(this,arguments);
+      // Only enhance a successfully refreshed, visible Community feed. The old
+      // version issued extra reads during page startup, even while Home was open.
+      if(result===true&&q("community")?.classList.contains("active")){
+        setTimeout(async()=>{
+          try{await enhanceFeed();await renderPolls()}
+          catch(error){console.warn("Community enhancements:",error)}
+        },0);
+      }
+      return result;
+    };
   }
 }
 function patchComposer(){
@@ -291,14 +302,31 @@ async function renderPolls(){
 }
 function boot(){
   patchLoad();patchComposer();patchPublish();
-  setTimeout(async()=>{await enhanceFeed();await renderPolls()},700);
-  window.addEventListener("load",()=>setTimeout(async()=>{patchLoad();patchComposer();patchPublish();await enhanceFeed();await renderPolls()},900));
+  window.addEventListener("load",()=>{patchLoad();patchComposer();patchPublish();},{once:true});
 }
 boot();
 })();
 
 // Gallery albums + favorites + moderation panel
-async function loadAlbums(){const {data,error}=await client().from("gallery_albums").select("id,name,description,cover_url,created_at").order("created_at",{ascending:false});if(error){console.warn("Gallery albums:",error);return []}return data||[]}
+let albumsInFlight=null;
+async function loadAlbums(){
+  if(!client()?.from)return [];
+  if(albumsInFlight)return albumsInFlight;
+  albumsInFlight=(async()=>{
+    try{
+      const {data,error}=await client().from("gallery_albums")
+        .select("id,name,description,cover_url,created_at")
+        .order("created_at",{ascending:false});
+      if(error)throw error;
+      return data||[];
+    }catch(error){
+      console.warn("Gallery albums:",error);
+      return [];
+    }
+  })();
+  try{return await albumsInFlight}
+  finally{albumsInFlight=null}
+}
 async function toggleFavorite(type,id){
   if(!uid())return toastX("Prijavi se da sačuvaš favorite.","error"),undefined;
   if(!["team","player"].includes(type)||!id)return toastX("Favorit nije prepoznat.","error"),undefined;
@@ -359,13 +387,45 @@ function decorateFavorite(type,id){
   },60);
 }
 function patchFavorites(){if(window.__FAVORITES_PATCH__)return;window.__FAVORITES_PATCH__=true;const ot=window.openTeam,op=window.openPlayer;if(typeof ot==="function")window.openTeam=function(id){const r=ot.apply(this,arguments);decorateFavorite("team",id);return r};if(typeof op==="function")window.openPlayer=function(id){const r=op.apply(this,arguments);decorateFavorite("player",id);return r}}
-async function injectGalleryAlbums(){const albums=await loadAlbums(),host=q("galleryGrid");if(!host)return;let bar=q("communityAlbumBar");if(!bar){bar=document.createElement("div");bar.id="communityAlbumBar";bar.style.marginBottom="12px";host.parentElement?.insertBefore(bar,host)}bar.innerHTML='<label> Album: <select id="communityAlbumFilter"><option value="">Sve fotografije</option>'+albums.map(a=>'<option value="'+a.id+'">'+escX(a.name)+'</option>').join("")+'</select></label>';q("communityAlbumFilter").onchange=()=>{const id=q("communityAlbumFilter").value;host.querySelectorAll(".gallery-item").forEach((el,i)=>{const g=(window.gallery||[])[i];el.hidden=!!id&&String(g?.album_id)!==String(id)})}}
+async function injectGalleryAlbums(){
+  const host=q("galleryGrid");
+  if(!host||!q("gallery")?.classList.contains("active"))return;
+  const albums=await loadAlbums();
+  if(!q("gallery")?.classList.contains("active"))return;
+  let bar=q("communityAlbumBar");
+  if(!bar){
+    bar=document.createElement("div");
+    bar.id="communityAlbumBar";
+    bar.style.marginBottom="12px";
+    host.parentElement?.insertBefore(bar,host);
+  }
+  bar.innerHTML='<label> Album: <select id="communityAlbumFilter"><option value="">Sve fotografije</option>'+albums.map(a=>'<option value="'+escX(a.id)+'">'+escX(a.name)+'</option>').join("")+'</select></label>';
+  const filter=q("communityAlbumFilter");
+  if(filter)filter.onchange=()=>{
+    const id=filter.value;
+    host.querySelectorAll(".gallery-item").forEach((el,i)=>{
+      const g=(window.gallery||[])[i];
+      el.hidden=!!id&&String(g?.album_id)!==String(id);
+    });
+  };
+}
+let galleryAlbumSelectInFlight=false;
 async function ensureGalleryAlbumSelect(){
-  if(!admin())return;
-  const host=q("adminGalleryList")?.parentElement;if(!host||q("galleryAlbumSelect"))return;
-  const albums=await loadAlbums();const wrap=document.createElement("div");wrap.className="form-group";
-  wrap.innerHTML='<label> Album (opcionalno)</label><select id="galleryAlbumSelect"><option value="">Bez albuma</option>'+albums.map(a=>'<option value="'+a.id+'">'+escX(a.name)+'</option>').join("")+'</select>';
-  const btn=host.querySelector('button[onclick*="adminAddGalleryImage"]');btn?.parentElement?.insertBefore(wrap,btn);
+  if(!admin()||galleryAlbumSelectInFlight)return;
+  const host=q("adminGalleryList")?.parentElement;
+  if(!host||q("galleryAlbumSelect"))return;
+  galleryAlbumSelectInFlight=true;
+  try{
+    const albums=await loadAlbums();
+    if(q("galleryAlbumSelect"))return;
+    const wrap=document.createElement("div");
+    wrap.className="form-group";
+    wrap.innerHTML='<label> Album (opcionalno)</label><select id="galleryAlbumSelect"><option value="">Bez albuma</option>'+albums.map(a=>'<option value="'+escX(a.id)+'">'+escX(a.name)+'</option>').join("")+'</select>';
+    const btn=host.querySelector('button[onclick*="adminAddGalleryImage"]');
+    btn?.parentElement?.insertBefore(wrap,btn);
+  }finally{
+    galleryAlbumSelectInFlight=false;
+  }
 }
 function patchGalleryUpload(){
   if(window.__GALLERY_UPLOAD_ALBUM_PATCH__)return;
@@ -396,7 +456,28 @@ function patchGalleryUpload(){
     return result;
   };
 }
-function patchGallery(){if(!window.__GALLERY_ALBUM_PATCH__&&typeof window.renderGallery==="function"){window.__GALLERY_ALBUM_PATCH__=true;const old=window.renderGallery;window.renderGallery=function(){const r=old.apply(this,arguments);setTimeout(injectGalleryAlbums,0);return r}}if(!window.__GALLERY_ADMIN_ALBUM_PATCH__&&typeof window.renderAdminGallery==="function"){window.__GALLERY_ADMIN_ALBUM_PATCH__=true;const old=window.renderAdminGallery;window.renderAdminGallery=function(){const r=old.apply(this,arguments);setTimeout(injectAdminAlbumTools,0);return r}}}
+function patchGallery(){
+  if(!window.__GALLERY_ALBUM_PATCH__&&typeof window.renderGallery==="function"){
+    window.__GALLERY_ALBUM_PATCH__=true;
+    const old=window.renderGallery;
+    window.renderGallery=function(){
+      const result=old.apply(this,arguments);
+      if(q("gallery")?.classList.contains("active"))setTimeout(injectGalleryAlbums,0);
+      return result;
+    };
+  }
+  if(!window.__GALLERY_ADMIN_ALBUM_PATCH__&&typeof window.renderAdminGallery==="function"){
+    window.__GALLERY_ADMIN_ALBUM_PATCH__=true;
+    const old=window.renderAdminGallery;
+    window.renderAdminGallery=function(){
+      const result=old.apply(this,arguments);
+      if(admin()&&q("admin")?.classList.contains("active")){
+        setTimeout(()=>{void injectAdminAlbumTools();void ensureGalleryAlbumSelect();void injectAdminReports()},0);
+      }
+      return result;
+    };
+  }
+}
 async function injectAdminReports(){if(!admin())return;const host=q("adminContent");if(!host||q("communityModerationCard"))return;const card=document.createElement("div");card.id="communityModerationCard";card.style.marginTop="20px";card.innerHTML='<h3>️ Community moderacija</h3><div id="communityReportsList" class="muted">Učitavanje prijava…</div>';host.appendChild(card);const {data,error}=await client().from("community_reports").select("id,post_id,comment_id,reason,status,created_at").eq("status","open").order("created_at",{ascending:false}).limit(50);if(error){q("communityReportsList").textContent=error.message;return}q("communityReportsList").innerHTML=(data||[]).map(r=>'<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)"><strong>'+escX(r.post_id?"Objava":"Komentar")+'</strong> · '+escX(r.reason)+'<div class="muted">'+escX(r.created_at)+'</div><button type="button" class="btn btn-small btn-blue" data-report-review="'+r.id+'"> Označi pregledano</button></div>').join("")||"Nema otvorenih prijava.";q("communityReportsList").querySelectorAll("[data-report-review]").forEach(b=>b.onclick=async()=>{const {error}=await client().from("community_reports").update({status:"reviewed",reviewed_by:uid()}).eq("id",b.dataset.reportReview);if(error)return toastX(error.message,"error");b.parentElement.remove();toastX("Prijava je obrađena.")})}
 function patchCommentModeration(){
   if(window.__COMMENT_MODERATION_PATCH__)return;
@@ -410,5 +491,17 @@ function patchCommentModeration(){
     return r;
   };
 }
-function boot2(){patchFavorites();patchGallery();patchGalleryUpload();patchCommentModeration();setTimeout(()=>{injectGalleryAlbums();injectAdminAlbumTools();ensureGalleryAlbumSelect();injectAdminReports()},1200);window.addEventListener("load",()=>setTimeout(()=>{patchFavorites();patchGallery();patchGalleryUpload();patchCommentModeration();injectGalleryAlbums();injectAdminAlbumTools();injectAdminReports()},1500))}
+function boot2(){
+  patchFavorites();patchGallery();patchGalleryUpload();patchCommentModeration();
+  const initializeVisibleSection=()=>setTimeout(()=>{
+    if(q("gallery")?.classList.contains("active"))void injectGalleryAlbums();
+    if(admin()&&q("admin")?.classList.contains("active")){
+      void injectAdminAlbumTools();
+      void ensureGalleryAlbumSelect();
+      void injectAdminReports();
+    }
+  },250);
+  if(document.readyState==="complete")initializeVisibleSection();
+  else window.addEventListener("load",initializeVisibleSection,{once:true});
+}
 boot2();
