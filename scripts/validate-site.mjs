@@ -825,6 +825,29 @@ if (
   pass("Fan Game limits repeat aggregate RPCs while retaining refreshes for changed picks and MVP votes");
 }
 
+const communityActionSafety = communityClickAuditSource.slice(0,communityClickAuditSource.indexOf("async function getBlocked()"));
+const favoriteSource = communityClickAuditSource.slice(
+  communityClickAuditSource.indexOf("async function toggleFavorite(type,id)"),
+  communityClickAuditSource.indexOf("function decorateFavorite(type,id)")
+);
+const favoriteDecorateSource = communityClickAuditSource.slice(
+  communityClickAuditSource.indexOf("function decorateFavorite(type,id)"),
+  communityClickAuditSource.indexOf("function patchFavorites()")
+);
+if (
+  !communityActionSafety.includes("catch(error)") ||
+  !communityActionSafety.includes('toastX(error?.message||"Prijava nije uspjela. Pokušaj ponovo.","error")') ||
+  !communityActionSafety.includes("await window.loadV9Community?.()") ||
+  !favoriteSource.includes("if(readError)throw readError") ||
+  !favoriteSource.includes("if(error)throw error") ||
+  !favoriteDecorateSource.includes("const next=await toggleFavorite(type,id)") ||
+  favoriteDecorateSource.includes("b.textContent=(await client()")
+) {
+  fail("Community report/block/favorite actions must handle failures and update favorite UI from confirmed mutation results");
+} else {
+  pass("Community report/block/favorite actions handle request failures and retain truthful UI state");
+}
+
 const communityExtrasSource = communityClickAuditSource.slice(
   communityClickAuditSource.indexOf("async function publishExtras(postId)"),
   communityClickAuditSource.indexOf("function patchPublish()",communityClickAuditSource.indexOf("async function publishExtras(postId)"))
