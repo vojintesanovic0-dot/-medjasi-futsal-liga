@@ -1362,6 +1362,18 @@ if (
   pass("Unused anon SELECT grants are removed only from tables without anon/public SELECT policies");
 }
 
+const profileRoleTriggerCleanup = read("sql/23_remove_duplicate_profile_role_trigger.sql");
+if (
+  !profileRoleTriggerCleanup.includes("drop trigger if exists profiles_prevent_role_escalation on public.profiles") ||
+  !profileRoleTriggerCleanup.includes("drop function if exists public.prevent_profile_role_escalation()") ||
+  !profileRoleTriggerCleanup.includes("trg_protect_profile_role") ||
+  !profileRoleTriggerCleanup.includes("auth.uid()")
+) {
+  fail("Profile role protection must use the single current guard and remove the conflicting legacy trigger only");
+} else {
+  pass("Profile role protection removes the superseded trigger and retains the current role guard");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
