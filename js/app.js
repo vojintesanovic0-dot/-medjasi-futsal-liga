@@ -11192,17 +11192,56 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     (data||[]).forEach(p=>V.profiles[String(p.id)]=p);
     await loadFanPublicStyles(unique);
   }
-  async function load(){
-    try{
-      const [{data:posts,error:pe},{data:stories,error:se}]=await Promise.all([
-        supabaseClient.from('community_posts').select('id,user_id,image_url,caption,created_at,music_track_id').order('created_at',{ascending:false}).limit(50),
-        supabaseClient.from('community_stories').select('id,user_id,image_url,caption,created_at,expires_at,music_track_id').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(40)
-      ]);
-      if(pe)throw pe; V.posts=posts||[];
-      if(se)console.warn('Community stories:',se); V.stories=stories||[];
-      await loadProfiles([...V.posts,...V.stories].map(x=>x.user_id));
-      await render(); V.loaded=true;
-    }catch(err){console.warn('Community load:',err); V.posts=[];V.stories=[];render();}
+  let loadInFlight=null;
+  let loadFailureCount=0;
+  let loadRetryAt=0;
+  async function load(options={}){
+    if(loadInFlight)return loadInFlight;
+    if(!options.force&&Date.now()<loadRetryAt)return false;
+
+    loadInFlight=(async()=>{
+      try{
+        const [{data:posts,error:postError},{data:stories,error:storyError}]=await Promise.all([
+          supabaseClient.from('community_posts')
+            .select('id,user_id,image_url,caption,created_at,music_track_id')
+            .order('created_at',{ascending:false}).limit(50),
+          supabaseClient.from('community_stories')
+            .select('id,user_id,image_url,caption,created_at,expires_at,music_track_id')
+            .gt('expires_at',new Date().toISOString())
+            .order('created_at',{ascending:false}).limit(40)
+        ]);
+
+        if(postError)throw postError;
+        // Commit the post snapshot only after its read succeeded. A failed
+        // optional Stories query must not make previously loaded Stories vanish.
+        V.posts=posts||[];
+        if(storyError){
+          console.warn('Community stories:',storyError);
+        }else{
+          V.stories=stories||[];
+        }
+
+        await loadProfiles([...V.posts,...V.stories].map(x=>x.user_id));
+        await render();
+        V.loaded=true;
+        loadFailureCount=0;
+        loadRetryAt=0;
+        return true;
+      }catch(error){
+        console.warn('Community load:',error);
+        loadFailureCount=Math.min(loadFailureCount+1,4);
+        loadRetryAt=Date.now()+Math.min(60000,5000*Math.pow(2,loadFailureCount-1));
+        // Keep the last successful snapshot and DOM during transient 503s.
+        // On first load, render the empty states so navigation still completes.
+        if(!V.loaded){
+          try{await render()}catch(renderError){console.warn('Community initial render:',renderError)}
+        }
+        return false;
+      }finally{
+        loadInFlight=null;
+      }
+    })();
+    return loadInFlight;
   }
   function communityTrack(id){return musicTracks.find(t=>String(t.id)===String(id))||null;}
   function communityMusicChip(id){const t=communityTrack(id);if(!t)return "";return `<button type="button" class="v9-music-chip" onclick="event.stopPropagation();playCommunityMusic('${escV(t.id)}')">🎵 ${escV(t.title||"Muzika")} <small>· ${t.provider==="spotify"?"Spotify":"YouTube"}</small><span>▶</span></button>`;}
@@ -11311,7 +11350,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
 
     hideModal();
     try{
-      await load();
+      await load({force:true});
     }catch(refreshError){
       console.warn("Objava je sačuvana, ali feed nije osvježen:",refreshError);
       toastV("Objava je sačuvana, ali prikaz nije osvježen. Pokušaj ponovo učitati Community.","error");
@@ -11326,9 +11365,9 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   }
 };
   window.openV9StoryComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div>'+communityMusicPicker("v9StoryMusic")+'<button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>');filePreview('v9StoryFile','v9StoryPreview')};
-  window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!isAllowedRasterImage(f))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null,music_track_id:q('v9StoryMusic')?.value?Number(q('v9StoryMusic').value):null});if(error)throw error;hideModal();await load();toastV('Priča je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
+  window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!isAllowedRasterImage(f))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null,music_track_id:q('v9StoryMusic')?.value?Number(q('v9StoryMusic').value):null});if(error)throw error;hideModal();await load({force:true});toastV('Priča je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
   window.openV9Story=function(id){const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=V.profiles[String(s.user_id)]||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${fanCommunityIdentityHTML(p,String(s.user_id))}</b><div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${escV(s.image_url)}" alt=""><div class="v9-story-caption">${escV(s.caption||'')}</div>${communityMusicChip(s.music_track_id)}${logged()&&(String(s.user_id)===String(currentUser.id)||typeof isAdmin==='function'&&isAdmin())?`<button class="btn btn-small" onclick="deleteV9Story('${escV(s.id)}')">Obriši priču</button>`:''}</div>`) };
-  window.deleteV9Story=async function(id){if(!guard())return;const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;if(String(s.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu priču?'))return;const {error}=await supabaseClient.from('community_stories').delete().eq('id',id);if(error)return toastV(error.message,'error');hideModal();await load();toastV('Priča je obrisana.')};
+  window.deleteV9Story=async function(id){if(!guard())return;const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;if(String(s.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu priču?'))return;const {error}=await supabaseClient.from('community_stories').delete().eq('id',id);if(error)return toastV(error.message,'error');hideModal();await load({force:true});toastV('Priča je obrisana.')};
   window.openV9Profile=async function(id){
     await loadFanPublicStyles([id]);
     const {data:p,error}=await supabaseClient.from('profiles').select('id,username,avatar_url,bio,role').eq('id',id).maybeSingle();if(error||!p)return toastV('Profil nije pronađen.','error');
@@ -11337,7 +11376,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   };
   window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${escV(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${escV(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);filePreview('v9AvatarFile','v9AvatarPreview')};
   window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!isAllowedRasterImage(f))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await supabaseClient.from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV('Profil je ažuriran.')}catch(err){toastV(err.message||'Greška pri čuvanju profila.','error')}};
-  window.deleteV9Post=async function(id){if(!guard())return;const p=V.posts.find(x=>String(x.id)===String(id));if(!p||String(p.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);if(error)return toastV(error.message,'error');await load();toastV('Objava je obrisana.')};
+  window.deleteV9Post=async function(id){if(!guard())return;const p=V.posts.find(x=>String(x.id)===String(id));if(!p||String(p.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);if(error)return toastV(error.message,'error');await load({force:true});toastV('Objava je obrisana.')};
   window.toggleV9Reaction=async function(postId,type){
     if(!guard())return;
     const {data:existing,error:ee}=await supabaseClient.from('community_reactions').select('id,reaction').eq('post_id',postId).eq('user_id',currentUser.id).maybeSingle();
