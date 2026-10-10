@@ -1859,7 +1859,7 @@ async function loadAll(){
     }
   }
   const refreshedSuccessfully=!hadLoadErrors;
-  if(refreshedSuccessfully)scheduleGameRefresh(250);
+  if(refreshedSuccessfully)scheduleGameRefresh(1200);
   return refreshedSuccessfully;
 }
 
