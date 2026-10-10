@@ -7868,8 +7868,8 @@ function subscribeRealtime(){
         )
 
 
-        .on("postgres_changes",{event:"*",schema:"public",table:"site_settings"},()=>loadMusicSettings())
-        .on("postgres_changes",{event:"*",schema:"public",table:"music_tracks"},()=>loadMusicSettings())
+        .on("postgres_changes",{event:"*",schema:"public",table:"site_settings"},()=>scheduleMusicSettingsRefresh())
+        .on("postgres_changes",{event:"*",schema:"public",table:"music_tracks"},()=>scheduleMusicSettingsRefresh())
         .on("postgres_changes",{event:"*",schema:"public",table:"news"},()=>window.medjasiV7?.loadNews?.())
 
 
@@ -8079,7 +8079,8 @@ function getYoutubeId(url) {
    UČITAJ POSTAVKE IZ SUPABASE
 ----------------------------------------- */
 
-async function loadMusicSettings(){
+async function loadMusicSettingsOnce(){
+  let successful=true;
   // Treat settings and tracks as independent refreshes: a transient failure in
   // either query must not make a working playlist disappear or turn itself off.
   try{
@@ -8090,11 +8091,13 @@ async function loadMusicSettings(){
       .maybeSingle();
 
     if(error){
+      successful=false;
       console.error("Učitavanje postavki muzike nije uspjelo:",error);
     }else{
       musicSettings=settings||{youtube_music_enabled:false};
     }
   }catch(error){
+    successful=false;
     console.error("Učitavanje postavki muzike nije uspjelo:",error);
   }
 
@@ -8107,11 +8110,13 @@ async function loadMusicSettings(){
       .order("created_at",{ascending:true});
 
     if(error){
+      successful=false;
       console.error("Učitavanje playlist-e nije uspjelo:",error);
     }else{
       musicTracks=tracks||[];
     }
   }catch(error){
+    successful=false;
     console.error("Učitavanje playlist-e nije uspjelo:",error);
   }
 
@@ -8121,6 +8126,63 @@ async function loadMusicSettings(){
   }catch(error){
     console.error("Pokretanje playera muzike nije uspjelo:",error);
   }
+  return successful;
+}
+
+let musicSettingsLoadPromise=null;
+let musicSettingsLoadQueued=false;
+let musicSettingsRealtimeTimer=0;
+let musicSettingsFailureCount=0;
+let musicSettingsRetryAt=0;
+
+async function loadMusicSettings({force=false}={}){
+  if(!force&&Date.now()<musicSettingsRetryAt)return false;
+  if(musicSettingsLoadPromise){
+    musicSettingsLoadQueued=true;
+    return musicSettingsLoadPromise;
+  }
+
+  musicSettingsLoadPromise=(async()=>{
+    let attempts=0;
+    let successful=false;
+    do{
+      musicSettingsLoadQueued=false;
+      successful=await loadMusicSettingsOnce();
+      attempts++;
+      if(successful){
+        musicSettingsFailureCount=0;
+        musicSettingsRetryAt=0;
+      }else{
+        musicSettingsFailureCount=Math.min(musicSettingsFailureCount+1,4);
+        musicSettingsRetryAt=Date.now()+Math.min(120000,10000*Math.pow(2,musicSettingsFailureCount-1));
+      }
+    }while(musicSettingsLoadQueued&&attempts<2&&successful);
+
+    if(musicSettingsLoadQueued){
+      musicSettingsLoadQueued=false;
+      scheduleMusicSettingsRefresh(Math.max(500,musicSettingsRetryAt-Date.now()));
+    }
+    return successful;
+  })();
+
+  try{
+    return await musicSettingsLoadPromise;
+  }finally{
+    musicSettingsLoadPromise=null;
+  }
+}
+
+function scheduleMusicSettingsRefresh(delay=450){
+  clearTimeout(musicSettingsRealtimeTimer);
+  musicSettingsRealtimeTimer=setTimeout(()=>{
+    musicSettingsRealtimeTimer=0;
+    const wait=musicSettingsRetryAt-Date.now();
+    if(wait>0){
+      scheduleMusicSettingsRefresh(wait);
+      return;
+    }
+    void loadMusicSettings();
+  },Math.max(0,Number(delay)||0));
 }
 
 
