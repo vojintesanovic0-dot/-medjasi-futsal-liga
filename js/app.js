@@ -47,6 +47,7 @@ let matchPlayers = [];
 
 let currentMatchId = null;
 let liveRefreshInterval = null;
+let liveRefreshInFlight = false;
 let realtimeChannel = null;
 let musicInitialized = false;
 let selectedCommentImage = null;
@@ -6730,87 +6731,106 @@ function openMatch(id){
 
 /* =========================================================
    LIVE AUTO REFRESH
-========================================================= */
+=============================async function refreshLiveMatchSnapshot(matchId){
+  if(!supabaseClient?.from)throw new Error("Supabase nije dostupan za osvježavanje utakmice.");
+  const [matchResult,goalsResult,cardsResult,playersResult]=await Promise.all([
+    supabaseClient.from("matches").select("*").eq("id",matchId).maybeSingle(),
+    supabaseClient.from("goals").select("*").eq("match_id",matchId)
+      .order("minute",{ascending:true}).order("second",{ascending:true}),
+    supabaseClient.from("cards").select("*").eq("match_id",matchId)
+      .order("minute",{ascending:true}),
+    supabaseClient.from("match_players").select("*").eq("match_id",matchId)
+      .order("player_id",{ascending:true})
+  ]);
+  const failed=[matchResult,goalsResult,cardsResult,playersResult].find(result=>result.error);
+  if(failed)throw failed.error;
+  if(!matchResult.data)return null;
 
-function startLiveRefresh(
-  matchId
-){
+  const id=String(matchId);
+  const updatedMatch=matchResult.data;
+  const matchIndex=matches.findIndex(match=>String(match.id)===id);
+  if(matchIndex>=0)matches[matchIndex]=updatedMatch;
+  else matches.push(updatedMatch);
+
+  goals=[...goals.filter(goal=>String(goal.match_id)!==id),...(goalsResult.data||[])];
+  cards=[...cards.filter(card=>String(card.match_id)!==id),...(cardsResult.data||[])];
+  matchPlayers=[...matchPlayers.filter(player=>String(player.match_id)!==id),...(playersResult.data||[])];
+  return updatedMatch;
+}
+
+function isViewingLiveMatchModal(matchId){
+  const modal=document.getElementById("modal");
+  const content=document.getElementById("modalContent");
+  return !!modal?.classList.contains("active") &&
+    String(currentMatchId)===String(matchId) &&
+    !!content?.querySelector(".live-header");
+}
+
+function stopLiveRefreshForMatch(intervalId,clockId){
+  clearInterval(intervalId);
+  if(liveRefreshInterval===intervalId)liveRefreshInterval=null;
+  clearInterval(clockId);
+  if(window.__medjasiLiveClock===clockId)window.__medjasiLiveClock=null;
+}
+
+function startLiveRefresh(matchId){
+  clearInterval(liveRefreshInterval);
   clearInterval(window.__medjasiLiveClock);
-  window.__medjasiLiveClock=setInterval(()=>{
+  liveRefreshInterval=null;
+  window.__medjasiLiveClock=null;
+
+  const initial=getMatch(matchId);
+  if(!initial||initial.status!=="live")return;
+
+  const clockId=setInterval(()=>{
     const current=getMatch(matchId);
-    if(!current || current.status!=="live"){
-      clearInterval(window.__medjasiLiveClock);
+    if(!current||current.status!=="live"){
+      clearInterval(clockId);
+      if(window.__medjasiLiveClock===clockId)window.__medjasiLiveClock=null;
       return;
     }
+    // Only update the clock when the modal still shows this exact match.
+    if(!isViewingLiveMatchModal(matchId))return;
     const el=document.querySelector(".live-time");
-    if(el) el.textContent=formatLiveClock(getLiveElapsedSeconds(current));
+    if(el)el.textContent=formatLiveClock(getLiveElapsedSeconds(current));
   },1000);
+  window.__medjasiLiveClock=clockId;
 
-  clearInterval(
-    liveRefreshInterval
-  );
-
-
-  const match =
-    getMatch(matchId);
-
-
-  if(
-    !match ||
-    match.status !== "live"
-  ){
-    return;
-  }
-
-
-  liveRefreshInterval =
-    setInterval(
-      async()=>{
-
-        await loadAll();
-
-
-        const updated =
-          getMatch(matchId);
-
-
-        if(!updated){
-
-          clearInterval(
-            liveRefreshInterval
-          );
-
-          return;
+  const intervalId=setInterval(async()=>{
+    // A single live snapshot refresh at a time across all open match modals.
+    if(liveRefreshInFlight)return;
+    liveRefreshInFlight=true;
+    try{
+      const updated=await refreshLiveMatchSnapshot(matchId);
+      if(!updated){
+        stopLiveRefreshForMatch(intervalId,clockId);
+        return;
+      }
+      if(updated.status!=="live"){
+        stopLiveRefreshForMatch(intervalId,clockId);
+        if(isViewingLiveMatchModal(matchId)){
+          if(updated.status==="finished")openFinished(matchId);
+          else openMatch(matchId);
         }
+        return;
+      }
 
-
-        if(
-          updated.status !==
-          "live"
-        ){
-
-          clearInterval(
-            liveRefreshInterval
-          );
-
-          return;
-        }
-
-
-        /*
-          Ponovo otvorimo samo ako je modal
-          još uvijek otvoren.
-        */
-
-        if(
-          document
-            .getElementById("modal")
-            ?.classList
-            .contains("active")
-        ){
-
-          openMatch(matchId);
-        }
+      if(isViewingLiveMatchModal(matchId)){
+        const content=document.getElementById("modalContent");
+        const selectedTab=content?.querySelector(".match-tab.active")?.dataset.tab||"overview";
+        openMatch(matchId);
+        if(selectedTab!=="overview")switchMatchTab(selectedTab);
+      }
+    }catch(error){
+      // This interval is only a fallback to realtime; retain the open view and
+      // retry on the next tick instead of refreshing every table in the app.
+      console.warn("Osvježavanje utakmice uživo nije uspjelo:",error);
+    }finally{
+      liveRefreshInFlight=false;
+    }
+  },10000);
+  liveRefreshInterval=intervalId;
+}
 
       },
       10000
