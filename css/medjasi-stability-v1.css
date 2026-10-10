@@ -106,3 +106,6 @@ th,td{line-height:1.45}
  .mfl-data-status p{font-size:12px!important}
  .mfl-data-status button{width:100%!important;min-height:42px!important}
 }
+
+/* Respect the hidden attribute despite the visible banner's flex layout. */
+.mfl-data-status[hidden]{display:none!important}
