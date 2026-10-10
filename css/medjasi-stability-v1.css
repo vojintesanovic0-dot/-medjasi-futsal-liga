@@ -109,3 +109,27 @@ th,td{line-height:1.45}
 
 /* Respect the hidden attribute despite the visible banner's flex layout. */
 .mfl-data-status[hidden]{display:none!important}
+
+/* Final high-specificity typography overrides for the header, sidebar and compact tables.
+   These intentionally override older 5.5–9px labels without changing the theme. */
+html body .site-header .dashboard-header-context-kicker{font-size:10px!important;line-height:1.2!important}
+html body .site-header .dashboard-mobile-brand strong{font-size:12px!important;line-height:1.15!important}
+html body .site-header .dashboard-mobile-brand span{font-size:9px!important;line-height:1.25!important;letter-spacing:.12em!important}
+html body .site-header .v7-search-wrap input{height:36px!important;font-size:12px!important;line-height:1.35!important;padding-left:32px!important}
+html body .site-header .header-account .v13-auth-copy small{font-size:10px!important;line-height:1.3!important}
+html body .app-sidebar .sidebar-live-status,
+html body .app-sidebar .sidebar-live-match-top,
+html body .app-sidebar .sidebar-live-team,
+html body .app-sidebar .sidebar-season-line{font-size:10px!important;line-height:1.4!important}
+html body .app-sidebar .sidebar-quick-grid button{min-height:35px!important;font-size:10px!important;line-height:1.35!important}
+html body .mobile-bottom button{min-height:50px!important;font-size:10px!important;line-height:1.25!important;padding:6px 2px 7px!important}
+html body #table thead th{font-size:11px!important;line-height:1.4!important}
+html body .section .table-wrap th{font-size:11px!important;line-height:1.4!important}
+html body #home.dashboard-home .dashboard-brand-mini{font-size:10px!important;line-height:1.35!important}
+html body #home.dashboard-home .dashboard-welcome{font-size:10px!important;line-height:1.35!important}
+html body #home.dashboard-home .dashboard-next-meta{font-size:11px!important;line-height:1.5!important}
+html body #home.dashboard-home .dashboard-lime-chip{font-size:10px!important;line-height:1.4!important}
+html body #home.dashboard-home .dashboard-fixture-details button{min-height:36px!important;font-size:11px!important}
+html body #home.dashboard-home .dashboard-hero-actions .btn{min-height:36px!important;font-size:11px!important;line-height:1.35!important}
+html body #dashboardFooter .dashboard-footer-season{font-size:9px!important}
+html body #dashboardFooter .dashboard-footer-brand{font-size:9px!important;line-height:1.45!important}
