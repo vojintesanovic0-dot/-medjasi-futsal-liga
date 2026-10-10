@@ -1038,6 +1038,16 @@ if (
   pass("Fan Game limits repeat aggregate RPCs while retaining refreshes for changed picks and MVP votes");
 }
 
+if (
+  !fanGameSource.includes('u ? sb().rpc("fan_leaderboard") : Promise.resolve({data:[],error:null})') ||
+  !fanGameSource.includes("Prijavi se da vidiš tabelu navijača.") ||
+  fanGameSource.includes('sb().rpc("fan_leaderboard")\n      ]);')
+) {
+  fail("Anonymous Fan Game access must not let a protected leaderboard RPC disable public markets, shop, and team fund");
+} else {
+  pass("Anonymous Fan Game refresh skips the protected leaderboard RPC and preserves public features");
+}
+
 const communityActionSafety = communityClickAuditSource.slice(0,communityClickAuditSource.indexOf("async function getBlocked()"));
 const favoriteSource = communityClickAuditSource.slice(
   communityClickAuditSource.indexOf("async function toggleFavorite(type,id)"),
