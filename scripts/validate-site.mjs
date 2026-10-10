@@ -739,13 +739,14 @@ const uploadTick=String.fromCharCode(96);
 const userIdPlaceholder="$"+"{currentUser.id}";
 const expectedChatOwnerPath="uploadFile(file,"+uploadTick+"chat/"+userIdPlaceholder+uploadTick+")";
 const expectedCommentOwnerPath="uploadFile(file,"+uploadTick+"comments/"+userIdPlaceholder+uploadTick+")";
+const storageUploadPolicyMigration=read("sql/16_restrict_liga_images_uploads.sql");
 if (
   (app.split(expectedChatOwnerPath).length-1)!==2 ||
   !app.includes(expectedCommentOwnerPath) ||
   app.includes('uploadFile(file,"chat")') ||
   app.includes('uploadFile(file,"comments")') ||
-  !app.includes("name like ('comments/' || (select auth.uid())::text || '/%')") ||
-  !app.includes("name like ('chat/' || (select auth.uid())::text || '/%')")
+  !storageUploadPolicyMigration.includes("name like ('comments/' || (select auth.uid())::text || '/%')") ||
+  !storageUploadPolicyMigration.includes("name like ('chat/' || (select auth.uid())::text || '/%')")
 ) {
   fail("Chat/comment image upload paths must match the owner-scoped Storage policies for the signed-in user");
 } else {
