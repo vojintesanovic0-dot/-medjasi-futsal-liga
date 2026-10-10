@@ -207,7 +207,7 @@ if (
   !loadStatsFunction.includes("if(error)throw error") ||
   !loadStatsFunction.includes("return V7.stats") ||
   !finishSaveFunction.includes("await loadStats()") ||
-  !finishSaveFunction.includes("await saveRatings(matchId)")
+  !finishSaveFunction.includes("await saveRatings(id)")
 ) {
   fail("Match finalization must not overwrite existing player stats when the current stats read fails");
 } else pass("Match finalization confirms the existing stats read before writing ratings");
