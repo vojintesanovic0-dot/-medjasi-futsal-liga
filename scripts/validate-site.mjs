@@ -782,6 +782,25 @@ if (
   pass("Database event integrity migration guards goal/card participants and required references");
 }
 
+const liveRefreshSource = app.slice(
+  app.indexOf("async function refreshLiveMatchSnapshot(matchId)"),
+  app.indexOf("/* =========================================================\\n   GOAL CONTROL",app.indexOf("async function refreshLiveMatchSnapshot(matchId)"))
+);
+if (
+  !liveRefreshSource.includes('.from("matches").select("*").eq("id",matchId).maybeSingle()') ||
+  !liveRefreshSource.includes('.from("goals").select("*").eq("match_id",matchId)') ||
+  !liveRefreshSource.includes('.from("cards").select("*").eq("match_id",matchId)') ||
+  !liveRefreshSource.includes('.from("match_players").select("*").eq("match_id",matchId)') ||
+  liveRefreshSource.includes("await loadAll()") ||
+  !liveRefreshSource.includes("isViewingLiveMatchModal(matchId)") ||
+  !liveRefreshSource.includes("selectedTab!==\"overview\"") ||
+  !liveRefreshSource.includes("liveRefreshInFlight")
+) {
+  fail("Live match fallback must refresh only match-scoped data and must not hijack other modals or reset the active tab");
+} else {
+  pass("Live match refresh is match-scoped, deduplicated, and preserves the user's modal/tab");
+}
+
 const goalEventSource = app.slice(
   app.indexOf("async function addGoal(matchId)"),
   app.indexOf("/* =========================================================\n   CARD CONTROL",app.indexOf("async function addGoal(matchId)"))
