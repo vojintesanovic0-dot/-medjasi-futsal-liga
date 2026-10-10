@@ -17,6 +17,7 @@ const app = read("js/app.js");
 const game = read("js/game.js");
 const dashboard = read("js/dashboard-layout-v1.js");
 const growth = read("js/growth.js");
+const css = read("css/medjasi-dashboard-refinements-v2.css");
 
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((m) => m[1]);
 const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
