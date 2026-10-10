@@ -893,6 +893,31 @@ if (
   pass("Storage upload migration enforces file type, size, and user-folder boundaries");
 }
 
+const adminLeagueMediaMigration = read("sql/21_allow_admin_gallery_news_media.sql");
+const adminGalleryUploadStart = app.indexOf("async function adminAddMedia()");
+const adminGalleryUploadEnd = app.indexOf("function ensureGalleryVideoUI()", adminGalleryUploadStart);
+const adminGalleryUploadFunction = adminGalleryUploadStart >= 0 && adminGalleryUploadEnd > adminGalleryUploadStart
+  ? app.slice(adminGalleryUploadStart, adminGalleryUploadEnd) : "";
+const adminNewsPublishStart = app.indexOf("async function publishNews()");
+const adminNewsPublishEnd = app.indexOf("async function deleteNews(", adminNewsPublishStart);
+const adminNewsPublishFunction = adminNewsPublishStart >= 0 && adminNewsPublishEnd > adminNewsPublishStart
+  ? app.slice(adminNewsPublishStart, adminNewsPublishEnd) : "";
+if (
+  !adminLeagueMediaMigration.includes("create policy liga_images_admin_media_insert") ||
+  !adminLeagueMediaMigration.includes("create policy liga_images_admin_media_delete") ||
+  !adminLeagueMediaMigration.includes("public.fan_is_admin()") ||
+  !adminLeagueMediaMigration.includes("name ~ '^(gallery|news)/") ||
+  !adminLeagueMediaMigration.includes("metadata->>'mimetype'") ||
+  !adminLeagueMediaMigration.includes("15728640") ||
+  !adminLeagueMediaMigration.includes("52428800") ||
+  !adminGalleryUploadFunction.includes('uploadFile(file,"gallery")') ||
+  !adminNewsPublishFunction.includes('uploadFile(file,"news")')
+) {
+  fail("Admin gallery/news media Storage policies must match the app upload paths, verify admin access, enforce media/size limits, and permit cleanup");
+} else {
+  pass("Admin gallery/news uploads and cleanup are covered by role-gated, size-limited Storage policies");
+}
+
 const eventIntegritySource = read("sql/15_validate_match_event_integrity.sql");
 if (
   !eventIntegritySource.includes("create trigger trg_medjasi_validate_goal_match_participants") ||
