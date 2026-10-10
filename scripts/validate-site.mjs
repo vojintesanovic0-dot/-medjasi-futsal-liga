@@ -164,6 +164,33 @@ if (
   fail("News publishing must not be reported as failed solely because push delivery failed");
 } else pass("News publishing reports storage and push outcomes separately");
 
+const addMatchStart = app.indexOf("async function addMatch()");
+const adminMatchesStart = app.indexOf("function renderAdminMatches()", addMatchStart);
+const addMatchFunction = addMatchStart >= 0 && adminMatchesStart > addMatchStart ? app.slice(addMatchStart, adminMatchesStart) : "";
+const saveLineupStart = app.indexOf("async function saveLineup(");
+const substitutionsStart = app.indexOf("/* =========================================================\\n   SUBSTITUTIONS", saveLineupStart);
+const saveLineupFunction = saveLineupStart >= 0 && substitutionsStart > saveLineupStart ? app.slice(saveLineupStart, substitutionsStart) : "";
+const substitutionStart = app.indexOf("async function makeSubstitution(");
+const lineupBenchStart = app.indexOf("/* =========================================================\\n   LINEUP / BENCH", substitutionStart);
+const substitutionFunction = substitutionStart >= 0 && lineupBenchStart > substitutionStart ? app.slice(substitutionStart, lineupBenchStart) : "";
+if (
+  !addMatchFunction.includes("try{") ||
+  !addMatchFunction.includes('.select("*").maybeSingle()') ||
+  !addMatchFunction.includes("submitButton.disabled=true") ||
+  !saveLineupFunction.includes('.upsert(rows,{onConflict:"match_id,player_id"})') ||
+  !saveLineupFunction.includes("const {data:existingRows,error:readError}") ||
+  !saveLineupFunction.includes("catch(error)") ||
+  saveLineupFunction.indexOf(".upsert(rows")>saveLineupFunction.indexOf(".delete()") ||
+  !substitutionFunction.includes('.eq("is_active",true)') ||
+  !substitutionFunction.includes('.eq("is_active",false)') ||
+  !substitutionFunction.includes("rollbackFailed") ||
+  !substitutionFunction.includes("historyError")
+) {
+  fail("Match creation, lineup, and substitutions must catch network errors and avoid deleting/changing roster state before guarded writes succeed");
+} else {
+  pass("Match creation, lineup and substitution writes are guarded, validated, and recover from partial failures");
+}
+
 const matchStatusStart = app.indexOf("async function changeMatchStatus(id,status)");
 const matchMinuteStart = app.indexOf("async function changeMinute(id,minute)", matchStatusStart);
 const matchLineupStart = app.indexOf("async function openLineupControl(", matchMinuteStart);
