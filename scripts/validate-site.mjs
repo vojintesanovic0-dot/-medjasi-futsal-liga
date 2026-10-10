@@ -164,24 +164,27 @@ if (
   fail("News publishing must not be reported as failed solely because push delivery failed");
 } else pass("News publishing reports storage and push outcomes separately");
 
-const matchStatusStart = app.indexOf("async function changeMatchStatus(");
-const matchStatusEnd = app.indexOf("/* =========================================================\n   MATCH MINUTE", matchStatusStart);
-const matchStatusFunction = matchStatusStart >= 0 && matchStatusEnd > matchStatusStart ? app.slice(matchStatusStart, matchStatusEnd) : "";
+const matchStatusStart = app.indexOf("async function changeMatchStatus(id,status)");
+const matchMinuteStart = app.indexOf("async function changeMinute(id,minute)", matchStatusStart);
+const matchLineupStart = app.indexOf("async function openLineupControl(", matchMinuteStart);
+const matchStatusFunction = matchStatusStart >= 0 && matchMinuteStart > matchStatusStart ? app.slice(matchStatusStart, matchMinuteStart) : "";
+const matchMinuteFunction = matchMinuteStart >= 0 && matchLineupStart > matchMinuteStart ? app.slice(matchMinuteStart, matchLineupStart) : "";
 const addCardStart = app.indexOf("async function addCard(matchId)");
-const addCardEnd = app.indexOf("/* =========================================================\n   TEAM MODAL", addCardStart);
+const addCardEnd = app.indexOf("\n/* =========================================================\n   TEAM MODAL", addCardStart);
 const addCardFunction = addCardStart >= 0 && addCardEnd > addCardStart ? app.slice(addCardStart, addCardEnd) : "";
 if (
   !app.includes("async function notifyLeaguePush(type,title,body,matchId)") ||
-  !matchStatusFunction.includes('void notifyLeaguePush("live",title,body,id)') ||
-  !matchStatusFunction.includes('changed&&status==="live"') ||
-  !addCardFunction.includes('    "card",') ||
+  !matchStatusFunction.includes("await readConfirmedMatch(id,existing)") ||
+  !matchStatusFunction.includes('confirmed.status!==status') ||
+  !matchStatusFunction.includes('const pushOk=await notifyLeaguePush("live",title,body,id)') ||
+  !matchStatusFunction.includes('const pushOk=await notifyLeaguePush("match_finished",title,"Utakmica je završena.",id)') ||
   !addCardFunction.includes('const {error}=await supabaseClient.from("cards").insert') ||
   !addCardFunction.includes("await refreshLiveMatchSnapshot(String(matchId))") ||
   !addCardFunction.includes("const pushOk=await notifyLeaguePush(") ||
   addCardFunction.indexOf("const pushOk=await notifyLeaguePush(")<addCardFunction.indexOf("await refreshLiveMatchSnapshot(String(matchId))")
 ) {
-  fail("Push events for LIVE kickoff and saved cards must be sent only after successful writes and persisted-score confirmation");
-} else pass("LIVE kickoff and saved-card push notifications follow a successful database write and score confirmation");
+  fail("LIVE/status and saved-card push events must follow successful writes and match-scoped score confirmation");
+} else pass("LIVE/status and saved-card push notifications use confirmed database state");
 
 const v7AssistGoalStart = app.indexOf("async function addGoalWithAssist(matchId)");
 const v7AssistGoalEnd = app.indexOf("function decorateCourtRatings(matchId)", v7AssistGoalStart);
