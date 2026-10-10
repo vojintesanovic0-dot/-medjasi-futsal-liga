@@ -13,18 +13,28 @@ const SUPABASE_KEY =
 
 // If the CDN is temporarily unavailable, keep the static shell alive instead
 // of aborting this entire script at top-level initialization.
-const supabaseClient = window.supabase?.createClient
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-  : null;
+let supabaseClient = null;
 
-if (!supabaseClient) {
-  console.error("Supabase SDK nije učitan; podaci i prijava su privremeno nedostupni.");
+function initializeSupabaseClient(){
+  if(supabaseClient)return supabaseClient;
+  const createClient=window.supabase?.createClient;
+  if(typeof createClient!=="function")return null;
+  try{
+    supabaseClient=createClient(SUPABASE_URL,SUPABASE_KEY);
+  }catch(error){
+    console.error("Supabase klijent nije mogao biti pokrenut:",error);
+    supabaseClient=null;
+  }
+  return supabaseClient;
 }
 
-/* Legacy patch layers use window.supabaseClient. */
+initializeSupabaseClient();
+
+/* Legacy patch layers use window.supabaseClient. The getter also permits
+   late SDK initialization when an optional module runs before a CDN finishes. */
 Object.defineProperty(window, "supabaseClient", {
   configurable: true,
-  get: () => supabaseClient
+  get: () => supabaseClient || initializeSupabaseClient()
 });
 
 
@@ -7907,6 +7917,23 @@ function subscribeRealtime(){
 ========================================================= */
 
 async function init(){
+
+  // Wait for the primary CDN or its fallback before making any database calls.
+  try{
+    if(window.__MEDJASI_SUPABASE_READY)await window.__MEDJASI_SUPABASE_READY;
+  }catch(sdkError){
+    console.warn("Supabase SDK loader failed:",sdkError);
+  }
+  initializeSupabaseClient();
+
+  if(!supabaseClient){
+    console.error("Supabase podaci su privremeno nedostupni; statički dio stranice ostaje aktivan.");
+    try{renderAll();}catch(renderError){console.error("Statistički prikaz stranice:",renderError);}
+    const status=document.getElementById("homeAnnouncement");
+    if(status)status.innerHTML='<div class="empty compact">Podaci lige trenutno nisu dostupni. Provjeri internet vezu i osvježi stranicu.</div>';
+    return;
+  }
+
 
   /* Jedan neuspješan servis ne smije zaustaviti ostatak aplikacije. */
   try {

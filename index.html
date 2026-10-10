@@ -30,7 +30,56 @@
 <meta content="Međasi Futsal Liga" name="twitter:title"/>
 <meta content="Rezultati, tabela, ekipe, igrači i live dešavanja Međasi Futsal Lige." name="twitter:description"/>
 <meta content="https://vojintesanovic0-dot.github.io/-medjasi-futsal-liga/images/icon-512.png" name="twitter:image"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2" crossorigin="anonymous"></script>
+<!-- Load Supabase from two independent CDNs without blocking the page parser. -->
+<script>
+(function(){
+  if(window.supabase&&typeof window.supabase.createClient==="function"){
+    window.__MEDJASI_SUPABASE_READY=Promise.resolve(true);
+    return;
+  }
+  const sources=[
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2",
+    "https://unpkg.com/@supabase/supabase-js@2.117.2"
+  ];
+  window.__MEDJASI_SUPABASE_READY=new Promise(resolve=>{
+    let index=0;
+    const next=()=>{
+      if(window.supabase&&typeof window.supabase.createClient==="function"){
+        resolve(true);
+        return;
+      }
+      if(index>=sources.length){
+        console.error("Supabase SDK nije dostupan ni preko jednog CDN izvora.");
+        resolve(false);
+        return;
+      }
+      const script=document.createElement("script");
+      script.async=true;
+      script.crossOrigin="anonymous";
+      script.src=sources[index++];
+      let settled=false;
+      const timer=window.setTimeout(()=>finish(false),7000);
+      function finish(ok){
+        if(settled)return;
+        settled=true;
+        window.clearTimeout(timer);
+        script.onload=null;
+        script.onerror=null;
+        if(ok&&window.supabase&&typeof window.supabase.createClient==="function"){
+          resolve(true);
+          return;
+        }
+        script.remove();
+        next();
+      }
+      script.onload=()=>finish(true);
+      script.onerror=()=>finish(false);
+      document.head.appendChild(script);
+    };
+    next();
+  });
+})();
+</script>
 
 
 
@@ -750,7 +799,7 @@
 
 
 
-<script src="./js/app.js?v=20261010v40" defer></script>
+<script src="./js/app.js?v=20261011v41" defer></script>
 <script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=20261010v11" defer></script><script src="./js/growth.js?v=20261009v06" defer></script><script src="./js/community-features.js?v=20261010v09" defer></script><script src="./js/ui-compat.js?v=20261009v01" defer></script><script src="./js/admin-organizer.js?v=15" defer></script>
 <script src="./js/graphic-engine.js?v=1" defer></script><script src="./js/medjasi-v13-ui.js?v=20261007v01" defer></script><script src="./js/extras.js?v=1" defer></script>
 <script src="./js/dashboard-layout-v1.js?v=20261009v7" defer></script>
