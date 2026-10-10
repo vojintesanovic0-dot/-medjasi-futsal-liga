@@ -173,13 +173,15 @@ const addCardFunction = addCardStart >= 0 && addCardEnd > addCardStart ? app.sli
 if (
   !app.includes("async function notifyLeaguePush(type,title,body,matchId)") ||
   !matchStatusFunction.includes('void notifyLeaguePush("live",title,body,id)') ||
-  !matchStatusFunction.includes("changed&&status===\"live\"") ||
+  !matchStatusFunction.includes('changed&&status==="live"') ||
   !addCardFunction.includes('    "card",') ||
-  !addCardFunction.includes("const {error}=await supabaseClient.from(\"cards\").insert") ||
-  !addCardFunction.includes("void notifyLeaguePush(")
+  !addCardFunction.includes('const {error}=await supabaseClient.from("cards").insert') ||
+  !addCardFunction.includes("await refreshLiveMatchSnapshot(String(matchId))") ||
+  !addCardFunction.includes("const pushOk=await notifyLeaguePush(") ||
+  addCardFunction.indexOf("const pushOk=await notifyLeaguePush(")<addCardFunction.indexOf("await refreshLiveMatchSnapshot(String(matchId))")
 ) {
-  fail("Push events for LIVE kickoff and saved cards must send only after a successful database write");
-} else pass("LIVE kickoff and saved-card push notifications are wired after database success");
+  fail("Push events for LIVE kickoff and saved cards must be sent only after successful writes and persisted-score confirmation");
+} else pass("LIVE kickoff and saved-card push notifications follow a successful database write and score confirmation");
 
 const v7AssistGoalStart = app.indexOf("async function addGoalWithAssist(matchId)");
 const v7AssistGoalEnd = app.indexOf("function decorateCourtRatings(matchId)", v7AssistGoalStart);
