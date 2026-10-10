@@ -290,6 +290,22 @@ async function notifyLeaguePush(type,title,body,matchId){
 
 
 
+async function readConfirmedMatch(matchId,fallback){
+  const {data,error}=await supabaseClient
+    .from("matches")
+    .select("*")
+    .eq("id",matchId)
+    .maybeSingle();
+  if(error)throw error;
+  if(!data)throw new Error("Rezultat utakmice nije moguće potvrditi u bazi.");
+
+  const snapshot={...(fallback||{}),...data};
+  const index=matches.findIndex(match=>String(match.id)===String(matchId));
+  if(index>=0)matches[index]=snapshot;
+  else matches.push(snapshot);
+  return snapshot;
+}
+
 function teamLogo(team){
 
   return safeUrl(
@@ -1737,6 +1753,7 @@ async function loadAll(){
     return;
   }
   loadAllActive=true;
+  let hadLoadErrors=false;
 
   try{
     /* Supabase vraća max 1000 redova po upitu: velike tabele čitamo stranicu po stranicu. */
@@ -1789,6 +1806,7 @@ async function loadAll(){
     ]);
 
     const [teamsResult,playersResult,matchesResult,goalsResult,cardsResult,commentsResult,messagesResult,galleryResult,matchPlayersResult]=results;
+    hadLoadErrors=results.some(r=>!!r.error);
     results.forEach(r=>{if(r.error) console.error(r.error)});
 
     /* Ako upit padne, zadržavamo prethodne podatke umjesto da ispraznimo ekran. */
@@ -1807,6 +1825,7 @@ async function loadAll(){
     processLeagueNotifications();
     renderAll();
   }catch(error){
+    hadLoadErrors=true;
     console.error("Greška pri učitavanju:",error);
   }finally{
     loadAllActive=false;
@@ -1815,6 +1834,7 @@ async function loadAll(){
       queueMicrotask(()=>{void loadAll()});
     }
   }
+  return !hadLoadErrors;
 }
 
 /* =========================================================
@@ -6924,8 +6944,7 @@ function openGoalControl(
 ========================================================= */
 
 async function addGoal(matchId){
-  if(!canManageMatch()) return;
-
+  if(!canManageMatch())return;
   const match=getMatch(matchId);
   if(!match){
     alert("Utakmica nije pronađena. Osvježi prikaz i pokušaj ponovo.");
@@ -6935,9 +6954,8 @@ async function addGoal(matchId){
   const player_id=document.getElementById("goalPlayer")?.value;
   const minuteInput=document.getElementById("goalMinute");
   const secondInput=document.getElementById("goalSecond");
-  const minute=minuteInput ? Number(minuteInput.value) : NaN;
-  const second=secondInput ? Number(secondInput.value || 0) : 0;
-
+  const minute=minuteInput?Number(minuteInput.value):NaN;
+  const second=secondInput?Number(secondInput.value||0):0;
   if(!Number.isInteger(minute)||minute<0||minute>60){
     alert("Minuta gola mora biti cijeli broj od 0 do 60.");
     return;
@@ -6948,48 +6966,59 @@ async function addGoal(matchId){
   }
 
   const player=getPlayer(player_id);
-  if(!player){
-    alert("Izaberi igrača.");
-    return;
-  }
+  if(!player){alert("Izaberi igrača.");return;}
   if(
-    String(player.team_id)!==String(match.home_team_id) &&
+    String(player.team_id)!==String(match.home_team_id)&&
     String(player.team_id)!==String(match.away_team_id)
   ){
     alert("Igrač ne pripada ekipama u ovoj utakmici.");
     return;
   }
 
+  const submitButton=[...document.querySelectorAll("#modalContent button")]
+    .find(button=>/\baddGoal\s*\(/.test(button.getAttribute("onclick")||""));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
+
   let result;
   try{
     result=await supabaseClient.from("goals").insert({
-      match_id:matchId,
-      player_id,
-      minute,
-      second
+      match_id:matchId,player_id,minute,second
     });
   }catch(error){
+    if(submitButton?.isConnected)submitButton.disabled=false;
     alert(error?.message||"Gol nije sačuvan zbog mrežne greške. Pokušaj ponovo.");
     return;
   }
   if(result.error){
+    if(submitButton?.isConnected)submitButton.disabled=false;
     alert(result.error.message||"Gol nije sačuvan.");
     return;
   }
 
-  /* Score is derived centrally by the database goal-event trigger. */
   hideModal();
   toast("Gol je evidentiran.");
-  await loadAll();
+  let refreshed= false;
+  try{refreshed=(await loadAll())===true;}
+  catch(error){console.warn("Osvježavanje nakon gola nije uspjelo:",error);}
 
-  const updatedMatch=getMatch(matchId)||match;
+  let updatedMatch=getMatch(matchId)||match;
+  if(!refreshed){
+    try{
+      updatedMatch=await readConfirmedMatch(matchId,match);
+    }catch(error){
+      console.error("Gol je sačuvan, ali rezultat nije potvrđen:",error);
+      toastV("Gol je sačuvan, ali rezultat nije moguće potvrditi. Push obavještenje nije poslano; osvježi utakmicu.","error");
+      openMatch(matchId);
+      return;
+    }
+  }
+
   const updatedPlayer=getPlayer(player_id)||player;
-  const side=String(updatedPlayer.team_id)===String(updatedMatch.home_team_id)?"home":"away";
-  const score=(updatedMatch.home_score||0)+":"+(updatedMatch.away_score||0);
+  const score=Number(updatedMatch.home_score||0)+":"+Number(updatedMatch.away_score||0);
   const goalTitle="⚽ GOL — "+teamName(updatedPlayer.team_id);
   const goalBody=updatedPlayer.name+" · "+score+" · "+minute+"'"+(second?String(second).padStart(2,"0")+"s":"");
   void notifyLeaguePush("goal",goalTitle,goalBody,matchId);
-
   openMatch(matchId);
 }
 
@@ -10769,16 +10798,18 @@ async function addGoalWithAssist(matchId){
     }
   }
 
+  const submitButton=[...document.querySelectorAll("#modalContent button")]
+    .find(button=>/medjasiV7\.addGoal\s*\(/.test(button.getAttribute("onclick")||""));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
+
   try{
     const {error}=await supabaseClient.from("goals").insert({
-      match_id:matchId,
-      player_id:playerId,
-      assist_player_id:assistId,
-      minute,
-      second:0
+      match_id:matchId,player_id:playerId,assist_player_id:assistId,minute,second:0
     });
     if(error)throw error;
   }catch(error){
+    if(submitButton?.isConnected)submitButton.disabled=false;
     console.error("Unos gola nije uspio:",error);
     toastV(error?.message||"Gol nije sačuvan. Pokušaj ponovo.","error");
     return;
@@ -10786,11 +10817,25 @@ async function addGoalWithAssist(matchId){
 
   hideModal();
   toastV("Gol i asistencija su evidentirani.");
-  await loadAll();
+  let refreshed=false;
+  try{refreshed=(await loadAll())===true;}
+  catch(error){console.warn("Osvježavanje nakon gola nije uspjelo:",error);}
 
-  const updatedMatch=matches.find(x=>String(x.id)===String(matchId))||match;
+  let updatedMatch=matches.find(x=>String(x.id)===String(matchId))||match;
+  if(!refreshed){
+    try{
+      updatedMatch=await readConfirmedMatch(matchId,match);
+    }catch(error){
+      console.error("Gol je sačuvan, ali rezultat nije potvrđen:",error);
+      toastV("Gol je sačuvan, ali rezultat nije moguće potvrditi. Push obavještenje nije poslano; osvježi utakmicu.","error");
+      if(updatedMatch.status==="live")openMatch(matchId);
+      else openFinished(matchId);
+      return;
+    }
+  }
+
   const updatedScorer=playerV(playerId)||scorer;
-  const score=(updatedMatch.home_score||0)+":"+(updatedMatch.away_score||0);
+  const score=Number(updatedMatch.home_score||0)+":"+Number(updatedMatch.away_score||0);
   const goalBody=updatedScorer.name+(assist?" · asistencija: "+assist.name:"")+" · "+score+" · "+minute+"'";
   void notifyLeaguePush("goal","⚽ GOL — "+teamV(updatedScorer.team_id)?.name,goalBody,matchId);
 
