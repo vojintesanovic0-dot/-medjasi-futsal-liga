@@ -1107,6 +1107,21 @@ if (
   pass("Fan Game refresh uses bounded exponential backoff while preserving forced user-triggered refreshes");
 }
 
+const publicPrivilegesMigration = read("sql/17_revoke_excess_public_table_privileges.sql");
+if (
+  !publicPrivilegesMigration.includes("revoke insert, update, delete, truncate, references, trigger, maintain on table") ||
+  !publicPrivilegesMigration.includes("from anon") ||
+  !publicPrivilegesMigration.includes("revoke truncate, references, trigger, maintain on table") ||
+  !publicPrivilegesMigration.includes("from authenticated") ||
+  !publicPrivilegesMigration.includes("alter default privileges for role postgres in schema public") ||
+  !publicPrivilegesMigration.includes("revoke insert, update, delete, truncate, references, trigger, maintain on tables from anon") ||
+  !publicPrivilegesMigration.includes("revoke truncate, references, trigger, maintain on tables from authenticated")
+) {
+  fail("Public tables must retain existing read/CRUD behavior while unnecessary client maintenance grants are removed for current and future tables");
+} else {
+  pass("Least-privilege migration removes unnecessary public table grants and tightens postgres default privileges");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
