@@ -763,6 +763,33 @@ if (
   pass("Chat and comment uploads use owner-scoped paths accepted by Storage RLS");
 }
 
+const storageDeleteHelper = app.slice(
+  app.indexOf("function leagueMediaObjectPath(publicUrl,expectedFolder)"),
+  app.indexOf("async function adminDeleteGalleryImage(id)")
+);
+const galleryDeleteSource = app.slice(
+  app.indexOf("async function adminDeleteGalleryImage(id)"),
+  app.indexOf("/* =========================================================\\n   TEAM MODAL",app.indexOf("async function adminDeleteGalleryImage(id)"))
+);
+const newsDeleteStart = app.indexOf("async function deleteNews(id)");
+const newsDeleteEnd = app.indexOf("const V7=",newsDeleteStart);
+const newsDeleteSource = newsDeleteStart >= 0 && newsDeleteEnd > newsDeleteStart ? app.slice(newsDeleteStart,newsDeleteEnd) : "";
+if (
+  !storageDeleteHelper.includes('url.origin!==base.origin') ||
+  !storageDeleteHelper.includes('"/storage/v1/object/public/liga-images/"') ||
+  !storageDeleteHelper.includes('parts[0]!==expectedFolder') ||
+  !storageDeleteHelper.includes('storage.from("liga-images").remove([path])') ||
+  !galleryDeleteSource.includes("await removeLeagueMediaObject(item.media_url||item.image_url,\"gallery\")") ||
+  !galleryDeleteSource.includes("catch(error)") ||
+  !newsDeleteSource.includes('select("id,media_url")') ||
+  !newsDeleteSource.includes('await removeLeagueMediaObject(item.media_url,"news")') ||
+  !newsDeleteSource.includes("catch(error)")
+) {
+  fail("Gallery/news deletion must remove only same-project Storage objects after a successful row delete and report cleanup failures");
+} else {
+  pass("Gallery/news deletions safely clean same-project uploaded media and report partial failures");
+}
+
 const cardSaveSource = app.slice(
   app.indexOf("async function addCard(matchId)"),
   app.indexOf("/* =========================================================\\n   TEAM MODAL",app.indexOf("async function addCard(matchId)"))
