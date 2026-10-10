@@ -793,21 +793,21 @@ if (
   pass("Gallery/news deletions safely clean same-project uploaded media and report partial failures");
 }
 
-const matchStatusStart = app.indexOf("async function changeMatchStatus(id,status)");
-const matchMinuteStart = app.indexOf("async function changeMinute(id,minute)",matchStatusStart);
-const matchLineupStart = app.indexOf("async function openLineupControl(",matchMinuteStart);
-const matchStatusFunction = matchStatusStart >= 0 && matchMinuteStart > matchStatusStart ? app.slice(matchStatusStart,matchMinuteStart) : "";
-const matchMinuteFunction = matchMinuteStart >= 0 && matchLineupStart > matchMinuteStart ? app.slice(matchMinuteStart,matchLineupStart) : "";
+const matchStatusStart2 = app.indexOf("async function changeMatchStatus(id,status)");
+const matchMinuteStart2 = app.indexOf("async function changeMinute(id,minute)",matchStatusStart2);
+const matchLineupStart2 = app.indexOf("async function openLineupControl(",matchMinuteStart2);
+const matchStatusFunction2 = matchStatusStart2 >= 0 && matchMinuteStart2 > matchStatusStart2 ? app.slice(matchStatusStart2,matchMinuteStart2) : "";
+const matchMinuteFunction2 = matchMinuteStart2 >= 0 && matchLineupStart2 > matchMinuteStart2 ? app.slice(matchMinuteStart2,matchLineupStart2) : "";
 if (
-  !matchStatusFunction.includes("await readConfirmedMatch(id,existing)") ||
-  !matchStatusFunction.includes(".select(\"*\")") ||
-  !matchStatusFunction.includes("confirmed.status!==status") ||
-  !matchStatusFunction.includes('Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)') ||
-  !matchStatusFunction.includes("const pushOk=await notifyLeaguePush(") ||
-  !matchMinuteFunction.includes("Number.isInteger(value)") ||
-  !matchMinuteFunction.includes("value>60") ||
-  !matchMinuteFunction.includes(".select(\"id,current_minute\")") ||
-  !matchMinuteFunction.includes("catch(error)")
+  !matchStatusFunction2.includes("await readConfirmedMatch(id,existing)") ||
+  !matchStatusFunction2.includes(".select(\"*\")") ||
+  !matchStatusFunction2.includes("confirmed.status!==status") ||
+  !matchStatusFunction2.includes('Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)') ||
+  !matchStatusFunction2.includes("const pushOk=await notifyLeaguePush(") ||
+  !matchMinuteFunction2.includes("Number.isInteger(value)") ||
+  !matchMinuteFunction2.includes("value>60") ||
+  !matchMinuteFunction2.includes(".select(\"id,current_minute\")") ||
+  !matchMinuteFunction2.includes("catch(error)")
 ) {
   fail("Match status/minute edits must validate inputs, confirm persisted values, and broadcast only the confirmed match state");
 } else {
