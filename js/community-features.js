@@ -17,8 +17,7 @@ async function reportTarget(kind,id){
   const db=client();
   if(!db?.from)return toastX("Servis za prijave trenutno nije dostupan.","error"),false;
   const payload={reporter_id:uid(),reason:reason.trim().slice(0,500)};
-  if(kind==="post")payload.post_id=id;
-  else payload.comment_id=id;
+  if(kind==="post")payload.post_id=id;else payload.comment_id=id;
   try{
     const {error}=await db.from("community_reports").insert(payload);
     if(error)throw error;
@@ -270,7 +269,37 @@ async function renderPolls(){
               user_id:uid()
             });
             if(error?.code==="23505"){
-              toastX("Već si async function toggleFavorite(type,id){
+              toastX("Već si glasao na ovoj anketi.","error");
+            }else if(error){
+              throw error;
+            }else{
+              toastX("Glas je zabilježen.");
+            }
+          }catch(error){
+            console.warn("Community poll vote:",error);
+            toastX(error?.message||"Glasanje nije uspjelo. Pokušaj ponovo.","error");
+            if(box.isConnected)box.querySelectorAll("button").forEach(item=>{item.disabled=false;});
+          }
+        });
+        box.appendChild(button);
+      }
+      body.appendChild(box);
+    }
+  }catch(error){
+    console.warn("Community polls:",error);
+  }
+}
+function boot(){
+  patchLoad();patchComposer();patchPublish();
+  setTimeout(async()=>{await enhanceFeed();await renderPolls()},700);
+  window.addEventListener("load",()=>setTimeout(async()=>{patchLoad();patchComposer();patchPublish();await enhanceFeed();await renderPolls()},900));
+}
+boot();
+})();
+
+// Gallery albums + favorites + moderation panel
+async function loadAlbums(){const {data,error}=await client().from("gallery_albums").select("id,name,description,cover_url,created_at").order("created_at",{ascending:false});if(error){console.warn("Gallery albums:",error);return []}return data||[]}
+async function toggleFavorite(type,id){
   if(!uid())return toastX("Prijavi se da sačuvaš favorite.","error"),undefined;
   if(!["team","player"].includes(type)||!id)return toastX("Favorit nije prepoznat.","error"),undefined;
   const db=client();
@@ -281,7 +310,23 @@ async function renderPolls(){
     if(readError)throw readError;
     if(data){
       const {error}=await db.from("fan_favorites").delete()
-        .eq("user_id",function decorateFavorite(type,id){
+        .eq("user_id",uid()).eq("entity_type",type).eq("entity_id",String(id));
+      if(error)throw error;
+      toastX("Uklonjeno iz favorita.");
+      return false;
+    }
+    const {error}=await db.from("fan_favorites").insert({user_id:uid(),entity_type:type,entity_id:String(id)});
+    if(error)throw error;
+    toastX("Dodano u favorite.");
+    return true;
+  }catch(error){
+    console.warn("Community favorite:",error);
+    toastX(error?.message||"Promjena favorita nije uspjela.","error");
+    return undefined;
+  }
+}
+window.toggleFavorite=toggleFavorite;
+function decorateFavorite(type,id){
   setTimeout(async()=>{
     if(!uid())return;
     const host=q("modalContent");
@@ -299,8 +344,7 @@ async function renderPolls(){
       return;
     }
     const b=document.createElement("button");
-    b.type="button";
-    b.className="btn btn-small community-favorite-action";
+    b.type="button";b.className="btn btn-small community-favorite-action";
     b.textContent=data?"⭐ Ukloni iz favorita":" Dodaj u favorite";
     b.onclick=async()=>{
       b.disabled=true;
@@ -314,10 +358,6 @@ async function renderPolls(){
     h.parentElement?.appendChild(b);
   },60);
 }
-async function loadAlbums(){const {data,error}=await client().from("gallery_albums").select("id,name,description,cover_url,created_at").order("created_at",{ascending:false});if(error){console.warn("Gallery albums:",error);return []}return data||[]}
-async function toggleFavorite(type,id){if(!uid())return toastX("Prijavi se da sačuvaš favorite.","error");const {data}=await client().from("fan_favorites").select("entity_type").eq("user_id",uid()).eq("entity_type",type).eq("entity_id",String(id)).maybeSingle();const r=data?await client().from("fan_favorites").delete().eq("user_id",uid()).eq("entity_type",type).eq("entity_id",String(id)):await client().from("fan_favorites").insert({user_id:uid(),entity_type:type,entity_id:String(id)});if(r.error)return toastX(r.error.message,"error");toastX(data?"Uklonjeno iz favorita.":"Dodano u favorite.");return !data}
-window.toggleFavorite=toggleFavorite;
-function decorateFavorite(type,id){setTimeout(async()=>{if(!uid())return;const host=q("modalContent");if(!host||host.querySelector(".community-favorite-action"))return;const h=host.querySelector("h2,h3");if(!h)return;const {data}=await client().from("fan_favorites").select("entity_type").eq("user_id",uid()).eq("entity_type",type).eq("entity_id",String(id)).maybeSingle();const b=document.createElement("button");b.type="button";b.className="btn btn-small community-favorite-action";b.textContent=data?"⭐ Ukloni iz favorita":" Dodaj u favorite";b.onclick=async()=>{await toggleFavorite(type,id);b.textContent=(await client().from("fan_favorites").select("entity_type").eq("user_id",uid()).eq("entity_type",type).eq("entity_id",String(id)).maybeSingle()).data?"⭐ Ukloni iz favorita":" Dodaj u favorite"};h.parentElement?.appendChild(b)},60)}
 function patchFavorites(){if(window.__FAVORITES_PATCH__)return;window.__FAVORITES_PATCH__=true;const ot=window.openTeam,op=window.openPlayer;if(typeof ot==="function")window.openTeam=function(id){const r=ot.apply(this,arguments);decorateFavorite("team",id);return r};if(typeof op==="function")window.openPlayer=function(id){const r=op.apply(this,arguments);decorateFavorite("player",id);return r}}
 async function injectGalleryAlbums(){const albums=await loadAlbums(),host=q("galleryGrid");if(!host)return;let bar=q("communityAlbumBar");if(!bar){bar=document.createElement("div");bar.id="communityAlbumBar";bar.style.marginBottom="12px";host.parentElement?.insertBefore(bar,host)}bar.innerHTML='<label> Album: <select id="communityAlbumFilter"><option value="">Sve fotografije</option>'+albums.map(a=>'<option value="'+a.id+'">'+escX(a.name)+'</option>').join("")+'</select></label>';q("communityAlbumFilter").onchange=()=>{const id=q("communityAlbumFilter").value;host.querySelectorAll(".gallery-item").forEach((el,i)=>{const g=(window.gallery||[])[i];el.hidden=!!id&&String(g?.album_id)!==String(id)})}}
 async function ensureGalleryAlbumSelect(){
