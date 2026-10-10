@@ -80,14 +80,22 @@ const goalStart = app.indexOf("function openGoal(matchId)", saveStart);
 const finishFunction = finishStart >= 0 && saveStart > finishStart ? app.slice(finishStart, saveStart) : "";
 const saveFunction = saveStart >= 0 && goalStart > saveStart ? app.slice(saveStart, goalStart) : "";
 if (
-  !finishFunction.includes("await saveRatings(matchId)") ||
-  !finishFunction.includes("if(error)throw error") ||
-  !finishFunction.includes("catch(error)") ||
+  !finishFunction.includes("await refreshLiveMatchSnapshot(id)") ||
+  !finishFunction.includes("await loadStats()") ||
+  !finishFunction.includes("await saveRatings(id)") ||
+  !finishFunction.includes('.select("*")') ||
+  !finishFunction.includes("readConfirmedMatch(id,updated)") ||
+  !finishFunction.includes('confirmed.status!=="finished"') ||
+  !finishFunction.includes('Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)') ||
+  !finishFunction.includes("if(!wasAlreadyFinished)") ||
+  !finishFunction.includes("finishMatchInFlight.has(id)") ||
+  !finishFunction.includes("finishMatchInFlight.delete(id)") ||
   !saveFunction.includes("if(error)throw error") ||
   !saveFunction.includes("clearMvp.error")
 ) {
-  fail("Match finalization must stop on player-stat/MVP write errors");
-} else pass("Match finalization checks player-stat and MVP writes before completing");
+  fail("Match finalization must refresh the selected match first, serialize duplicate submits, verify the persisted final score/status, and only broadcast the first confirmed finish");
+} else pass("Match finalization confirms fresh stats and the persisted result before one-time push and Fan Game settlement");
+
 
 if (
   !app.includes("function supportedLeagueMedia(file)") ||
