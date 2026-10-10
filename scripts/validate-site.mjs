@@ -196,6 +196,12 @@ if (
   !addMatchFunction.includes("try{") ||
   !addMatchFunction.includes('.select("*").maybeSingle()') ||
   !addMatchFunction.includes("submitButton.disabled=true") ||
+  !addMatchFunction.includes('.from("seasons")') ||
+  !addMatchFunction.includes('.eq("is_active",true)') ||
+  !addMatchFunction.includes("if(seasonError)") ||
+  !addMatchFunction.includes("season_id:activeSeason?.id||null") ||
+  !addMatchFunction.includes("ali nema aktivne sezone") ||
+  !app.includes("Ako postoji aktivna sezona, automatski se dodjeljuje novim utakmicama.") ||
   !saveLineupFunction.includes('.upsert(rows,{onConflict:"match_id,player_id"})') ||
   !saveLineupFunction.includes("const {data:existingRows,error:readError}") ||
   !saveLineupFunction.includes("catch(error)") ||

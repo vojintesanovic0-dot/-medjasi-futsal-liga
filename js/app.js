@@ -4391,6 +4391,17 @@ async function addMatch(){
   if(submitButton)submitButton.disabled=true;
 
   try{
+    // Tie new fixtures to the active season when one is configured. Keep the
+    // historic seasonless workflow possible, but make that state explicit below.
+    const {data:activeSeason,error:seasonError}=await supabaseClient
+      .from("seasons")
+      .select("id")
+      .eq("is_active",true)
+      .order("created_at",{ascending:false})
+      .limit(1)
+      .maybeSingle();
+    if(seasonError)throw new Error("Ne mogu provjeriti aktivnu sezonu. Utakmica nije sačuvana.");
+
     const {data:created,error}=await supabaseClient.from("matches").insert({
       home_team_id:home,
       away_team_id:away,
@@ -4399,7 +4410,8 @@ async function addMatch(){
       home_score:0,
       away_score:0,
       status:"scheduled",
-      current_minute:0
+      current_minute:0,
+      season_id:activeSeason?.id||null
     }).select("*").maybeSingle();
     if(error)throw error;
     if(!created?.id)throw new Error("Baza nije potvrdila kreiranje utakmice.");
@@ -4413,7 +4425,12 @@ async function addMatch(){
     catch(refreshError){console.warn("Utakmica je sačuvana, ali osvježavanje nije uspjelo:",refreshError);}
 
     if(refreshed){
-      toast("Utakmica je dodana.","success");
+      toast(
+        activeSeason?.id
+          ? "Utakmica je dodana i povezana s aktivnom sezonom."
+          : "Utakmica je dodana, ali nema aktivne sezone pa joj nije dodijeljena.",
+        "success"
+      );
     }else{
       toast("Utakmica je dodana, ali lista nije potpuno osvježena. Ponovo učitaj admin panel.","error");
     }
@@ -11179,7 +11196,7 @@ async function disableRealPush(){
   }
 }
 function renderPushUI(){if(!$('v7PushStatus')||!$('v7PushButton'))return;const on=localStorage.getItem('medjasi_push_enabled')==='1';$('v7PushStatus').textContent=on?'🔔 Push obavještenja su uključena.':'Push obavještenja nisu uključena.';$('v7PushStatus').className='v7-push-status '+(on?'ok':'');$('v7PushButton').textContent=on?'🔕 Isključi push':'🔔 Uključi push';$('v7PushButton').onclick=on?disableRealPush:subscribeRealPush}
-function ensureSeasonAdmin(){if(!$('adminContent')||!isAdm()||$('v7SeasonCard'))return;const c=document.createElement('div');c.id='v7SeasonCard';c.className='card';c.style.marginTop='20px';c.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SEZONE</span><h3>🏆 Upravljanje sezonama</h3><p class="muted">Aktivna sezona se automatski dodjeljuje novim utakmicama.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="actions"><input id="v7SeasonName" placeholder="npr. 2026/27" style="max-width:220px"><button class="btn btn-green" onclick="medjasiV7.addSeason()">＋ Nova sezona</button></div><div id="v7SeasonList" style="margin-top:12px"></div>`;$('adminContent').appendChild(c);renderSeasons()}
+function ensureSeasonAdmin(){if(!$('adminContent')||!isAdm()||$('v7SeasonCard'))return;const c=document.createElement('div');c.id='v7SeasonCard';c.className='card';c.style.marginTop='20px';c.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SEZONE</span><h3>🏆 Upravljanje sezonama</h3><p class="muted">Ako postoji aktivna sezona, automatski se dodjeljuje novim utakmicama.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="actions"><input id="v7SeasonName" placeholder="npr. 2026/27" style="max-width:220px"><button class="btn btn-green" onclick="medjasiV7.addSeason()">＋ Nova sezona</button></div><div id="v7SeasonList" style="margin-top:12px"></div>`;$('adminContent').appendChild(c);renderSeasons()}
 async function loadSeasons(){
   try{
     const {data,error}=await supabaseClient.from("seasons").select("*").order("created_at",{ascending:false});
