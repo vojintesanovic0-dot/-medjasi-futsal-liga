@@ -157,10 +157,42 @@
       [...body.children].forEach(el=>{if(el.classList?.contains("card")) directCards.push(el)});
     });
 
+    const headingOf=card=>(
+      card.querySelector?.(".admin-card-head h3, .admin-card-head strong, .crud-title span, h3")?.textContent||""
+    ).trim().toLowerCase();
+
     const specs=[
-      {key:"gallery",match:card=>card.id!=="adminCrudV4"&&!!(card.querySelector?.("#adminGalleryList,#galleryImageFile")||/\bgalerija\b/i.test(card.textContent||""))},
-      {key:"playlist",match:card=>!!(card.querySelector?.("#adminMusicPlaylist")||card.classList?.contains("admin-music-card"))},
-      {key:"push",match:card=>card.id==="v7PushCard"||!!card.querySelector?.("#v7PushCard")||/push notifikacije/i.test(card.textContent||"")}
+      {
+        key:"gallery",
+        match:card=>{
+          if(card.id==="adminCrudV4")return false;
+          const heading=headingOf(card);
+          return card.id==="adminGalleryCard" ||
+            card.id==="adminGallery" ||
+            !!card.querySelector?.("#adminGalleryList,#galleryImageFile") ||
+            !!card.classList?.contains("admin-gallery-card") ||
+            (heading==="galerija"||heading.startsWith("galerija "));
+        }
+      },
+      {
+        key:"playlist",
+        match:card=>{
+          const heading=headingOf(card);
+          return card.id==="adminMusicCard" ||
+            !!card.querySelector?.("#adminMusicPlaylist") ||
+            !!card.classList?.contains("admin-music-card") ||
+            (heading==="playlist"||heading.startsWith("playlist ")||heading==="liga muzika"||heading.startsWith("liga muzika ")||heading==="upravljanje muzikom"||heading.startsWith("upravljanje muzikom "));
+        }
+      },
+      {
+        key:"push",
+        match:card=>{
+          const heading=headingOf(card);
+          return card.id==="v7PushCard" ||
+            !!card.querySelector?.("#v7PushCard") ||
+            (heading==="push obavještenja"||heading.startsWith("push obavještenja ")||heading==="push notifikacije"||heading.startsWith("push notifikacije "));
+        }
+      }
     ];
 
     moving=true;

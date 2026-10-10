@@ -39,11 +39,24 @@
   const upcoming=()=>active().filter(m=>m.status==="scheduled");
   const finished=()=>MT().filter(m=>m.status==="finished").sort((a,b)=>new Date(b.match_date||0)-new Date(a.match_date||0));
   let refreshPending=false;
-  async function refresh(){
+  let refreshFailureCount=0;
+  let refreshRetryAt=0;
+  // Markets themselves still refresh on the live interval. Aggregated pick counts
+  // and MVP results are cached separately because they change much less often.
+  const MARKET_STATS_TTL=30000;
+  const MVP_RESULTS_TTL=60000;
+  let marketStatsFetchedAt=0;
+  let mvpResultsFetchedAt=0;
+  async function refresh(options={}){
+    const force=options?.force!==false;
     const requestedUserKey=currentUserKey();
     resetUserSnapshot(requestedUserKey);
     if(!sb())return;
-    if(S.loading){refreshPending=true;return;}
+    if(!force&&Date.now()<refreshRetryAt)return;
+    if(S.loading){
+      if(force)refreshPending=true;
+      return;
+    }
     S.loading=true;
     try{
       const u=user();
@@ -55,6 +68,8 @@
       ]);
       if(mk.error&&/relation|does not exist|schema cache|function/i.test(mk.error.message||"")){
         S.err="setup";
+        refreshFailureCount=Math.min(refreshFailureCount+1,4);
+        refreshRetryAt=Date.now()+Math.min(60000,10000*Math.pow(2,refreshFailureCount-1));
         return;
       }
       const coreError=[mk,shop,fund,board].find(result=>result.error);
@@ -94,19 +109,55 @@
         nextVotes=Object.fromEntries((votes.data||[]).map(row=>[String(row.match_id),true]));
       }
 
-      const nextStats={};
-      await Promise.all(active().slice(0,12).map(async match=>{
-        const result=await sb().rpc("fan_market_stats",{p_match:String(match.id)});
-        if(result.error)throw result.error;
-        (result.data||[]).forEach(row=>{nextStats[row.market_id]=Number(row.picks);});
-      }));
+      let nextStats=S.stats;
+      const counterNow=Date.now();
+      if(!marketStatsFetchedAt||counterNow-marketStatsFetchedAt>=MARKET_STATS_TTL){
+        // Record attempts as well as successes so a failing optional aggregate
+        // RPC cannot be hammered again on every 10-second refresh.
+        marketStatsFetchedAt=counterNow;
+        try{
+          const statResults=await Promise.all(active().slice(0,12).map(match=>
+            sb().rpc("fan_market_stats",{p_match:String(match.id)})
+          ));
+          const statFailure=statResults.find(result=>result.error);
+          if(statFailure)throw statFailure.error;
+          const refreshedStats={};
+          statResults.forEach(result=>{
+            (result.data||[]).forEach(row=>{
+              refreshedStats[row.market_id]=Number(row.picks);
+            });
+          });
+          nextStats=refreshedStats;
+          marketStatsFetchedAt=Date.now();
+        }catch(error){
+          // These counts are informational; keep the last good values if an
+          // aggregate RPC is temporarily unavailable rather than failing the
+          // entire Fan Game snapshot.
+          console.warn("Fan Game market counts are temporarily unavailable:",error);
+        }
+      }
 
-      const nextMvp={};
-      await Promise.all(finished().slice(0,4).map(async match=>{
-        const result=await sb().rpc("fan_mvp_results",{p_match:String(match.id)});
-        if(result.error)throw result.error;
-        nextMvp[String(match.id)]=result.data||[];
-      }));
+      let nextMvp=S.mvp;
+      const finishedMatches=finished().slice(0,4);
+      if(!mvpResultsFetchedAt||counterNow-mvpResultsFetchedAt>=MVP_RESULTS_TTL){
+        // New/failed results are retried after the TTL, not every live tick.
+        mvpResultsFetchedAt=counterNow;
+        try{
+          const mvpResults=await Promise.all(finishedMatches.map(match=>
+            sb().rpc("fan_mvp_results",{p_match:String(match.id)})
+          ));
+          const mvpFailure=mvpResults.find(result=>result.error);
+          if(mvpFailure)throw mvpFailure.error;
+          const refreshedMvp={};
+          mvpResults.forEach((result,index)=>{
+            refreshedMvp[String(finishedMatches[index].id)]=result.data||[];
+          });
+          nextMvp=refreshedMvp;
+          mvpResultsFetchedAt=Date.now();
+        }catch(error){
+          console.warn("Fan Game MVP results are temporarily unavailable:",error);
+        }
+      }
 
       let nextProfiles=S.profiles;
       if(isAdm()&&!nextProfiles.length){
@@ -137,10 +188,14 @@
       S.mvp=nextMvp;
       S.profiles=nextProfiles;
       S.err=null;
+      refreshFailureCount=0;
+      refreshRetryAt=0;
     }catch(error){
       if(currentUserKey()!==requestedUserKey){
         refreshPending=true;
       }else{
+        refreshFailureCount=Math.min(refreshFailureCount+1,4);
+        refreshRetryAt=Date.now()+Math.min(60000,10000*Math.pow(2,refreshFailureCount-1));
         console.error("Pogodi:",error);
         if(S.err!=="setup"&&!S.markets.length&&!S.shop.length&&!S.board.length)S.err="unavailable";
       }
@@ -289,8 +344,8 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
       b.disabled=true;
       const r=await rpc("fan_place_pick",{p_market:S.sel.id,p_stake:stake,p_boost:!!$("fgBoost")?.checked},"Pogodak je sačuvan! 🎯");
       if(b.isConnected)b.disabled=false;
-      if(!r.error){hideModal();S.sel=null;refresh();}
-    }else if(a==="daily"){const r=await rpc("fan_claim_daily",{},"+10 poena! 🎁");if(!r.error)refresh();}else if(a==="buy"){const r=await rpc("fan_buy_item",{p_item:Number(id)},"Kupljeno! 🛍️");if(!r.error)refresh();}else if(a==="equip"){const r=await rpc("fan_equip_item",{p_item:Number(id),p_on:b.dataset.on==="1"});if(!r.error){const uid=user()?.id;if(uid&&window.__fanPublicStyles)delete window.__fanPublicStyles[String(uid)];refresh();}}else if(a==="donate"){const r=await rpc("fan_team_donate",{p_team:$("fgFundTeam").value,p_amount:Number($("fgFundAmt").value)},"Hvala na podršci! 💚");if(!r.error)refresh();}else if(a==="follow"){if(!user())return;if(S.follows.includes(String(id))){const {error}=await sb().from("fan_team_follows").delete().eq("user_id",user().id).eq("team_id",id);if(error)return note(error.message,"error");}else{const {error}=await sb().from("fan_team_follows").insert({user_id:user().id,team_id:id});if(error)return note(error.message,"error");}refresh();}else if(a==="clubDonate"){const r=await rpc("fan_team_donate",{p_team:$("fgClubTeam").value,p_amount:Number($("fgClubAmt").value)},"Hvala na podršci! 💚");if(!r.error)refresh();}else if(a==="mvp"){const r=await rpc("fan_mvp_vote",{p_match:id,p_player:$("mvpP-"+id).value,p_extra:Number($("mvpX-"+id).value)},"Glas je upisan ⭐");if(!r.error)refresh();}else if(a==="gen"){const r=await adminAction("generate_markets",{match_id:id},"Ponuda je otvorena.");if(!r.error)refresh();}else if(a==="settle"){if(confirm("Obračunati poene za ovu utakmicu?")){const r=await adminAction("settle_match",{match_id:id});if(!r.error)refresh();}}else if(a==="grant"){const r=await adminAction("grant",{user_id:$("grU").value,amount:Number($("grA").value),reason:$("grR").value});if(!r.error)refresh();}}
+      if(!r.error){marketStatsFetchedAt=0;hideModal();S.sel=null;refresh();}
+    }else if(a==="daily"){const r=await rpc("fan_claim_daily",{},"+10 poena! 🎁");if(!r.error)refresh();}else if(a==="buy"){const r=await rpc("fan_buy_item",{p_item:Number(id)},"Kupljeno! 🛍️");if(!r.error)refresh();}else if(a==="equip"){const r=await rpc("fan_equip_item",{p_item:Number(id),p_on:b.dataset.on==="1"});if(!r.error){const uid=user()?.id;if(uid&&window.__fanPublicStyles)delete window.__fanPublicStyles[String(uid)];refresh();}}else if(a==="donate"){const r=await rpc("fan_team_donate",{p_team:$("fgFundTeam").value,p_amount:Number($("fgFundAmt").value)},"Hvala na podršci! 💚");if(!r.error)refresh();}else if(a==="follow"){if(!user())return;if(S.follows.includes(String(id))){const {error}=await sb().from("fan_team_follows").delete().eq("user_id",user().id).eq("team_id",id);if(error)return note(error.message,"error");}else{const {error}=await sb().from("fan_team_follows").insert({user_id:user().id,team_id:id});if(error)return note(error.message,"error");}refresh();}else if(a==="clubDonate"){const r=await rpc("fan_team_donate",{p_team:$("fgClubTeam").value,p_amount:Number($("fgClubAmt").value)},"Hvala na podršci! 💚");if(!r.error)refresh();}else if(a==="mvp"){const r=await rpc("fan_mvp_vote",{p_match:id,p_player:$("mvpP-"+id).value,p_extra:Number($("mvpX-"+id).value)},"Glas je upisan ⭐");if(!r.error){mvpResultsFetchedAt=0;refresh();}}else if(a==="gen"){const r=await adminAction("generate_markets",{match_id:id},"Ponuda je otvorena.");if(!r.error){marketStatsFetchedAt=0;refresh();}}else if(a==="settle"){if(confirm("Obračunati poene za ovu utakmicu?")){const r=await adminAction("settle_match",{match_id:id});if(!r.error)refresh();}}else if(a==="grant"){const r=await adminAction("grant",{user_id:$("grU").value,amount:Number($("grA").value),reason:$("grR").value});if(!r.error)refresh();}}
   function mount(){if($("game"))return;const main=document.querySelector("main");if(!main)return;const sec=document.createElement("section");sec.className="section";sec.id="game";sec.innerHTML=`<h2 class="section-title fg-section-title">Pogodi</h2><div id="gameRoot"></div>`;main.appendChild(sec);document.addEventListener("click",onClick);document.addEventListener("input",e=>{if(["fgStake","fgBoost"].includes(e.target.id))updateWin();});}
   let bootAttempts=0;
   function boot(){
@@ -304,7 +359,7 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
     // when "game" becomes active. Do not wrap showSection a second time.
     if(sb()&&!window.__MEDJASI_GAME_REFRESH_TIMER__){
       window.__MEDJASI_GAME_REFRESH_TIMER__=setInterval(()=>{
-        if(sb()&&document.querySelector(".section.active")?.id==="game")refresh();
+        if(sb()&&document.querySelector(".section.active")?.id==="game")refresh({force:false});
       },10000);
     }
     window.medjasiGame={refresh,openTab,getActiveTab:()=>S.tab};
