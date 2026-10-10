@@ -1795,17 +1795,28 @@ async function loadAll(){
       return {data:error?null:(data||[]),error};
     };
 
-    const results=await Promise.all([
-      fetchAllRows("teams","name"),
-      fetchAllRows("players","jersey_number"),
-      fetchAllRows("matches","match_date"),
-      fetchAllRows("goals","minute"),
-      fetchAllRows("cards","minute"),
-      fetchRecent("comments",300),
-      fetchRecent("messages",300),
-      fetchRecent("gallery",200),
-      fetchAllRows("match_players",null)
-    ]);
+    // Bound the initial burst of REST requests. A pool timeout is a shared
+    // service failure; nine simultaneous table queries per browser multiplied
+    // across visitors needlessly amplifies it. Keep the original result order.
+    const loadTasks=[
+      ()=>fetchAllRows("teams","name"),
+      ()=>fetchAllRows("players","jersey_number"),
+      ()=>fetchAllRows("matches","match_date"),
+      ()=>fetchAllRows("goals","minute"),
+      ()=>fetchAllRows("cards","minute"),
+      ()=>fetchRecent("comments",300),
+      ()=>fetchRecent("messages",300),
+      ()=>fetchRecent("gallery",200),
+      ()=>fetchAllRows("match_players",null)
+    ];
+    const results=[];
+    const LOAD_QUERY_CONCURRENCY=4;
+    for(let i=0;i<loadTasks.length;i+=LOAD_QUERY_CONCURRENCY){
+      const batch=await Promise.all(
+        loadTasks.slice(i,i+LOAD_QUERY_CONCURRENCY).map(task=>task())
+      );
+      results.push(...batch);
+    }
 
     const [teamsResult,playersResult,matchesResult,goalsResult,cardsResult,commentsResult,messagesResult,galleryResult,matchPlayersResult]=results;
     hadLoadErrors=results.some(r=>!!r.error);
