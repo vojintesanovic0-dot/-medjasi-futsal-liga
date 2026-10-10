@@ -814,6 +814,9 @@ if (
   !fanGameSource.includes("const MVP_RESULTS_TTL=60000") ||
   !fanGameSource.includes("marketStatsFetchedAt=0") ||
   !fanGameSource.includes("mvpResultsFetchedAt=0") ||
+  !fanGameSource.includes("marketStatsFetchedAt=counterNow;") ||
+  !fanGameSource.includes("mvpResultsFetchedAt=counterNow;") ||
+  fanGameSource.includes("needsNewMvpResult") ||
   !fanGameSource.includes("Fan Game market counts are temporarily unavailable:") ||
   !fanGameSource.includes("Fan Game MVP results are temporarily unavailable:")
 ) {
