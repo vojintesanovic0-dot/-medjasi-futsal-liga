@@ -118,17 +118,31 @@ async function publishExtras(postId){
 function patchPublish(){
   if(window.__COMMUNITY_PUBLISH_PATCH__)return;
   window.__COMMUNITY_PUBLISH_PATCH__=true;
-  const old=window.publishV9Post;if(typeof old!=="function")return;
+  const old=window.publishV9Post;
+  if(typeof old!=="function")return;
   window.publishV9Post=async function(){
-    const before=Date.now();
-    const r=await old.apply(this,arguments);
-    /* The original function closes the modal and reloads. Find the newest own post. */
-    if(Date.now()-before<120000&&uid()){
-      const {data}=await client().from("community_posts").select("id").eq("user_id",uid()).order("created_at",{ascending:false}).limit(1);
-      if(data?.[0]) await publishExtras(data[0].id);
-      window.loadV9Community?.();
+    let postId=null;
+    try{
+      postId=await old.apply(this,arguments);
+    }catch(error){
+      console.error("Objava nije mogla biti završena:",error);
+      toastX(error?.message||"Objava nije sačuvana.","error");
+      return null;
     }
-    return r;
+
+    // The base publisher returns the exact inserted ID. Never guess from the
+    // newest post: a failed publish could otherwise modify an older post.
+    if(typeof postId==="string"&&/^[0-9a-f-]{36}$/i.test(postId)){
+      try{
+        await publishExtras(postId);
+      }catch(error){
+        console.error("Dodatni Community podaci nisu sačuvani:",error);
+        toastX("Objava je sačuvana, ali povezivanje/anketa nije potpuno završeno.","error");
+      }
+      window.loadV9Community?.();
+      return postId;
+    }
+    return null;
   };
 }
 async function renderPolls(){
