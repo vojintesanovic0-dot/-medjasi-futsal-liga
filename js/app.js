@@ -4667,75 +4667,116 @@ async function changeMatchStatus(id,status){
     return;
   }
 
-  const changed=existing.status!==status;
+  let before;
+  try{
+    before=await readConfirmedMatch(id,existing);
+  }catch(error){
+    console.error("Početni status utakmice nije moguće potvrditi:",error);
+    alert("Status utakmice nije moguće potvrditi iz baze. Promjena nije poslana; pokušaj ponovo.");
+    return;
+  }
+
+  const changed=before.status!==status;
+  if(!changed){
+    try{await loadAll();}catch(error){console.warn("Osvježavanje statusa:",error);}
+    return;
+  }
+
   const patch={status};
-  if(status==="live"&&existing.status!=="live"){
+  if(status==="live"&&before.status!=="live"){
     patch.live_started_at=new Date().toISOString();
-  }else if(status!=="live"&&existing.status==="live"){
+  }else if(status!=="live"&&before.status==="live"){
     patch.live_started_at=null;
   }
 
+  let updateResult;
   try{
-    const {error}=await supabaseClient.from("matches").update(patch).eq("id",id);
-    if(error)throw error;
+    updateResult=await supabaseClient.from("matches")
+      .update(patch)
+      .eq("id",id)
+      .select("*")
+      .maybeSingle();
+    if(updateResult.error)throw updateResult.error;
+    if(!updateResult.data)throw new Error("Baza nije potvrdila promjenu statusa utakmice.");
   }catch(error){
     alert(error?.message||"Status utakmice nije sačuvan. Pokušaj ponovo.");
     return;
   }
 
-  await loadAll();
-  // Goals and finished-match push are emitted from the league_events realtime
-  // path. LIVE has no league_events insert, so send its push only here.
-  const current=getMatch(id)||existing;
-  if(changed&&status==="live"){
-    const title="🔴 UTAKMICA UŽIVO — "+teamName(current.home_team_id)+" : "+teamName(current.away_team_id);
-    const body="Rezultat "+(current.home_score||0)+":"+(current.away_score||0)+" · Počela je utakmica uživo.";
-    void notifyLeaguePush("live",title,body,id);
-  }else if(changed&&status==="finished"){
-    const title="🏁 KRAJ — "+teamName(current.home_team_id)+" "+(current.home_score||0)+":"+(current.away_score||0)+" "+teamName(current.away_team_id);
-    void notifyLeaguePush("match_finished",title,"Utakmica je završena.",id);
-  }
-}
-
-/* =========================================================
-   MATCH MINUTE
-========================================================= */
-
-async function changeMinute(
-  id,
-  minute
-){
-
-  if(!canManageMatch()) return;
-
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("matches")
-      .update({
-        current_minute:
-          Number(minute) || 0
-      })
-      .eq("id",id);
-
-
-  if(error){
-
-    alert(error.message);
-
+  let confirmed;
+  try{
+    confirmed=await readConfirmedMatch(id,updateResult.data);
+    if(confirmed.status!==status){
+      throw new Error("Sačuvani status se razlikuje od izabranog statusa.");
+    }
+  }catch(error){
+    console.error("Status je poslan, ali promjena nije potvrđena:",error);
+    alert("Status je poslan, ali nije moguće potvrditi novo stanje iz baze. Push nije poslan; osvježi utakmicu.");
+    try{await loadAll();}catch(refreshError){console.warn("Osvježavanje nakon promjene statusa:",refreshError);}
     return;
   }
 
+  let fullyRefreshed=false;
+  try{fullyRefreshed=(await loadAll())===true;}
+  catch(error){console.warn("Osvježavanje nakon promjene statusa:",error);}
+  if(!fullyRefreshed){
+    toast("Status je sačuvan, ali dio prikaza nije osvježen.","error");
+  }
 
-  await loadAll();
+  // Only a confirmed transition emits push, using the score returned by the DB.
+  if(status==="live"){
+    const title="🔴 UTAKMICA UŽIVO — "+teamName(confirmed.home_team_id)+" : "+teamName(confirmed.away_team_id);
+    const body="Rezultat "+Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)+" · Počela je utakmica uživo.";
+    const pushOk=await notifyLeaguePush("live",title,body,id);
+    if(!pushOk)toast("Status je promijenjen, ali push nije potvrđen.","error");
+  }else if(status==="finished"){
+    const title="🏁 KRAJ — "+teamName(confirmed.home_team_id)+" "+Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)+" "+teamName(confirmed.away_team_id);
+    const pushOk=await notifyLeaguePush("match_finished",title,"Utakmica je završena.",id);
+    if(!pushOk)toast("Utakmica je završena, ali push nije potvrđen.","error");
+  }
 }
 
+async function changeMinute(id,minute){
+  if(!canManageMatch())return;
+  if(String(minute??"").trim()===""){
+    alert("Unesi minutu utakmice.");
+    return;
+  }
+  const value=Number(minute);
+  if(!Number.isInteger(value)||value<0||value>60){
+    alert("Minuta utakmice mora biti cijeli broj od 0 do 60.");
+    return;
+  }
 
-/* =========================================================
-   LINEUP CONTROL
-========================================================= */
+  const match=getMatch(id);
+  if(!match)return alert("Utakmica nije pronađena.");
+
+  try{
+    const {data,error}=await supabaseClient.from("matches")
+      .update({current_minute:value})
+      .eq("id",id)
+      .select("id,current_minute")
+      .maybeSingle();
+    if(error)throw error;
+    if(!data)throw new Error("Baza nije potvrdila promjenu minute.");
+
+    const local=matches.find(x=>String(x.id)===String(id));
+    if(local)local.current_minute=data.current_minute;
+
+    try{
+      const refreshed=await loadAll();
+      if(refreshed!==true){
+        toast("Minuta je sačuvana, ali dio prikaza nije osvježen.","error");
+      }
+    }catch(refreshError){
+      console.warn("Minuta je sačuvana, ali osvježavanje nije uspjelo:",refreshError);
+      toast("Minuta je sačuvana, ali prikaz nije osvježen.","error");
+    }
+  }catch(error){
+    console.error("Promjena minute nije uspjela:",error);
+    alert(error?.message||"Minuta nije sačuvana. Pokušaj ponovo.");
+  }
+}
 
 async function openLineupControl(
   matchId
