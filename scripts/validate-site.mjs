@@ -790,6 +790,27 @@ if (
   pass("Gallery/news deletions safely clean same-project uploaded media and report partial failures");
 }
 
+const matchStatusStart = app.indexOf("async function changeMatchStatus(id,status)");
+const matchMinuteStart = app.indexOf("async function changeMinute(id,minute)",matchStatusStart);
+const matchLineupStart = app.indexOf("async function openLineupControl(",matchMinuteStart);
+const matchStatusFunction = matchStatusStart >= 0 && matchMinuteStart > matchStatusStart ? app.slice(matchStatusStart,matchMinuteStart) : "";
+const matchMinuteFunction = matchMinuteStart >= 0 && matchLineupStart > matchMinuteStart ? app.slice(matchMinuteStart,matchLineupStart) : "";
+if (
+  !matchStatusFunction.includes("await readConfirmedMatch(id,existing)") ||
+  !matchStatusFunction.includes(".select(\"*\")") ||
+  !matchStatusFunction.includes("confirmed.status!==status") ||
+  !matchStatusFunction.includes('Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)') ||
+  !matchStatusFunction.includes("const pushOk=await notifyLeaguePush(") ||
+  !matchMinuteFunction.includes("Number.isInteger(value)") ||
+  !matchMinuteFunction.includes("value>60") ||
+  !matchMinuteFunction.includes(".select(\"id,current_minute\")") ||
+  !matchMinuteFunction.includes("catch(error)")
+) {
+  fail("Match status/minute edits must validate inputs, confirm persisted values, and broadcast only the confirmed match state");
+} else {
+  pass("Match status/minute edits validate values and use database-confirmed state before push");
+}
+
 const cardSaveSource = app.slice(
   app.indexOf("async function addCard(matchId)"),
   app.indexOf("/* =========================================================\\n   TEAM MODAL",app.indexOf("async function addCard(matchId)"))
