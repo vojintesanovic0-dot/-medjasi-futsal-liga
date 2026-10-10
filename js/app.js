@@ -4348,107 +4348,58 @@ async function addPlayer(){
 ========================================================= */
 
 async function addMatch(){
+  if(!isAdmin())return alert("Nemaš admin ovlaštenje.");
 
-  if(!isAdmin()){
+  const home=document.getElementById("matchHome")?.value||"";
+  const away=document.getElementById("matchAway")?.value||"";
+  const date=document.getElementById("matchDate")?.value||"";
+  const round=document.getElementById("matchRound")?.value||"";
 
-    alert(
-      "Nemaš admin ovlaštenje."
-    );
+  if(!home||!away||!date)return alert("Popuni sva polja.");
+  if(String(home)===String(away))return alert("Domaćin i gost ne mogu biti ista ekipa.");
 
-    return;
+  const dateValue=new Date(date);
+  if(Number.isNaN(dateValue.getTime()))return alert("Datum utakmice nije ispravan.");
+
+  const submitButton=[...document.querySelectorAll("#adminContent button")]
+    .find(button=>/addMatch\s*\(/.test(button.getAttribute("onclick")||""));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
+
+  try{
+    const {data:created,error}=await supabaseClient.from("matches").insert({
+      home_team_id:home,
+      away_team_id:away,
+      match_date:dateValue.toISOString(),
+      round:round||null,
+      home_score:0,
+      away_score:0,
+      status:"scheduled",
+      current_minute:0
+    }).select("*").maybeSingle();
+    if(error)throw error;
+    if(!created?.id)throw new Error("Baza nije potvrdila kreiranje utakmice.");
+
+    if(!matches.some(match=>String(match.id)===String(created.id)))matches.push(created);
+    document.getElementById("matchDate").value="";
+    document.getElementById("matchRound").value="";
+
+    let refreshed=false;
+    try{refreshed=(await loadAll())===true;}
+    catch(refreshError){console.warn("Utakmica je sačuvana, ali osvježavanje nije uspjelo:",refreshError);}
+
+    if(refreshed){
+      toast("Utakmica je dodana.","success");
+    }else{
+      toast("Utakmica je dodana, ali lista nije potpuno osvježena. Ponovo učitaj admin panel.","error");
+    }
+  }catch(error){
+    console.error("Dodavanje utakmice nije uspjelo:",error);
+    alert(error?.message||"Utakmica nije sačuvana. Provjeri listu utakmica prije ponovnog pokušaja.");
+  }finally{
+    if(submitButton?.isConnected)submitButton.disabled=false;
   }
-
-
-  const home =
-    document
-      .getElementById("matchHome")
-      .value;
-
-
-  const away =
-    document
-      .getElementById("matchAway")
-      .value;
-
-
-  const date =
-    document
-      .getElementById("matchDate")
-      .value;
-
-
-  const round =
-    document
-      .getElementById("matchRound")
-      .value;
-
-
-  if(!home || !away || !date){
-
-    alert(
-      "Popuni sva polja."
-    );
-
-    return;
-  }
-
-
-  if(home === away){
-
-    alert(
-      "Domaćin i gost ne mogu biti ista ekipa."
-    );
-
-    return;
-  }
-
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("matches")
-      .insert({
-        home_team_id:home,
-        away_team_id:away,
-        match_date:
-          new Date(date).toISOString(),
-        round:
-          round || null,
-        home_score:0,
-        away_score:0,
-        status:"scheduled",
-        current_minute:0
-      });
-
-
-  if(error){
-
-    alert(error.message);
-
-    return;
-  }
-
-
-  document.getElementById(
-    "matchDate"
-  ).value = "";
-
-
-  document.getElementById(
-    "matchRound"
-  ).value = "";
-
-
-  toast(
-    "Utakmica je dodana."
-  );
-
-
-  await loadAll();
 }
-
-
 /* =========================================================
    ADMIN MATCHES
 ========================================================= */
@@ -5013,234 +4964,106 @@ async function openLineupControl(
    SAVE LINEUP
 ========================================================= */
 
-async function saveLineup(
-  matchId
-){
+async function saveLineup(matchId){
+  if(!canManageMatch())return;
+  const match=getMatch(matchId);
+  if(!match)return alert("Utakmica nije pronađena. Osvježi prikaz.");
 
-  if(!canManageMatch()) return;
+  const registered=[...document.querySelectorAll(".registered-player:checked")].map(x=>String(x.dataset.player||""));
+  const starting=[...document.querySelectorAll(".starting-player:checked")].map(x=>String(x.dataset.player||""));
 
+  const isTeamPlayer=(id,teamId)=>String(getPlayer(id)?.team_id)===String(teamId);
+  const homeRegistered=registered.filter(id=>isTeamPlayer(id,match.home_team_id));
+  const awayRegistered=registered.filter(id=>isTeamPlayer(id,match.away_team_id));
+  const homeStarting=starting.filter(id=>isTeamPlayer(id,match.home_team_id));
+  const awayStarting=starting.filter(id=>isTeamPlayer(id,match.away_team_id));
 
-  const match =
-    getMatch(matchId);
-
-
-  if(!match) return;
-
-
-  const registered =
-    [
-      ...document.querySelectorAll(
-        ".registered-player:checked"
-      )
-    ]
-    .map(
-      x =>
-        x.dataset.player
-    );
-
-
-  const starting =
-    [
-      ...document.querySelectorAll(
-        ".starting-player:checked"
-      )
-    ]
-    .map(
-      x =>
-        x.dataset.player
-    );
-
-
-  const homeStarting =
-    starting.filter(
-      id =>
-        getPlayer(id)?.team_id ===
-        match.home_team_id
-    );
-
-
-  const awayStarting =
-    starting.filter(
-      id =>
-        getPlayer(id)?.team_id ===
-        match.away_team_id
-    );
-
-
-  const homeRegistered =
-    registered.filter(
-      id =>
-        getPlayer(id)?.team_id ===
-        match.home_team_id
-    );
-
-
-  const awayRegistered =
-    registered.filter(
-      id =>
-        getPlayer(id)?.team_id ===
-        match.away_team_id
-    );
-
-
-  if(
-    homeRegistered.length < 5 ||
-    awayRegistered.length < 5
-  ){
-
-    alert(
-      "Svaka ekipa mora imati najmanje 5 prijavljenih igrača."
-    );
-
+  if(homeRegistered.length<5||awayRegistered.length<5){
+    alert("Svaka ekipa mora imati najmanje 5 prijavljenih igrača.");
+    return;
+  }
+  if(homeStarting.length!==5||awayStarting.length!==5){
+    alert("Moraš izabrati tačno 5 početnih igrača za svaku ekipu.");
+    return;
+  }
+  if(!homeStarting.some(id=>getPlayer(id)?.position==="Golman")||
+     !awayStarting.some(id=>getPlayer(id)?.position==="Golman")){
+    alert("Početna petorka mora sadržati golmana za obje ekipe.");
+    return;
+  }
+  if(starting.some(id=>!registered.includes(id))){
+    alert("Svaki početni igrač mora biti označen kao prijavljen.");
     return;
   }
 
-
-  if(
-    homeStarting.length !== 5 ||
-    awayStarting.length !== 5
-  ){
-
-    alert(
-      "Moraš izabrati tačno 5 početnih igrača za svaku ekipu."
-    );
-
+  const allRegistered=[...new Set([...homeRegistered,...awayRegistered])];
+  const allStarting=new Set([...homeStarting,...awayStarting]);
+  if(allRegistered.length!==homeRegistered.length+awayRegistered.length){
+    alert("Postava sadrži ponovljenog ili neispravnog igrača. Osvježi postavu.");
     return;
   }
+  const rows=allRegistered.map(player_id=>({
+    match_id:matchId,
+    player_id,
+    is_starting:allStarting.has(player_id),
+    is_active:allStarting.has(player_id)
+  }));
 
+  const submitButton=[...document.querySelectorAll("#modalContent button")]
+    .find(button=>/saveLineup\s*\(/.test(button.getAttribute("onclick")||""));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
 
-  const homeGoalkeeper =
-    homeStarting.some(
-      id =>
-        getPlayer(id)?.position ===
-        "Golman"
-    );
-
-
-  const awayGoalkeeper =
-    awayStarting.some(
-      id =>
-        getPlayer(id)?.position ===
-        "Golman"
-    );
-
-
-  if(
-    !homeGoalkeeper ||
-    !awayGoalkeeper
-  ){
-
-    alert(
-      "Početna petorka mora sadržati golmana za obje ekipe."
-    );
-
-    return;
-  }
-
-
-  /*
-    Početni igrači moraju biti registrovani.
-  */
-
-  const startingNotRegistered =
-    starting.filter(
-      id =>
-        !registered.includes(id)
-    );
-
-
-  if(startingNotRegistered.length){
-
-    alert(
-      "Svaki početni igrač mora biti označen kao prijavljen."
-    );
-
-    return;
-  }
-
-
-  const allStarting =
-    [
-      ...homeStarting,
-      ...awayStarting
-    ];
-
-
-  const allRegistered =
-    [
-      ...new Set([
-        ...homeRegistered,
-        ...awayRegistered
-      ])
-    ];
-
-
-  const rows =
-    allRegistered.map(
-      player_id => ({
-        match_id:matchId,
-        player_id,
-        is_starting:
-          allStarting.includes(
-            player_id
-          ),
-        is_active:
-          allStarting.includes(
-            player_id
-          )
-      })
-    );
-
-
-  const {
-    error:deleteError
-  } =
-    await supabaseClient
-      .from("match_players")
-      .delete()
+  try{
+    // Read server truth first; never delete the roster before a successful upsert.
+    const {data:existingRows,error:readError}=await supabaseClient.from("match_players")
+      .select("player_id")
       .eq("match_id",matchId);
+    if(readError)throw readError;
 
+    const {error:upsertError}=await supabaseClient.from("match_players")
+      .upsert(rows,{onConflict:"match_id,player_id"});
+    if(upsertError)throw upsertError;
 
-  if(deleteError){
+    const selectedIds=new Set(allRegistered.map(String));
+    const toRemove=(existingRows||[])
+      .map(row=>String(row.player_id))
+      .filter(id=>!selectedIds.has(id));
+    let cleanupError=null;
+    for(const playerId of [...new Set(toRemove)]){
+      try{
+        const {error}=await supabaseClient.from("match_players")
+          .delete()
+          .eq("match_id",matchId)
+          .eq("player_id",playerId);
+        if(error)throw error;
+      }catch(error){
+        cleanupError=error;
+        console.error("Uklanjanje odjavljenog igrača nije uspjelo:",error);
+        break;
+      }
+    }
 
-    alert(
-      deleteError.message
-    );
+    hideModal();
+    let refreshed=false;
+    try{refreshed=(await loadAll())===true;}
+    catch(refreshError){console.warn("Osvježavanje postave nije uspjelo:",refreshError);}
 
-    return;
+    if(cleanupError){
+      toast("Postava je sačuvana, ali uklanjanje jednog ili više odjavljenih igrača nije dovršeno. Provjeri postavu.","error");
+    }else if(!refreshed){
+      toast("Postava je sačuvana, ali prikaz nije potpuno osvježen. Ponovo otvori utakmicu.","error");
+    }else{
+      toast("Postava je sačuvana.","success");
+    }
+    if(String(currentMatchId)===String(matchId)&&refreshed)openMatch(matchId);
+  }catch(error){
+    console.error("Čuvanje postave nije uspjelo:",error);
+    alert(error?.message||"Postava nije sačuvana. Postojeći zapisi nisu unaprijed obrisani.");
+  }finally{
+    if(submitButton?.isConnected)submitButton.disabled=false;
   }
-
-
-  const {
-    error:insertError
-  } =
-    await supabaseClient
-      .from("match_players")
-      .insert(rows);
-
-
-  if(insertError){
-
-    alert(
-      insertError.message
-    );
-
-    return;
-  }
-
-
-  hideModal();
-
-
-  toast(
-    "Postava je sačuvana."
-  );
-
-
-  await loadAll();
 }
-
-
 /* =========================================================
    SUBSTITUTIONS
 ========================================================= */
@@ -5473,141 +5296,121 @@ async function openSubstitutionControl(
    MAKE SUBSTITUTION
 ========================================================= */
 
-async function makeSubstitution(
-  matchId,
-  side
-){
+async function makeSubstitution(matchId,side){
+  if(!canManageMatch())return;
+  if(!["home","away"].includes(side))return alert("Izabrana strana utakmice nije ispravna.");
 
-  if(!canManageMatch()) return;
+  const match=getMatch(matchId);
+  if(!match)return alert("Utakmica nije pronađena.");
+  if(match.status!=="live")return alert("Izmjene su dostupne samo tokom utakmice uživo.");
 
+  const outEl=document.getElementById(side==="home"?"subHomeOut":"subAwayOut");
+  const inEl=document.getElementById(side==="home"?"subHomeIn":"subAwayIn");
+  const out=String(outEl?.value||"");
+  const incoming=String(inEl?.value||"");
+  if(!out||!incoming)return alert("Izaberi oba igrača.");
+  if(out===incoming)return alert("Igrač koji izlazi i igrač koji ulazi moraju biti različiti.");
 
-  const outEl =
-    document.getElementById(
-      side === "home"
-        ? "subHomeOut"
-        : "subAwayOut"
-    );
-
-
-  const inEl =
-    document.getElementById(
-      side === "home"
-        ? "subHomeIn"
-        : "subAwayIn"
-    );
-
-
-  const out =
-    outEl?.value;
-
-
-  const incoming =
-    inEl?.value;
-
-
-  if(!out || !incoming){
-
-    alert(
-      "Izaberi oba igrača."
-    );
-
-    return;
+  const sideTeam=side==="home"?match.home_team_id:match.away_team_id;
+  const outPlayer=getPlayer(out);
+  const inPlayer=getPlayer(incoming);
+  if(!outPlayer||!inPlayer)return alert("Jedan od izabranih igrača nije dostupan. Osvježi postavu.");
+  if(String(outPlayer.team_id)!==String(sideTeam)||String(inPlayer.team_id)!==String(sideTeam)){
+    return alert("Oba igrača moraju pripadati izabranoj ekipi.");
   }
 
+  const submitButton=[...document.querySelectorAll("#modalContent button")]
+    .find(button=>(button.getAttribute("onclick")||"").includes("makeSubstitution("));
+  if(submitButton?.disabled)return;
+  if(submitButton)submitButton.disabled=true;
 
-  if(out === incoming){
-
-    alert(
-      "Igrač koji izlazi i igrač koji ulazi moraju biti različiti."
-    );
-
-    return;
-  }
-
-
-  const {
-    error:outError
-  } =
-    await supabaseClient
-      .from("match_players")
-      .update({
-        is_active:false
-      })
-      .eq("match_id",matchId)      .eq("player_id",out);
-
-
-  if(outError){
-
-    alert(
-      outError.message
-    );
-
-    return;
-  }
-
-
-  const {
-    error:inError
-  } =
-    await supabaseClient
-      .from("match_players")
-      .update({
-        is_active:true
-      })
+  let outgoingChanged=false;
+  let incomingChanged=false;
+  try{
+    const {data:rows,error:readError}=await supabaseClient.from("match_players")
+      .select("player_id,is_active")
       .eq("match_id",matchId)
-      .eq("player_id",incoming);
+      .in("player_id",[out,incoming]);
+    if(readError)throw readError;
 
+    const outRow=(rows||[]).find(row=>String(row.player_id)===out);
+    const inRow=(rows||[]).find(row=>String(row.player_id)===incoming);
+    if(!outRow||!inRow)throw new Error("Oba igrača moraju biti prijavljena u postavi utakmice.");
+    if(!outRow.is_active)throw new Error("Igrač koji izlazi više nije aktivan. Osvježi postavu.");
+    if(inRow.is_active)throw new Error("Igrač koji ulazi već je aktivan. Osvježi postavu.");
 
-  if(inError){
+    const {data:outUpdated,error:outError}=await supabaseClient.from("match_players")
+      .update({is_active:false})
+      .eq("match_id",matchId)
+      .eq("player_id",out)
+      .eq("is_active",true)
+      .select("player_id")
+      .maybeSingle();
+    if(outError)throw outError;
+    if(!outUpdated)throw new Error("Igrač koji izlazi promijenio je status. Osvježi postavu.");
+    outgoingChanged=true;
 
-    alert(
-      inError.message
-    );
+    const {data:inUpdated,error:inError}=await supabaseClient.from("match_players")
+      .update({is_active:true})
+      .eq("match_id",matchId)
+      .eq("player_id",incoming)
+      .eq("is_active",false)
+      .select("player_id")
+      .maybeSingle();
+    if(inError)throw inError;
+    if(!inUpdated)throw new Error("Igrač koji ulazi promijenio je status. Osvježi postavu.");
+    incomingChanged=true;
 
+    const {error:historyError}=await supabaseClient.from("match_substitutions").insert({
+      match_id:matchId,
+      team_id:sideTeam,
+      player_out_id:out,
+      player_in_id:incoming,
+      minute:Number(match.current_minute||0)
+    });
+    if(historyError)throw historyError;
+  }catch(error){
+    let rollbackFailed=false;
+    if(incomingChanged){
+      try{
+        const {error}=await supabaseClient.from("match_players").update({is_active:false})
+          .eq("match_id",matchId).eq("player_id",incoming).eq("is_active",true);
+        if(error)throw error;
+      }catch(rollbackError){
+        rollbackFailed=true;
+        console.error("Povratak aktivnog statusa zamjene nije uspio:",rollbackError);
+      }
+    }
+    if(outgoingChanged){
+      try{
+        const {error}=await supabaseClient.from("match_players").update({is_active:true})
+          .eq("match_id",matchId).eq("player_id",out).eq("is_active",false);
+        if(error)throw error;
+      }catch(rollbackError){
+        rollbackFailed=true;
+        console.error("Povratak izlaznog igrača nije uspio:",rollbackError);
+      }
+    }
+    if(submitButton?.isConnected)submitButton.disabled=false;
+    console.error("Izmjena nije sačuvana:",error);
+    alert((error?.message||"Izmjena nije sačuvana.")+(rollbackFailed?" Vraćanje prethodne postave nije potpuno; odmah osvježi utakmicu i provjeri postavu.":""));
+    try{await loadAll();}catch(refreshError){console.warn("Osvježavanje nakon neuspjele izmjene:",refreshError);}
     return;
   }
-
-  /* Evidentiraj izmjenu i u istoriji utakmice. */
-  const outPlayer = getPlayer(out);
-  const inPlayer = getPlayer(incoming);
-  const teamId = outPlayer?.team_id || inPlayer?.team_id;
-  if (teamId) {
-    const { error: substitutionError } = await supabaseClient
-      .from("match_substitutions")
-      .insert({
-        match_id: matchId,
-        team_id: teamId,
-        player_out_id: out,
-        player_in_id: incoming,
-        minute: Number(matches.find(m => String(m.id) === String(matchId))?.current_minute || 0)
-      });
-    if (substitutionError) {
-      console.warn("Istorija izmjene nije sačuvana:", substitutionError);
-    }
-  }
-
 
   hideModal();
-
-
-  toast(
-    "Izmjena je evidentirana."
-  );
-
-
-  await loadAll();
-
-
-  if(
-    String(currentMatchId) ===
-    String(matchId)
-  ){
-
-    openMatch(matchId);
+  const refreshed=await loadAll().catch(error=>{
+    console.warn("Izmjena je sačuvana, ali osvježavanje nije uspjelo:",error);
+    return false;
+  });
+  if(refreshed!==true){
+    toast("Izmjena je sačuvana, ali prikaz nije potpuno osvježen.","error");
+  }else{
+    toast("Izmjena je evidentirana.","success");
   }
+  if(String(currentMatchId)===String(matchId)&&refreshed===true)openMatch(matchId);
+  if(submitButton?.isConnected)submitButton.disabled=false;
 }
-
-
 /* =========================================================
    LINEUP / BENCH
 ========================================================= */
