@@ -47,6 +47,7 @@
   const MVP_RESULTS_TTL=120000;
   let marketStatsFetchedAt=0;
   let mvpResultsFetchedAt=0;
+  let ensuredWalletUserId=null;
   async function refresh(options={}){
     const force=options?.force!==false;
     const requestedUserKey=currentUserKey();
@@ -60,15 +61,21 @@
     S.loading=true;
     try{
       const u=user();
-      const [mk,shop,fund,board]=await Promise.all([
-        sb().from("fan_markets").select("*").eq("status","open").order("created_at"),
-        sb().from("fan_shop_items").select("*").eq("active",true).order("price"),
-        sb().from("fan_team_fund").select("*"),
+      const coreTasks=[
+        ()=>sb().from("fan_markets").select("*").eq("status","open").order("created_at"),
+        ()=>sb().from("fan_shop_items").select("*").eq("active",true).order("price"),
+        ()=>sb().from("fan_team_fund").select("*"),
         // The hardened database intentionally keeps the balance-bearing
         // leaderboard behind authenticated EXECUTE. Do not let anonymous access
         // denial fail the markets/shop/fund snapshot.
-        u ? sb().rpc("fan_leaderboard") : Promise.resolve({data:[],error:null})
-      ]);
+        ()=>u ? sb().rpc("fan_leaderboard") : Promise.resolve({data:[],error:null})
+      ];
+      const coreResults=[];
+      for(let i=0;i<coreTasks.length;i+=2){
+        const batch=await Promise.all(coreTasks.slice(i,i+2).map(task=>task()));
+        coreResults.push(...batch);
+      }
+      const [mk,shop,fund,board]=coreResults;
       if(mk.error&&/relation|does not exist|schema cache|function/i.test(mk.error.message||"")){
         S.err="setup";
         refreshFailureCount=Math.min(refreshFailureCount+1,4);
@@ -92,16 +99,25 @@
 
       let nextWallet=null,nextPicks=[],nextLedger=[],nextInventory=[],nextFollows=[],nextVotes={};
       if(u){
-        const ensure=await sb().rpc("fan_ensure_wallet");
-        if(ensure.error)throw ensure.error;
-        const [w,pk,ledger,inventory,votes,follows]=await Promise.all([
-          sb().from("fan_wallets").select("*").eq("user_id",u.id).maybeSingle(),
-          sb().from("fan_picks").select("*,fan_markets(label)").eq("user_id",u.id).order("created_at",{ascending:false}).limit(60),
-          sb().from("fan_ledger").select("*").eq("user_id",u.id).order("created_at",{ascending:false}).limit(15),
-          sb().from("fan_inventory").select("*").eq("user_id",u.id),
-          sb().from("fan_mvp_votes").select("match_id").eq("voter",u.id),
-          sb().from("fan_team_follows").select("team_id").eq("user_id",u.id)
-        ]);
+        if(ensuredWalletUserId!==String(u.id)){
+          const ensure=await sb().rpc("fan_ensure_wallet");
+          if(ensure.error)throw ensure.error;
+          ensuredWalletUserId=String(u.id);
+        }
+        const userTasks=[
+          ()=>sb().from("fan_wallets").select("*").eq("user_id",u.id).maybeSingle(),
+          ()=>sb().from("fan_picks").select("*,fan_markets(label)").eq("user_id",u.id).order("created_at",{ascending:false}).limit(60),
+          ()=>sb().from("fan_ledger").select("*").eq("user_id",u.id).order("created_at",{ascending:false}).limit(15),
+          ()=>sb().from("fan_inventory").select("*").eq("user_id",u.id),
+          ()=>sb().from("fan_mvp_votes").select("match_id").eq("voter",u.id),
+          ()=>sb().from("fan_team_follows").select("team_id").eq("user_id",u.id)
+        ];
+        const userResults=[];
+        for(let i=0;i<userTasks.length;i+=2){
+          const batch=await Promise.all(userTasks.slice(i,i+2).map(task=>task()));
+          userResults.push(...batch);
+        }
+        const [w,pk,ledger,inventory,votes,follows]=userResults;
         const userError=[w,pk,ledger,inventory,votes,follows].find(result=>result.error);
         if(userError)throw userError.error;
         nextWallet=w.data||null;
@@ -114,14 +130,20 @@
 
       let nextStats=S.stats;
       const counterNow=Date.now();
-      if(!marketStatsFetchedAt||counterNow-marketStatsFetchedAt>=MARKET_STATS_TTL){
+      if(u&&(!marketStatsFetchedAt||counterNow-marketStatsFetchedAt>=MARKET_STATS_TTL)){
         // Record attempts as well as successes so a failing optional aggregate
         // RPC cannot be hammered again on every 10-second refresh.
         marketStatsFetchedAt=counterNow;
         try{
-          const statResults=await Promise.all(active().slice(0,12).map(match=>
-            sb().rpc("fan_market_stats",{p_match:String(match.id)})
-          ));
+          const statResults=[];
+          const statsTasks=active().slice(0,12);
+          for(let i=0;i<statsTasks.length;i+=2){
+            const batch=await Promise.all(statsTasks.slice(i,i+2).map(match=>
+              sb().rpc("fan_market_stats",{p_match:String(match.id)})
+            ));
+            statResults.push(...batch);
+            if(batch.some(result=>result.error))break;
+          }
           const statFailure=statResults.find(result=>result.error);
           if(statFailure)throw statFailure.error;
           const refreshedStats={};
@@ -142,13 +164,18 @@
 
       let nextMvp=S.mvp;
       const finishedMatches=finished().slice(0,4);
-      if(!mvpResultsFetchedAt||counterNow-mvpResultsFetchedAt>=MVP_RESULTS_TTL){
+      if(u&&(!mvpResultsFetchedAt||counterNow-mvpResultsFetchedAt>=MVP_RESULTS_TTL)){
         // New/failed results are retried after the TTL, not every live tick.
         mvpResultsFetchedAt=counterNow;
         try{
-          const mvpResults=await Promise.all(finishedMatches.map(match=>
-            sb().rpc("fan_mvp_results",{p_match:String(match.id)})
-          ));
+          const mvpResults=[];
+          for(let i=0;i<finishedMatches.length;i+=2){
+            const batch=await Promise.all(finishedMatches.slice(i,i+2).map(match=>
+              sb().rpc("fan_mvp_results",{p_match:String(match.id)})
+            ));
+            mvpResults.push(...batch);
+            if(batch.some(result=>result.error))break;
+          }
           const mvpFailure=mvpResults.find(result=>result.error);
           if(mvpFailure)throw mvpFailure.error;
           const refreshedMvp={};
@@ -363,7 +390,7 @@ function tabFanBase(){
     if(sb()&&!window.__MEDJASI_GAME_REFRESH_TIMER__){
       window.__MEDJASI_GAME_REFRESH_TIMER__=setInterval(()=>{
         if(!document.hidden&&sb()&&document.querySelector(".section.active")?.id==="game")refresh({force:false});
-      },30000);
+      },60000);
     }
     window.medjasiGame={refresh,openTab,getActiveTab:()=>S.tab};
   }
