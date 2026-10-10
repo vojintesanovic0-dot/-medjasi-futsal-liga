@@ -35,6 +35,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 16. `sql/15_validate_match_event_integrity.sql` – zahtijeva utakmicu i igrača na golu/kartonu te odbija strijelce/asistente/kartonisane igrače koji nisu iz ekipa te utakmice.
 17. `sql/16_restrict_liga_images_uploads.sql` – ograničava Storage upload na dozvoljene medije, 50 MB po objektu i slike do 12 MB u korisničkim folderima; administratori zadržavaju video upload.
 18. `sql/17_revoke_excess_public_table_privileges.sql` – uklanja nepotrebne privilegije za `anon` i privilegije održavanja za klijentske uloge, zadržavajući postojeće RLS i autentifikovane CRUD tokove.
+19. `sql/18_tighten_public_dml_and_sequence_grants.sql` – uklanja direktne INSERT/UPDATE/DELETE dozvole bez odgovarajuće RLS politike, sužava pristup sekvencama i postavlja minimalne podrazumijevane privilegije za nove tabele.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
