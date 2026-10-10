@@ -37,6 +37,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 18. `sql/17_revoke_excess_public_table_privileges.sql` – uklanja nepotrebne privilegije za `anon` i privilegije održavanja za klijentske uloge, zadržavajući postojeće RLS i autentifikovane CRUD tokove.
 19. `sql/18_tighten_public_dml_and_sequence_grants.sql` – uklanja direktne INSERT/UPDATE/DELETE dozvole bez odgovarajuće RLS politike, sužava pristup sekvencama i postavlja minimalne podrazumijevane privilegije za nove tabele.
 20. `sql/19_revoke_default_function_execute.sql` – uklanja automatsko `EXECUTE` za `PUBLIC`, `anon` i `authenticated` na budućim funkcijama koje kreira `postgres`; dozvole postojećih funkcija ostaju iste.
+21. `sql/20_revoke_public_math_helper_execute.sql` – uklanja javni RPC pristup internim funkcijama za Poisson vjerovatnoću i pretvaranje vjerovatnoće u kvotu; interni preračun kvota ostaje nepromijenjen.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
