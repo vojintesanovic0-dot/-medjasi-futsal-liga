@@ -2928,6 +2928,7 @@ function renderMatches(){
             <strong>Raspored utakmica još nije unesen.</strong>
             <br>
             Kada se utakmice objave, ovdje ćeš vidjeti termine i rezultate.
+            ${isAdmin()?'<br><button type="button" class="btn btn-green btn-small" style="margin-top:12px" onclick="showSection(\'admin\')">Unesi prvu utakmicu</button>':""}
           </div>
         `
         : `

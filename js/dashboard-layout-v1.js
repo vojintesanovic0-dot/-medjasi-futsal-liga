@@ -22,6 +22,12 @@
   };
   const upcoming=()=>allMatches().filter(m=>m.status==="scheduled").sort((a,b)=>new Date(a.match_date||0)-new Date(b.match_date||0));
   const liveMatches=()=>allMatches().filter(m=>m.status==="live").sort((a,b)=>(Number(b.current_minute)||0)-(Number(a.current_minute)||0));
+  function emptyScheduleMarkup(showAdminAction=false){
+    const action=showAdminAction&&window.currentProfile?.role==="admin"
+      ? '<button type="button" class="btn btn-green btn-small" style="margin-top:10px" onclick="showSection(\'admin\')">Unesi prvu utakmicu</button>'
+      : "";
+    return '<div class="dashboard-empty"><strong>Raspored još nije unesen.</strong><br>Termini će se prikazati ovdje kada utakmice budu dodane.</div>'+action;
+  }
   function fixtureMarkup(m,phone=false){
     const home=findTeam(m.home_team_id),away=findTeam(m.away_team_id);
     const venue=String(m.venue||m.location||"Sportska dvorana Međasi");
@@ -41,7 +47,7 @@
   function renderNext(){
     const host=$("dashboardNextMatch");if(!host)return;
     const next=upcoming()[0];
-    if(!next){host.innerHTML='<div class="dashboard-empty">Trenutno nema zakazane naredne utakmice.<br>Prati raspored lige za nove termine.</div>';return;}
+    if(!next){host.innerHTML=emptyScheduleMarkup(true);return;}
     const home=findTeam(next.home_team_id),away=findTeam(next.away_team_id);
     host.innerHTML='<div class="dashboard-next-card">'+
       '<div class="dashboard-next-top"><span class="dashboard-lime-chip">Naredna utakmica</span><small>'+esc(next.round?String(next.round)+". KOLO":"RASPORED")+'</small></div>'+
@@ -56,9 +62,9 @@
   function renderUpcoming(){
     const host=$("dashboardUpcomingCards");if(!host)return;
     const rows=upcoming().slice(0,3);
-    host.innerHTML=rows.length?rows.map(m=>fixtureMarkup(m,false)).join(""):'<div class="dashboard-empty">Nema narednih utakmica.</div>';
+    host.innerHTML=rows.length?rows.map(m=>fixtureMarkup(m,false)).join(""):emptyScheduleMarkup(false);
     const phone=$("dashboardPhoneNext");
-    if(phone)phone.innerHTML=rows.length?fixtureMarkup(rows[0],true):'<div class="dashboard-empty">Nema zakazane utakmice.</div>';
+    if(phone)phone.innerHTML=rows.length?fixtureMarkup(rows[0],true):emptyScheduleMarkup(false);
   }
   function renderSidebarLive(){
     const host=$("sidebarLiveMatch");if(!host)return;
