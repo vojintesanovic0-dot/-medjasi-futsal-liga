@@ -1052,6 +1052,41 @@ if (
 } else {
   pass("Community polls render for regular users and are idempotent with guarded async errors");
 }
+const communityFeedStart = app.indexOf("async function renderFeed()");
+const communityProfileStart = app.indexOf("async function renderMyProfile()",communityFeedStart);
+const communityFeedMetaSource = communityFeedStart>=0&&communityProfileStart>communityFeedStart
+  ? app.slice(communityFeedStart,communityProfileStart) : "";
+const communityBootstrapStart = app.indexOf("window.loadV9Community=load");
+const communityBootstrapEnd = app.indexOf("/* FINAL PUBLIC UI API",communityBootstrapStart);
+const communityBootstrapSource = communityBootstrapStart>=0&&communityBootstrapEnd>communityBootstrapStart
+  ? app.slice(communityBootstrapStart,communityBootstrapEnd) : "";
+if (
+  !communityFeedMetaSource.includes("async function refreshPostMetaBatch(ids)") ||
+  !communityFeedMetaSource.includes("await refreshPostMetaBatch(V.posts.map(p=>p.id))") ||
+  communityFeedMetaSource.includes("Promise.all(V.posts.map(p=>refreshPostMeta(p.id)))") ||
+  !communityFeedMetaSource.includes('readPostRows("community_reactions","id,post_id,user_id,reaction")') ||
+  !communityFeedMetaSource.includes('readPostRows("community_comments","id,post_id")') ||
+  !communityFeedMetaSource.includes('.in("post_id",unique)') ||
+  !communityFeedMetaSource.includes("PAGE_SIZE=1000") ||
+  !communityFeedMetaSource.includes("MAX_ROWS=10000") ||
+  !communityBootstrapSource.includes("if(q('community')?.classList.contains('active'))void load()")
+) {
+  fail("Community feed should load on demand and fetch reaction/comment metadata in bounded batches rather than issuing two requests per post on every page load");
+} else {
+  pass("Community loading is demand-driven and post metadata uses bounded batched queries");
+}
+
+if (
+  !app.includes("if(r!==true)return r;") ||
+  !app.includes("let backgroundRefreshFailures=0;") ||
+  !app.includes("backgroundRefreshFailures=Math.min(backgroundRefreshFailures+1,3)") ||
+  !app.includes("scheduleBackgroundRefresh(retryDelay)")
+) {
+  fail("Background refresh must skip optional queries after a failed/in-flight core load and exponentially back off during API failures");
+} else {
+  pass("Background refresh backs off during backend failures and avoids duplicate optional fetches");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
