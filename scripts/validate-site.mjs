@@ -1122,6 +1122,24 @@ if (
   pass("Least-privilege migration removes unnecessary public table grants and tightens postgres default privileges");
 }
 
+const policyAlignedGrantsMigration = read("sql/18_tighten_public_dml_and_sequence_grants.sql");
+if (
+  !policyAlignedGrantsMigration.includes("has_table_privilege(") ||
+  !policyAlignedGrantsMigration.includes("from pg_policies p") ||
+  !policyAlignedGrantsMigration.includes("p.cmd in (c.cmd, 'ALL')") ||
+  !policyAlignedGrantsMigration.includes("or p.roles @> array['public']::name[]") ||
+  !policyAlignedGrantsMigration.includes("revoke all on all sequences in schema public from anon") ||
+  !policyAlignedGrantsMigration.includes("grant usage on sequence") ||
+  !policyAlignedGrantsMigration.includes("public.fan_shop_items_id_seq") ||
+  !policyAlignedGrantsMigration.includes("public.sponsors_id_seq") ||
+  !policyAlignedGrantsMigration.includes("public.team_applications_id_seq") ||
+  !policyAlignedGrantsMigration.includes("revoke insert, update, delete on tables from authenticated")
+) {
+  fail("Authenticated table DML must be limited to commands allowed by RLS policies, and sequence rights must be minimal");
+} else {
+  pass("Policy-aligned DML and sequence grant migration keeps required CRUD while revoking unused direct mutations");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
