@@ -962,6 +962,22 @@ if (
   pass("Database event integrity migration guards goal/card participants and required references");
 }
 
+const liveRefreshHeaderStart = app.indexOf("LIVE AUTO REFRESH");
+const liveRefreshHeaderClose = app.indexOf("*/",liveRefreshHeaderStart);
+const liveRefreshFunctionStart = app.indexOf("async function refreshLiveMatchSnapshot(matchId)");
+const startLiveRefreshFunctionStart = app.indexOf("function startLiveRefresh(matchId)");
+if (
+  liveRefreshHeaderStart<0 ||
+  liveRefreshHeaderClose<0 ||
+  liveRefreshFunctionStart<0 ||
+  startLiveRefreshFunctionStart<0 ||
+  liveRefreshHeaderClose>liveRefreshFunctionStart
+) {
+  fail("Live match refresh functions must not be swallowed by an unclosed section comment");
+} else {
+  pass("Live match refresh definitions are executable code outside the section comment");
+}
+
 const liveRefreshSource = app.slice(
   app.indexOf("async function refreshLiveMatchSnapshot(matchId)"),
   app.indexOf("/* =========================================================\n   GOAL CONTROL",app.indexOf("async function refreshLiveMatchSnapshot(matchId)"))
@@ -979,6 +995,17 @@ if (
   fail("Live match fallback must refresh only match-scoped data and must not hijack other modals or reset the active tab");
 } else {
   pass("Live match refresh is match-scoped, deduplicated, and preserves the user's modal/tab");
+}
+
+if (
+  !app.includes("scheduleLiveModalRefresh(payload?.new?.id||payload?.old?.id)") ||
+  !app.includes("scheduleLiveModalRefresh(payload?.new?.match_id||payload?.old?.match_id)") ||
+  !app.includes("function scheduleLiveModalRefresh(matchId,delay=180)") ||
+  !app.includes("},30000);")
+) {
+  fail("Live modal must refresh on scoped Realtime events and use a slower fallback poll");
+} else {
+  pass("Live match modal refreshes from Realtime and only polls every 30 seconds as fallback");
 }
 
 const goalEventSource = app.slice(
