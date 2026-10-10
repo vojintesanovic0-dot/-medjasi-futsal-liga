@@ -101,19 +101,44 @@ function patchComposer(){
   };
 }
 async function publishExtras(postId){
-  const match=q("communityPostMatch")?.value||null,team=q("communityPostTeam")?.value||null,player=q("communityPostPlayer")?.value||null;
+  const match=q("communityPostMatch")?.value||null;
+  const team=q("communityPostTeam")?.value||null;
+  const player=q("communityPostPlayer")?.value||null;
+
   if(match||team||player){
-    const {error}=await client().from("community_posts").update({match_id:match,team_id:team,player_id:player}).eq("id",postId).eq("user_id",uid());
-    if(error)console.warn("Community links:",error);
+    const {error}=await client().from("community_posts")
+      .update({match_id:match,team_id:team,player_id:player})
+      .eq("id",postId).eq("user_id",uid());
+    if(error)throw error;
   }
-  if(q("communityPostPollEnabled")?.checked){
-    const question=q("communityPollQuestion")?.value.trim();
-    const options=[...(q("communityPollOptions")?.value||"").split("\n")].map(x=>x.trim()).filter(Boolean).slice(0,8);
-    if(question&&options.length>=2){
-      const {data:p,error}=await client().from("community_polls").insert({post_id:postId,question}).select("id").single();
-      if(!error&&p) await client().from("community_poll_options").insert(options.map((label,i)=>({poll_id:p.id,label,sort_order:i})));
-    }
+
+  if(!q("communityPostPollEnabled")?.checked)return;
+
+  const question=q("communityPollQuestion")?.value.trim()||"";
+  const options=(q("communityPollOptions")?.value||"")
+    .split("\n").map(value=>value.trim()).filter(Boolean).slice(0,8);
+
+  if(question.length<3||question.length>300){
+    throw new Error("Pitanje ankete mora imati između 3 i 300 znakova.");
   }
+  if(options.length<2||options.length>8){
+    throw new Error("Anketa mora imati najmanje 2, a najviše 8 opcija.");
+  }
+  if(options.some(label=>label.length>120)){
+    throw new Error("Svaka opcija ankete može imati najviše 120 znakova.");
+  }
+
+  const {data:poll,error:pollError}=await client()
+    .from("community_polls")
+    .insert({post_id:postId,question})
+    .select("id").single();
+  if(pollError)throw pollError;
+  if(!poll?.id)throw new Error("Anketa nije vraćena nakon čuvanja.");
+
+  const {error:optionsError}=await client().from("community_poll_options").insert(
+    options.map((label,index)=>({poll_id:poll.id,label,sort_order:index}))
+  );
+  if(optionsError)throw optionsError;
 }
 function patchPublish(){
   if(window.__COMMUNITY_PUBLISH_PATCH__)return;
