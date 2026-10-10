@@ -164,6 +164,25 @@ if (
   fail("News publishing must not be reported as failed solely because push delivery failed");
 } else pass("News publishing reports storage and push outcomes separately");
 
+const substitutionHistorySource = app.slice(
+  app.indexOf("async function makeSubstitution("),
+  app.indexOf("/* =========================================================\\n   LINEUP / BENCH",app.indexOf("async function makeSubstitution("))
+);
+const substitutionCompatWrapperStart = app.indexOf("const oldMakeSubstitution=window.makeSubstitution");
+const substitutionCompatWrapperEnd = app.indexOf("\\nfunction renderMvp(matchId)",substitutionCompatWrapperStart);
+const substitutionCompatWrapper = substitutionCompatWrapperStart>=0&&substitutionCompatWrapperEnd>substitutionCompatWrapperStart
+  ? app.slice(substitutionCompatWrapperStart,substitutionCompatWrapperEnd) : "";
+if (
+  (app.match(/from\(["']match_substitutions["']\)\.insert/g)||[]).length!==1 ||
+  !substitutionHistorySource.includes('.from("match_substitutions").insert({') ||
+  !substitutionCompatWrapper.includes("oldMakeSubstitution.apply(this,[matchId,side])") ||
+  substitutionCompatWrapper.includes("match_substitutions")
+) {
+  fail("Each substitution must write its history row exactly once; the compatibility wrapper must not repeat the database insert");
+} else {
+  pass("Substitution history is written exactly once through the guarded handler");
+}
+
 const addMatchStart = app.indexOf("async function addMatch()");
 const adminMatchesStart = app.indexOf("function renderAdminMatches()", addMatchStart);
 const addMatchFunction = addMatchStart >= 0 && adminMatchesStart > addMatchStart ? app.slice(addMatchStart, adminMatchesStart) : "";
