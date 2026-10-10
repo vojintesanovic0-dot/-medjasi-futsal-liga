@@ -1087,6 +1087,26 @@ if (
   pass("Background refresh backs off during backend failures and avoids duplicate optional fetches");
 }
 
+const gameRefreshStart = game.indexOf("async function refresh(options={})");
+const gameRefreshEnd = game.indexOf("function group(",gameRefreshStart);
+const gameRefreshSource = gameRefreshStart>=0&&gameRefreshEnd>gameRefreshStart
+  ? game.slice(gameRefreshStart,gameRefreshEnd) : "";
+const gamePollingStart = game.indexOf("window.__MEDJASI_GAME_REFRESH_TIMER__=setInterval");
+const gamePollingSource = gamePollingStart>=0 ? game.slice(gamePollingStart,gamePollingStart+250) : "";
+if (
+  !gameRefreshSource.includes("const force=options?.force!==false") ||
+  !gameRefreshSource.includes("if(!force&&Date.now()<refreshRetryAt)return") ||
+  !gameRefreshSource.includes("if(force)refreshPending=true") ||
+  !gameRefreshSource.includes("refreshFailureCount=Math.min(refreshFailureCount+1,4)") ||
+  !gameRefreshSource.includes("refreshRetryAt=Date.now()+Math.min(60000,10000*Math.pow(2,refreshFailureCount-1))") ||
+  !gameRefreshSource.includes("refreshFailureCount=0") ||
+  !gamePollingSource.includes("refresh({force:false})")
+) {
+  fail("Fan Game live polling must back off after backend failures and must not queue redundant timer refreshes while another request is in flight");
+} else {
+  pass("Fan Game refresh uses bounded exponential backoff while preserving forced user-triggered refreshes");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
