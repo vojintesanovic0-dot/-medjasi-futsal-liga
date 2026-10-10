@@ -867,6 +867,21 @@ if (
   pass("Community report/block/favorite actions handle request failures and retain truthful UI state");
 }
 
+const galleryAlbumPatchSource = communityClickAuditSource.slice(
+  communityClickAuditSource.indexOf("function patchGalleryUpload()"),
+  communityClickAuditSource.indexOf("function patchGallery()",communityClickAuditSource.indexOf("function patchGalleryUpload()"))
+);
+if (
+  !galleryAlbumPatchSource.includes("typeof result!==\"string\"") ||
+  !galleryAlbumPatchSource.includes('.eq("id",result)') ||
+  !galleryAlbumPatchSource.includes('.eq("created_by",uid())') ||
+  galleryAlbumPatchSource.includes('.order("created_at",{ascending:false}).limit(1)')
+) {
+  fail("Gallery album selection must update only the exact newly uploaded image, never fall back to the newest existing image");
+} else {
+  pass("Gallery upload applies albums only to the exact successfully inserted image ID");
+}
+
 const communityExtrasSource = communityClickAuditSource.slice(
   communityClickAuditSource.indexOf("async function publishExtras(postId)"),
   communityClickAuditSource.indexOf("function patchPublish()",communityClickAuditSource.indexOf("async function publishExtras(postId)"))
