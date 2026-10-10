@@ -746,7 +746,7 @@ if (
   pass("Search results open the selected item with escaped inline identifiers");
 }
 
-const musicLoaderStart = app.indexOf("async function loadMusicSettings()");
+const musicLoaderStart = app.indexOf("async function loadMusicSettings(");
 const musicLoaderEnd = app.indexOf("function renderMusicAdmin()",musicLoaderStart);
 const musicLoader = musicLoaderStart >= 0 && musicLoaderEnd > musicLoaderStart
   ? app.slice(musicLoaderStart,musicLoaderEnd) : "";
