@@ -1140,6 +1140,38 @@ if (
   pass("Least-privilege migration removes unnecessary public table grants and tightens postgres default privileges");
 }
 
+const communityFeaturesSource = read("js/community-features.js");
+const communitySafetyStart = communityFeaturesSource.indexOf("function patchLoad()");
+const communitySafetyEnd = communityFeaturesSource.indexOf("function patchComposer()",communitySafetyStart);
+const communitySafetySource = communitySafetyStart>=0&&communitySafetyEnd>communitySafetyStart
+  ? communityFeaturesSource.slice(communitySafetyStart,communitySafetyEnd) : "";
+const communityGalleryStart = communityFeaturesSource.indexOf("async function injectGalleryAlbums()");
+const communityGalleryEnd = communityFeaturesSource.indexOf("let galleryAlbumSelectInFlight",communityGalleryStart);
+const communityGallerySource = communityGalleryStart>=0&&communityGalleryEnd>communityGalleryStart
+  ? communityFeaturesSource.slice(communityGalleryStart,communityGalleryEnd) : "";
+const communityBootStart = communityFeaturesSource.indexOf("function boot(){");
+const communityBootEnd = communityFeaturesSource.indexOf("boot();",communityBootStart);
+const communityBootSource = communityBootStart>=0&&communityBootEnd>communityBootStart
+  ? communityFeaturesSource.slice(communityBootStart,communityBootEnd) : "";
+const communityAdminBootStart = communityFeaturesSource.indexOf("function boot2(){");
+const communityAdminBootEnd = communityFeaturesSource.indexOf("boot2();",communityAdminBootStart);
+const communityAdminBootSource = communityAdminBootStart>=0&&communityAdminBootEnd>communityAdminBootStart
+  ? communityFeaturesSource.slice(communityAdminBootStart,communityAdminBootEnd) : "";
+if (
+  !communitySafetySource.includes("if(result===true&&q(\"community\")?.classList.contains(\"active\"))") ||
+  !communitySafetySource.includes("await enhanceFeed();await renderPolls()") ||
+  communityBootSource.includes("setTimeout(async()=>{await enhanceFeed();await renderPolls()},700") ||
+  !communityGallerySource.includes('if(!host||!q("gallery")?.classList.contains("active"))return;') ||
+  !communityGallerySource.includes('if(!q("gallery")?.classList.contains("active"))return;') ||
+  !communityAdminBootSource.includes('if(q("gallery")?.classList.contains("active"))void injectGalleryAlbums()') ||
+  !communityAdminBootSource.includes('if(admin()&&q("admin")?.classList.contains("active"))') ||
+  communityAdminBootSource.includes('injectGalleryAlbums();injectAdminAlbumTools();ensureGalleryAlbumSelect();injectAdminReports()},1200')
+) {
+  fail("Community/Gallery/Admin add-on queries must run only for the active section, share requests, and render polls after a successful feed refresh");
+} else {
+  pass("Community/Gallery/Admin add-ons avoid hidden-section startup queries and render polls after a successful Community refresh");
+}
+
 const defaultFunctionGrantMigration = read("sql/19_revoke_default_function_execute.sql");
 if (
   !defaultFunctionGrantMigration.includes("alter default privileges for role postgres") ||
