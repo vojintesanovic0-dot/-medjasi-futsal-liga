@@ -7880,18 +7880,44 @@ async function init(){
     if(!document.hidden) scheduleLoadAll(200);
   });
 
-  setInterval(
-    async()=>{
-      if(document.hidden) return;
-      await loadAll();
-      try {
+  let backgroundRefreshFailures=0;
+  let backgroundRefreshTimer=0;
+  const scheduleBackgroundRefresh=delay=>{
+    clearTimeout(backgroundRefreshTimer);
+    backgroundRefreshTimer=setTimeout(runBackgroundRefresh,delay);
+  };
+  const runBackgroundRefresh=async()=>{
+    if(document.hidden){
+      scheduleBackgroundRefresh(60000);
+      return;
+    }
+
+    let refreshed=false;
+    try{
+      refreshed=(await loadAll())===true;
+    }catch(error){
+      console.error("Medjasi background refresh:",error);
+    }
+
+    if(refreshed){
+      backgroundRefreshFailures=0;
+      try{
         await loadMusicSettings();
-      } catch (error) {
-        console.error("Medjasi background music refresh:", error);
+      }catch(error){
+        console.error("Medjasi background music refresh:",error);
       }
-    },
-    60000
-  );
+      scheduleBackgroundRefresh(60000);
+      return;
+    }
+
+    // Back off during a backend outage instead of repeatedly firing a full
+    // parallel fetch set every minute. User-triggered actions can still retry.
+    backgroundRefreshFailures=Math.min(backgroundRefreshFailures+1,3);
+    const retryDelay=Math.min(300000,60000*Math.pow(2,backgroundRefreshFailures));
+    console.warn("Medjasi background refresh failed; next retry in",Math.round(retryDelay/1000),"seconds.");
+    scheduleBackgroundRefresh(retryDelay);
+  };
+  scheduleBackgroundRefresh(60000);
 }
 
 
@@ -11106,7 +11132,7 @@ function renderSearch(){const q=$('v7Search')?.value.trim().toLowerCase(),box=$(
 
 // Load wrappers
 const originalLoadAll=window.loadAll;
-window.loadAll=async function(...args){const r=await originalLoadAll.apply(this,args);try{await loadStats();await loadNews()}catch(e){console.warn('V7 load:',e)}try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();renderGalleryV7()}catch(e){console.warn(e)}return r};
+window.loadAll=async function(...args){const r=await originalLoadAll.apply(this,args);if(r!==true)return r;try{await loadStats();await loadNews()}catch(e){console.warn('V7 load:',e)}try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();renderGalleryV7()}catch(e){console.warn(e)}return r};
 // Realtime safety wrapper; original subscription remains but news/stats refresh independently.
 V7.ensureNewsUI=ensureNewsUI;V7.loadNews=loadNews;V7.notifyPush=notifyPush;window.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoalWithAssist;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
 window.openGoalControl=function(id){return openGoal(id)};
@@ -11194,13 +11220,68 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     const host=q('v9Feed');if(!host)return;
     if(!V.posts.length){host.innerHTML='<div class="v9-empty">Još nema objava. Budi prvi koji će objaviti fotografiju. 📸</div>';return}
     host.innerHTML=V.posts.map((p,i)=>{const a=V.profiles[String(p.user_id)]||{};const own=logged()&&String(p.user_id)===String(currentUser.id);return `<article class="v9-post" data-post-id="${escV(p.id)}" style="animation-delay:${Math.min(i,8)*35}ms"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(a)}" alt="" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer"><div><div class="v9-post-author" onclick="openV9Profile('${escV(p.user_id)}')" style="cursor:pointer">${fanCommunityIdentityHTML(a,String(p.user_id))}</div><div class="v9-post-meta">${fmt(p.created_at)}</div></div>${own||typeof isAdmin==='function'&&isAdmin()?`<button class="btn btn-small v9-post-menu" onclick="deleteV9Post('${escV(p.id)}')">Obriši</button>`:''}</div><img class="v9-post-image" src="${escV(p.image_url)}" alt="${escV(p.caption||'Fotografija')}" loading="lazy" onclick="openV9Lightbox('${escV(p.image_url)}')"><div class="v9-post-body">${p.caption?`<div class="v9-post-caption">${escV(p.caption)}</div>`:''}${communityMusicChip(p.music_track_id)}<div class="v9-post-actions"><button id="v9r-${escV(p.id)}" class="v9-reaction" onclick="toggleV9Reaction('${escV(p.id)}','❤️')">❤️ <span>0</span></button><button class="v9-reaction" onclick="toggleV9Comments('${escV(p.id)}')">💬 <span id="v9cnum-${escV(p.id)}">0</span></button></div><div id="v9comments-${escV(p.id)}" class="v9-comments" hidden></div></div></article>`}).join('');
-    await Promise.all(V.posts.map(p=>refreshPostMeta(p.id)));
+    await refreshPostMetaBatch(V.posts.map(p=>p.id));
+  }
+  async function refreshPostMetaBatch(ids){
+    const unique=[...new Set((ids||[]).filter(Boolean).map(String))];
+    if(!unique.length)return;
+
+    const PAGE_SIZE=1000;
+    const MAX_ROWS=10000;
+    const readPostRows=async(table,columns)=>{
+      const rows=[];
+      let offset=0;
+      for(;;){
+        const {data,error}=await supabaseClient.from(table)
+          .select(columns)
+          .in("post_id",unique)
+          .order("post_id",{ascending:true})
+          .order("id",{ascending:true})
+          .range(offset,offset+PAGE_SIZE-1);
+        if(error)throw error;
+        const page=data||[];
+        rows.push(...page);
+        if(page.length<PAGE_SIZE)break;
+        offset+=PAGE_SIZE;
+        if(offset>MAX_ROWS)throw new Error("Community statistika prelazi sigurni limit; stari prikaz je zadržan.");
+      }
+      return rows;
+    };
+
+    try{
+      const [reactions,comments]=await Promise.all([
+        readPostRows("community_reactions","id,post_id,user_id,reaction"),
+        readPostRows("community_comments","id,post_id")
+      ]);
+      const reactionCounts=new Map();
+      const commentCounts=new Map();
+      const myReactions=new Set();
+      for(const row of reactions){
+        const id=String(row.post_id);
+        reactionCounts.set(id,(reactionCounts.get(id)||0)+1);
+        if(logged()&&String(row.user_id)===String(currentUser.id))myReactions.add(id);
+      }
+      for(const row of comments){
+        const id=String(row.post_id);
+        commentCounts.set(id,(commentCounts.get(id)||0)+1);
+      }
+      for(const id of unique){
+        const button=q('v9r-'+id);
+        const count=button?.querySelector('span');
+        if(count)count.textContent=String(reactionCounts.get(id)||0);
+        if(button){
+          if(myReactions.has(id))button.classList.add('active');
+          else button.classList.remove('active');
+        }
+        const commentCount=q('v9cnum-'+id);
+        if(commentCount)commentCount.textContent=String(commentCounts.get(id)||0);
+      }
+    }catch(error){
+      console.warn("Community statistika:",error);
+    }
   }
   async function refreshPostMeta(id){
-    const [{data:r,error:re},{data:c,error:ce}]=await Promise.all([supabaseClient.from('community_reactions').select('id,user_id,reaction').eq('post_id',id),supabaseClient.from('community_comments').select('id').eq('post_id',id)]);
-    if(re||ce)return;
-    const b=q('v9r-'+id);if(b){b.querySelector('span').textContent=(r||[]).length;if(logged()&&r?.some(x=>String(x.user_id)===String(currentUser.id)))b.classList.add('active');else b.classList.remove('active')}
-    const cnum=q('v9cnum-'+id);if(cnum)cnum.textContent=(c||[]).length;
+    return refreshPostMetaBatch([id]);
   }
   async function renderMyProfile(){
     const host=q('v9MyProfileCard');if(!host)return;
@@ -11285,7 +11366,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     };
   }
   window.loadV9Community=load;
-  window.addEventListener('load',()=>setTimeout(()=>{patchAuth();load()},450));
+  window.addEventListener('load',()=>setTimeout(()=>{patchAuth();if(q('community')?.classList.contains('active'))void load()},450));
   setTimeout(()=>{patchAuth()},900);
 })();
 
