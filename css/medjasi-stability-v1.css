@@ -83,3 +83,26 @@ th,td{line-height:1.45}
  #modal .modal-box{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;max-height:calc(100dvh - 20px)!important;padding:16px!important}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;transition-duration:.001ms!important}}
+
+/* Honest data-load state with a one-tap retry. */
+.mfl-data-status{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:14px!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  margin:0 0 12px!important;padding:13px 15px!important;
+  border:1px solid rgba(245,185,66,.42)!important;border-radius:12px!important;
+  background:linear-gradient(110deg,rgba(77,54,9,.40),rgba(3,19,21,.94))!important;
+  color:#f5f7ef!important;box-shadow:0 8px 24px rgba(0,0,0,.18)!important;
+}
+.mfl-data-status[data-state="stale"]{border-color:rgba(0,205,225,.36)!important;background:linear-gradient(110deg,rgba(4,48,55,.35),rgba(3,19,21,.94))!important}
+.mfl-data-status-copy{flex:1 1 auto!important;min-width:0!important}
+.mfl-data-status strong{display:block!important;margin:0 0 4px!important;color:#fff!important;font-size:14px!important;line-height:1.4!important}
+.mfl-data-status p{margin:0!important;color:#cbdad5!important;font-size:12px!important;line-height:1.55!important}
+.mfl-data-status button{flex:0 0 auto!important;min-height:38px!important;padding:9px 13px!important;border:1px solid rgba(57,245,139,.38)!important;border-radius:9px!important;background:linear-gradient(90deg,#24d76a,#56f59a)!important;color:#032112!important;font-size:12px!important;font-weight:850!important}
+.mfl-data-status button:hover{filter:brightness(1.06)}
+.mfl-data-status button:disabled{cursor:progress!important;filter:saturate(.5)!important;opacity:.72!important}
+@media(max-width:640px){
+ .mfl-data-status{align-items:stretch!important;flex-direction:column!important;gap:10px!important;padding:12px!important}
+ .mfl-data-status strong{font-size:13px!important}
+ .mfl-data-status p{font-size:12px!important}
+ .mfl-data-status button{width:100%!important;min-height:42px!important}
+}

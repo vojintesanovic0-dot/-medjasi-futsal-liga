@@ -1772,6 +1772,66 @@ function refreshCommentsOnly(){
 }
 
 
+/* =========================================================
+   LEAGUE DATA STATUS
+   Distinguish an actually empty league from a failed refresh.
+========================================================= */
+let hasSuccessfulLeagueSnapshot=false;
+
+function updateLeagueDataStatus(hasErrors){
+  let status=document.getElementById("mflDataStatus");
+  if(!hasErrors){
+    if(status){
+      status.hidden=true;
+      status.dataset.state="ok";
+      const button=status.querySelector("button");
+      if(button){button.disabled=false;button.textContent="Pokušaj ponovo";}
+    }
+    return;
+  }
+
+  if(!status){
+    status=document.createElement("section");
+    status.id="mflDataStatus";
+    status.className="mfl-data-status";
+    status.setAttribute("role","status");
+    status.setAttribute("aria-live","polite");
+    status.innerHTML='<div class="mfl-data-status-copy"><strong id="mflDataStatusTitle">Podaci lige nisu dostupni</strong><p id="mflDataStatusMessage"></p></div><button type="button" onclick="retryLeagueDataLoad()">Pokušaj ponovo</button>';
+  }
+
+  const target=document.querySelector("main > .section.active")||document.getElementById("home")||document.querySelector("main");
+  if(target&&status.parentElement!==target)target.prepend(status);
+
+  status.hidden=false;
+  status.dataset.state=hasSuccessfulLeagueSnapshot?"stale":"unavailable";
+  const title=status.querySelector("#mflDataStatusTitle");
+  const message=status.querySelector("#mflDataStatusMessage");
+  if(title)title.textContent=hasSuccessfulLeagueSnapshot?"Osvježavanje podataka nije uspjelo":"Podaci lige se nisu mogli učitati";
+  if(message)message.textContent=hasSuccessfulLeagueSnapshot
+    ?"Prikazujemo posljednje uspješno učitane podatke. Provjeri vezu i pokušaj osvježiti."
+    :"Provjeri internet vezu. Rezultati i ostali podaci nisu potvrđeni, pa prazni prikazi ne znače da je liga prazna.";
+}
+
+async function retryLeagueDataLoad(){
+  const status=document.getElementById("mflDataStatus");
+  const button=status?.querySelector("button");
+  if(button?.disabled)return;
+  if(button){button.disabled=true;button.textContent="Učitavanje…";}
+  try{
+    const ok=await loadAll();
+    if(!ok)updateLeagueDataStatus(true);
+  }catch(error){
+    console.error("Ručno osvježavanje podataka nije uspjelo:",error);
+    updateLeagueDataStatus(true);
+  }finally{
+    if(button&&button.isConnected){
+      button.disabled=false;
+      button.textContent="Pokušaj ponovo";
+    }
+  }
+}
+window.retryLeagueDataLoad=retryLeagueDataLoad;
+
 async function loadAll(){
   if(loadAllActive){
     loadAllPending=true;
@@ -1871,6 +1931,8 @@ async function loadAll(){
     }
   }
   const refreshedSuccessfully=!hadLoadErrors;
+  if(refreshedSuccessfully)hasSuccessfulLeagueSnapshot=true;
+  updateLeagueDataStatus(!refreshedSuccessfully);
   if(refreshedSuccessfully)scheduleGameRefresh(1200);
   return refreshedSuccessfully;
 }
@@ -1978,10 +2040,10 @@ function renderAnnouncement(){
 
     el.innerHTML = `
       <div class="empty compact">
-        Trenutno nema zakazane naredne utakmice.
+        Raspored narednih utakmica još nije objavljen.
         <br>
         <span class="muted">
-          Prati chat za nove informacije.
+          Ovdje će se prikazati termin čim utakmica bude unesena.
         </span>
       </div>
     `;
@@ -2860,13 +2922,21 @@ function renderMatches(){
       ? list
           .map(enhancedMatchHTML)
           .join("")
-      : `
-        <div class="empty">
-          <strong>Nema rezultata</strong>
-          <br>
-          Promijeni filtere i pokušaj ponovo.
-        </div>
-      `;
+      : matches.length===0
+        ? `
+          <div class="empty">
+            <strong>Raspored utakmica još nije unesen.</strong>
+            <br>
+            Kada se utakmice objave, ovdje ćeš vidjeti termine i rezultate.
+          </div>
+        `
+        : `
+          <div class="empty">
+            <strong>Nema utakmica koje odgovaraju filterima.</strong>
+            <br>
+            Promijeni ili očisti filtere i pokušaj ponovo.
+          </div>
+        `;
 }
 
 
@@ -7931,8 +8001,7 @@ async function init(){
   if(!supabaseClient){
     console.error("Supabase podaci su privremeno nedostupni; statički dio stranice ostaje aktivan.");
     try{renderAll();}catch(renderError){console.error("Statistički prikaz stranice:",renderError);}
-    const status=document.getElementById("homeAnnouncement");
-    if(status)status.innerHTML='<div class="empty compact">Podaci lige trenutno nisu dostupni. Provjeri internet vezu i osvježi stranicu.</div>';
+    updateLeagueDataStatus(true);
     return;
   }
 
