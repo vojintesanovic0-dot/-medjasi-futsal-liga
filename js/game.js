@@ -39,17 +39,24 @@
   const upcoming=()=>active().filter(m=>m.status==="scheduled");
   const finished=()=>MT().filter(m=>m.status==="finished").sort((a,b)=>new Date(b.match_date||0)-new Date(a.match_date||0));
   let refreshPending=false;
+  let refreshFailureCount=0;
+  let refreshRetryAt=0;
   // Markets themselves still refresh on the live interval. Aggregated pick counts
   // and MVP results are cached separately because they change much less often.
   const MARKET_STATS_TTL=30000;
   const MVP_RESULTS_TTL=60000;
   let marketStatsFetchedAt=0;
   let mvpResultsFetchedAt=0;
-  async function refresh(){
+  async function refresh(options={}){
+    const force=options?.force!==false;
     const requestedUserKey=currentUserKey();
     resetUserSnapshot(requestedUserKey);
     if(!sb())return;
-    if(S.loading){refreshPending=true;return;}
+    if(!force&&Date.now()<refreshRetryAt)return;
+    if(S.loading){
+      if(force)refreshPending=true;
+      return;
+    }
     S.loading=true;
     try{
       const u=user();
@@ -61,6 +68,8 @@
       ]);
       if(mk.error&&/relation|does not exist|schema cache|function/i.test(mk.error.message||"")){
         S.err="setup";
+        refreshFailureCount=Math.min(refreshFailureCount+1,4);
+        refreshRetryAt=Date.now()+Math.min(60000,10000*Math.pow(2,refreshFailureCount-1));
         return;
       }
       const coreError=[mk,shop,fund,board].find(result=>result.error);
@@ -179,10 +188,14 @@
       S.mvp=nextMvp;
       S.profiles=nextProfiles;
       S.err=null;
+      refreshFailureCount=0;
+      refreshRetryAt=0;
     }catch(error){
       if(currentUserKey()!==requestedUserKey){
         refreshPending=true;
       }else{
+        refreshFailureCount=Math.min(refreshFailureCount+1,4);
+        refreshRetryAt=Date.now()+Math.min(60000,10000*Math.pow(2,refreshFailureCount-1));
         console.error("Pogodi:",error);
         if(S.err!=="setup"&&!S.markets.length&&!S.shop.length&&!S.board.length)S.err="unavailable";
       }
@@ -346,7 +359,7 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
     // when "game" becomes active. Do not wrap showSection a second time.
     if(sb()&&!window.__MEDJASI_GAME_REFRESH_TIMER__){
       window.__MEDJASI_GAME_REFRESH_TIMER__=setInterval(()=>{
-        if(sb()&&document.querySelector(".section.active")?.id==="game")refresh();
+        if(sb()&&document.querySelector(".section.active")?.id==="game")refresh({force:false});
       },10000);
     }
     window.medjasiGame={refresh,openTab,getActiveTab:()=>S.tab};
