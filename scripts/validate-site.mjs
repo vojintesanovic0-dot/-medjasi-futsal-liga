@@ -735,11 +735,15 @@ if (
   pass("Push subscription enable/disable flows preserve truthful state across failures");
 }
 
+const uploadTick=String.fromCharCode(96);
+const userIdPlaceholder="$"+"{currentUser.id}";
+const expectedChatOwnerPath="uploadFile(file,"+uploadTick+"chat/"+userIdPlaceholder+uploadTick+")";
+const expectedCommentOwnerPath="uploadFile(file,"+uploadTick+"comments/"+userIdPlaceholder+uploadTick+")";
 if (
-  app.includes('uploadFile(file,"comments")') ||
+  (app.split(expectedChatOwnerPath).length-1)!==2 ||
+  !app.includes(expectedCommentOwnerPath) ||
   app.includes('uploadFile(file,"chat")') ||
-  (app.match(/uploadFile\\(file,\\`chat\\/\\$\\{currentUser\\.id\\}\\`\\)/g)||[]).length!==2 ||
-  !app.includes('uploadFile(file,\`comments/${currentUser.id}\`)') ||
+  app.includes('uploadFile(file,"comments")') ||
   !app.includes("name like ('comments/' || (select auth.uid())::text || '/%')") ||
   !app.includes("name like ('chat/' || (select auth.uid())::text || '/%')")
 ) {
@@ -779,13 +783,13 @@ if (
 
 const goalEventSource = app.slice(
   app.indexOf("async function addGoal(matchId)"),
-  app.indexOf("/* =========================================================\\n   CARD CONTROL",app.indexOf("async function addGoal(matchId)"))
+  app.indexOf("/* =========================================================\n   CARD CONTROL",app.indexOf("async function addGoal(matchId)"))
 );
 const goalAssistSource = app.slice(
   app.indexOf("async function addGoalWithAssist(matchId)"),
   app.indexOf("function decorateCourtRatings",app.indexOf("async function addGoalWithAssist(matchId)"))
 );
-const loadAllSource = app.slice(app.indexOf("async function loadAll(){"),app.indexOf("\\n/* =====================================",app.indexOf("async function loadAll(){")));
+const loadAllSource = app.slice(app.indexOf("async function loadAll(){"),app.indexOf("\n/* =====================================",app.indexOf("async function loadAll(){")));
 if (
   !loadAllSource.includes("return !hadLoadErrors;") ||
   !app.includes("async function readConfirmedMatch(matchId,fallback)") ||
