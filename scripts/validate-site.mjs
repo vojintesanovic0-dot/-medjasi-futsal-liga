@@ -784,7 +784,7 @@ if (
 
 const liveRefreshSource = app.slice(
   app.indexOf("async function refreshLiveMatchSnapshot(matchId)"),
-  app.indexOf("/* =========================================================\\n   GOAL CONTROL",app.indexOf("async function refreshLiveMatchSnapshot(matchId)"))
+  app.indexOf("/* =========================================================\n   GOAL CONTROL",app.indexOf("async function refreshLiveMatchSnapshot(matchId)"))
 );
 if (
   !liveRefreshSource.includes('.from("matches").select("*").eq("id",matchId).maybeSingle()') ||
