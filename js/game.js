@@ -43,8 +43,8 @@
   let refreshRetryAt=0;
   // Markets themselves still refresh on the live interval. Aggregated pick counts
   // and MVP results are cached separately because they change much less often.
-  const MARKET_STATS_TTL=30000;
-  const MVP_RESULTS_TTL=60000;
+  const MARKET_STATS_TTL=60000;
+  const MVP_RESULTS_TTL=120000;
   let marketStatsFetchedAt=0;
   let mvpResultsFetchedAt=0;
   async function refresh(options={}){
@@ -359,8 +359,8 @@ function tabBoard(){if(!S.board.length)return `<div class="card fg-empty"><p>Tab
     // when "game" becomes active. Do not wrap showSection a second time.
     if(sb()&&!window.__MEDJASI_GAME_REFRESH_TIMER__){
       window.__MEDJASI_GAME_REFRESH_TIMER__=setInterval(()=>{
-        if(sb()&&document.querySelector(".section.active")?.id==="game")refresh({force:false});
-      },10000);
+        if(!document.hidden&&sb()&&document.querySelector(".section.active")?.id==="game")refresh({force:false});
+      },30000);
     }
     window.medjasiGame={refresh,openTab,getActiveTab:()=>S.tab};
   }
