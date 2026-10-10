@@ -10,41 +10,74 @@ const toastX=(m,t)=>typeof window.toast==="function"?window.toast(m,t):alert(m);
 const client=()=>window.supabaseClient;
 
 async function reportTarget(kind,id){
-  if(!uid()) return toastX("Prijavi se da prijaviš sadržaj.","error");
+  if(!uid())return toastX("Prijavi se da prijaviš sadržaj.","error"),false;
+  if(!id||!["post","comment"].includes(kind))return toastX("Sadržaj za prijavu nije pronađen.","error"),false;
   const reason=prompt("Zašto prijavljuješ ovaj sadržaj?\n\nSpam, uvreda, neprikladan sadržaj, lažno predstavljanje ili drugo.");
-  if(!reason?.trim()) return;
+  if(!reason?.trim())return false;
+  const db=client();
+  if(!db?.from)return toastX("Servis za prijave trenutno nije dostupan.","error"),false;
   const payload={reporter_id:uid(),reason:reason.trim().slice(0,500)};
-  if(kind==="post") payload.post_id=id;
+  if(kind==="post")payload.post_id=id;
   else payload.comment_id=id;
-  const {error}=await client().from("community_reports").insert(payload);
-  if(error) return toastX(error.message,"error");
-  toastX("Prijava je poslata administratoru.");
+  try{
+    const {error}=await db.from("community_reports").insert(payload);
+    if(error)throw error;
+    toastX("Prijava je poslata administratoru.");
+    return true;
+  }catch(error){
+    console.warn("Community report:",error);
+    toastX(error?.message||"Prijava nije uspjela. Pokušaj ponovo.","error");
+    return false;
+  }
 }
 async function blockUser(id){
-  if(!uid()) return toastX("Prijavi se da blokiraš korisnika.","error");
-  if(String(id)===String(uid())) return;
-  if(!confirm("Blokirati ovog korisnika? Njegove Community objave i komentari više se neće prikazivati tebi.")) return;
-  const {error}=await client().from("community_blocks").upsert({user_id:uid(),blocked_user_id:id});
-  if(error) return toastX(error.message,"error");
-  toastX("Korisnik je blokiran.");
-  window.loadV9Community?.();
+  if(!uid())return toastX("Prijavi se da blokiraš korisnika.","error"),false;
+  if(!id||String(id)===String(uid()))return false;
+  if(!confirm("Blokirati ovog korisnika? Njegove Community objave i komentari više se neće prikazivati tebi."))return false;
+  const db=client();
+  if(!db?.from)return toastX("Servis za blokiranje trenutno nije dostupan.","error"),false;
+  try{
+    const {error}=await db.from("community_blocks").upsert({user_id:uid(),blocked_user_id:id});
+    if(error)throw error;
+    toastX("Korisnik je blokiran.");
+    try{await window.loadV9Community?.();}catch(refreshError){console.warn("Community refresh:",refreshError);}
+    return true;
+  }catch(error){
+    console.warn("Community block:",error);
+    toastX(error?.message||"Korisnika nije moguće blokirati sada.","error");
+    return false;
+  }
 }
 async function unblockUser(id){
-  if(!uid()) return;
-  const {error}=await client().from("community_blocks").delete().eq("user_id",uid()).eq("blocked_user_id",id);
-  if(error) return toastX(error.message,"error");
-  toastX("Korisnik više nije blokiran.");
-  window.loadV9Community?.();
+  if(!uid()||!id)return false;
+  const db=client();
+  if(!db?.from)return toastX("Servis za blokiranje trenutno nije dostupan.","error"),false;
+  try{
+    const {error}=await db.from("community_blocks").delete().eq("user_id",uid()).eq("blocked_user_id",id);
+    if(error)throw error;
+    toastX("Korisnik više nije blokiran.");
+    try{await window.loadV9Community?.();}catch(refreshError){console.warn("Community refresh:",refreshError);}
+    return true;
+  }catch(error){
+    console.warn("Community unblock:",error);
+    toastX(error?.message||"Korisnika nije moguće odblokirati sada.","error");
+    return false;
+  }
 }
 window.communityReport=reportTarget;
 window.communityBlock=blockUser;
 window.communityUnblock=unblockUser;
 
 async function getBlocked(){
-  if(!uid()) return [];
-  const {data,error}=await client().from("community_blocks").select("blocked_user_id").eq("user_id",uid());
-  if(error){console.warn("Community blocks:",error);return []}
-  return (data||[]).map(x=>String(x.blocked_user_id));
+  if(!uid()||!client()?.from)return [];
+  try{
+    const {data,error}=await client().from("community_blocks").select("blocked_user_id").eq("user_id",uid());
+    if(error)throw error;
+    return (data||[]).map(x=>String(x.blocked_user_id));
+  }catch(error){
+    console.warn("Community blocks:",error);
+    return [];
+  }
 }
 function extractUserId(el){
   const attr=el?.getAttribute("onclick")||"";
@@ -237,35 +270,50 @@ async function renderPolls(){
               user_id:uid()
             });
             if(error?.code==="23505"){
-              toastX("Već si glasao na ovoj anketi.","error");
-            }else if(error){
-              throw error;
-            }else{
-              toastX("Glas je zabilježen.");
-            }
-          }catch(error){
-            console.warn("Community poll vote:",error);
-            toastX(error?.message||"Glasanje nije uspjelo. Pokušaj ponovo.","error");
-            if(box.isConnected)box.querySelectorAll("button").forEach(item=>{item.disabled=false;});
-          }
-        });
-        box.appendChild(button);
-      }
-      body.appendChild(box);
+              toastX("Već si async function toggleFavorite(type,id){
+  if(!uid())return toastX("Prijavi se da sačuvaš favorite.","error"),undefined;
+  if(!["team","player"].includes(type)||!id)return toastX("Favorit nije prepoznat.","error"),undefined;
+  const db=client();
+  if(!db?.from)return toastX("Servis favorita trenutno nije dostupan.","error"),undefined;
+  try{
+    const {data,error:readError}=await db.from("fan_favorites").select("entity_type")
+      .eq("user_id",uid()).eq("entity_type",type).eq("entity_id",String(id)).maybeSingle();
+    if(readError)throw readError;
+    if(data){
+      const {error}=await db.from("fan_favorites").delete()
+        .eq("user_id",function decorateFavorite(type,id){
+  setTimeout(async()=>{
+    if(!uid())return;
+    const host=q("modalContent");
+    if(!host||host.querySelector(".community-favorite-action"))return;
+    const h=host.querySelector("h2,h3");
+    if(!h)return;
+    let data;
+    try{
+      const {data:favorite,error}=await client().from("fan_favorites").select("entity_type")
+        .eq("user_id",uid()).eq("entity_type",type).eq("entity_id",String(id)).maybeSingle();
+      if(error)throw error;
+      data=favorite;
+    }catch(error){
+      console.warn("Community favorite state:",error);
+      return;
     }
-  }catch(error){
-    console.warn("Community polls:",error);
-  }
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="btn btn-small community-favorite-action";
+    b.textContent=data?"⭐ Ukloni iz favorita":" Dodaj u favorite";
+    b.onclick=async()=>{
+      b.disabled=true;
+      try{
+        const next=await toggleFavorite(type,id);
+        if(typeof next==="boolean")b.textContent=next?"⭐ Ukloni iz favorita":" Dodaj u favorite";
+      }finally{
+        if(b.isConnected)b.disabled=false;
+      }
+    };
+    h.parentElement?.appendChild(b);
+  },60);
 }
-function boot(){
-  patchLoad();patchComposer();patchPublish();
-  setTimeout(async()=>{await enhanceFeed();await renderPolls()},700);
-  window.addEventListener("load",()=>setTimeout(async()=>{patchLoad();patchComposer();patchPublish();await enhanceFeed();await renderPolls()},900));
-}
-boot();
-})();
-
-// Gallery albums + favorites + moderation panel
 async function loadAlbums(){const {data,error}=await client().from("gallery_albums").select("id,name,description,cover_url,created_at").order("created_at",{ascending:false});if(error){console.warn("Gallery albums:",error);return []}return data||[]}
 async function toggleFavorite(type,id){if(!uid())return toastX("Prijavi se da sačuvaš favorite.","error");const {data}=await client().from("fan_favorites").select("entity_type").eq("user_id",uid()).eq("entity_type",type).eq("entity_id",String(id)).maybeSingle();const r=data?await client().from("fan_favorites").delete().eq("user_id",uid()).eq("entity_type",type).eq("entity_id",String(id)):await client().from("fan_favorites").insert({user_id:uid(),entity_type:type,entity_id:String(id)});if(r.error)return toastX(r.error.message,"error");toastX(data?"Uklonjeno iz favorita.":"Dodano u favorite.");return !data}
 window.toggleFavorite=toggleFavorite;
