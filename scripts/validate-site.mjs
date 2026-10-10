@@ -772,7 +772,7 @@ const galleryDeleteSource = app.slice(
   app.indexOf("/* =========================================================\\n   TEAM MODAL",app.indexOf("async function adminDeleteGalleryImage(id)"))
 );
 const newsDeleteStart = app.indexOf("async function deleteNews(id)");
-const newsDeleteEnd = app.indexOf("const V7=",newsDeleteStart);
+const newsDeleteEnd = app.indexOf("async function setNewsPublished(id,published)",newsDeleteStart);
 const newsDeleteSource = newsDeleteStart >= 0 && newsDeleteEnd > newsDeleteStart ? app.slice(newsDeleteStart,newsDeleteEnd) : "";
 if (
   !storageDeleteHelper.includes('url.origin!==base.origin') ||
