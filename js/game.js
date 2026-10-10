@@ -103,6 +103,9 @@
       let nextStats=S.stats;
       const counterNow=Date.now();
       if(!marketStatsFetchedAt||counterNow-marketStatsFetchedAt>=MARKET_STATS_TTL){
+        // Record attempts as well as successes so a failing optional aggregate
+        // RPC cannot be hammered again on every 10-second refresh.
+        marketStatsFetchedAt=counterNow;
         try{
           const statResults=await Promise.all(active().slice(0,12).map(match=>
             sb().rpc("fan_market_stats",{p_match:String(match.id)})
@@ -127,14 +130,9 @@
 
       let nextMvp=S.mvp;
       const finishedMatches=finished().slice(0,4);
-      const needsNewMvpResult=finishedMatches.some(match=>
-        !Object.prototype.hasOwnProperty.call(S.mvp,String(match.id))
-      );
-      if(
-        !mvpResultsFetchedAt||
-        counterNow-mvpResultsFetchedAt>=MVP_RESULTS_TTL||
-        needsNewMvpResult
-      ){
+      if(!mvpResultsFetchedAt||counterNow-mvpResultsFetchedAt>=MVP_RESULTS_TTL){
+        // New/failed results are retried after the TTL, not every live tick.
+        mvpResultsFetchedAt=counterNow;
         try{
           const mvpResults=await Promise.all(finishedMatches.map(match=>
             sb().rpc("fan_mvp_results",{p_match:String(match.id)})
