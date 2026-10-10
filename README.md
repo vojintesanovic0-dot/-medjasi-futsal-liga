@@ -36,6 +36,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 17. `sql/16_restrict_liga_images_uploads.sql` – ograničava Storage upload na dozvoljene medije, 50 MB po objektu i slike do 12 MB u korisničkim folderima; administratori zadržavaju video upload.
 18. `sql/17_revoke_excess_public_table_privileges.sql` – uklanja nepotrebne privilegije za `anon` i privilegije održavanja za klijentske uloge, zadržavajući postojeće RLS i autentifikovane CRUD tokove.
 19. `sql/18_tighten_public_dml_and_sequence_grants.sql` – uklanja direktne INSERT/UPDATE/DELETE dozvole bez odgovarajuće RLS politike, sužava pristup sekvencama i postavlja minimalne podrazumijevane privilegije za nove tabele.
+20. `sql/19_revoke_default_function_execute.sql` – uklanja automatsko `EXECUTE` za `PUBLIC`, `anon` i `authenticated` na budućim funkcijama koje kreira `postgres`; dozvole postojećih funkcija ostaju iste.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
