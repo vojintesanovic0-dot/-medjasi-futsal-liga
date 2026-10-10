@@ -764,6 +764,32 @@ if (
   pass("Database event integrity migration guards goal/card participants and required references");
 }
 
+const goalEventSource = app.slice(
+  app.indexOf("async function addGoal(matchId)"),
+  app.indexOf("/* =========================================================\\n   CARD CONTROL",app.indexOf("async function addGoal(matchId)"))
+);
+const goalAssistSource = app.slice(
+  app.indexOf("async function addGoalWithAssist(matchId)"),
+  app.indexOf("function decorateCourtRatings",app.indexOf("async function addGoalWithAssist(matchId)"))
+);
+const loadAllSource = app.slice(app.indexOf("async function loadAll(){"),app.indexOf("\\n/* =====================================",app.indexOf("async function loadAll(){")));
+if (
+  !loadAllSource.includes("return !hadLoadErrors;") ||
+  !app.includes("async function readConfirmedMatch(matchId,fallback)") ||
+  !goalEventSource.includes("(await loadAll())===true") ||
+  !goalEventSource.includes("readConfirmedMatch(matchId,match)") ||
+  !goalEventSource.includes("submitButton.disabled=true") ||
+  !goalAssistSource.includes("(await loadAll())===true") ||
+  !goalAssistSource.includes("readConfirmedMatch(matchId,match)") ||
+  !goalAssistSource.includes("submitButton.disabled=true") ||
+  !goalEventSource.includes("Push obavještenje nije poslano") ||
+  !goalAssistSource.includes("Push obavještenje nije poslano")
+) {
+  fail("Goal entry must prevent double submission and confirm the persisted match score before broadcasting when a bulk refresh is incomplete");
+} else {
+  pass("Goal entry blocks duplicate clicks and avoids broadcasting an unconfirmed score after partial refresh failures");
+}
+
 const fanGameSource = read("js/game.js");
 if (
   !fanGameSource.includes("const MARKET_STATS_TTL=30000") ||
