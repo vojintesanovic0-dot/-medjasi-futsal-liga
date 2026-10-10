@@ -41,6 +41,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 22. `sql/21_allow_admin_gallery_news_media.sql` – omogućava isključivo administratorima upload slika/videa u galeriju i vijesti te brisanje njihovih Storage objekata; obični korisnički folderi ostaju ograničeni.
 23. `sql/22_revoke_unneeded_anon_select.sql` – uklanja direktni `SELECT` grant za anonimnu ulogu sa tabela čije RLS politike dozvoljavaju čitanje samo prijavljenim korisnicima.
 24. `sql/23_remove_duplicate_profile_role_trigger.sql` – uklanja zastarjeli dupli okidač za promjenu uloge profila; noviji `trg_protect_profile_role` ostaje jedina provjera koja štiti korisničke zahtjeve i dopušta pouzdani SQL Editor kontekst.
+25. `sql/24_enforce_single_active_season.sql` – baznim jedinstvenim indeksom sprečava da istovremeno postoje dvije aktivne sezone.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
