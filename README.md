@@ -39,6 +39,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 20. `sql/19_revoke_default_function_execute.sql` – uklanja automatsko `EXECUTE` za `PUBLIC`, `anon` i `authenticated` na budućim funkcijama koje kreira `postgres`; dozvole postojećih funkcija ostaju iste.
 21. `sql/20_revoke_public_math_helper_execute.sql` – uklanja javni RPC pristup internim funkcijama za Poisson vjerovatnoću i pretvaranje vjerovatnoće u kvotu; interni preračun kvota ostaje nepromijenjen.
 22. `sql/21_allow_admin_gallery_news_media.sql` – omogućava isključivo administratorima upload slika/videa u galeriju i vijesti te brisanje njihovih Storage objekata; obični korisnički folderi ostaju ograničeni.
+23. `sql/22_revoke_unneeded_anon_select.sql` – uklanja direktni `SELECT` grant za anonimnu ulogu sa tabela čije RLS politike dozvoljavaju čitanje samo prijavljenim korisnicima.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
