@@ -440,20 +440,22 @@ function showSection(id){
 
   /* DESKTOP / SIDEBAR NAV */
 
-  document.querySelectorAll("#mainNav button")
-    .forEach(button =>
-      button.classList.remove("active")
-    );
-
-  const navButton =
-    [...document.querySelectorAll("#mainNav button")]
-      .find(button =>
-        button.getAttribute("onclick")?.includes(
-          `showSection('${id}')`
-        )
-      );
-
+  const navButtons=[...document.querySelectorAll("#mainNav button")];
+  const navButton=navButtons.find(button=>
+    button.getAttribute("onclick")?.includes("showSection('" + id + "')")
+  );
+  navButtons.forEach(button=>button.classList.remove("active"));
   navButton?.classList.add("active");
+
+  if(id==="game"){
+    const activeTab=String(window.medjasiGame?.getActiveTab?.()||"matches");
+    const gameButton=navButtons.find(button=>button.dataset.dashboardTab===activeTab)||
+      (activeTab==="matches"
+        ? navButtons.find(button=>(button.getAttribute("onclick")||"").includes("dashboardOpenGameTab('matches')"))
+        : null);
+    gameButton?.classList.add("active");
+  }
+  window.dashboardSyncHeaderContext?.(id);
 
   if(id === "admin" && isAdmin()){
     try{

@@ -1380,6 +1380,59 @@ if (
   pass("Profile role protection removes the superseded trigger and retains the current role guard");
 }
 
+const sectionNavigationStart = app.indexOf("function showSection(id)");
+const sectionNavigationEnd = app.indexOf("/* =========================================================\n   MODAL", sectionNavigationStart);
+const sectionNavigation = sectionNavigationStart >= 0 && sectionNavigationEnd > sectionNavigationStart
+  ? app.slice(sectionNavigationStart, sectionNavigationEnd) : "";
+if (
+  !sectionNavigation.includes("window.dashboardSyncHeaderContext?.(id)") ||
+  !sectionNavigation.includes("button.dataset.dashboardTab===activeTab") ||
+  !sectionNavigation.includes("dashboardOpenGameTab('matches')")
+) {
+  fail("Section navigation must refresh the header context immediately and keep the selected Fan Game route active");
+} else {
+  pass("Header context and Fan Game navigation selection update on the user's click");
+}
+
+const gameTabRouterStart = dashboard.indexOf("window.dashboardOpenGameTab=function(tab)");
+const gameTabRouterEnd = dashboard.indexOf("window.toggleDashboardGlow", gameTabRouterStart);
+const gameTabRouter = gameTabRouterStart >= 0 && gameTabRouterEnd > gameTabRouterStart
+  ? dashboard.slice(gameTabRouterStart, gameTabRouterEnd) : "";
+if (
+  !gameTabRouter.includes("const markSelected=()=>") ||
+  !gameTabRouter.includes('window.dashboardSyncHeaderContext?.("game")') ||
+  !gameTabRouter.includes("Fan Game se nije otvorio")
+) {
+  fail("Fan Game tab shortcuts must show the selected tab and report a failed open instead of silently doing nothing");
+} else {
+  pass("Fan Game shortcuts synchronize selection and report failed navigation");
+}
+
+const newsMirrorStart = dashboard.indexOf("function renderNewsMirror()");
+const newsMirrorEnd = dashboard.indexOf("function syncWallet()", newsMirrorStart);
+const newsMirror = newsMirrorStart >= 0 && newsMirrorEnd > newsMirrorStart
+  ? dashboard.slice(newsMirrorStart, newsMirrorEnd) : "";
+if (
+  !newsMirror.includes("medjasiV7.openNews") ||
+  !newsMirror.includes('class="dashboard-news-card"') ||
+  !newsMirror.includes('aria-label="Otvori vijest:')
+) {
+  fail("Dashboard news previews must open the corresponding news item and be keyboard-accessible buttons");
+} else {
+  pass("Dashboard news previews open the selected news item with accessible click targets");
+}
+
+if (
+  !css.includes("@media(min-width:1025px)") ||
+  !css.includes(".dashboard-right-rail{display:none!important;}") ||
+  !css.includes("@media(max-width:1024px)") ||
+  !css.includes("display:flex!important;grid-column:1!important;grid-row:2!important;")
+) {
+  fail("The auxiliary news/upcoming rail must stay off desktop but be restored below the home dashboard on mobile");
+} else {
+  pass("Dashboard auxiliary rail is desktop-hidden and mobile-responsive");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();

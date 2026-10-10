@@ -1,4 +1,4 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v137";
+const CACHE_NAME = "medjasi-futsal-pwa-v138";
 const CDN_CACHE = "medjasi-cdn-v1";
 
 const APP_SHELL = [
@@ -6,7 +6,7 @@ const APP_SHELL = [
   "./index.html",
   "./manifest.json",
   "./css/app.css?v=20261006v21",
-  "./js/app.js?v=20261011v41",
+  "./js/app.js?v=20261011v42",
   "./js/effects.js?v=1",
   "./css/production.css?v=20261007v23",
   "./css/visual-redesign-v1.css?v=1",
@@ -34,9 +34,9 @@ const APP_SHELL = [
   "./css/medjasi-admin-v2.css?v=1",
   "./css/medjasi-sitewide-v3.css?v=1",
   "./css/medjasi-dashboard-reference-v1.css?v=1",
-  "./css/medjasi-dashboard-refinements-v2.css?v=7",
+  "./css/medjasi-dashboard-refinements-v2.css?v=8",
   "./css/medjasi-header-fix-v1.css?v=1",
-  "./js/dashboard-layout-v1.js?v=20261009v7",
+  "./js/dashboard-layout-v1.js?v=20261011v8",
   "./css/medjasi-design-v11.css?v=20261007v02",
   "./css/medjasi-design-v13.css?v=20261007v02",
   "./js/admin-organizer.js?v=15",

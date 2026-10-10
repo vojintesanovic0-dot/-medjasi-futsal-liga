@@ -432,8 +432,10 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
 }
 
 
-/* The right rail was removed from the intended desktop layout; keep its code/data hooks intact but hide its panel. */
-.dashboard-right-rail{display:none!important;}
+/* Keep the auxiliary rail off desktop; mobile uses it as a stacked section below the main dashboard. */
+@media(min-width:1025px){
+  .dashboard-right-rail{display:none!important;}
+}
 
 
 /* =========================================================
@@ -725,3 +727,70 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
   outline:2px solid rgba(57,245,139,.85)!important;
   outline-offset:3px!important;
 }
+
+/* =========================================================
+   RESPONSIVE FUNCTIONALITY / READABILITY RECOVERY
+   Preserve the existing dark green/cyan theme; improve clarity and touch use.
+========================================================= */
+.dashboard-section-head h2{font-size:13px!important;line-height:1.35!important}
+.dashboard-section-head button{font-size:10px!important;min-height:30px!important}
+.dashboard-empty,.dashboard-news-empty{font-size:11px!important;line-height:1.55!important}
+.dashboard-kpi small{font-size:10px!important}
+.dashboard-kpi em{font-size:9px!important;line-height:1.35!important}
+.dashboard-next-meta,.dashboard-upcoming-meta,.dashboard-upcoming-venue{font-size:10px!important;line-height:1.4!important}
+.dashboard-upcoming-teams strong{font-size:10px!important;line-height:1.25!important;overflow-wrap:anywhere!important}
+.dashboard-news-card{
+  width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  border:0!important;background:transparent!important;color:inherit!important;
+  font:inherit!important;text-align:left!important;cursor:pointer!important;
+}
+.dashboard-news-card:focus-visible{
+  outline:2px solid rgba(57,245,139,.82)!important;outline-offset:2px!important;
+}
+.dashboard-news-card-copy{display:flex!important;min-width:0!important;flex-direction:column!important;gap:4px!important}
+.dashboard-news-card-copy b{font-size:10px!important;line-height:1.4!important;overflow-wrap:anywhere!important}
+.dashboard-news-card-copy small{font-size:9px!important;line-height:1.35!important}
+.sidebar-live-match{
+  display:block!important;width:100%!important;box-sizing:border-box!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:8px!important;
+  background:transparent!important;color:inherit!important;text-align:left!important;
+  font:inherit!important;cursor:pointer!important;
+}
+.sidebar-live-match:focus-visible{outline:2px solid rgba(57,245,139,.82)!important;outline-offset:2px!important}
+@media(max-width:1024px){
+  .dashboard-right-rail{
+    display:flex!important;grid-column:1!important;grid-row:2!important;
+    position:static!important;min-width:0!important;max-height:none!important;
+    overflow:visible!important;padding:0!important;gap:10px!important;
+  }
+  .dashboard-right-rail .dashboard-rail-panel{min-width:0!important;padding:12px!important}
+  .dashboard-right-rail .dashboard-section-head h2{font-size:13px!important}
+  .dashboard-right-rail .dashboard-upcoming-list{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+  .dashboard-right-rail .dashboard-news-list{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px 12px!important}
+  .dashboard-section-head h2{font-size:14px!important}
+  .dashboard-section-head button{font-size:11px!important;min-height:32px!important}
+  .dashboard-empty,.dashboard-news-empty{font-size:12px!important}
+  .dashboard-kpi small{font-size:11px!important}
+  .dashboard-kpi em{font-size:10px!important}
+  .dashboard-news-card-copy b{font-size:11px!important}
+  .dashboard-news-card-copy small{font-size:10px!important}
+}
+@media(max-width:640px){
+  .dashboard-hero-copy{width:100%!important}
+  .dashboard-hero p{max-width:100%!important;font-size:12px!important;line-height:1.6!important}
+  .dashboard-hero h2{font-size:14px!important;line-height:1.4!important}
+  .dashboard-hero-actions{gap:8px!important;flex-wrap:wrap!important}
+  .dashboard-hero-actions .btn{min-height:40px!important;font-size:12px!important;padding:10px 12px!important}
+  .dashboard-section-head{gap:8px!important;align-items:center!important}
+  .dashboard-section-head h2{font-size:14px!important}
+  .dashboard-upcoming-teams strong{font-size:10px!important}
+  .dashboard-right-rail .dashboard-upcoming-list,
+  .dashboard-right-rail .dashboard-news-list{grid-template-columns:minmax(0,1fr)!important}
+  .dashboard-right-rail .dashboard-upcoming-item{padding:10px!important}
+  .dashboard-right-rail .dashboard-news-card{min-height:62px!important}
+  .dashboard-community-copy p{font-size:12px!important;line-height:1.55!important}
+  .dashboard-shop-copy small{font-size:10px!important}
+  .dashboard-kpi strong{font-size:20px!important}
+  .site-header .v7-search-wrap input{font-size:10px!important}
+}
+

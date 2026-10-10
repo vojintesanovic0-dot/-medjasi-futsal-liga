@@ -110,6 +110,11 @@
     const cards=candidates.filter(node=>!candidates.some(parent=>parent!==node&&parent.contains(node))).slice(0,3);
     if(!cards.length){host.innerHTML='<div class="dashboard-news-empty">Objave iz lige pojaviće se ovdje kada budu dostupne.<br><button type="button" onclick="showSection(\'news\')">Otvori sve vijesti →</button></div>';return;}
     host.innerHTML=cards.map(card=>{
+      const openControl=[...card.querySelectorAll("button[onclick]")].find(button=>
+        (button.getAttribute("onclick")||"").includes("medjasiV7.openNews")
+      );
+      const openMatch=(openControl?.getAttribute("onclick")||"").match(/openNews\(['"]([0-9a-f-]{36})['"]\)/i);
+      const newsId=openMatch?.[1]||"";
       const clone=card.cloneNode(true);
       clone.querySelectorAll("[id]").forEach(el=>el.removeAttribute("id"));clone.removeAttribute("id");
       clone.querySelectorAll("button,input,textarea,select").forEach(el=>el.remove());
@@ -118,10 +123,11 @@
       const text=(title?.textContent||clone.textContent||"Novosti iz lige").trim().replace(/\s+/g," ").slice(0,110);
       const src=image?(image.currentSrc||image.getAttribute("src")||""):"";
       const date=clone.querySelector("time,small,[class*='date']");
-      return '<div class="dashboard-news-card">'+(src?'<img src="'+esc(safeImage(src))+'" alt="">':'<span class="dashboard-news-placeholder">MFL</span>')+'<div><b>'+esc(text)+'</b><small>'+esc(date?.textContent?.trim()||"Vijest lige")+'</small></div></div>';
+      const action=newsId?"medjasiV7.openNews('"+newsId+"')":"showSection('news')";
+      return '<button type="button" class="dashboard-news-card" onclick="'+action+'" aria-label="Otvori vijest: '+esc(text)+'">'+(src?'<img src="'+esc(safeImage(src))+'" alt="">':'<span class="dashboard-news-placeholder">MFL</span>')+'<span class="dashboard-news-card-copy"><b>'+esc(text)+'</b><small>'+esc(date?.textContent?.trim()||"Vijest lige")+'</small></span></button>';
     }).join("");
   }
-  function syncWallet(){
+    function syncWallet(){
     const host=$("sidebarFanPoints");if(!host)return;
     const source=document.querySelector("#game .fg-head .fg-bal b");
     host.textContent=source?.textContent?.trim()||"—";
@@ -152,11 +158,32 @@ window.dashboardOpenGameTab=function(tab){
     if(!known.includes(key))return;
     if(key==="admin"&&window.currentProfile?.role!=="admin")return;
     if(typeof window.showSection==="function")window.showSection("game");
-    const open=()=>window.medjasiGame?.openTab?.(key)===true;
+
+    const markSelected=()=>{
+      const nav=$("mainNav");
+      const buttons=[...(nav?.querySelectorAll("button")||[])];
+      buttons.forEach(button=>button.classList.remove("active"));
+      const selected=buttons.find(button=>button.dataset.dashboardTab===key)||
+        (key==="matches"
+          ? buttons.find(button=>(button.getAttribute("onclick")||"").includes("dashboardOpenGameTab('matches')"))
+          : key==="admin" ? $("dashboardAdminNav") : null);
+      selected?.classList.add("active");
+      window.dashboardSyncHeaderContext?.("game");
+    };
+    const open=()=>{
+      const opened=window.medjasiGame?.openTab?.(key)===true;
+      if(opened)markSelected();
+      return opened;
+    };
     if(open())return;
+
     let attempts=0;
     const retry=()=>{
-      if(open()||++attempts>=12)return;
+      if(open())return;
+      if(++attempts>=12){
+        if(typeof window.toast==="function")window.toast("Fan Game se nije otvorio. Osvježi stranicu i pokušaj ponovo.","error");
+        return;
+      }
       window.setTimeout(retry,100);
     };
     window.setTimeout(retry,0);
