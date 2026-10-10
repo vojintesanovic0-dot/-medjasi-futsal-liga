@@ -1140,6 +1140,18 @@ if (
   pass("Least-privilege migration removes unnecessary public table grants and tightens postgres default privileges");
 }
 
+const defaultFunctionGrantMigration = read("sql/19_revoke_default_function_execute.sql");
+if (
+  !defaultFunctionGrantMigration.includes("alter default privileges for role postgres") ||
+  !defaultFunctionGrantMigration.includes("revoke execute on functions from public") ||
+  !defaultFunctionGrantMigration.includes("alter default privileges for role postgres in schema public") ||
+  !defaultFunctionGrantMigration.includes("revoke execute on functions from anon, authenticated")
+) {
+  fail("New PostgreSQL functions must not inherit public/client EXECUTE by default; existing functions are unaffected");
+} else {
+  pass("Future function grants require explicit execution access instead of public defaults");
+}
+
 const policyAlignedGrantsMigration = read("sql/18_tighten_public_dml_and_sequence_grants.sql");
 if (
   !policyAlignedGrantsMigration.includes("has_table_privilege(") ||
