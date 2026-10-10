@@ -1716,6 +1716,17 @@ function updateAuthUI(renderContent=true){
 let loadAllActive=false;
 let loadAllPending=false;
 let loadAllDebounceTimer=0;
+let gameRefreshDebounceTimer=0;
+
+function scheduleGameRefresh(delay=450){
+  clearTimeout(gameRefreshDebounceTimer);
+  gameRefreshDebounceTimer=setTimeout(()=>{
+    gameRefreshDebounceTimer=0;
+    if(document.hidden||!document.querySelector("#game.section.active"))return;
+    try{void window.medjasiGame?.refresh?.();}
+    catch(error){console.warn("Fan Game refresh after league update failed:",error);}
+  },Math.max(0,Number(delay)||0));
+}
 
 function scheduleLoadAll(delay=350){
   clearTimeout(loadAllDebounceTimer);
@@ -1810,7 +1821,7 @@ async function loadAll(){
       ()=>fetchAllRows("match_players",null)
     ];
     const results=[];
-    const LOAD_QUERY_CONCURRENCY=4;
+    const LOAD_QUERY_CONCURRENCY=2;
     for(let i=0;i<loadTasks.length;i+=LOAD_QUERY_CONCURRENCY){
       const batch=await Promise.all(
         loadTasks.slice(i,i+LOAD_QUERY_CONCURRENCY).map(task=>task())
@@ -1847,7 +1858,9 @@ async function loadAll(){
       queueMicrotask(()=>{void loadAll()});
     }
   }
-  return !hadLoadErrors;
+  const refreshedSuccessfully=!hadLoadErrors;
+  if(refreshedSuccessfully)scheduleGameRefresh(250);
+  return refreshedSuccessfully;
 }
 
 /* =========================================================
@@ -7884,7 +7897,7 @@ async function init(){
 
 
   /*
-    Rezervno osvježavanje svakih 30 sekundi.
+    Rezervno osvježavanje svakih 2 minute; Realtime obrađuje promjene utakmica, golova i kartona.
   */
 
   document.addEventListener("visibilitychange",()=>{
@@ -7899,7 +7912,7 @@ async function init(){
   };
   const runBackgroundRefresh=async()=>{
     if(document.hidden){
-      scheduleBackgroundRefresh(60000);
+      scheduleBackgroundRefresh(120000);
       return;
     }
 
@@ -7917,7 +7930,7 @@ async function init(){
       }catch(error){
         console.error("Medjasi background music refresh:",error);
       }
-      scheduleBackgroundRefresh(60000);
+      scheduleBackgroundRefresh(120000);
       return;
     }
 
@@ -7928,7 +7941,7 @@ async function init(){
     console.warn("Medjasi background refresh failed; next retry in",Math.round(retryDelay/1000),"seconds.");
     scheduleBackgroundRefresh(retryDelay);
   };
-  scheduleBackgroundRefresh(60000);
+  scheduleBackgroundRefresh(120000);
 }
 
 
@@ -11161,7 +11174,7 @@ const oldRenderAdminMatches=window.renderAdminMatches;window.renderAdminMatches=
 const oldOpenMatch=window.openMatch;window.openMatch=async function(id){const r=oldOpenMatch?.(id);setTimeout(async()=>{try{await loadStats();addSaveButtonToLive(id);decorateCourtRatings(id);renderEnhancedLive(id)}catch(e){console.warn(e)}},120);return r};
 
 // News + media + push bootstrap
-setTimeout(async()=>{try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();ensureSeasonAdmin();await loadStats();await loadSeasons();await loadNews();renderGalleryV7()}catch(e){console.warn('V7 bootstrap:',e)}},800);
+setTimeout(async()=>{try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();ensureSeasonAdmin();await loadSeasons();renderGalleryV7()}catch(e){console.warn('V7 bootstrap:',e)}},800);
 window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();ensureSeasonAdmin();renderPushUI()},600));
 })();
 
