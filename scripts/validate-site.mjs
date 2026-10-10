@@ -825,6 +825,23 @@ if (
   pass("Fan Game limits repeat aggregate RPCs while retaining refreshes for changed picks and MVP votes");
 }
 
+const communityExtrasSource = communityClickAuditSource.slice(
+  communityClickAuditSource.indexOf("async function publishExtras(postId)"),
+  communityClickAuditSource.indexOf("function patchPublish()",communityClickAuditSource.indexOf("async function publishExtras(postId)"))
+);
+if (
+  !communityExtrasSource.includes("question.length<3||question.length>300") ||
+  !communityExtrasSource.includes("options.length<2||options.length>8") ||
+  !communityExtrasSource.includes("options.some(label=>label.length>120)") ||
+  !communityExtrasSource.includes("if(pollError)throw pollError") ||
+  !communityExtrasSource.includes("if(optionsError)throw optionsError") ||
+  !communityExtrasSource.includes("if(error)throw error")
+) {
+  fail("Community post links and poll saves must validate schema limits and surface Supabase write failures");
+} else {
+  pass("Community poll/link extras validate limits and surface failed writes instead of silently skipping them");
+}
+
 const communityPublishApp = app.slice(app.indexOf("window.publishV9Post=async function()"),app.indexOf("window.openV9StoryComposer=function()",app.indexOf("window.publishV9Post=async function()")));
 const communityPublishPatch = communityClickAuditSource.slice(communityClickAuditSource.indexOf("function patchPublish()"),communityClickAuditSource.indexOf("async function renderPolls()",communityClickAuditSource.indexOf("function patchPublish()")));
 if (
