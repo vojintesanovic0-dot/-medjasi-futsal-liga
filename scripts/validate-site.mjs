@@ -168,10 +168,10 @@ const addMatchStart = app.indexOf("async function addMatch()");
 const adminMatchesStart = app.indexOf("function renderAdminMatches()", addMatchStart);
 const addMatchFunction = addMatchStart >= 0 && adminMatchesStart > addMatchStart ? app.slice(addMatchStart, adminMatchesStart) : "";
 const saveLineupStart = app.indexOf("async function saveLineup(");
-const substitutionsStart = app.indexOf("/* =========================================================\\n   SUBSTITUTIONS", saveLineupStart);
+const substitutionsStart = app.indexOf("/* =========================================================\n   SUBSTITUTIONS", saveLineupStart);
 const saveLineupFunction = saveLineupStart >= 0 && substitutionsStart > saveLineupStart ? app.slice(saveLineupStart, substitutionsStart) : "";
 const substitutionStart = app.indexOf("async function makeSubstitution(");
-const lineupBenchStart = app.indexOf("/* =========================================================\\n   LINEUP / BENCH", substitutionStart);
+const lineupBenchStart = app.indexOf("/* =========================================================\n   LINEUP / BENCH", substitutionStart);
 const substitutionFunction = substitutionStart >= 0 && lineupBenchStart > substitutionStart ? app.slice(substitutionStart, lineupBenchStart) : "";
 if (
   !addMatchFunction.includes("try{") ||
