@@ -761,6 +761,23 @@ if (
   pass("Chat and comment uploads use owner-scoped paths accepted by Storage RLS");
 }
 
+const cardSaveSource = app.slice(
+  app.indexOf("async function addCard(matchId)"),
+  app.indexOf("/* =========================================================\\n   TEAM MODAL",app.indexOf("async function addCard(matchId)"))
+);
+if (
+  !cardSaveSource.includes("submitButton.disabled=true") ||
+  !cardSaveSource.includes("refreshLiveMatchSnapshot(String(matchId)") ||
+  !cardSaveSource.includes('if(!confirmedMatch)throw new Error') ||
+  !cardSaveSource.includes('if(!pushOk)toastV(') ||
+  !cardSaveSource.includes('fullyRefreshed!==true') ||
+  !cardSaveSource.includes("Push nije poslan")
+) {
+  fail("Card entry must prevent double submits, confirm persisted match data before push, and distinguish save success from refresh/push failures");
+} else {
+  pass("Card entry prevents duplicate clicks and only broadcasts a confirmed match score");
+}
+
 const mediaUploadMigration = read("sql/16_restrict_liga_images_uploads.sql");
 if (
   !mediaUploadMigration.includes("file_size_limit = 52428800") ||
