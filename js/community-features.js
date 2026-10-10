@@ -368,36 +368,34 @@ async function ensureGalleryAlbumSelect(){
   const btn=host.querySelector('button[onclick*="adminAddGalleryImage"]');btn?.parentElement?.insertBefore(wrap,btn);
 }
 function patchGalleryUpload(){
-  if(window.__GALLERY_UPLOAD_ALBUM_PATCH__)return;const old=window.adminAddGalleryImage;if(typeof old!=="function")return;
-  window.__GALLERY_UPLOAD_ALBUM_PATCH__=true;window.adminAddGalleryImage=async function(){
-    const r=await old.apply(this,arguments);if(r!==false&&uid()){
-      const album=q("galleryAlbumSelect")?.value||null;
-      if(album){
-        const galleryId=typeof r==="string"?r:null;
-        if(galleryId){
-          const {error}=await client().from("gallery").update({album_id:album}).eq("id",galleryId).eq("created_by",uid());
-          if(error)console.warn("Gallery album:",error);
-          else{
-            const local=window.gallery?.find(g=>String(g.id)===String(galleryId));
-            if(local)local.album_id=album;
-          }
-        }else{
-          /* Compatibility fallback for older upload implementations. */
-          const {data}=await client().from("gallery").select("id").eq("created_by",uid()).order("created_at",{ascending:false}).limit(1);
-          if(data?.[0]){
-            const {error}=await client().from("gallery").update({album_id:album}).eq("id",data[0].id);
-            if(!error){
-              const local=window.gallery?.find(g=>String(g.id)===String(data[0].id));
-              if(local)local.album_id=album;
-            }
-          }
-        }
-      }
+  if(window.__GALLERY_UPLOAD_ALBUM_PATCH__)return;
+  const old=window.adminAddGalleryImage;
+  if(typeof old!=="function")return;
+  window.__GALLERY_UPLOAD_ALBUM_PATCH__=true;
+  window.adminAddGalleryImage=async function(){
+    // Capture the selected album before the original handler clears its inputs.
+    const album=q("galleryAlbumSelect")?.value||null;
+    const result=await old.apply(this,arguments);
+
+    // Only the exact inserted row ID is safe. Never guess by querying the newest
+    // image: a cancelled/failed upload must not mutate an older gallery item.
+    if(typeof result!=="string"||!result||!uid()||!album)return result;
+
+    try{
+      const {error}=await client().from("gallery")
+        .update({album_id:album})
+        .eq("id",result)
+        .eq("created_by",uid());
+      if(error)throw error;
+      const local=window.gallery?.find(item=>String(item.id)===String(result));
+      if(local)local.album_id=album;
+    }catch(error){
+      console.warn("Gallery album:",error);
+      toastX("Fotografija je objavljena, ali album nije sačuvan. Uredi album i pokušaj ponovo.","error");
     }
-    return r;
+    return result;
   };
 }
-function injectAdminAlbumTools(){if(!admin())return;const host=q("adminGalleryList");if(!host||q("communityAlbumAdmin"))return;const card=document.createElement("div");card.id="communityAlbumAdmin";card.style.marginTop="12px";card.innerHTML='<h4> Albumi galerije</h4><div class="form-group"><input id="newAlbumName" maxlength="120" placeholder="Naziv albuma"></div><div class="form-group"><input id="newAlbumDesc" maxlength="500" placeholder="Opis albuma"></div><button type="button" class="btn btn-blue btn-small" id="createAlbumBtn">＋ Kreiraj album</button><div id="communityAlbumAdminList" class="muted"></div>';host.parentElement?.appendChild(card);q("createAlbumBtn").onclick=async()=>{const name=q("newAlbumName")?.value.trim();if(!name)return toastX("Upiši naziv albuma.","error");const {error}=await client().from("gallery_albums").insert({name,description:q("newAlbumDesc")?.value.trim()||null,created_by:uid()});if(error)return toastX(error.message,"error");toastX("Album je kreiran.");card.remove();injectAdminAlbumTools()};loadAlbums().then(a=>{const x=q("communityAlbumAdminList");if(x)x.textContent=a.map(v=>v.name).join(" • ")||"Još nema albuma."})}
 function patchGallery(){if(!window.__GALLERY_ALBUM_PATCH__&&typeof window.renderGallery==="function"){window.__GALLERY_ALBUM_PATCH__=true;const old=window.renderGallery;window.renderGallery=function(){const r=old.apply(this,arguments);setTimeout(injectGalleryAlbums,0);return r}}if(!window.__GALLERY_ADMIN_ALBUM_PATCH__&&typeof window.renderAdminGallery==="function"){window.__GALLERY_ADMIN_ALBUM_PATCH__=true;const old=window.renderAdminGallery;window.renderAdminGallery=function(){const r=old.apply(this,arguments);setTimeout(injectAdminAlbumTools,0);return r}}}
 async function injectAdminReports(){if(!admin())return;const host=q("adminContent");if(!host||q("communityModerationCard"))return;const card=document.createElement("div");card.id="communityModerationCard";card.style.marginTop="20px";card.innerHTML='<h3>️ Community moderacija</h3><div id="communityReportsList" class="muted">Učitavanje prijava…</div>';host.appendChild(card);const {data,error}=await client().from("community_reports").select("id,post_id,comment_id,reason,status,created_at").eq("status","open").order("created_at",{ascending:false}).limit(50);if(error){q("communityReportsList").textContent=error.message;return}q("communityReportsList").innerHTML=(data||[]).map(r=>'<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)"><strong>'+escX(r.post_id?"Objava":"Komentar")+'</strong> · '+escX(r.reason)+'<div class="muted">'+escX(r.created_at)+'</div><button type="button" class="btn btn-small btn-blue" data-report-review="'+r.id+'"> Označi pregledano</button></div>').join("")||"Nema otvorenih prijava.";q("communityReportsList").querySelectorAll("[data-report-review]").forEach(b=>b.onclick=async()=>{const {error}=await client().from("community_reports").update({status:"reviewed",reviewed_by:uid()}).eq("id",b.dataset.reportReview);if(error)return toastX(error.message,"error");b.parentElement.remove();toastX("Prijava je obrađena.")})}
 function patchCommentModeration(){
