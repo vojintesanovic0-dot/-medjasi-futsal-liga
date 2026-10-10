@@ -46,6 +46,7 @@ let gallery = [];
 let matchPlayers = [];
 
 let currentMatchId = null;
+let finishMatchInFlight = new Set();
 let liveRefreshInterval = null;
 let liveRefreshInFlight = false;
 let realtimeChannel = null;
@@ -10719,38 +10720,80 @@ async function addSave(matchId,pid){
   }
 }
 function renderEnhancedLive(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m||m.status!=='live')return;const host=$('modalContent');if(!host)return;host.querySelectorAll('.v7-live-rating-table').forEach(x=>x.remove());const h=teamV(m.home_team_id),a=teamV(m.away_team_id);const block=(team,label)=>`<div class="card v7-live-rating-table" style="margin-top:14px"><h3>${label} · ocjene</h3><div class="table-wrap" style="margin-top:10px"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Ocjena</th><th>G</th><th>A</th><th>O</th></tr></thead><tbody>${ratingRows(matchId,team.id)||'<tr><td colspan="5">Nema postave.</td></tr>'}</tbody></table></div></div>`;host.insertAdjacentHTML('beforeend',block(h,escV(h?.name||'Domaćin'))+block(a,escV(a?.name||'Gost')))}
-async function openFinished(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const hp=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.home_team_id);const ap=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.away_team_id);showModal(`<div class="modal-title"><h2>🏁 Završetak utakmice · statistika</h2><p class="muted">${escV(teamV(m.home_team_id)?.name)} ${m.home_score||0}:${m.away_score||0} ${escV(teamV(m.away_team_id)?.name)}</p></div><div class="v7-finished-grid"><div class="card"><h3>⚽ Golovi i asistencije</h3><p class="muted" style="margin:6px 0 12px">Ako statistiku unosiš naknadno, možeš evidentirati svaki gol i asistenta.</p><div class="actions"><button class="btn btn-green" onclick="medjasiV7.openGoal('${matchId}')">＋ Dodaj gol</button></div><div style="margin-top:12px">${goals.filter(g=>String(g.match_id)===String(matchId)).sort((x,y)=>(+x.minute||0)-(+y.minute||0)).map(g=>`<div class="event"><span class="event-minute">${g.minute||0}'</span><span class="event-icon">⚽</span><div><b>${escV(playerV(g.player_id)?.name||'Igrač')}</b>${g.assist_player_id?` <span class="muted">assist: ${escV(playerV(g.assist_player_id)?.name||'')}</span>`:''}</div></div>`).join('')||'<div class="empty compact">Nema golova.</div>'}</div></div><div class="card"><h3>📊 Ocjene igrača</h3><div class="table-wrap" style="margin-top:10px"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Ocjena</th><th>G</th><th>A</th><th>O</th></tr></thead><tbody>${ratingRows(matchId,m.home_team_id)}${ratingRows(matchId,m.away_team_id)}</tbody></table></div></div></div>${renderMvp(matchId)}<div class="actions" style="margin-top:16px"><button class="btn btn-blue" onclick="medjasiV7.finishAndSave('${matchId}')">💾 Sačuvaj statistiku i završi</button></div>`)}
-async function finishAndSave(matchId){
+async function openFinished(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const hp=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.home_team_id);const ap=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===m.away_team_id);showModal(`<div class="modal-title"><h2>🏁 Završetak utakmice · statistika</h2><p class="muted">${escV(teamV(m.home_team_id)?.name)} ${m.home_score||0}:${m.away_score||0} ${escV(teamV(m.away_team_id)?.name)}</p></div><div class="v7-finished-grid"><div class="card"><h3>⚽ Golovi i asistencije</h3><p class="muted" style="margin:6px 0 12px">Ako statistiku unosiš naknadno, možeš evidentirati svaki gol i asistenta.</p><div class="actions"><button class="btn btn-green" onclick="medjasiV7.openGoal('${matchId}')">＋ Dodaj gol</button></div><div style="margin-top:12px">${goals.filter(g=>String(g.match_id)===String(matchId)).sort((x,y)=>(+x.minute||0)-(+y.minute||0)).map(g=>`<div class="event"><span class="event-minute">${g.minute||0}'</span><span class="event-icon">⚽</span><div><b>${escV(playerV(g.player_id)?.name||'Igrač')}</b>${g.assist_player_id?` <span class="muted">assist: ${escV(playerV(g.assist_player_id)?.name||'')}</span>`:''}</div></div>`).join('')||'<div class="empty compact">Nema golova.</div>'}</div></div><div class="card"><h3>📊 Ocjene igrača</h3><div class="table-wrap" style="margin-top:10px"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Ocjena</th><th>G</th><th>A</th><th>O</th></tr></thead><tbody>${ratingRows(matchId,m.home_team_id)}${ratingRows(matchId,m.away_team_id)}</tbody></table></div></div></div>${renderMvp(matchId)}<div class="actions" style="margin-top:16px"><button class="btn btn-blue" onclick="medjasiV7.finishAndSave('${matchId}')">💾 Sačuvaj sasync function finishAndSave(matchId){
   if(!canManageMatch())return;
-  const m=matches.find(x=>String(x.id)===String(matchId));
+  const id=String(matchId);
+  const m=matches.find(x=>String(x.id)===id);
   if(!m)return toastV("Utakmica nije pronađena.","error");
 
-  try{
-    // Preserve saves/ratings only from a confirmed read, then require all writes
-    // to succeed before allowing the database to finish the match.
-    await loadStats();
-    await saveRatings(matchId);
-    const {error}=await supabaseClient.from("matches").update({status:"finished"}).eq("id",matchId);
-    if(error)throw error;
-  }catch(error){
-    console.error("Završetak utakmice nije mogao biti sačuvan:",error);
-    toastV("Statistika nije potpuno sačuvana; utakmica nije označena kao završena. Provjeri podatke i pokušaj ponovo.","error");
-    return;
-  }
+  // Prevent double-clicks from racing two rating/MVP finalizations.
+  if(finishMatchInFlight.has(id))return;
+  finishMatchInFlight.add(id);
+  let wasAlreadyFinished=m.status==="finished";
 
-  hideModal();
-  toastV("Utakmica je završena i statistika je sačuvana.");
-  void notifyLeaguePush(
-    "match_finished",
-    "🏁 KRAJ — "+teamV(m.home_team_id)?.name+" "+(m.home_score||0)+":"+(m.away_score||0)+" "+teamV(m.away_team_id)?.name,
-    "Utakmica je završena.",
-    matchId
-  );
   try{
-    await loadAll();
-  }catch(refreshError){
-    console.warn("Osvježavanje nakon završetka utakmice nije uspjelo:",refreshError);
-    toastV("Utakmica je završena, ali prikaz nije osvježen. Ponovo učitaj stranicu.","error");
+    // Re-read the selected match, goals, cards and line-up before deriving
+    // ratings, so the final score/stats aren't based on an old open modal.
+    const latest=await refreshLiveMatchSnapshot(id);
+    if(!latest)throw new Error("Utakmica nije pronađena u bazi.");
+    wasAlreadyFinished=latest.status==="finished";
+
+    // Preserve saves/ratings only from a successful stats read; every write
+    // must succeed before changing the match status.
+    await loadStats();
+    await saveRatings(id);
+
+    const {data:updated,error}=await supabaseClient.from("matches")
+      .update({status:"finished"})
+      .eq("id",id)
+      .select("*")
+      .maybeSingle();
+    if(error)throw error;
+    if(!updated)throw new Error("Baza nije potvrdila promjenu statusa utakmice.");
+
+    // Re-read the saved row. A successful update response alone must not be
+    // treated as proof that the final result/status is what we will broadcast.
+    const confirmed=await readConfirmedMatch(id,updated);
+    if(confirmed.status!=="finished"){
+      throw new Error("Status utakmice nije potvrđen kao završen u bazi.");
+    }
+
+    hideModal();
+    toastV("Utakmica je završena i statistika je sačuvana.");
+
+    // The database trigger creates the league event/settles Fan Game. Only send
+    // a browser push on the first transition, using the confirmed score.
+    if(!wasAlreadyFinished){
+      const pushOk=await notifyLeaguePush(
+        "match_finished",
+        "🏁 KRAJ — "+teamV(confirmed.home_team_id)?.name+" "+
+          Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)+" "+
+          teamV(confirmed.away_team_id)?.name,
+        "Utakmica je završena.",
+        id
+      );
+      if(!pushOk){
+        toastV("Utakmica je završena, ali push obavještenje nije potvrđeno (moguće da nema aktivnih pretplata).","error");
+      }
+    }
+
+    try{
+      const fullyRefreshed=await loadAll();
+      if(fullyRefreshed!==true){
+        toastV("Utakmica je završena; dio prikaza nije osvježen. Ponovo otvori utakmicu.","error");
+      }
+    }catch(refreshError){
+      console.warn("Osvježavanje nakon završetka utakmice nije uspjelo:",refreshError);
+      toastV("Utakmica je završena, ali prikaz nije osvježen. Ponovo učitaj stranicu.","error");
+    }
+  }catch(error){
+    console.error("Završetak utakmice nije mogao biti potvrđen:",error);
+    toastV(error?.message||"Završetak/statistika nisu potvrđeni. Provjeri stanje i pokušaj ponovo.","error");
+  }finally{
+    finishMatchInFlight.delete(id);
+  }
+}
+vo učitaj stranicu.","error");
   }
 }
 async function saveRatings(matchId){
