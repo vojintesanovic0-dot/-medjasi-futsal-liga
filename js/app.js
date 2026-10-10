@@ -3607,7 +3607,7 @@ async function addComment(){
 
   try{
     if(file){
-      image_url=await uploadFile(file,"comments");
+      image_url=await uploadFile(file,`comments/${currentUser.id}`);
     }
 
     const {error}=await supabaseClient
@@ -3822,7 +3822,7 @@ async function sendChat(){
 
   try{
     let image_url=null;
-    if(file) image_url=await uploadFile(file,"chat");
+    if(file) image_url=await uploadFile(file,`chat/${currentUser.id}`);
 
     const username=currentProfile?.username || currentUser.user_metadata?.username || currentUser.email?.split("@")[0] || "Korisnik";
 
@@ -10276,7 +10276,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     try{
       let image_url=null;
-      if(file && typeof uploadFile==="function") image_url=await uploadFile(file,"chat");
+      if(file && typeof uploadFile==="function") image_url=await uploadFile(file,`chat/${currentUser.id}`);
 
       const username=window.currentProfile?.username ||
         window.currentUser.user_metadata?.username ||
