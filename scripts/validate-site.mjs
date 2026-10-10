@@ -166,10 +166,10 @@ if (
 
 const substitutionHistorySource = app.slice(
   app.indexOf("async function makeSubstitution("),
-  app.indexOf("/* =========================================================\\n   LINEUP / BENCH",app.indexOf("async function makeSubstitution("))
+  app.indexOf("/* =========================================================\n   LINEUP / BENCH",app.indexOf("async function makeSubstitution("))
 );
 const substitutionCompatWrapperStart = app.indexOf("const oldMakeSubstitution=window.makeSubstitution");
-const substitutionCompatWrapperEnd = app.indexOf("\\nfunction renderMvp(matchId)",substitutionCompatWrapperStart);
+const substitutionCompatWrapperEnd = app.indexOf("\nfunction renderMvp(matchId)",substitutionCompatWrapperStart);
 const substitutionCompatWrapper = substitutionCompatWrapperStart>=0&&substitutionCompatWrapperEnd>substitutionCompatWrapperStart
   ? app.slice(substitutionCompatWrapperStart,substitutionCompatWrapperEnd) : "";
 if (
