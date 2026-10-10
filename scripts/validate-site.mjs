@@ -1172,6 +1172,17 @@ if (
   pass("Community/Gallery/Admin add-ons avoid hidden-section startup queries and render polls after a successful Community refresh");
 }
 
+const internalFanMathMigration = read("sql/20_revoke_public_math_helper_execute.sql");
+if (
+  !internalFanMathMigration.includes("public.fan_odds_from_prob(numeric, numeric)") ||
+  !internalFanMathMigration.includes("public.fan_poisson_prob(numeric, integer)") ||
+  !internalFanMathMigration.includes("from public, anon, authenticated")
+) {
+  fail("Internal Fan Game probability helpers must not be callable as public/anonymous/authenticated RPCs");
+} else {
+  pass("Fan Game math helpers are restricted to internal execution while preserving the repricing function");
+}
+
 const defaultFunctionGrantMigration = read("sql/19_revoke_default_function_execute.sql");
 if (
   !defaultFunctionGrantMigration.includes("alter default privileges for role postgres") ||
