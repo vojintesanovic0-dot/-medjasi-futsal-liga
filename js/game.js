@@ -390,7 +390,7 @@ function tabFanBase(){
     if(sb()&&!window.__MEDJASI_GAME_REFRESH_TIMER__){
       window.__MEDJASI_GAME_REFRESH_TIMER__=setInterval(()=>{
         if(!document.hidden&&sb()&&document.querySelector(".section.active")?.id==="game")refresh({force:false});
-      },30000);
+      },60000);
     }
     window.medjasiGame={refresh,openTab,getActiveTab:()=>S.tab};
   }
