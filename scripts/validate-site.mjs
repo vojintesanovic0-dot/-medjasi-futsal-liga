@@ -934,6 +934,19 @@ const goalAssistSource = app.slice(
   app.indexOf("function decorateCourtRatings",app.indexOf("async function addGoalWithAssist(matchId)"))
 );
 const loadAllSource = app.slice(app.indexOf("async function loadAll(){"),app.indexOf("\n/* =====================================",app.indexOf("async function loadAll(){")));
+
+if (
+  !loadAllSource.includes("const LOAD_QUERY_CONCURRENCY=4") ||
+  !loadAllSource.includes("const results=[];") ||
+  !loadAllSource.includes("for(let i=0;i<loadTasks.length;i+=LOAD_QUERY_CONCURRENCY)") ||
+  !loadAllSource.includes("results.push(...batch)") ||
+  !loadAllSource.includes("loadTasks.slice(i,i+LOAD_QUERY_CONCURRENCY).map(task=>task())")
+) {
+  fail("Base refresh must bound simultaneous REST requests while preserving the original result order");
+} else {
+  pass("Base database refresh limits its parallel request burst to four queries");
+}
+
 if (
   !loadAllSource.includes("return !hadLoadErrors;") ||
   !app.includes("async function readConfirmedMatch(matchId,fallback)") ||
