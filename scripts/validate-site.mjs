@@ -1342,6 +1342,26 @@ if (
   pass("Policy-aligned DML and sequence grant migration keeps required CRUD while revoking unused direct mutations");
 }
 
+const anonSelectCleanupMigration = read("sql/22_revoke_unneeded_anon_select.sql");
+const anonSelectCleanupTables = [
+  "admin_audit_log",
+  "community_poll_votes",
+  "fan_favorites",
+  "fan_inventory",
+  "fan_mvp_votes",
+  "fan_picks",
+  "fan_team_follows"
+];
+if (
+  !anonSelectCleanupMigration.includes("revoke select on table public.%I from anon") ||
+  !anonSelectCleanupMigration.includes("to_regclass(") ||
+  anonSelectCleanupTables.some(tableName=>!anonSelectCleanupMigration.includes("'"+tableName+"'"))
+) {
+  fail("Tables with authenticated-only RLS read policies must not retain direct SELECT grants for anon");
+} else {
+  pass("Unused anon SELECT grants are removed only from tables without anon/public SELECT policies");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
