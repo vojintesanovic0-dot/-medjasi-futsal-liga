@@ -941,7 +941,7 @@ if (
 
 if (
   !app.includes("function scheduleGameRefresh(delay=450)") ||
-  !app.includes("if(refreshedSuccessfully)scheduleGameRefresh(250)") ||
+  !app.includes("if(refreshedSuccessfully)scheduleGameRefresh(1200)") ||
   !app.includes('if(document.hidden||!document.querySelector("#game.section.active"))return;')
 ) {
   fail("Fan Game snapshots must be refreshed after a successful league snapshot, only while the Game section is visible");
@@ -1032,7 +1032,7 @@ if (
 
 if (
   !loadAllSource.includes("const refreshedSuccessfully=!hadLoadErrors;") ||
-  !loadAllSource.includes("if(refreshedSuccessfully)scheduleGameRefresh(250)") ||
+  !loadAllSource.includes("if(refreshedSuccessfully)scheduleGameRefresh(1200)") ||
   !app.includes("async function readConfirmedMatch(matchId,fallback)") ||
   !goalEventSource.includes("(await loadAll())===true") ||
   !goalEventSource.includes("readConfirmedMatch(matchId,match)") ||
@@ -1050,6 +1050,13 @@ if (
 
 const fanGameSource = read("js/game.js");
 if (
+  !fanGameSource.includes("for(let i=0;i<coreTasks.length;i+=2)") ||
+  !fanGameSource.includes("for(let i=0;i<userTasks.length;i+=2)") ||
+  !fanGameSource.includes("ensuredWalletUserId!==String(u.id)") ||
+  !fanGameSource.includes("if(u&&(!marketStatsFetchedAt") ||
+  !fanGameSource.includes("if(u&&(!mvpResultsFetchedAt") ||
+  !fanGameSource.includes("for(let i=0;i<statsTasks.length;i+=2)") ||
+  !fanGameSource.includes("for(let i=0;i<finishedMatches.length;i+=2)") ||
   !fanGameSource.includes("const MARKET_STATS_TTL=60000") ||
   !fanGameSource.includes("const MVP_RESULTS_TTL=120000") ||
   !fanGameSource.includes("marketStatsFetchedAt=0") ||
@@ -1211,7 +1218,7 @@ if (
   !gameRefreshSource.includes("refreshFailureCount=0") ||
   !gamePollingSource.includes("refresh({force:false})") ||
   !gamePollingSource.includes("!document.hidden") ||
-  !gamePollingSource.includes("30000") ||
+  !gamePollingSource.includes("60000") ||
   !game.includes("const MARKET_STATS_TTL=60000") ||
   !game.includes("const MVP_RESULTS_TTL=120000")
 ) {
