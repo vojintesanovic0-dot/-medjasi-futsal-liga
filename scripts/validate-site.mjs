@@ -1107,6 +1107,24 @@ if (
   pass("Fan Game refresh uses bounded exponential backoff while preserving forced user-triggered refreshes");
 }
 
+const communityLoadStart = app.indexOf("async function load(options={})",app.indexOf("function fanCommunityIdentityHTML"));
+const communityLoadEnd = app.indexOf("function communityTrack",communityLoadStart);
+const communityLoadSource = communityLoadStart>=0&&communityLoadEnd>communityLoadStart
+  ? app.slice(communityLoadStart,communityLoadEnd) : "";
+if (
+  !communityLoadSource.includes("if(loadInFlight)return loadInFlight;") ||
+  !communityLoadSource.includes("if(!options.force&&Date.now()<loadRetryAt)return false;") ||
+  !communityLoadSource.includes("loadFailureCount=Math.min(loadFailureCount+1,4)") ||
+  !communityLoadSource.includes("loadRetryAt=Date.now()+Math.min(60000,5000*Math.pow(2,loadFailureCount-1))") ||
+  !communityLoadSource.includes("if(!V.loaded)") ||
+  communityLoadSource.includes("V.posts=[];V.stories=[];render()") ||
+  !app.includes("await load({force:true});")
+) {
+  fail("Community feed must avoid overlapping loads, back off during failures, preserve the last good snapshot, and force refresh after successful mutations");
+} else {
+  pass("Community feed preserves the last good snapshot and backs off failed loads without blocking saved-content refreshes");
+}
+
 const publicPrivilegesMigration = read("sql/17_revoke_excess_public_table_privileges.sql");
 if (
   !publicPrivilegesMigration.includes("revoke insert, update, delete, truncate, references, trigger, maintain on table") ||
