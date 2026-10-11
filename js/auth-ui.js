@@ -77,11 +77,10 @@
   }).observe(node,{subtree:true,childList:true,characterData:true});
  });
 
- document.addEventListener("click",event=>{
-  const modeTrigger=event.target.closest("[data-auth-mode]");
-  if(modeTrigger){setAuthMode(modeTrigger.dataset.authMode,modeTrigger.dataset.authFocusTarget||"");return;}
-  const toggle=event.target.closest("[data-auth-password-toggle]");
-  if(toggle){
+ document.querySelectorAll("#login [data-auth-password-toggle]").forEach(toggle=>{
+  toggle.addEventListener("click",event=>{
+   event.preventDefault();
+   event.stopPropagation();
    const input=byId(toggle.dataset.authPasswordToggle);
    if(!input)return;
    const reveal=input.type==="password";
@@ -90,8 +89,11 @@
    toggle.setAttribute("aria-label",reveal?"Sakrij lozinku":"Prikaži lozinku");
    toggle.title=reveal?"Sakrij lozinku":"Prikaži lozinku";
    input.focus({preventScroll:true});
-   return;
-  }
+  });
+ });
+ document.addEventListener("click",event=>{
+  const modeTrigger=event.target.closest("#login button[role='tab'][data-auth-mode], #login .auth-inline-link[data-auth-mode]");
+  if(modeTrigger){setAuthMode(modeTrigger.dataset.authMode,modeTrigger.dataset.authFocusTarget||"");return;}
   const oldFocusTrigger=event.target.closest("[data-auth-focus]");
   if(oldFocusTrigger){
    const focusId=oldFocusTrigger.dataset.authFocus;
