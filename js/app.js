@@ -460,9 +460,9 @@ function showSection(id){
   if(id === "admin" && isAdmin()){
     try{
       renderAdminMatches();
-      renderAdminGallery();
-      renderAdminNews?.();
-      renderMusicAdmin?.();
+      window.renderAdminGallery?.();
+      window.renderAdminNews?.();
+      window.renderMusicAdmin?.();
       fillTeamSelects();
       injectModeratorPanel?.();
       initGraphicEngine?.();
@@ -10789,7 +10789,29 @@ function ensureNewsUI(){
   document.querySelectorAll('.mobile-more-grid button').forEach(b=>{if(b.innerHTML.includes('Komentari')){b.innerHTML=b.innerHTML.replace('💭','📰').replace('Komentari','Vijesti').replace('Komentari zajednice','Novosti lige');b.setAttribute('onclick',"mobileMoreGo('news')")}});
   const c=$('comments');if(c){const h=c.querySelector('.section-title');if(h)h.textContent='💬 Komentari zajednice';}
   ensureAdminNews();
-}function ensureAdminNews(){
+}
+function renderAdminNews(){
+  const box=$('v7NewsAdminList');
+  if(!box)return;
+  if(!isAdm()){box.innerHTML='';return;}
+  const rows=Array.isArray(V7.news)?V7.news:[];
+  box.innerHTML=rows.map(n=>{
+    const id=escV(n.id);
+    const published=n.published===true;
+    return '<div class="v7-admin-news-item" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)">'+
+      '<div><strong>'+escV(n.title||'Bez naslova')+'</strong><small class="muted" style="display:block;margin-top:4px">'+
+      (published?'OBJAVLJENA':'SKICA')+' · '+escV(formatV(n.created_at))+'</small></div>'+
+      '<div class="actions"><button type="button" class="btn btn-small" data-news-toggle="'+id+'" data-published="'+(!published)+'">'+
+      (published?'Sakrij':'Objavi')+'</button><button type="button" class="btn btn-red btn-small" data-news-delete="'+id+'">Obriši</button></div></div>';
+  }).join('')||'<div class="muted">Nema vijesti.</div>';
+  box.querySelectorAll('[data-news-toggle]').forEach(button=>{
+    button.addEventListener('click',()=>setNewsPublished(button.dataset.newsToggle,button.dataset.published==='true'));
+  });
+  box.querySelectorAll('[data-news-delete]').forEach(button=>{
+    button.addEventListener('click',()=>deleteNews(button.dataset.newsDelete));
+  });
+}
+function ensureAdminNews(){
   const admin=$('adminContent');if(!admin||!isAdm()||$('v7NewsAdmin'))return;
   const card=document.createElement('div');card.id='v7NewsAdmin';card.className='card';card.style.marginTop='20px';
   card.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SADRŽAJ LIGE</span><h3>📰 Upravljanje vijestima</h3><p class="muted">Objavi novost, dodaj sliku ili video i podijeli je direktno u chat.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="v7-admin-news-form"><div class="form-group"><label>Naslov</label><input id="v7NewsTitle" maxlength="150" placeholder="Naslov vijesti"></div><div class="form-group"><label>Autor / oznaka</label><input id="v7NewsKicker" maxlength="50" placeholder="npr. LIGA, NAJAVA, REZULTAT"></div><div class="form-group wide"><label>Kratki uvod</label><textarea id="v7NewsLead" maxlength="400" style="min-height:80px" placeholder="Kratak uvod koji se vidi na kartici"></textarea></div><div class="form-group wide"><label>Sadržaj vijesti</label><textarea id="v7NewsBody" maxlength="10000" placeholder="Tekst vijesti..."></textarea></div><div class="form-group"><label>Slika ili video</label><input id="v7NewsFile" type="file" accept="image/*,video/mp4,video/webm,video/ogg"></div><div class="form-group"><label>Objavi</label><select id="v7NewsPublished"><option value="true">Odmah javno</option><option value="false">Sačuvaj kao skicu</option></select></div></div><div class="actions" style="margin-top:12px"><button class="btn btn-green" onclick="medjasiV7.publishNews()">📰 Objavi vijest</button></div><div id="v7NewsAdminList" class="v7-admin-news-list"></div>`;
@@ -11391,20 +11413,21 @@ async function adminAddMedia(){
 
   try{
     const media_url=await uploadFile(file,"gallery");
-    const {error}=await supabaseClient.from("gallery").insert({
+    const {data:insertedMedia,error}=await supabaseClient.from("gallery").insert({
       image_url:media_url,
       media_url,
       media_type:media.kind,
       title:title.slice(0,100)||"Medij lige",
       description:description.slice(0,250),
       created_by:currentUser.id
-    });
+    }).select("id").single();
     if(error)throw error;
     $("galleryImageFile").value="";
     $("galleryTitle").value="";
     $("galleryDescription").value="";
     await loadAll();
     toastV("Medij je objavljen.");
+    return insertedMedia?.id||null;
   }catch(error){
     console.error("Objava medija nije uspjela:",error);
     toastV(error?.message||"Greška pri uploadu medija.","error");

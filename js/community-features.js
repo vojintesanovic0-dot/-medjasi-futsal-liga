@@ -308,6 +308,14 @@ boot();
 })();
 
 // Gallery albums + favorites + moderation panel
+(()=>{
+"use strict";
+const q=id=>document.getElementById(id);
+const uid=()=>window.currentUser?.id||null;
+const admin=()=>typeof window.isAdmin==="function"&&window.isAdmin();
+const toastX=(message,type)=>typeof window.toast==="function"?window.toast(message,type):alert(message);
+const client=()=>window.supabaseClient;
+const escX=value=>typeof window.esc==="function"?window.esc(value??""):String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char]));
 let albumsInFlight=null;
 async function loadAlbums(){
   if(!client()?.from)return [];
@@ -494,6 +502,9 @@ function patchCommentModeration(){
 function boot2(){
   patchFavorites();patchGallery();patchGalleryUpload();patchCommentModeration();
   const initializeVisibleSection=()=>setTimeout(()=>{
+    // App.js mounts its renderers during DOMContentLoaded; retry the wrappers
+    // after that initialization so album/favorite enhancements are actually wired.
+    patchFavorites();patchGallery();patchGalleryUpload();patchCommentModeration();
     if(q("gallery")?.classList.contains("active"))void injectGalleryAlbums();
     if(admin()&&q("admin")?.classList.contains("active")){
       void injectAdminAlbumTools();
@@ -505,3 +516,4 @@ function boot2(){
   else window.addEventListener("load",initializeVisibleSection,{once:true});
 }
 boot2();
+})();
