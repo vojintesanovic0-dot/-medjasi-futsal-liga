@@ -50,6 +50,14 @@ try{
   await page.goto(base,{waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mainNav button").first().waitFor({timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
+  await page.waitForFunction(()=>{
+    const teams=Number(document.getElementById("statTeams")?.textContent?.trim()||0);
+    const players=Number(document.getElementById("statPlayers")?.textContent?.trim()||0);
+    const status=document.getElementById("mflDataStatus");
+    return teams>=3&&players>=12&&(!status||status.hidden);
+  },null,{timeout:30000});
+  const loadedCounts=await page.evaluate(()=>({teams:Number(document.getElementById("statTeams")?.textContent?.trim()||0),players:Number(document.getElementById("statPlayers")?.textContent?.trim()||0),matches:Number(document.getElementById("statMatches")?.textContent?.trim()||0),dataWarning:!!document.getElementById("mflDataStatus")&&!document.getElementById("mflDataStatus").hidden}));
+  console.log("Live league data loaded:",JSON.stringify(loadedCounts));
   for(const id of ["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info"])await clickSection(id);
   await page.locator("#headerAccount button").filter({hasText:"Prijava"}).first().click();
   await page.waitForFunction(()=>!!document.querySelector("#login.section.active"),null,{timeout:5000});
