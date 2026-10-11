@@ -133,3 +133,58 @@ html body #home.dashboard-home .dashboard-fixture-details button{min-height:36px
 html body #home.dashboard-home .dashboard-hero-actions .btn{min-height:36px!important;font-size:11px!important;line-height:1.35!important}
 html body #dashboardFooter .dashboard-footer-season{font-size:9px!important}
 html body #dashboardFooter .dashboard-footer-brand{font-size:9px!important;line-height:1.45!important}
+
+
+/* Critical navigation containment fix:
+   older body #mainNav rules have greater specificity than the earlier #mainNav
+   rules and leave the sidebar navigation in a wide horizontal row. */
+.app-sidebar .sidebar-scroll{width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+.app-sidebar #mainNav{
+  position:static!important;
+  display:flex!important;
+  flex:0 0 auto!important;
+  flex-direction:column!important;
+  flex-wrap:nowrap!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  gap:3px!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+  white-space:normal!important;
+}
+.app-sidebar #mainNav .nav-group-title{width:100%!important;flex:0 0 auto!important;white-space:normal!important}
+.app-sidebar #mainNav button{
+  flex:0 0 auto!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  min-height:36px!important;
+  height:auto!important;
+  justify-content:flex-start!important;
+  white-space:normal!important;
+  box-sizing:border-box!important;
+}
+.app-sidebar #mainNav.mobile-open{
+  position:fixed!important;
+  left:8px!important;
+  right:auto!important;
+  top:calc(var(--dash-header) + 7px)!important;
+  z-index:1750!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  width:min(320px,calc(100vw - 16px))!important;
+  max-width:none!important;
+  max-height:calc(100dvh - var(--dash-header) - 84px)!important;
+  overflow-y:auto!important;
+  padding:11px!important;
+  pointer-events:auto!important;
+}
