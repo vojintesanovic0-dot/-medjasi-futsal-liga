@@ -116,9 +116,13 @@ try{
   await page.locator("#authTabLogin").click();
   assert.equal(await page.locator("#registerPassword").getAttribute("type"),"password","Switching modes must conceal any revealed password.");
   await page.locator('[data-auth-mode="register"][data-auth-focus-target="registerUsername"]').click();
-  assert.equal(await page.evaluate(()=>document.activeElement?.id),"registerUsername","The register shortcut must select register and focus its first field.");
+  await page.waitForFunction(()=>document.activeElement?.id==="registerUsername",null,{timeout:3000});
   await page.locator('[data-auth-mode="login"][data-auth-focus-target="loginEmail"]').click();
-  assert.equal(await page.evaluate(()=>document.activeElement?.id),"loginEmail","The login shortcut must select login and focus its email field.");
+  await page.waitForFunction(()=>document.activeElement?.id==="loginEmail",null,{timeout:3000});
+  await page.locator(".auth-return-btn").click();
+  await page.waitForFunction(()=>!!document.querySelector("#home.section.active"),null,{timeout:5000});
+  await page.locator("#headerAccount button").filter({hasText:"Registracija"}).first().click();
+  await page.waitForFunction(()=>!!document.querySelector("#login.section.active")&&document.querySelector("#registerPanel")?.hidden===false,null,{timeout:5000});
   await page.locator(".auth-return-btn").click();
   await page.waitForFunction(()=>!!document.querySelector("#home.section.active"),null,{timeout:5000});
   await page.setViewportSize({width:390,height:844});
