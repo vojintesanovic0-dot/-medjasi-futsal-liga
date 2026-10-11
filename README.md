@@ -41,9 +41,10 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 22. `sql/21_allow_admin_gallery_news_media.sql` – omogućava isključivo administratorima upload slika/videa u galeriju i vijesti te brisanje njihovih Storage objekata; obični korisnički folderi ostaju ograničeni.
 23. `sql/22_revoke_unneeded_anon_select.sql` – uklanja direktni `SELECT` grant za anonimnu ulogu sa tabela čije RLS politike dozvoljavaju čitanje samo prijavljenim korisnicima.
 24. `sql/23_remove_duplicate_profile_role_trigger.sql` – uklanja zastarjeli dupli okidač za promjenu uloge profila; noviji `trg_protect_profile_role` ostaje jedina provjera koja štiti korisničke zahtjeve i dopušta pouzdani SQL Editor kontekst.
+25. `sql/24_public_league_snapshot_rpc.sql` – objedinjuje javno čitanje podataka lige u jedan `SECURITY INVOKER` RPC, čuva postojeće RLS politike i smanjuje broj REST konekcija pri početnom učitavanju.
 
 ## Novo u ovoj verziji
-- `js/app.js`: paginirano čitanje velikih tabela, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja, djelimično osvježavanje poruka/komentara i auth callback bez await deadlocka.
+- `js/app.js`: paginirano čitanje velikih tabela, objedinjeni league snapshot RPC, timeout/backoff pri greškama baze, lokalna kopija posljednjih uspješno učitanih podataka, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja i auth callback bez await deadlocka.
 - `js/extras.js` + `css/extras.css`: statistika+ (strijelci, asistenti, fair play), .ics kalendar, dijeljenje rezultata kao slika, opciona tema i admin audit UI.
 - `service-worker.js`: nova verzija cache-a, offline stranica i keširanje jsDelivr Supabase biblioteke.
 - `supabase/functions/fan-admin-action/index.ts`: administratorski RPC pozivi koriste JWT stvarnog administratora kako bi provjere `auth.uid()` ostale ispravne.

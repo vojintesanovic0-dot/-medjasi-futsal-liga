@@ -957,7 +957,8 @@ if (
 
 if (
   !app.includes("function scheduleGameRefresh(delay=450)") ||
-  !app.includes("if(refreshedSuccessfully)scheduleGameRefresh(1200)") ||
+  !(app.includes("if(refreshedSuccessfully)scheduleGameRefresh(1200)") ||
+    (app.includes("if(refreshedSuccessfully){") && app.includes("scheduleGameRefresh(1200);"))) ||
   !app.includes('if(document.hidden||!document.querySelector("#game.section.active"))return;')
 ) {
   fail("Fan Game snapshots must be refreshed after a successful league snapshot, only while the Game section is visible");
