@@ -316,6 +316,21 @@ const admin=()=>typeof window.isAdmin==="function"&&window.isAdmin();
 const toastX=(message,type)=>typeof window.toast==="function"?window.toast(message,type):alert(message);
 const client=()=>window.supabaseClient;
 const escX=value=>typeof window.esc==="function"?window.esc(value??""):String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char]));
+// These helpers lived inside the first IIFE in the old file; define the
+// dependencies locally so the gallery and comment moderation layer can run.
+async function getBlocked(){
+  if(!uid()||!client()?.from)return [];
+  try{
+    const {data,error}=await client().from("community_blocks").select("blocked_user_id").eq("user_id",uid());
+    if(error)throw error;
+    return (data||[]).map(row=>String(row.blocked_user_id));
+  }catch(error){
+    console.warn("Community blocks:",error);
+    return [];
+  }
+}
+const blockUser=id=>window.communityBlock?.(id);
+const reportTarget=(kind,id)=>window.communityReport?.(kind,id);
 let albumsInFlight=null;
 async function loadAlbums(){
   if(!client()?.from)return [];
