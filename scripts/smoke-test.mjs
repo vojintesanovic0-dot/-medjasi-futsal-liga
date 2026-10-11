@@ -27,7 +27,10 @@ const missingAssets=[];
 page.on("pageerror",error=>pageErrors.push(error.stack||error.message));
 page.on("response",response=>{if(response.url().startsWith(base)&&response.status()>=400)missingAssets.push(response.status()+" "+response.url());});
 async function navButton(target){
-  const index=await page.locator("#mainNav button").evaluateAll((buttons,id)=>buttons.findIndex(b=>(b.getAttribute("onclick")||"").includes("showSection('"+id+"')")),target);
+  const index=await page.locator("#mainNav button").evaluateAll((buttons,id)=>buttons.findIndex(b=>{
+    const handler=b.getAttribute("onclick")||"";
+    return id==="game" ? handler.includes("dashboardOpenGameTab('matches')") : handler.includes("showSection('"+id+"')");
+  }),target);
   assert.notEqual(index,-1,"Missing navigation button for "+target);
   const button=page.locator("#mainNav button").nth(index);
   const geometry=await button.evaluate(el=>{
