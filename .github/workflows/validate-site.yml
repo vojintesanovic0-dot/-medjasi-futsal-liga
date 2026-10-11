@@ -20,3 +20,9 @@ jobs:
           node-version: "22"
       - name: Validate HTML assets, navigation, CSS, cache versions and JavaScript syntax
         run: node scripts/validate-site.mjs
+      - name: Install browser smoke-test dependency
+        run: npm install --no-save playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Exercise navigation and mobile controls in Chromium
+        run: node scripts/smoke-test.mjs
