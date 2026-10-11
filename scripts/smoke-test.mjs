@@ -59,6 +59,8 @@ try{
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mobileMenuBtn").waitFor({timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
+  const mobileWidth=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth}));
+  assert.ok(mobileWidth.document<=mobileWidth.viewport+2&&mobileWidth.body<=mobileWidth.viewport+2,"Horizontal overflow on mobile: "+JSON.stringify(mobileWidth));
   await page.locator("#mobileMenuBtn").click();
   await page.waitForFunction(()=>document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
   await clickSection("matches");
