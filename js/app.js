@@ -1732,6 +1732,50 @@ let loadAllRetryTimer=0;
 let loadAllFailureCount=0;
 let musicSettingsStartupDeferred=false;
 let gameRefreshDebounceTimer=0;
+const LEAGUE_SNAPSHOT_CACHE_KEY="medjasi.league.snapshot.v1";
+function persistLeagueSnapshot(){
+  try{
+    const savedAt=Date.now();
+    const core={
+      version:1,savedAt,teams,players,matches,goals,cards,matchPlayers,
+      comments:[],messages:[],gallery:[]
+    };
+    const full={...core,comments,messages,gallery};
+    let serialized=JSON.stringify(full);
+    // Keep localStorage usage bounded; if chat/media is large, retain only
+    // the core league snapshot rather than failing the whole save.
+    if(serialized.length>1500000)serialized=JSON.stringify(core);
+    if(serialized.length<=1500000)localStorage.setItem(LEAGUE_SNAPSHOT_CACHE_KEY,serialized);
+  }catch(error){
+    console.warn("Lokalna kopija podataka lige nije sačuvana:",error);
+  }
+}
+function restoreCachedLeagueSnapshot(){
+  try{
+    const raw=localStorage.getItem(LEAGUE_SNAPSHOT_CACHE_KEY);
+    if(!raw)return false;
+    const cached=JSON.parse(raw);
+    if(cached?.version!==1||!Number.isFinite(Number(cached.savedAt))||Date.now()-Number(cached.savedAt)>30*24*60*60*1000)return false;
+    const keys=["teams","players","matches","goals","cards","matchPlayers","comments","messages","gallery"];
+    if(keys.some(key=>!Array.isArray(cached[key])))return false;
+    teams=cached.teams;
+    players=cached.players;
+    matches=cached.matches;
+    goals=cached.goals;
+    cards=cached.cards;
+    matchPlayers=cached.matchPlayers;
+    comments=cached.comments;
+    messages=cached.messages;
+    gallery=cached.gallery;
+    hasSuccessfulLeagueSnapshot=true;
+    lastSuccessfulLoadAt=Number(cached.savedAt);
+    return true;
+  }catch(error){
+    console.warn("Lokalna kopija podataka lige nije mogla biti pročitana:",error);
+    return false;
+  }
+}
+
 let lastSuccessfulLoadAt=0;
 
 function isTransientDataServiceError(error){
@@ -2011,6 +2055,7 @@ async function loadAll(){
   if(refreshedSuccessfully){
     hasSuccessfulLeagueSnapshot=true;
     lastSuccessfulLoadAt=Date.now();
+    persistLeagueSnapshot();
     loadAllFailureCount=0;
     if(loadAllRetryTimer){clearTimeout(loadAllRetryTimer);loadAllRetryTimer=0;}
     if(musicSettingsStartupDeferred){
@@ -8089,6 +8134,12 @@ function subscribeRealtime(){
 ========================================================= */
 
 async function init(){
+
+  // Paint the last confirmed public league snapshot immediately when available.
+  // A later REST failure then shows a stale-data warning instead of a blank league.
+  if(restoreCachedLeagueSnapshot()){
+    try{renderAll();}catch(cacheRenderError){console.warn("Prikaz lokalne kopije lige:",cacheRenderError);}
+  }
 
   // Wait for the primary CDN or its fallback before making any database calls.
   try{

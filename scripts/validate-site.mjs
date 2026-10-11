@@ -1067,6 +1067,16 @@ if (
 
 const snapshotMigration = read("sql/24_public_league_snapshot_rpc.sql");
 if (
+  !app.includes("function restoreCachedLeagueSnapshot()") ||
+  !app.includes("persistLeagueSnapshot();") ||
+  !app.includes("if(restoreCachedLeagueSnapshot())")
+) {
+  fail("A last-known-good league snapshot must render during temporary REST outages");
+} else {
+  pass("The last successful league snapshot is cached and restored before the network refresh");
+}
+
+if (
   !loadAllSource.includes('supabaseClient.rpc("get_league_snapshot")') ||
   !loadAllSource.includes("AbortSignal.timeout(8000)") ||
   !loadAllSource.includes("isTransientDataServiceError") ||
