@@ -59,10 +59,16 @@ if (
   !authMarkup.includes('<form class="form auth-form" id="registerForm"') ||
   !authMarkup.includes('type="email" required') ||
   !authMarkup.includes('data-auth-password-toggle="loginPassword"') ||
-  !authMarkup.includes('data-auth-focus="registerUsername"') ||
+  !authMarkup.includes('data-auth-mode="register"') ||
+  !authMarkup.includes('data-auth-panel="register"') ||
+  !authMarkup.includes('role="tablist"') ||
+  !authMarkup.includes('class="auth-promo-panel"') ||
   !authUi.includes("form.reportValidity()") ||
   !authUi.includes("if(pending)return") ||
-  !authUi.includes("aria-pressed")
+  !authUi.includes("aria-pressed") ||
+  !authUi.includes("window.setAuthMode=setAuthMode") ||
+  !authUi.includes("setCustomValidity") ||
+  !authUi.includes("ArrowRight")
 ) {
   fail("Login/register forms must enforce native input validation, prevent duplicate submits, and provide accessible password visibility controls");
 } else pass("Login/register forms validate required/email/password fields, guard duplicate submissions, and expose accessible password toggles");

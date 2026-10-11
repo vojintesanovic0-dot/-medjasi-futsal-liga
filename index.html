@@ -94,7 +94,7 @@
 <link rel="stylesheet" href="./css/medjasi-icons-v2.css?v=20261009v02">
 <link rel="stylesheet" href="./css/medjasi-dashboard-refinements-v2.css?v=8">
 <link rel="stylesheet" href="./css/medjasi-stability-v1.css?v=4">
-<link rel="stylesheet" href="./css/auth-polish-v1.css?v=1">
+<link rel="stylesheet" href="./css/auth-polish-v1.css?v=2">
 <link rel="stylesheet" href="./css/medjasi-header-fix-v1.css?v=1">
 
 </head>
@@ -360,16 +360,40 @@
   <div class="auth-page-head">
     <div class="auth-page-intro">
       <span class="auth-eyebrow">MEĐASI FUTSAL LIGA · ČLANSTVO</span>
-      <h1>Prijava i registracija</h1>
-      <p>Prijavi se ili napravi nalog za komentare, chat i sadržaj zajednice.</p>
+      <h1 id="authPageTitle">Prijavi se i nastavi</h1>
+      <p id="authPageDescription">Tvoj nalog na jednom mjestu — profil, zajednica i dešavanja u ligi.</p>
     </div>
     <button class="auth-return-btn" type="button" onclick="exitAuthScreen()" aria-label="Vrati se na početnu" title="Nazad na početnu">
       <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       <span>Nazad na početnu</span>
     </button>
   </div>
-  <div class="grid grid-2 auth-grid">
-    <div class="card auth-card auth-login-card">
+  <div class="auth-workspace">
+    <aside class="auth-promo-panel" aria-label="Prednosti članstva">
+      <div class="auth-promo-top">
+        <span class="auth-promo-ball" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="25"/><path d="m32 19 9 6v11l-9 6-9-6V25zM32 19l-6-12M41 25l12-4M41 36l7 12M23 36l-7 12M23 25l-12-4M26 7l-5 10M53 21l4-10M48 48l5 7M16 48l-5 7"/></svg></span>
+        <span class="auth-promo-brand"><strong>MEĐASI</strong><small>FUTSAL LIGA</small></span>
+      </div>
+      <div class="auth-promo-copy">
+        <span class="auth-promo-kicker">VIŠE OD REZULTATA</span>
+        <h2>Uključi se u<br><span>igru.</span></h2>
+        <p>Prati ligu, druži se s navijačima i budi dio svakog važnog trenutka.</p>
+      </div>
+      <div class="auth-promo-features">
+        <div class="auth-promo-feature"><span class="auth-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.3"/><path d="M5 20c.6-3.5 3-5.3 7-5.3s6.4 1.8 7 5.3"/></svg></span><span><strong>Tvoj profil</strong><small>Sačuvaj svoj identitet i napredak</small></span></div>
+        <div class="auth-promo-feature"><span class="auth-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2.8 20c.5-3.4 2.6-5.2 6.2-5.2 1.5 0 2.7.3 3.7 1M16 5.5a3 3 0 0 1 0 5.8M15 15c3.8 0 5.8 1.7 6.2 5"/></svg></span><span><strong>Ekipa i zajednica</strong><small>Uključi se u razgovore i komentare</small></span></div>
+        <div class="auth-promo-feature"><span class="auth-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m12 7 4 3v4l-4 3-4-3v-4zM12 7 10 3M16 10l5-1M16 14l3 4M8 14l-3 4M8 10 3 9"/></svg></span><span><strong>Fan Game</strong><small>Prognoze i ligaški izazovi</small></span></div>
+      </div>
+      <div class="auth-promo-foot"><span class="auth-promo-live-dot"></span><span><strong>Jedna liga. Jedna zajednica.</strong><small>Dobro došao među Međase.</small></span></div>
+      <span class="auth-promo-orbit auth-promo-orbit-one" aria-hidden="true"></span><span class="auth-promo-orbit auth-promo-orbit-two" aria-hidden="true"></span>
+    </aside>
+    <div class="auth-main">
+      <div class="auth-mode-switch" role="tablist" aria-label="Izbor prijave ili registracije">
+        <button type="button" role="tab" id="authTabLogin" aria-controls="loginPanel" aria-selected="true" tabindex="0" class="is-active" data-auth-mode="login">Prijava</button>
+        <button type="button" role="tab" id="authTabRegister" aria-controls="registerPanel" aria-selected="false" tabindex="-1" data-auth-mode="register">Registracija</button>
+      </div>
+      <div class="auth-panel" id="loginPanel" role="tabpanel" aria-labelledby="authTabLogin" data-auth-panel="login">
+        <div class="card auth-card auth-login-card">
       <div class="auth-card-heading">
         <span class="auth-card-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.6-3.6 3-5.5 7-5.5s6.4 1.9 7 5.5"/></svg>
@@ -379,7 +403,7 @@
       <form class="form auth-form" id="loginForm" autocomplete="on">
         <div class="form-group">
           <label for="loginEmail">Email</label>
-          <input id="loginEmail" name="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="Unesi email adresu" type="email" required/>
+          <input id="loginEmail" name="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="npr. ime@email.com" type="email" required/>
         </div>
         <div class="form-group">
           <label for="loginPassword">Lozinka</label>
@@ -391,10 +415,12 @@
         <button class="btn btn-green auth-primary-btn" id="loginSubmitButton" type="submit">Prijavi se</button>
         <button class="btn auth-secondary-btn" type="button" id="resetPasswordButton" onclick="resetPassword()">Zaboravljena lozinka?</button>
         <p class="muted auth-message" id="loginMessage" aria-live="polite" aria-atomic="true"></p>
-        <p class="auth-switch-note">Nemaš nalog? <button class="auth-inline-link" type="button" data-auth-focus="registerUsername">Registruj se</button></p>
+        <p class="auth-switch-note">Još nemaš nalog? <button class="auth-inline-link" type="button" data-auth-mode="register" data-auth-focus-target="registerUsername">Napravi ga ovdje</button></p>
       </form>
-    </div>
-    <div class="card auth-card auth-register-card">
+        </div>
+      </div>
+      <div class="auth-panel" id="registerPanel" role="tabpanel" aria-labelledby="authTabRegister" data-auth-panel="register" hidden>
+        <div class="card auth-card auth-register-card">
       <div class="auth-card-heading">
         <span class="auth-card-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.5-3.4 2.6-5.2 6.2-5.2 2.2 0 3.8.6 4.8 1.9M17 8v6M14 11h6"/></svg>
@@ -408,7 +434,7 @@
         </div>
         <div class="form-group">
           <label for="registerEmail">Email</label>
-          <input id="registerEmail" name="email" maxlength="254" inputmode="email" placeholder="Email adresa" type="email" autocomplete="email" required/>
+          <input id="registerEmail" name="email" maxlength="254" inputmode="email" placeholder="npr. ime@email.com" type="email" autocomplete="email" required/>
         </div>
         <div class="form-group">
           <label for="registerPassword">Lozinka</label>
@@ -421,13 +447,18 @@
           <label for="registerPasswordConfirm">Ponovi lozinku</label>
           <div class="auth-password-wrap">
             <input id="registerPasswordConfirm" name="new-password-confirm" autocomplete="new-password" minlength="6" placeholder="Ponovi lozinku" type="password" required/>
+              <small class="auth-field-hint" id="authPasswordMatchHint">Obje lozinke moraju biti iste.</small>
             <button class="auth-password-toggle" type="button" data-auth-password-toggle="registerPasswordConfirm" aria-label="Prikaži lozinku" title="Prikaži lozinku" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
         </div>
-        <button class="btn btn-green auth-primary-btn" id="registerSubmitButton" type="submit">Registruj se</button>
+        <button class="btn btn-green auth-primary-btn" id="registerSubmitButton" type="submit">Kreiraj nalog</button>
         <p class="muted auth-message" id="registerMessage" aria-live="polite" aria-atomic="true"></p>
-        <p class="auth-switch-note">Već imaš nalog? <button class="auth-inline-link" type="button" data-auth-focus="loginEmail">Prijavi se</button></p>
+        <p class="auth-switch-note">Već imaš nalog? <button class="auth-inline-link" type="button" data-auth-mode="login" data-auth-focus-target="loginEmail">Prijavi se</button></p>
       </form>
+    </div>
+        </div>
+      </div>
+      <p class="auth-privacy-note">Podaci tvog naloga služe za pristup profilu i funkcijama zajednice.</p>
     </div>
   </div>
 </section>
@@ -808,6 +839,6 @@
 <script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=20261011v12" defer></script><script src="./js/growth.js?v=20261009v06" defer></script><script src="./js/community-features.js?v=20261011v11" defer></script><script src="./js/ui-compat.js?v=20261009v01" defer></script><script src="./js/admin-organizer.js?v=15" defer></script>
 <script src="./js/graphic-engine.js?v=1" defer></script><script src="./js/medjasi-v13-ui.js?v=20261007v01" defer></script><script src="./js/extras.js?v=1" defer></script>
 <script src="./js/dashboard-layout-v1.js?v=20261011v9" defer></script>
-<script src="./js/auth-ui.js?v=1" defer></script>
+<script src="./js/auth-ui.js?v=2" defer></script>
 </body>
 </html>

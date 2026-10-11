@@ -94,7 +94,7 @@
         'title="Prijava ili registracija">Prijava</button>'+
         '<button type="button" class="account-btn v13-register" '+
         'aria-label="Registracija" '+
-        'onclick="window.showSection(\'login\');setTimeout(()=>document.getElementById(\'registerUsername\')?.focus(),80)" '+
+        'onclick="window.showSection(\'login\');setTimeout(()=>window.setAuthMode?.(\'register\'),80)" '+
         'title="Registracija">Registracija</button>';
       return;
     }

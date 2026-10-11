@@ -83,6 +83,8 @@ try{
   await page.waitForFunction(()=>!!document.querySelector("#login.section.active"),null,{timeout:5000});
   assert.equal(await page.locator("#loginForm").count(),1,"Login form must be a real HTML form.");
   assert.equal(await page.locator("#registerForm").count(),1,"Registration form must be a real HTML form.");
+  assert.equal(await page.locator("#registerPanel").isHidden(),true,"Registration must not clutter the initial login view.");
+  assert.equal(await page.locator("#authTabLogin").getAttribute("aria-selected"),"true");
   const loginValidity=await page.locator("#loginForm").evaluate(form=>{
     const email=form.querySelector("#loginEmail");
     return {valid:form.checkValidity(),required:email.required,typeMismatch:email.validity.typeMismatch};
@@ -99,13 +101,24 @@ try{
   assert.equal(await passwordToggle.getAttribute("aria-pressed"),"true");
   await passwordToggle.click();
   assert.equal(await page.locator("#loginPassword").getAttribute("type"),"password","Password visibility toggle must hide the password again.");
-  await page.locator('[data-auth-focus="registerUsername"]').click();
-  assert.equal(await page.evaluate(()=>document.activeElement?.id),"registerUsername","The register shortcut must focus its first field.");
+  await page.locator("#authTabRegister").click();
+  await page.waitForFunction(()=>document.querySelector("#registerPanel")?.hidden===false);
+  assert.equal(await page.locator("#authTabRegister").getAttribute("aria-selected"),"true","Register tab must be selected.");
+  assert.equal(await page.locator("#loginPanel").isHidden(),true,"Login panel must hide when registration is selected.");
   await page.locator("#registerPassword").fill("abcdef");
+  await page.locator("#registerPasswordConfirm").fill("abcdee");
+  assert.equal(await page.locator("#registerPasswordConfirm").evaluate(input=>input.validity.customError),true,"Mismatching passwords should be caught before submit.");
+  await page.locator("#registerPasswordConfirm").fill("abcdef");
+  assert.equal(await page.locator("#registerPasswordConfirm").evaluate(input=>input.validity.customError),false,"Matching passwords should clear the validation error.");
   const registrationToggle=page.locator('[data-auth-password-toggle="registerPassword"]');
   await registrationToggle.click();
   assert.equal(await page.locator("#registerPassword").getAttribute("type"),"text","Registration password visibility toggle must work.");
-  await registrationToggle.click();
+  await page.locator("#authTabLogin").click();
+  assert.equal(await page.locator("#registerPassword").getAttribute("type"),"password","Switching modes must conceal any revealed password.");
+  await page.locator('[data-auth-mode="register"][data-auth-focus-target="registerUsername"]').click();
+  assert.equal(await page.evaluate(()=>document.activeElement?.id),"registerUsername","The register shortcut must select register and focus its first field.");
+  await page.locator('[data-auth-mode="login"][data-auth-focus-target="loginEmail"]').click();
+  assert.equal(await page.evaluate(()=>document.activeElement?.id),"loginEmail","The login shortcut must select login and focus its email field.");
   await page.locator(".auth-return-btn").click();
   await page.waitForFunction(()=>!!document.querySelector("#home.section.active"),null,{timeout:5000});
   await page.setViewportSize({width:390,height:844});
