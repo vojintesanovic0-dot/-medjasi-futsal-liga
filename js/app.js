@@ -1728,8 +1728,21 @@ function updateAuthUI(renderContent=true){
 let loadAllActive=false;
 let loadAllPending=false;
 let loadAllDebounceTimer=0;
+let loadAllRetryTimer=0;
+let loadAllFailureCount=0;
+let musicSettingsStartupDeferred=false;
 let gameRefreshDebounceTimer=0;
 let lastSuccessfulLoadAt=0;
+
+function isTransientDataServiceError(error){
+  const code=String(error?.code||"").toUpperCase();
+  const status=Number(error?.status||error?.statusCode||error?.response?.status||0);
+  const name=String(error?.name||"");
+  const message=String(error?.message||error||"").toLowerCase();
+  return status===503||code==="PGRST003"||code==="PGRST002"||
+    name==="AbortError"||name==="TimeoutError"||
+    /connection pool|schema cache|timed out acquiring connection|failed to fetch|networkerror|load failed/.test(message);
+}
 
 function scheduleGameRefresh(delay=450){
   clearTimeout(gameRefreshDebounceTimer);
@@ -1742,6 +1755,8 @@ function scheduleGameRefresh(delay=450){
 }
 
 function scheduleLoadAll(delay=350){
+  // Do not let realtime bursts bypass the shared recovery backoff.
+  if(loadAllRetryTimer)return;
   clearTimeout(loadAllDebounceTimer);
   loadAllDebounceTimer=setTimeout(()=>{
     loadAllDebounceTimer=0;
@@ -1817,6 +1832,8 @@ async function retryLeagueDataLoad(){
   const status=document.getElementById("mflDataStatus");
   const button=status?.querySelector("button");
   if(button?.disabled)return;
+  if(loadAllRetryTimer){clearTimeout(loadAllRetryTimer);loadAllRetryTimer=0;}
+  loadAllFailureCount=0;
   if(button){button.disabled=true;button.textContent="Učitavanje…";}
   try{
     const ok=await loadAll();
@@ -1840,6 +1857,13 @@ async function loadAll(){
   }
   loadAllActive=true;
   let hadLoadErrors=false;
+  const withRequestTimeout=query=>{
+    try{
+      return typeof AbortSignal!=="undefined"&&typeof AbortSignal.timeout==="function"
+        ? query.abortSignal(AbortSignal.timeout(8000))
+        : query;
+    }catch(error){return query;}
+  };
 
   try{
     /* Supabase vraća max 1000 redova po upitu: velike tabele čitamo stranicu po stranicu. */
@@ -1847,7 +1871,7 @@ async function loadAll(){
       const PAGE=1000;
       let from=0,all=[];
       for(;;){
-        let q=supabaseClient.from(table).select("*");
+        let q=withRequestTimeout(supabaseClient.from(table).select("*"));
         if(orderCol) q=q.order(orderCol,{ascending:true});
         // Stable tie-breakers prevent gaps between pages. The optional
         // match_players join table is keyed by match_id/player_id and may not
@@ -1871,9 +1895,9 @@ async function loadAll(){
 
     /* Chat, komentari i galerija: samo najnoviji zapisi. */
     const fetchRecent=async(table,limit)=>{
-      const {data,error}=await supabaseClient
-        .from(table).select("*")
-        .order("created_at",{ascending:false})
+      const {data,error}=await withRequestTimeout(
+        supabaseClient.from(table).select("*")
+      ).order("created_at",{ascending:false})
         .order("id",{ascending:false})
         .limit(limit);
       return {data:error?null:(data||[]),error};
@@ -1882,6 +1906,7 @@ async function loadAll(){
     // Bound the initial burst of REST requests. A pool timeout is a shared
     // service failure; nine simultaneous table queries per browser multiplied
     // across visitors needlessly amplifies it. Keep the original result order.
+    const LOAD_QUERY_CONCURRENCY=2;
     const loadTasks=[
       ()=>fetchAllRows("teams","name"),
       ()=>fetchAllRows("players","jersey_number"),
@@ -1894,20 +1919,71 @@ async function loadAll(){
       ()=>fetchAllRows("match_players",null)
     ];
     const results=[];
-    const LOAD_QUERY_CONCURRENCY=2;
-    for(let i=0;i<loadTasks.length;i+=LOAD_QUERY_CONCURRENCY){
-      const batch=await Promise.all(
-        loadTasks.slice(i,i+LOAD_QUERY_CONCURRENCY).map(task=>task())
-      );
-      results.push(...batch);
+    let usedSnapshot=false;
+    let skipLegacyFallback=false;
+    const snapshotKeys=["teams","players","matches","goals","cards","comments","messages","gallery","match_players"];
+    let snapshotResponse;
+    try{
+      snapshotResponse=await withRequestTimeout(supabaseClient.rpc("get_league_snapshot"));
+    }catch(error){
+      snapshotResponse={data:null,error};
+    }
+
+    if(!snapshotResponse?.error&&snapshotResponse?.data&&typeof snapshotResponse.data==="object"&&!Array.isArray(snapshotResponse.data)){
+      const snapshot=snapshotResponse.data;
+      const missingKey=snapshotKeys.find(key=>!Array.isArray(snapshot[key]));
+      const oversizedKey=snapshotKeys.find(key=>Array.isArray(snapshot[key])&&snapshot[key].length>21000);
+      if(missingKey||oversizedKey){
+        const error=new Error(missingKey
+          ? "Snapshot lige nije potpun: nedostaje tabela "+missingKey+"."
+          : "Podaci prelaze sigurni limit od 21.000 redova; rezultat nije skraćen tiho.");
+        results.push(...loadTasks.map((_,index)=>({data:null,error,skipped:index>0})));
+        skipLegacyFallback=true;
+      }else{
+        results.push(
+          {data:snapshot.teams,error:null},
+          {data:snapshot.players,error:null},
+          {data:snapshot.matches,error:null},
+          {data:snapshot.goals,error:null},
+          {data:snapshot.cards,error:null},
+          {data:snapshot.comments,error:null},
+          {data:snapshot.messages,error:null},
+          {data:snapshot.gallery,error:null},
+          {data:snapshot.match_players,error:null}
+        );
+        usedSnapshot=true;
+      }
+    }else if(snapshotResponse?.error&&isTransientDataServiceError(snapshotResponse.error)){
+      // A shared PostgREST outage affects all tables. Do not fan it out into
+      // nine more requests; preserve the last known snapshot and back off.
+      results.push(...loadTasks.map((_,index)=>({data:null,error:snapshotResponse.error,skipped:index>0})));
+      skipLegacyFallback=true;
+    }
+
+    // Compatibility fallback for a missing RPC. If the pool is unhealthy,
+    // stop after the first failed batch instead of issuing every table query.
+    if(!usedSnapshot&&!skipLegacyFallback){
+      for(let i=0;i<loadTasks.length;i+=LOAD_QUERY_CONCURRENCY){
+        const batch=await Promise.all(
+          loadTasks.slice(i,i+LOAD_QUERY_CONCURRENCY).map(task=>task())
+        );
+        results.push(...batch);
+        const transient=batch.find(result=>result.error&&isTransientDataServiceError(result.error));
+        if(transient){
+          for(let j=results.length;j<loadTasks.length;j++){
+            results.push({data:null,error:transient.error,skipped:true});
+          }
+          break;
+        }
+      }
     }
 
     const [teamsResult,playersResult,matchesResult,goalsResult,cardsResult,commentsResult,messagesResult,galleryResult,matchPlayersResult]=results;
-    hadLoadErrors=results.some(r=>!!r.error);
-    results.forEach(r=>{if(r.error) console.error(r.error)});
+    hadLoadErrors=results.some(r=>!!r.error||!!r.skipped);
+    results.forEach(r=>{if(r.error&&!r.skipped)console.error(r.error)});
 
     /* Ako upit padne, zadržavamo prethodne podatke umjesto da ispraznimo ekran. */
-    const keep=(r,old)=>r.error?old:(r.data||[]);
+    const keep=(r,old)=>r.error||r.skipped?old:(r.data||[]);
 
     teams=keep(teamsResult,teams);
     players=keep(playersResult,players);
@@ -1915,7 +1991,7 @@ async function loadAll(){
     goals=keep(goalsResult,goals);
     cards=keep(cardsResult,cards);
     comments=keep(commentsResult,comments);
-    messages=messagesResult.error?messages:(messagesResult.data||[]).slice().reverse();
+    messages=messagesResult.error||messagesResult.skipped?messages:(messagesResult.data||[]).slice().reverse();
     gallery=keep(galleryResult,gallery);
     matchPlayers=keep(matchPlayersResult,matchPlayers);
 
@@ -1928,16 +2004,35 @@ async function loadAll(){
     loadAllActive=false;
     if(loadAllPending){
       loadAllPending=false;
-      queueMicrotask(()=>{void loadAll()});
+      if(!hadLoadErrors)queueMicrotask(()=>{void loadAll()});
     }
   }
   const refreshedSuccessfully=!hadLoadErrors;
   if(refreshedSuccessfully){
     hasSuccessfulLeagueSnapshot=true;
     lastSuccessfulLoadAt=Date.now();
+    loadAllFailureCount=0;
+    if(loadAllRetryTimer){clearTimeout(loadAllRetryTimer);loadAllRetryTimer=0;}
+    if(musicSettingsStartupDeferred){
+      musicSettingsStartupDeferred=false;
+      scheduleMusicSettingsRefresh(1200);
+    }
   }
   updateLeagueDataStatus(!refreshedSuccessfully);
-  if(refreshedSuccessfully)scheduleGameRefresh(1200);
+  if(refreshedSuccessfully){
+    scheduleGameRefresh(1200);
+  }else if(!loadAllRetryTimer){
+    loadAllFailureCount=Math.min(loadAllFailureCount+1,5);
+    const retryDelay=Math.min(120000,5000*Math.pow(2,loadAllFailureCount-1))+Math.floor(Math.random()*1500);
+    loadAllRetryTimer=setTimeout(()=>{
+      loadAllRetryTimer=0;
+      if(document.hidden){
+        loadAllRetryTimer=setTimeout(()=>{loadAllRetryTimer=0;void loadAll();},30000);
+        return;
+      }
+      void loadAll();
+    },retryDelay);
+  }
   return refreshedSuccessfully;
 }
 
@@ -8021,21 +8116,27 @@ async function init(){
     }
   }
 
+  let leagueDataLoaded=false;
   try {
-    await loadMusicSettings();
-  } catch (error) {
-    console.error("Medjasi music initialization:", error);
-    musicSettings = {youtube_music_enabled:false};
-    musicTracks = [];
-    try { initMusic(); } catch (musicError) {
-      console.error("Medjasi music UI:", musicError);
-    }
-  }
-
-  try {
-    await loadAll();
+    leagueDataLoaded=await loadAll();
   } catch (error) {
     console.error("Medjasi data initialization:", error);
+  }
+
+  if(leagueDataLoaded){
+    try {
+      await loadMusicSettings();
+    } catch (error) {
+      console.error("Medjasi music initialization:", error);
+      musicSettings = {youtube_music_enabled:false};
+      musicTracks = [];
+      try { initMusic(); } catch (musicError) {
+        console.error("Medjasi music UI:", musicError);
+      }
+    }
+  }else{
+    // Prioritize core league data while PostgREST is recovering.
+    musicSettingsStartupDeferred=true;
   }
 
   restoreRememberedSection();

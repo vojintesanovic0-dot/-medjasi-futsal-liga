@@ -60,7 +60,8 @@ try{
     await page.waitForFunction(()=>{
       const teams=Number(document.getElementById("statTeams")?.textContent?.trim()||0);
       const players=Number(document.getElementById("statPlayers")?.textContent?.trim()||0);
-      return teams>=3&&players>=12;
+      const status=document.getElementById("mflDataStatus");
+      return (teams>=3&&players>=12&&(!status||status.hidden))||(!!status&&!status.hidden);
     },null,{timeout:30000});
   }catch(error){
     const snapshot=await page.evaluate(()=>({teams:document.getElementById("statTeams")?.textContent,players:document.getElementById("statPlayers")?.textContent,matches:document.getElementById("statMatches")?.textContent,status:document.getElementById("mflDataStatus")?.textContent,supabaseSdk:typeof window.supabase?.createClient,supabaseClient:!!window.supabaseClient?.from}));

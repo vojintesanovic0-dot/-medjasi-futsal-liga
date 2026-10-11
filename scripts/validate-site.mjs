@@ -1048,7 +1048,8 @@ if (
 
 if (
   !loadAllSource.includes("const refreshedSuccessfully=!hadLoadErrors;") ||
-  !loadAllSource.includes("if(refreshedSuccessfully)scheduleGameRefresh(1200)") ||
+  !(loadAllSource.includes("if(refreshedSuccessfully)scheduleGameRefresh(1200)") ||
+    (loadAllSource.includes("if(refreshedSuccessfully){") && loadAllSource.includes("scheduleGameRefresh(1200);"))) ||
   !app.includes("async function readConfirmedMatch(matchId,fallback)") ||
   !goalEventSource.includes("(await loadAll())===true") ||
   !goalEventSource.includes("readConfirmedMatch(matchId,match)") ||
@@ -1062,6 +1063,20 @@ if (
   fail("Goal entry must prevent double submission and confirm the persisted match score before broadcasting when a bulk refresh is incomplete");
 } else {
   pass("Goal entry blocks duplicate clicks and avoids broadcasting an unconfirmed score after partial refresh failures");
+}
+
+const snapshotMigration = read("sql/24_public_league_snapshot_rpc.sql");
+if (
+  !loadAllSource.includes('supabaseClient.rpc("get_league_snapshot")') ||
+  !loadAllSource.includes("AbortSignal.timeout(8000)") ||
+  !loadAllSource.includes("isTransientDataServiceError") ||
+  !loadAllSource.includes("loadAllFailureCount") ||
+  !snapshotMigration.includes("SECURITY INVOKER") ||
+  snapshotMigration.includes("SECURITY DEFINER")
+) {
+  fail("Core league loading must use the RLS-preserving snapshot RPC with bounded transient-error recovery");
+} else {
+  pass("Core league loading uses one RLS-preserving snapshot request with timeout and backoff");
 }
 
 const fanGameSource = read("js/game.js");
