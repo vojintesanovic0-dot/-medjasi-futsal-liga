@@ -18,8 +18,16 @@
   const win = (s,o,b) => Math.floor(Number(s||0)*Number(o||0)*(b?1.5:1));
   const S={tab:"matches",loading:false,err:null,userKey:undefined,wallet:null,markets:[],picks:[],ledger:[],board:[],shop:[],inv:[],follows:[],fund:{},stats:{},votes:{},mvp:{},profiles:[],sel:null};
   const currentUserKey=()=>user()?.id==null?null:String(user().id);
+  let lastSuccessfulRefreshAt=0;
+  const AUTO_REFRESH_TTL=180000;
   function resetUserSnapshot(nextUserKey){
     if(S.userKey===nextUserKey)return false;
+    lastSuccessfulRefreshAt=0;
+    refreshFailureCount=0;
+    refreshRetryAt=0;
+    marketStatsFetchedAt=0;
+    mvpResultsFetchedAt=0;
+    ensuredWalletUserId=null;
     S.userKey=nextUserKey;
     S.wallet=null;
     S.picks=[];
@@ -51,8 +59,9 @@
   async function refresh(options={}){
     const force=options?.force!==false;
     const requestedUserKey=currentUserKey();
-    resetUserSnapshot(requestedUserKey);
+    const userChanged=resetUserSnapshot(requestedUserKey);
     if(!sb())return;
+    if(!force&&!userChanged&&Date.now()-lastSuccessfulRefreshAt<AUTO_REFRESH_TTL)return;
     if(!force&&Date.now()<refreshRetryAt)return;
     if(S.loading){
       if(force)refreshPending=true;
@@ -220,6 +229,7 @@
       S.err=null;
       refreshFailureCount=0;
       refreshRetryAt=0;
+      lastSuccessfulRefreshAt=Date.now();
     }catch(error){
       if(currentUserKey()!==requestedUserKey){
         refreshPending=true;

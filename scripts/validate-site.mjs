@@ -1211,7 +1211,11 @@ if (
   !app.includes("let backgroundRefreshFailures=0;") ||
   !app.includes("backgroundRefreshFailures=Math.min(backgroundRefreshFailures+1,3)") ||
   !app.includes("scheduleBackgroundRefresh(retryDelay)") ||
-  !app.includes("scheduleBackgroundRefresh(120000)") ||
+  !app.includes("scheduleBackgroundRefresh(300000)") ||
+  !app.includes("lastSuccessfulLoadAt=Date.now()") ||
+  !app.includes("Date.now()-lastSuccessfulLoadAt>60000") ||
+  !app.includes("let v7StatsLoaded=false,v7NewsLoaded=false;") ||
+  !app.includes("const newsRoleChanged=v7NewsLoaded&&v7NewsLoadedForAdmin!==adminNow;") ||
   !app.includes("const LOAD_QUERY_CONCURRENCY=2")
 ) {
   fail("Background refresh must skip optional queries after a failed/in-flight core load and exponentially back off during API failures");
@@ -1227,6 +1231,8 @@ const gamePollingStart = game.indexOf("window.__MEDJASI_GAME_REFRESH_TIMER__=set
 const gamePollingSource = gamePollingStart>=0 ? game.slice(gamePollingStart,gamePollingStart+250) : "";
 if (
   !gameRefreshSource.includes("const force=options?.force!==false") ||
+  !gameRefreshSource.includes("Date.now()-lastSuccessfulRefreshAt<AUTO_REFRESH_TTL") ||
+  !game.includes("const AUTO_REFRESH_TTL=180000") ||
   !gameRefreshSource.includes("if(!force&&Date.now()<refreshRetryAt)return") ||
   !gameRefreshSource.includes("if(force)refreshPending=true") ||
   !gameRefreshSource.includes("refreshFailureCount=Math.min(refreshFailureCount+1,4)") ||

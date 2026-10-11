@@ -1729,6 +1729,7 @@ let loadAllActive=false;
 let loadAllPending=false;
 let loadAllDebounceTimer=0;
 let gameRefreshDebounceTimer=0;
+let lastSuccessfulLoadAt=0;
 
 function scheduleGameRefresh(delay=450){
   clearTimeout(gameRefreshDebounceTimer);
@@ -1931,7 +1932,10 @@ async function loadAll(){
     }
   }
   const refreshedSuccessfully=!hadLoadErrors;
-  if(refreshedSuccessfully)hasSuccessfulLeagueSnapshot=true;
+  if(refreshedSuccessfully){
+    hasSuccessfulLeagueSnapshot=true;
+    lastSuccessfulLoadAt=Date.now();
+  }
   updateLeagueDataStatus(!refreshedSuccessfully);
   if(refreshedSuccessfully)scheduleGameRefresh(1200);
   return refreshedSuccessfully;
@@ -8079,7 +8083,11 @@ async function init(){
   */
 
   document.addEventListener("visibilitychange",()=>{
-    if(!document.hidden) scheduleLoadAll(200);
+    // Returning to the tab is not itself a reason to repeat the full REST snapshot.
+    // Realtime keeps the page current; refresh only if the last good snapshot is stale.
+    if(!document.hidden && lastSuccessfulLoadAt && Date.now()-lastSuccessfulLoadAt>60000){
+      scheduleLoadAll(250);
+    }
   });
 
   let backgroundRefreshFailures=0;
@@ -8090,7 +8098,7 @@ async function init(){
   };
   const runBackgroundRefresh=async()=>{
     if(document.hidden){
-      scheduleBackgroundRefresh(120000);
+      scheduleBackgroundRefresh(300000);
       return;
     }
 
@@ -8108,7 +8116,7 @@ async function init(){
       }catch(error){
         console.error("Medjasi background music refresh:",error);
       }
-      scheduleBackgroundRefresh(120000);
+      scheduleBackgroundRefresh(300000);
       return;
     }
 
@@ -8119,7 +8127,7 @@ async function init(){
     console.warn("Medjasi background refresh failed; next retry in",Math.round(retryDelay/1000),"seconds.");
     scheduleBackgroundRefresh(retryDelay);
   };
-  scheduleBackgroundRefresh(120000);
+  scheduleBackgroundRefresh(300000);
 }
 
 
@@ -10603,15 +10611,28 @@ document.addEventListener("DOMContentLoaded",()=>{
   };
 
   /* Make role lookup happen before the first useful repaint. */
+  let v3StartPromise=null;
+  let v3AdminIdsLastAttempt=0;
   V3.start=async function(){
-    await V3.loadAdminIds();
-    V3.refresh();
+    if(v3StartPromise)return v3StartPromise;
+    v3StartPromise=(async()=>{
+      // Load the role list once at startup; do not race a timer and window.load.
+      if(!V3.roleCacheReady&&Date.now()-v3AdminIdsLastAttempt>=30000){
+        v3AdminIdsLastAttempt=Date.now();
+        await V3.loadAdminIds();
+      }
+      V3.refresh();
+    })();
+    try{return await v3StartPromise;}
+    finally{v3StartPromise=null;}
   };
 
-  /* Re-run after existing app initialization and auth changes. */
-  setTimeout(()=>V3.start(),500);
-  setTimeout(()=>V3.refresh(),1800);
-  window.addEventListener("load",()=>setTimeout(()=>V3.start(),300));
+  setTimeout(()=>V3.start(),700);
+  document.addEventListener("visibilitychange",()=>{
+    if(!document.hidden&&!V3.roleCacheReady&&Date.now()-v3AdminIdsLastAttempt>=30000){
+      void V3.start();
+    }
+  });
 
 })();
 
@@ -10778,10 +10799,11 @@ async function loadNews(){
   ensureNewsUI();
   const query=supabaseClient.from('news').select('*').order('created_at',{ascending:false}).limit(100);
   const {data,error}=isAdm()?await query:await query.eq('published',true);
-  if(error){console.warn('News:',error);return}
+  if(error){console.warn('News:',error);return false}
   V7.news=data||[];
   renderNews();
   renderAdminNews();
+  return true;
 }
 function renderNews(){
   const publicNews=V7.news.filter(n=>n.published===true);
@@ -11394,9 +11416,35 @@ function ensureGalleryVideoUI(){const input=$('galleryImageFile');if(!input)retu
 function ensureSearch(){if($('v7Search'))return;const actions=document.querySelector('.header-actions');if(!actions)return;const wrap=document.createElement('div');wrap.className='v7-search-wrap';wrap.innerHTML='<input id="v7Search" type="search" placeholder="🔎 Pretraži..." autocomplete="off"><div id="v7SearchResults" class="v7-search-results"></div>';actions.insertBefore(wrap,actions.firstChild);$('v7Search').addEventListener('input',renderSearch);document.addEventListener('click',e=>{if(!wrap.contains(e.target))$('v7SearchResults').classList.remove('open')})}
 function renderSearch(){const q=$('v7Search')?.value.trim().toLowerCase(),box=$('v7SearchResults');if(!box)return;if(q.length<2){box.classList.remove('open');return}const res=[];teams.filter(t=>String(t.name||'').toLowerCase().includes(q)).slice(0,5).forEach(t=>res.push({i:'🛡️',t:t.name,s:'Ekipa',fn:`openTeam('${escJs(t.id)}')`}));players.filter(p=>String(p.name||'').toLowerCase().includes(q)).slice(0,5).forEach(p=>res.push({i:'👤',t:p.name,s:`Igrač · ${teamV(p.team_id)?.name||''}`,fn:`openPlayer('${escJs(p.id)}')`}));V7.news.filter(n=>String(n.title||'').toLowerCase().includes(q)).slice(0,5).forEach(n=>res.push({i:'📰',t:n.title,s:'Vijest',fn:`medjasiV7.openNews('${escJs(n.id)}')`}));box.innerHTML=res.length?res.map(x=>`<button class="v7-search-item" onclick="${x.fn};$('v7SearchResults').classList.remove('open')"><span>${x.i}</span><span><b>${escV(x.t)}</b><small class="muted" style="display:block;margin-top:2px">${escV(x.s)}</small></span></button>`).join(''):'<div class="v7-news-empty">Nema rezultata.</div>';box.classList.add('open')}
 
-// Load wrappers
+// Load wrappers. Ratings and news need one initial read; thereafter their own
+// Realtime handlers, explicit navigation, and match-open flows refresh them.
+// Do not append two extra REST queries to every full league-data refresh.
 const originalLoadAll=window.loadAll;
-window.loadAll=async function(...args){const r=await originalLoadAll.apply(this,args);if(r!==true)return r;try{await loadStats();await loadNews()}catch(e){console.warn('V7 load:',e)}try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();renderGalleryV7()}catch(e){console.warn(e)}return r};
+let v7StatsLoaded=false,v7NewsLoaded=false;
+let v7NewsLoadedForAdmin=null;
+let v7StatsAttemptAt=0,v7NewsAttemptAt=0;
+window.loadAll=async function(...args){
+  const r=await originalLoadAll.apply(this,args);
+  if(r!==true)return r;
+  const now=Date.now();
+  if(!v7StatsLoaded&&now-v7StatsAttemptAt>=120000){
+    v7StatsAttemptAt=now;
+    try{await loadStats();v7StatsLoaded=true;}
+    catch(e){console.warn('V7 statistika trenutno nije dostupna:',e);}
+  }
+  const adminNow=isAdm();
+  const newsRoleChanged=v7NewsLoaded&&v7NewsLoadedForAdmin!==adminNow;
+  if((!v7NewsLoaded||newsRoleChanged)&&(newsRoleChanged||now-v7NewsAttemptAt>=120000)){
+    v7NewsAttemptAt=now;
+    try{
+      v7NewsLoaded=(await loadNews())===true;
+      if(v7NewsLoaded)v7NewsLoadedForAdmin=adminNow;
+    }catch(e){console.warn('V7 vijesti trenutno nisu dostupne:',e);}
+  }
+  try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();renderGalleryV7()}
+  catch(e){console.warn('V7 UI osvježavanje:',e);}
+  return r;
+};
 // Realtime safety wrapper; original subscription remains but news/stats refresh independently.
 V7.ensureNewsUI=ensureNewsUI;V7.loadNews=loadNews;V7.notifyPush=notifyPush;window.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoalWithAssist;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
 window.openGoalControl=function(id){return openGoal(id)};
