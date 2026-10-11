@@ -53,6 +53,20 @@ if (
   fail("Logout failures must reset the auth interaction flag and report network errors");
 } else pass("Logout resets auth interaction state on success and failure");
 
+const authUi = read("js/auth-ui.js");
+if (
+  !authMarkup.includes('<form class="form auth-form" id="loginForm"') ||
+  !authMarkup.includes('<form class="form auth-form" id="registerForm"') ||
+  !authMarkup.includes('type="email" required') ||
+  !authMarkup.includes('data-auth-password-toggle="loginPassword"') ||
+  !authMarkup.includes('data-auth-focus="registerUsername"') ||
+  !authUi.includes("form.reportValidity()") ||
+  !authUi.includes("if(pending)return") ||
+  !authUi.includes("aria-pressed")
+) {
+  fail("Login/register forms must enforce native input validation, prevent duplicate submits, and provide accessible password visibility controls");
+} else pass("Login/register forms validate required/email/password fields, guard duplicate submissions, and expose accessible password toggles");
+
 const resetStart = app.indexOf("async function resetPassword()");
 const resetEnd = app.indexOf("/* =========================================================\n   REGISTER", resetStart);
 const resetFunction = resetStart >= 0 && resetEnd > resetStart ? app.slice(resetStart, resetEnd) : "";

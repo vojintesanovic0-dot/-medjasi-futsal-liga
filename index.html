@@ -94,7 +94,7 @@
 <link rel="stylesheet" href="./css/medjasi-icons-v2.css?v=20261009v02">
 <link rel="stylesheet" href="./css/medjasi-dashboard-refinements-v2.css?v=8">
 <link rel="stylesheet" href="./css/medjasi-stability-v1.css?v=4">
-<link rel="stylesheet" href="./css/medjasi-header-fix-v1.css?v=1">
+<link rel="stylesheet" href="./css/auth-polish-v1.css?v=1">\n<link rel="stylesheet" href="./css/medjasi-header-fix-v1.css?v=1">
 
 </head>
 <body>
@@ -367,63 +367,66 @@
       <span>Nazad na početnu</span>
     </button>
   </div>
-
   <div class="grid grid-2 auth-grid">
     <div class="card auth-card auth-login-card">
       <div class="auth-card-heading">
         <span class="auth-card-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.6-3.6 3-5.5 7-5.5s6.4 1.9 7 5.5"/></svg>
         </span>
-        <div>
-          <h2>Prijava</h2>
-          <p class="muted">Dobro došao nazad.</p>
-        </div>
+        <div><h2>Prijava</h2><p class="muted">Dobro došao nazad.</p></div>
       </div>
-      <div class="form">
+      <form class="form auth-form" id="loginForm" autocomplete="on">
         <div class="form-group">
           <label for="loginEmail">Email</label>
-          <input id="loginEmail" autocomplete="email" placeholder="Unesi email adresu" type="email" required/>
+          <input id="loginEmail" name="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="Unesi email adresu" type="email" required/>
         </div>
         <div class="form-group">
           <label for="loginPassword">Lozinka</label>
-          <input id="loginPassword" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()" placeholder="Unesi lozinku" type="password" required/>
+          <div class="auth-password-wrap">
+            <input id="loginPassword" name="password" autocomplete="current-password" placeholder="Unesi lozinku" type="password" required/>
+            <button class="auth-password-toggle" type="button" data-auth-password-toggle="loginPassword" aria-label="Prikaži lozinku" title="Prikaži lozinku" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
         </div>
-        <button class="btn btn-green auth-primary-btn" id="loginSubmitButton" type="button" onclick="login()">Prijavi se</button>
-        <button class="btn auth-secondary-btn" type="button" onclick="resetPassword()">Zaboravljena lozinka?</button>
-        <p class="muted auth-message" id="loginMessage" aria-live="polite"></p>
-      </div>
+        <button class="btn btn-green auth-primary-btn" id="loginSubmitButton" type="submit">Prijavi se</button>
+        <button class="btn auth-secondary-btn" type="button" id="resetPasswordButton" onclick="resetPassword()">Zaboravljena lozinka?</button>
+        <p class="muted auth-message" id="loginMessage" aria-live="polite" aria-atomic="true"></p>
+        <p class="auth-switch-note">Nemaš nalog? <button class="auth-inline-link" type="button" data-auth-focus="registerUsername">Registruj se</button></p>
+      </form>
     </div>
-
     <div class="card auth-card auth-register-card">
       <div class="auth-card-heading">
         <span class="auth-card-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.5-3.4 2.6-5.2 6.2-5.2 2.2 0 3.8.6 4.8 1.9M17 8v6M14 11h6"/></svg>
         </span>
-        <div>
-          <h2>Registracija</h2>
-          <p class="muted">Napravi svoj nalog.</p>
-        </div>
+        <div><h2>Registracija</h2><p class="muted">Napravi svoj nalog.</p></div>
       </div>
-      <div class="form">
+      <form class="form auth-form" id="registerForm" autocomplete="on">
         <div class="form-group">
           <label for="registerUsername">Korisničko ime</label>
-          <input id="registerUsername" maxlength="30" minlength="3" autocomplete="username" placeholder="npr. MedjasiFan" required/>
+          <input id="registerUsername" name="username" maxlength="30" minlength="3" autocomplete="username" placeholder="npr. MedjasiFan" required/>
         </div>
         <div class="form-group">
           <label for="registerEmail">Email</label>
-          <input id="registerEmail" placeholder="Email adresa" type="email" autocomplete="email" required/>
+          <input id="registerEmail" name="email" maxlength="254" inputmode="email" placeholder="Email adresa" type="email" autocomplete="email" required/>
         </div>
         <div class="form-group">
           <label for="registerPassword">Lozinka</label>
-          <input id="registerPassword" autocomplete="new-password" placeholder="Najmanje 6 znakova" type="password" required/>
+          <div class="auth-password-wrap">
+            <input id="registerPassword" name="new-password" autocomplete="new-password" minlength="6" placeholder="Najmanje 6 znakova" type="password" required/>
+            <button class="auth-password-toggle" type="button" data-auth-password-toggle="registerPassword" aria-label="Prikaži lozinku" title="Prikaži lozinku" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
         </div>
         <div class="form-group">
           <label for="registerPasswordConfirm">Ponovi lozinku</label>
-          <input id="registerPasswordConfirm" autocomplete="new-password" onkeydown="if(event.key==='Enter')register()" placeholder="Ponovi lozinku" type="password" required/>
+          <div class="auth-password-wrap">
+            <input id="registerPasswordConfirm" name="new-password-confirm" autocomplete="new-password" minlength="6" placeholder="Ponovi lozinku" type="password" required/>
+            <button class="auth-password-toggle" type="button" data-auth-password-toggle="registerPasswordConfirm" aria-label="Prikaži lozinku" title="Prikaži lozinku" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
         </div>
-        <button class="btn btn-green auth-primary-btn" type="button" onclick="register()">Registruj se</button>
-        <p class="muted auth-message" id="registerMessage" aria-live="polite"></p>
-      </div>
+        <button class="btn btn-green auth-primary-btn" id="registerSubmitButton" type="submit">Registruj se</button>
+        <p class="muted auth-message" id="registerMessage" aria-live="polite" aria-atomic="true"></p>
+        <p class="auth-switch-note">Već imaš nalog? <button class="auth-inline-link" type="button" data-auth-focus="loginEmail">Prijavi se</button></p>
+      </form>
     </div>
   </div>
 </section>
@@ -803,6 +806,6 @@
 <script src="./js/app.js?v=20261011v48" defer></script>
 <script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=20261011v12" defer></script><script src="./js/growth.js?v=20261009v06" defer></script><script src="./js/community-features.js?v=20261011v11" defer></script><script src="./js/ui-compat.js?v=20261009v01" defer></script><script src="./js/admin-organizer.js?v=15" defer></script>
 <script src="./js/graphic-engine.js?v=1" defer></script><script src="./js/medjasi-v13-ui.js?v=20261007v01" defer></script><script src="./js/extras.js?v=1" defer></script>
-<script src="./js/dashboard-layout-v1.js?v=20261011v9" defer></script>
+<script src="./js/dashboard-layout-v1.js?v=20261011v9" defer></script>\n<script src="./js/auth-ui.js?v=1" defer></script>
 </body>
 </html>
