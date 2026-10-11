@@ -1082,6 +1082,7 @@ if (
   !loadAllSource.includes("AbortSignal.timeout(8000)") ||
   !loadAllSource.includes("isTransientDataServiceError") ||
   !loadAllSource.includes("loadAllFailureCount") ||
+  !loadAllSource.includes("15000*Math.pow(2,loadAllFailureCount-1)") ||
   !snapshotMigration.includes("SECURITY INVOKER") ||
   snapshotMigration.includes("SECURITY DEFINER")
 ) {

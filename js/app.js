@@ -2068,7 +2068,7 @@ async function loadAll(){
     scheduleGameRefresh(1200);
   }else if(!loadAllRetryTimer){
     loadAllFailureCount=Math.min(loadAllFailureCount+1,5);
-    const retryDelay=Math.min(120000,5000*Math.pow(2,loadAllFailureCount-1))+Math.floor(Math.random()*1500);
+    const retryDelay=Math.min(120000,15000*Math.pow(2,loadAllFailureCount-1))+Math.floor(Math.random()*3000);
     loadAllRetryTimer=setTimeout(()=>{
       loadAllRetryTimer=0;
       if(document.hidden){
