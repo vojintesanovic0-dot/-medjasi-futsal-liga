@@ -29,7 +29,15 @@ page.on("response",response=>{if(response.url().startsWith(base)&&response.statu
 async function navButton(target){
   const index=await page.locator("#mainNav button").evaluateAll((buttons,id)=>buttons.findIndex(b=>(b.getAttribute("onclick")||"").includes("showSection('"+id+"')")),target);
   assert.notEqual(index,-1,"Missing navigation button for "+target);
-  return page.locator("#mainNav button").nth(index);
+  const button=page.locator("#mainNav button").nth(index);
+  const geometry=await button.evaluate(el=>{
+    const r=el.getBoundingClientRect(),nav=document.querySelector("#mainNav"),n=nav?.getBoundingClientRect(),sidebar=document.querySelector(".app-sidebar"),sb=sidebar?.getBoundingClientRect();
+    return {button:{x:r.x,y:r.y,width:r.width,height:r.height},nav:n?{x:n.x,y:n.y,width:n.width,height:n.height}:null,sidebar:sb?{x:sb.x,y:sb.y,width:sb.width,height:sb.height}:null,viewport:{width:innerWidth,height:innerHeight},display:getComputedStyle(el).display,visibility:getComputedStyle(el).visibility};
+  });
+  const v=page.viewportSize();
+  const b=geometry.button;
+  assert.ok(b.width>0&&b.height>0&&b.x+b.width>0&&b.x<v.width&&b.y+b.height>0&&b.y<v.height,"Navigation target "+target+" is outside viewport: "+JSON.stringify(geometry));
+  return button;
 }
 async function clickSection(target){
   await (await navButton(target)).click({timeout:8000});
