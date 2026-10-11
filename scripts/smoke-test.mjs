@@ -38,7 +38,7 @@ async function clickSection(target){
 try{
   await page.goto(base,{waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mainNav button").first().waitFor({timeout:10000});
-  await page.waitForSelector("#game.section",{timeout:15000});
+  await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
   for(const id of ["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info"])await clickSection(id);
   await page.locator("#headerAccount button").filter({hasText:"Prijava"}).first().click();
   await page.waitForFunction(()=>!!document.querySelector("#login.section.active"),null,{timeout:5000});
@@ -47,7 +47,7 @@ try{
   await page.setViewportSize({width:390,height:844});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mobileMenuBtn").waitFor({timeout:10000});
-  await page.waitForSelector("#game.section",{timeout:15000});
+  await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
   await page.locator("#mobileMenuBtn").click();
   await page.waitForFunction(()=>document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
   await clickSection("matches");
