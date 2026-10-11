@@ -24,7 +24,13 @@ const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
 const page=await browser.newPage({viewport:{width:1365,height:900},serviceWorkers:"block"});
 const pageErrors=[];
 const missingAssets=[];
+const browserConsoleErrors=[];
+const failedRequests=[];
+const failedResponses=[];
 page.on("pageerror",error=>pageErrors.push(error.stack||error.message));
+page.on("console",message=>{if(message.type()==="error")browserConsoleErrors.push(message.text());});
+page.on("requestfailed",request=>failedRequests.push(request.url()+" :: "+(request.failure()?.errorText||"request failed")));
+page.on("response",response=>{if(/supabase\.co|cdn\.jsdelivr\.net|unpkg\.com/.test(response.url())&&response.status()>=400)failedResponses.push(response.status()+" "+response.url());});
 page.on("response",response=>{if(response.url().startsWith(base)&&response.status()>=400)missingAssets.push(response.status()+" "+response.url());});
 async function navButton(target){
   const index=await page.locator("#mainNav button").evaluateAll((buttons,id)=>buttons.findIndex(b=>{
@@ -50,14 +56,20 @@ try{
   await page.goto(base,{waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mainNav button").first().waitFor({timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
-  await page.waitForFunction(()=>{
-    const teams=Number(document.getElementById("statTeams")?.textContent?.trim()||0);
-    const players=Number(document.getElementById("statPlayers")?.textContent?.trim()||0);
-    const status=document.getElementById("mflDataStatus");
-    return teams>=3&&players>=12&&(!status||status.hidden);
-  },null,{timeout:30000});
+  try{
+    await page.waitForFunction(()=>{
+      const teams=Number(document.getElementById("statTeams")?.textContent?.trim()||0);
+      const players=Number(document.getElementById("statPlayers")?.textContent?.trim()||0);
+      return teams>=3&&players>=12;
+    },null,{timeout:30000});
+  }catch(error){
+    const snapshot=await page.evaluate(()=>({teams:document.getElementById("statTeams")?.textContent,players:document.getElementById("statPlayers")?.textContent,matches:document.getElementById("statMatches")?.textContent,status:document.getElementById("mflDataStatus")?.textContent,supabaseSdk:typeof window.supabase?.createClient,supabaseClient:!!window.supabaseClient?.from}));
+    console.log("LIVE DATA LOAD DIAGNOSTIC:",JSON.stringify({snapshot,browserConsoleErrors,failedRequests,failedResponses}));
+    throw error;
+  }
   const loadedCounts=await page.evaluate(()=>({teams:Number(document.getElementById("statTeams")?.textContent?.trim()||0),players:Number(document.getElementById("statPlayers")?.textContent?.trim()||0),matches:Number(document.getElementById("statMatches")?.textContent?.trim()||0),dataWarning:!!document.getElementById("mflDataStatus")&&!document.getElementById("mflDataStatus").hidden}));
   console.log("Live league data loaded:",JSON.stringify(loadedCounts));
+  assert.equal(loadedCounts.dataWarning,false,"League data warning is visible. Browser errors: "+browserConsoleErrors.join(" | ")+"; failed requests: "+failedRequests.join(" | ")+"; failed responses: "+failedResponses.join(" | "));
   for(const id of ["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info"])await clickSection(id);
   await page.locator("#headerAccount button").filter({hasText:"Prijava"}).first().click();
   await page.waitForFunction(()=>!!document.querySelector("#login.section.active"),null,{timeout:5000});
