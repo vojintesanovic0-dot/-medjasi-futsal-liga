@@ -1007,3 +1007,27 @@ main > .section.active:not(#home) table tbody tr:hover {
     transition: none !important;
   }
 }
+
+
+/* RESPONSIVE NAV GUARANTEE — hamburger only in the compact/mobile layout.
+   The sidebar navigation remains the desktop navigation; no handlers or
+   navigation items are removed. The 1024px breakpoint matches the existing
+   layout switch where the sidebar collapses into the mobile drawer. */
+@media (min-width: 1025px) {
+  .site-header #mobileMenuBtn,
+  .site-header .mobile-menu-btn {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
+@media (max-width: 1024px) {
+  .site-header #mobileMenuBtn,
+  .site-header .mobile-menu-btn {
+    display: inline-flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
