@@ -20,7 +20,7 @@ body>.footer{display:block!important}
 /* --- Desktop grid: full workspace beside the left sidebar; redundant right rail is hidden below --- */
 main{
   display:grid!important;
-  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-columns:minmax(0,1fr) minmax(258px,292px)!important;
   grid-auto-flow:row!important;
   align-items:start!important;
   column-gap:10px!important;
@@ -243,7 +243,7 @@ main{
 .site-header .header-account .v13-auth-copy strong{display:block!important;max-width:90px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:10px!important;color:#f0fff6!important}
 .site-header .header-account .v13-auth-copy small{display:block!important;margin-top:2px!important;font-size:9px!important;color:#89a39a!important}
 .site-header .header-account .v13-logout{width:30px!important;min-width:30px!important;height:30px!important;min-height:30px!important;padding:4px!important;font-size:12px!important}
-.site-header .topbar-action{order:5!important;width:39px!important;min-width:39px!important;height:39px!important;padding:8px!important}
+.site-header .topbar-action{order:1!important;width:39px!important;min-width:39px!important;height:39px!important;padding:8px!important}
 .site-header .mobile-menu-btn{display:none!important;order:8!important;font-size:0!important}
 .site-header .mobile-menu-btn::before,.site-header .mobile-menu-btn::after{content:""!important;position:absolute!important;left:10px!important;top:15px!important;width:16px!important;height:2px!important;border-radius:3px!important;background:#e7fff2!important;display:block!important;transform:none!important;box-shadow:0 5px 0 #e7fff2!important}
 .site-header .mobile-menu-btn::after{top:25px!important;box-shadow:none!important}
@@ -254,7 +254,7 @@ main{
 /* Footer appears only on the home dashboard; other sections keep their normal page footer. */
 body:has(main > #home.active)>.footer{display:none!important}
 body:has(main > .section.active:not(#home)) #dashboardFooter{display:none!important}
-.dashboard-footer{grid-template-columns:minmax(135px,210px) minmax(0,1fr) auto auto!important;padding:0 14px!important;gap:10px!important}
+.dashboard-footer{grid-template-columns:minmax(135px,210px) minmax(0,1fr) auto!important;padding:0 14px!important;gap:10px!important}
 .dashboard-footer-season{font-size:8px!important}
 .dashboard-footer-brand{font-size:8px!important;letter-spacing:.16em!important}
 .dashboard-footer-stats{gap:8px!important;padding-left:8px!important}
@@ -267,7 +267,7 @@ main:has(> .section.active:not(#home)) .dashboard-right-rail{display:none!import
 main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!important;grid-row:1!important;min-height:calc(100vh - 130px)!important;padding:24px 18px 76px!important}
 
 /* Tablet and mobile: one actual responsive dashboard, no decorative device panel. */
-@media(max-width:1180px){
+@media(max-width:1279px){
   :root{--dash-sidebar:206px}
   main{grid-template-columns:minmax(0,1fr)!important;padding-left:9px!important;padding-right:9px!important;gap:8px!important}
   .site-header .header-inner{padding:0 10px!important}
@@ -432,8 +432,14 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
 }
 
 
-/* Keep the auxiliary rail off desktop; mobile uses it as a stacked section below the main dashboard. */
-@media(min-width:1025px){
+/* Wide desktop uses the real information rail; the decorative phone mockup remains off. */
+@media(min-width:1280px){
+  main{grid-template-columns:minmax(0,1fr) minmax(258px,292px)!important;column-gap:12px!important;}
+  #home.dashboard-home{grid-column:1!important;grid-row:1!important;min-width:0!important;}
+  .dashboard-right-rail{display:flex!important;grid-column:2!important;grid-row:1!important;position:sticky!important;top:calc(var(--dash-header) + 9px)!important;max-height:calc(100vh - var(--dash-header) - var(--dash-footer) - 18px)!important;min-width:0!important;align-self:start!important;overflow-y:auto!important;}
+}
+@media(min-width:1025px) and (max-width:1279px){
+  main{grid-template-columns:minmax(0,1fr)!important;}
   .dashboard-right-rail{display:none!important;}
 }
 
