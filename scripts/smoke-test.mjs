@@ -70,6 +70,27 @@ try{
   }
   const loadedCounts=await page.evaluate(()=>({teams:Number(document.getElementById("statTeams")?.textContent?.trim()||0),players:Number(document.getElementById("statPlayers")?.textContent?.trim()||0),matches:Number(document.getElementById("statMatches")?.textContent?.trim()||0),dataWarning:!!document.getElementById("mflDataStatus")&&!document.getElementById("mflDataStatus").hidden}));
   console.log("Live league data loaded:",JSON.stringify(loadedCounts));
+  const desktopLayout=await page.evaluate(()=>{
+    const viewport=innerWidth;
+    const visiblePhonePreviews=[...document.querySelectorAll(".dashboard-phone-rail")].filter(el=>{
+      const style=getComputedStyle(el),rect=el.getBoundingClientRect();
+      return style.display!=="none"&&style.visibility!=="hidden"&&Number(style.opacity)!==0&&rect.width>0&&rect.height>0;
+    }).length;
+    const sidebar=document.getElementById("appSidebar");
+    const sidebarRect=sidebar?.getBoundingClientRect();
+    return {
+      viewport,
+      documentWidth:document.documentElement.scrollWidth,
+      bodyWidth:document.body.scrollWidth,
+      visiblePhonePreviews,
+      sidebarWidth:sidebarRect?.width||0,
+      sidebarVisible:!!sidebar&&getComputedStyle(sidebar).display!=="none"&&(sidebarRect?.width||0)>0
+    };
+  });
+  assert.ok(desktopLayout.documentWidth<=desktopLayout.viewport+2&&desktopLayout.bodyWidth<=desktopLayout.viewport+2,"Horizontal overflow on desktop: "+JSON.stringify(desktopLayout));
+  assert.equal(desktopLayout.visiblePhonePreviews,0,"The mobile phone mockup must not occupy the desktop layout: "+JSON.stringify(desktopLayout));
+  assert.ok(desktopLayout.sidebarVisible&&desktopLayout.sidebarWidth>0,"The desktop navigation sidebar must be visible: "+JSON.stringify(desktopLayout));
+  console.log("PASS desktop layout:",JSON.stringify(desktopLayout));
   if(loadedCounts.dataWarning){
     const warningText=await page.locator("#mflDataStatus").textContent();
     assert.ok(/Podaci lige|Osvježavanje podataka/i.test(warningText||""),"A data failure must be explained to visitors.");
@@ -137,7 +158,7 @@ try{
   await page.waitForFunction(()=>!document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
-  console.log("PASS browser smoke: navigation, login cancel, mobile drawer, mobile width, and data loaded or explicit retry state; no uncaught JS errors or missing local assets");
+  console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, login cancel, mobile drawer/width, and data loaded or explicit retry state; no uncaught JS errors or missing local assets");
 }finally{
   await browser.close();
   await new Promise(done=>server.close(done));
