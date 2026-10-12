@@ -1837,39 +1837,44 @@ function refreshCommentsOnly(){
    Distinguish an actually empty league from a failed refresh.
 ========================================================= */
 let hasSuccessfulLeagueSnapshot=false;
+let lastLeagueLoadError=null;
 
 function updateLeagueDataStatus(hasErrors){
   let status=document.getElementById("mflDataStatus");
-  if(!hasErrors){
-    if(status){
-      status.hidden=true;
-      status.dataset.state="ok";
-      const button=status.querySelector("button");
-      if(button){button.disabled=false;button.textContent="Pokušaj ponovo";}
-    }
-    return;
-  }
-
   if(!status){
-    status=document.createElement("section");
+    status=document.createElement("div");
     status.id="mflDataStatus";
     status.className="mfl-data-status";
     status.setAttribute("role","status");
     status.setAttribute("aria-live","polite");
-    status.innerHTML='<div class="mfl-data-status-copy"><strong id="mflDataStatusTitle">Podaci lige nisu dostupni</strong><p id="mflDataStatusMessage"></p></div><button type="button" onclick="retryLeagueDataLoad()">Pokušaj ponovo</button>';
+    const anchor=document.querySelector("main")||document.getElementById("home")?.parentElement||document.body;
+    anchor.prepend(status);
   }
-
-  const target=document.querySelector("main > .section.active")||document.getElementById("home")||document.querySelector("main");
-  if(target&&status.parentElement!==target)target.prepend(status);
-
-  status.hidden=false;
-  status.dataset.state=hasSuccessfulLeagueSnapshot?"stale":"unavailable";
+  status.hidden=!hasErrors;
+  status.classList.toggle("is-warning",hasErrors);
+  if(!hasErrors){status.textContent="";return;}
+  if(!status.querySelector("#mflDataStatusTitle")){
+    status.innerHTML='<div class="mfl-data-status-copy"><strong id="mflDataStatusTitle"></strong><p id="mflDataStatusMessage"></p></div><button type="button" class="btn btn-small btn-blue" onclick="retryLeagueDataLoad()">Pokušaj ponovo</button>';
+  }
   const title=status.querySelector("#mflDataStatusTitle");
   const message=status.querySelector("#mflDataStatusMessage");
   if(title)title.textContent=hasSuccessfulLeagueSnapshot?"Osvježavanje podataka nije uspjelo":"Podaci lige se nisu mogli učitati";
+  const loadError=lastLeagueLoadError;
+  const errorCode=String(loadError?.code||"").toUpperCase();
+  const errorStatus=Number(loadError?.status||loadError?.statusCode||loadError?.response?.status||0);
+  const serviceUnavailable=errorStatus===503||errorCode==="PGRST002";
+  const poolTimeout=errorStatus===504||errorCode==="PGRST003";
   if(message)message.textContent=hasSuccessfulLeagueSnapshot
-    ?"Prikazujemo posljednje uspješno učitane podatke. Provjeri vezu i pokušaj osvježiti."
-    :"Provjeri internet vezu. Rezultati i ostali podaci nisu potvrđeni, pa prazni prikazi ne znače da je liga prazna.";
+    ?"Prikazujemo posljednje uspješno učitane podatke. "+(serviceUnavailable
+      ?"Servis podataka trenutno ne odgovara (HTTP 503). Pokušaj ponovo za kratko vrijeme."
+      :poolTimeout
+        ?"Servis podataka je zauzet i zahtjev je istekao. Pokušaj ponovo za kratko vrijeme."
+        :"Osvježavanje nije uspjelo. Provjeri vezu i pokušaj ponovo.")
+    :serviceUnavailable
+      ?"Servis podataka lige trenutno ne odgovara (HTTP 503). Podaci nisu potvrđeni; pokušaj ponovo za kratko vrijeme."
+      :poolTimeout
+        ?"Servis podataka lige je zauzet (istek vremena čekanja). Podaci nisu potvrđeni; pokušaj ponovo za kratko vrijeme."
+        :"Provjeri internet vezu. Rezultati i ostali podaci nisu potvrđeni, pa prazni prikazi ne znače da je liga prazna.";
 }
 
 async function retryLeagueDataLoad(){
@@ -2024,6 +2029,7 @@ async function loadAll(){
 
     const [teamsResult,playersResult,matchesResult,goalsResult,cardsResult,commentsResult,messagesResult,galleryResult,matchPlayersResult]=results;
     hadLoadErrors=results.some(r=>!!r.error||!!r.skipped);
+    lastLeagueLoadError=results.find(r=>r.error&&!r.skipped)?.error||results.find(r=>r.error)?.error||null;
     results.forEach(r=>{if(r.error&&!r.skipped)console.error(r.error)});
 
     /* Ako upit padne, zadržavamo prethodne podatke umjesto da ispraznimo ekran. */
@@ -2043,6 +2049,7 @@ async function loadAll(){
     renderAll();
   }catch(error){
     hadLoadErrors=true;
+    lastLeagueLoadError=error;
     console.error("Greška pri učitavanju:",error);
   }finally{
     loadAllActive=false;
@@ -2053,6 +2060,7 @@ async function loadAll(){
   }
   const refreshedSuccessfully=!hadLoadErrors;
   if(refreshedSuccessfully){
+    lastLeagueLoadError=null;
     hasSuccessfulLeagueSnapshot=true;
     lastSuccessfulLoadAt=Date.now();
     persistLeagueSnapshot();

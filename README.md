@@ -45,6 +45,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 26. `sql/25_enforce_single_active_season.sql` – uvodi parcijalni jedinstveni indeks koji dozvoljava najviše jednu aktivnu sezonu; prije izmjene provjerava postojeće stanje i prekida ako su aktivne duplikatne sezone.
 27. `sql/26_create_profile_for_auth_users.sql` – automatski pravi običan profil nakon registracije, uključujući naloge koji čekaju potvrdu e-maila, i popunjava samo profile koji nedostaju; nikada ne kopira administratorsku ulogu iz korisničkih metapodataka.
 28. `sql/27_handle_profile_username_collisions.sql` – pri registraciji pokušava siguran rezervni naziv ako je željeno korisničko ime zauzeto; mijenja samo trigger funkciju i ne dira postojeće profile.
+- `scripts/check-live-supabase.mjs` i `.github/workflows/live-supabase-health.yml`: zasebna provjera produkcijskog snapshot API-ja; ne miješa dostupnost Supabase-a s UI regresijskim testovima.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, objedinjeni league snapshot RPC, timeout/backoff pri greškama baze, lokalna kopija posljednjih uspješno učitanih podataka, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja i auth callback bez await deadlocka.
