@@ -478,3 +478,133 @@ body {
     transition: none !important;
   }
 }
+
+
+/* Shared visual system for the league's inner sections. */
+main > .section.active:not(#home) {
+  animation: mflSectionEnter .22s cubic-bezier(.2,.75,.25,1) both;
+}
+@keyframes mflSectionEnter {
+  from { opacity: .35; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+main > .section.active:not(#home) > .section-title,
+main > .section.active:not(#home) > h2,
+main > .section.active:not(#home) .section-title {
+  color: #f0faf3 !important;
+  font-weight: 900 !important;
+  letter-spacing: -.035em !important;
+  text-wrap: pretty;
+}
+main > .section.active:not(#home) .card,
+main > .section.active:not(#home) .table-wrap,
+main > .section.active:not(#home) .gallery-grid > *,
+main > .section.active:not(#home) #teamsGrid > *,
+main > .section.active:not(#home) #playersGrid > * {
+  background-color: #08110c;
+  border-color: rgba(129,163,140,.16) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.025);
+}
+main > .section.active:not(#home) .card {
+  border-radius: 16px !important;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease !important;
+}
+main > .section.active:not(#home) .card:hover {
+  border-color: rgba(57,232,137,.24) !important;
+  box-shadow: 0 16px 36px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+main > .section.active:not(#home) .filters input,
+main > .section.active:not(#home) .filters select,
+main > .section.active:not(#home) input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+main > .section.active:not(#home) select,
+main > .section.active:not(#home) textarea {
+  color: #edf7f0 !important;
+  background: rgba(4,11,7,.97) !important;
+  border: 1px solid rgba(129,163,140,.23) !important;
+  border-radius: 11px !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.22) !important;
+}
+main > .section.active:not(#home) input:focus,
+main > .section.active:not(#home) select:focus,
+main > .section.active:not(#home) textarea:focus {
+  border-color: rgba(57,232,137,.62) !important;
+  outline: 0 !important;
+  box-shadow: 0 0 0 3px rgba(57,232,137,.09) !important;
+}
+main > .section.active:not(#home) .btn {
+  border-radius: 11px !important;
+  font-weight: 800 !important;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease !important;
+}
+main > .section.active:not(#home) .btn:hover {
+  transform: translateY(-1px);
+}
+main > .section.active:not(#home) .btn:active {
+  transform: translateY(0) scale(.985);
+}
+main > .section.active:not(#home) .btn-green,
+main > .section.active:not(#home) .btn-blue {
+  color: #04130a !important;
+  border-color: rgba(57,232,137,.42) !important;
+  background: linear-gradient(135deg, #6bf0a2, #39d77e) !important;
+  box-shadow: 0 6px 18px rgba(57,232,137,.11), inset 0 1px 0 rgba(255,255,255,.3) !important;
+}
+main > .section.active:not(#home) table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  overflow: hidden !important;
+}
+main > .section.active:not(#home) table thead th {
+  color: #bfe9cf !important;
+  background: #0d1b12 !important;
+  border-bottom-color: rgba(57,232,137,.22) !important;
+}
+main > .section.active:not(#home) table tbody tr:hover {
+  background: rgba(57,232,137,.035) !important;
+}
+#modal .modal-box {
+  transform-origin: center center;
+  animation: mflModalEnter .2s cubic-bezier(.18,.78,.25,1) both;
+}
+@keyframes mflModalEnter {
+  from { opacity: 0; transform: translateY(8px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (display-mode: standalone) {
+  .site-header {
+    height: calc(var(--dash-header, 66px) + env(safe-area-inset-top, 0px)) !important;
+    min-height: calc(var(--dash-header, 66px) + env(safe-area-inset-top, 0px)) !important;
+  }
+  .site-header .header-inner {
+    height: var(--dash-header, 66px) !important;
+    min-height: var(--dash-header, 66px) !important;
+  }
+  main {
+    padding-top: calc(var(--dash-header, 66px) + env(safe-area-inset-top, 0px) + 9px) !important;
+  }
+}
+@media (max-width: 640px) {
+  main > .section.active:not(#home) {
+    animation-duration: .18s;
+  }
+  main > .section.active:not(#home) .card {
+    border-radius: 14px !important;
+  }
+}
+@media (hover: none) {
+  main > .section.active:not(#home) .card:hover,
+  .dashboard-kpi:hover,
+  .sidebar-quick-grid button:hover {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  main > .section.active:not(#home),
+  #modal .modal-box {
+    animation: none !important;
+  }
+  main > .section.active:not(#home) .card,
+  main > .section.active:not(#home) .btn {
+    transition: none !important;
+  }
+}
