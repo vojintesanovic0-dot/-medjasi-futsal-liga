@@ -105,6 +105,7 @@ if (
   !loginLogoutSmokeSource.includes("await window.login()") ||
   !loginLogoutSmokeSource.includes("await window.logout()") ||
   !loginLogoutSmokeSource.includes("Successful login must visibly update the account header") ||
+  !loginLogoutSmokeSource.includes("Login must validate the active Supabase session") ||
   !loginLogoutSmokeSource.includes("without a real session")
 ) {
   fail("Browser smoke test must exercise successful login and logout without a real session");
