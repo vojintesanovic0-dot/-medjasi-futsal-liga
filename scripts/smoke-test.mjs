@@ -27,6 +27,7 @@ const missingAssets=[];
 const browserConsoleErrors=[];
 const failedRequests=[];
 const failedResponses=[];
+let liveDataFailure=null;
 page.on("pageerror",error=>pageErrors.push(error.stack||error.message));
 page.on("console",message=>{if(message.type()==="error")browserConsoleErrors.push(message.text());});
 page.on("requestfailed",request=>failedRequests.push(request.url()+" :: "+(request.failure()?.errorText||"request failed")));
@@ -74,7 +75,8 @@ try{
     const warningText=await page.locator("#mflDataStatus").textContent();
     assert.ok(/Podaci lige|Osvježavanje podataka/i.test(warningText||""),"A data failure must be explained to visitors.");
     assert.ok(await page.locator("#mflDataStatus button").count()>0,"The data warning must provide a retry action.");
-    console.log("WARN live Supabase data is unavailable; clear retry state is visible:",JSON.stringify({warning:warningText,browserConsoleErrors,failedResponses:failedResponses.slice(0,8)}));
+    liveDataFailure={warning:warningText,browserConsoleErrors:browserConsoleErrors.slice(0,8),failedResponses:failedResponses.slice(0,8)};
+    console.log("FAIL live Supabase integration is unavailable; continuing UI checks to collect more diagnostics:",JSON.stringify(liveDataFailure));
   }else{
     assert.ok(loadedCounts.teams>=3&&loadedCounts.players>=12,"Live league data should load before the site is considered healthy.");
   }
@@ -137,6 +139,7 @@ try{
   await page.waitForFunction(()=>!document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
+  assert.equal(liveDataFailure,null,"Live Supabase integration is unavailable; UI shell checks completed but the site is not healthy: "+JSON.stringify(liveDataFailure));
   console.log("PASS browser smoke: navigation, login cancel, mobile drawer, mobile width, and data loaded or explicit retry state; no uncaught JS errors or missing local assets");
 }finally{
   await browser.close();
