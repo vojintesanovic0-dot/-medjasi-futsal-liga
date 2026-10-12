@@ -608,3 +608,349 @@ main > .section.active:not(#home) table tbody tr:hover {
     transition: none !important;
   }
 }
+
+
+/* =========================================================
+   STRUCTURAL CORRECTION — BRAND BLOCK + TOP-RIGHT ACTIONS
+   Fixes fixed-width auth labels and gives the header controls
+   a predictable layout. Existing actions and DOM IDs remain.
+========================================================= */
+.app-sidebar .logo {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  margin: 0 0 8px !important;
+  padding: 8px 9px !important;
+  border: 1px solid rgba(57,232,137,.18) !important;
+  border-radius: 15px !important;
+  background:
+    radial-gradient(150px 70px at 0 0, rgba(57,232,137,.11), transparent 75%),
+    linear-gradient(145deg, #0c1a11, #060c08) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 8px 24px rgba(0,0,0,.16) !important;
+}
+.app-sidebar .logo > div:last-child {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+.app-sidebar .logo-ball {
+  width: 43px !important;
+  min-width: 43px !important;
+  height: 43px !important;
+  flex: 0 0 43px !important;
+  aspect-ratio: 1 / 1 !important;
+}
+.app-sidebar .logo span {
+  display: block !important;
+  max-width: 100% !important;
+  color: #f3fbf5 !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  line-height: 1.08 !important;
+  letter-spacing: -.035em !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+.app-sidebar .logo small {
+  display: block !important;
+  margin-top: 5px !important;
+  color: #8ba895 !important;
+  font-size: 7px !important;
+  font-weight: 750 !important;
+  letter-spacing: .105em !important;
+  line-height: 1.25 !important;
+  white-space: normal !important;
+}
+.site-header {
+  isolation: isolate !important;
+  z-index: 1400 !important;
+}
+.site-header .header-inner {
+  min-width: 0 !important;
+}
+.site-header .dashboard-header-context {
+  flex: 0 1 220px !important;
+  min-width: 145px !important;
+  max-width: 220px !important;
+  margin: 0 13px 0 0 !important;
+  padding: 0 15px 0 2px !important;
+  border-right: 1px solid rgba(57,232,137,.14) !important;
+}
+.site-header .dashboard-header-context-kicker {
+  color: #7ca98c !important;
+  font-size: 8px !important;
+  letter-spacing: .15em !important;
+}
+.site-header .dashboard-header-context strong {
+  display: block !important;
+  max-width: 100% !important;
+  color: #f3faf5 !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  line-height: 1.2 !important;
+}
+.site-header .header-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+}
+.site-header .v7-search-wrap {
+  flex: 1 1 390px !important;
+  min-width: 150px !important;
+  max-width: 460px !important;
+  margin-right: auto !important;
+}
+.site-header #headerAccount {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 2px 0 5px !important;
+  padding: 0 0 0 10px !important;
+  border-left: 1px solid rgba(57,232,137,.17) !important;
+  border-radius: 0 !important;
+}
+.site-header #headerAccount .v13-login,
+.site-header #headerAccount .v13-register {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 13px !important;
+  gap: 8px !important;
+  overflow: visible !important;
+  border-radius: 11px !important;
+  white-space: nowrap !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  font-weight: 850 !important;
+}
+.site-header #headerAccount .v13-login {
+  border: 1px solid rgba(57,232,137,.34) !important;
+  background: linear-gradient(145deg, rgba(57,232,137,.13), rgba(57,232,137,.055)) !important;
+  color: #eafff1 !important;
+}
+.site-header #headerAccount .v13-register {
+  border: 1px solid rgba(147,174,156,.2) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.015)) !important;
+  color: #c7d9ce !important;
+}
+.site-header #headerAccount .v13-login::before,
+.site-header #headerAccount .v13-register::before {
+  flex: 0 0 17px !important;
+  width: 17px !important;
+  height: 17px !important;
+}
+.site-header #headerAccount .v13-login:hover,
+.site-header #headerAccount .v13-register:hover {
+  border-color: rgba(57,232,137,.46) !important;
+  background: rgba(57,232,137,.1) !important;
+}
+.site-header #headerAccount .v13-auth-main {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex: 0 1 auto !important;
+  width: auto !important;
+  min-width: 98px !important;
+  max-width: 176px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  padding: 4px 10px 4px 5px !important;
+  gap: 8px !important;
+  border: 1px solid rgba(57,232,137,.19) !important;
+  border-radius: 13px !important;
+  background: linear-gradient(145deg, rgba(14,29,18,.98), rgba(6,13,8,.98)) !important;
+}
+.site-header #headerAccount .v13-header-avatar {
+  flex: 0 0 32px !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  object-fit: cover !important;
+  border: 1px solid rgba(57,232,137,.55) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 0 2px rgba(57,232,137,.045) !important;
+}
+.site-header #headerAccount .v13-auth-copy {
+  display: block !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-align: left !important;
+}
+.site-header #headerAccount .v13-auth-copy strong {
+  display: block !important;
+  max-width: 105px !important;
+  overflow: hidden !important;
+  color: #f0faf3 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.site-header #headerAccount .v13-auth-copy small {
+  display: block !important;
+  margin-top: 3px !important;
+  color: #8da895 !important;
+  font-size: 9px !important;
+  line-height: 1.1 !important;
+}
+.site-header #headerAccount .v13-logout {
+  flex: 0 0 36px !important;
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 8px !important;
+  border: 1px solid rgba(147,174,156,.18) !important;
+  border-radius: 10px !important;
+  background: rgba(255,255,255,.025) !important;
+}
+.site-header #headerAccount .v13-logout::before {
+  width: 18px !important;
+  height: 18px !important;
+  background-size: contain !important;
+}
+@media (min-width: 1025px) and (max-width: 1180px) {
+  .site-header .header-inner {
+    gap: 7px !important;
+    padding-right: 10px !important;
+    padding-left: 10px !important;
+  }
+  .site-header .dashboard-header-context {
+    flex-basis: 124px !important;
+    min-width: 124px !important;
+    max-width: 124px !important;
+    margin-right: 8px !important;
+    padding-right: 9px !important;
+  }
+  .site-header .dashboard-header-context strong {
+    font-size: 11px !important;
+  }
+  .site-header .header-actions {
+    gap: 5px !important;
+  }
+  .site-header .v7-search-wrap {
+    flex: 1 1 220px !important;
+    min-width: 116px !important;
+    max-width: none !important;
+  }
+  .site-header #headerAccount {
+    gap: 4px !important;
+    margin-left: 2px !important;
+    padding-left: 7px !important;
+  }
+  .site-header #headerAccount .v13-login,
+  .site-header #headerAccount .v13-register {
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 9px !important;
+    gap: 5px !important;
+    font-size: 10px !important;
+  }
+  .site-header #headerAccount .v13-login::before,
+  .site-header #headerAccount .v13-register::before {
+    flex-basis: 15px !important;
+    width: 15px !important;
+    height: 15px !important;
+  }
+  .site-header #headerAccount .v13-auth-main {
+    min-width: 34px !important;
+    max-width: 124px !important;
+    padding-right: 7px !important;
+  }
+  .site-header #headerAccount .v13-header-avatar {
+    flex-basis: 29px !important;
+    width: 29px !important;
+    min-width: 29px !important;
+    height: 29px !important;
+  }
+  .site-header #headerAccount .v13-logout {
+    display: none !important;
+  }
+}
+@media (max-width: 1024px) {
+  .app-sidebar .logo {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .site-header .dashboard-header-context { display: none !important; }
+  .site-header #headerAccount {
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+  .site-header #headerAccount .v13-login,
+  .site-header #headerAccount .v13-register {
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    overflow: hidden !important;
+    justify-content: center !important;
+  }
+  .site-header #headerAccount .v13-login::before,
+  .site-header #headerAccount .v13-register::before {
+    flex: 0 0 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+  }
+  .site-header #headerAccount .v13-auth-main {
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 2px !important;
+    justify-content: center !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+  .site-header #headerAccount .v13-auth-copy,
+  .site-header #headerAccount .v13-logout {
+    display: none !important;
+  }
+  .site-header #headerAccount .v13-header-avatar {
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 30px !important;
+    border-radius: 50% !important;
+  }
+}
+@media (max-width: 640px) {
+  .app-sidebar .logo {
+    height: 61px !important;
+    min-height: 61px !important;
+    padding: 2px 5px !important;
+    margin-bottom: 5px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-header #headerAccount button {
+    transition: none !important;
+  }
+}
