@@ -99,6 +99,16 @@ if (
   fail("Signup must normalize usernames, check case-insensitive availability, and remain resilient during Data API outages");
 } else pass("Signup normalizes usernames, checks availability, and relies on the server trigger during API outages");
 
+const signupSmokeSource = read("scripts/smoke-test.mjs");
+if (
+  !signupSmokeSource.includes("SMOKE_TEST_SIGNUP_INTERCEPTED") ||
+  !signupSmokeSource.includes("Mëđasi_Fan!") ||
+  !signupSmokeSource.includes("await window.register()") ||
+  !signupSmokeSource.includes("Username lookup must escape underscores")
+) {
+  fail("Browser smoke test must exercise username normalization and duplicate lookup without creating a real account");
+} else pass("Browser smoke test covers signup username normalization without creating an account");
+
 const authUi = read("js/auth-ui.js");
 if (
   !authMarkup.includes('<form class="form auth-form" id="loginForm"') ||
