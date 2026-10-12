@@ -99,6 +99,16 @@ if (
   fail("Signup must normalize usernames, check case-insensitive availability, and remain resilient during Data API outages");
 } else pass("Signup normalizes usernames, checks availability, and relies on the server trigger during API outages");
 
+const resetPasswordSmokeSource = read("scripts/smoke-test.mjs");
+if (
+  !resetPasswordSmokeSource.includes("reset-smoke@example.com") ||
+  !resetPasswordSmokeSource.includes("await window.resetPassword()") ||
+  !resetPasswordSmokeSource.includes("Password reset must return users to this site.") ||
+  !resetPasswordSmokeSource.includes("without sending a real email")
+) {
+  fail("Browser smoke test must cover password reset without sending real emails");
+} else pass("Browser smoke test covers password reset safely without sending real emails");
+
 const signupSmokeSource = read("scripts/smoke-test.mjs");
 if (
   !signupSmokeSource.includes("SMOKE_TEST_SIGNUP_INTERCEPTED") ||
