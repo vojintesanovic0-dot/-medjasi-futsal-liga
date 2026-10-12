@@ -355,6 +355,36 @@ try{
   await page.waitForFunction(()=>document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
   await clickSection("matches");
   await page.waitForFunction(()=>!document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
+
+  // Exercise the complete More drawer without touching real user data.
+  await page.locator("#mobileMoreBtn").click();
+  await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  assert.equal(await page.locator("#mobileMoreBtn").getAttribute("aria-expanded"),"true");
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  assert.equal(await page.locator("#mobileMoreBtn").getAttribute("aria-expanded"),"false");
+
+  await page.locator("#mobileMoreBtn").click();
+  await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  await page.locator("#mobileMoreDrawer .mobile-more-backdrop").click({position:{x:5,y:5}});
+  await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+
+  await page.locator("#mobileMoreBtn").click();
+  await page.locator('.mobile-more-grid button[onclick="mobileMoreGo(\'players\')"]').click();
+  await page.waitForFunction(()=>document.querySelector("#players.section")?.classList.contains("active"),null,{timeout:5000});
+  await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+
+  await page.evaluate(()=>{
+    window.__mobileMoreDashboardProbe=null;
+    window.dashboardOpenGameTab=(tab)=>{window.__mobileMoreDashboardProbe=tab;};
+  });
+  await page.locator("#mobileMoreBtn").click();
+  await page.locator('.mobile-more-grid button[onclick="mobileMoreDashboardGo(\'shop\')"]').click();
+  assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),"shop","Fan Shop shortcut must call the corresponding dashboard tab.");
+  await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  await page.evaluate(()=>{delete window.__mobileMoreDashboardProbe;delete window.dashboardOpenGameTab;});
+  console.log("PASS mobile More drawer: open/close, Escape, backdrop, section routing, Fan Shop routing, and aria-expanded state");
+
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
   console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, auth validation and isolated signup username handling, login cancel, mobile drawer/width, and live bootstrap or explicit retry state; suppressed extra REST requests after outage:",suppressedLiveRestCount,"; no uncaught JS errors or missing local assets");
