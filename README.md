@@ -47,6 +47,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 28. `sql/27_handle_profile_username_collisions.sql` – pri registraciji pokušava siguran rezervni naziv ako je željeno korisničko ime zauzeto; mijenja samo trigger funkciju i ne dira postojeće profile.
 - `scripts/check-live-supabase.mjs` i `.github/workflows/live-supabase-health.yml`: zasebna provjera produkcijskog snapshot API-ja; ne miješa dostupnost Supabase-a s UI regresijskim testovima.
 - Status poruka za nedostupni Data API ima razmake između naslova, objašnjenja i dugmeta, pa je čitljiva i u pristupačnom tekstualnom prikazu.
+- Registracija normalizuje korisnička imena i provjerava zauzetost bez blokiranja prijave kada je Data API privremeno nedostupan; server-side trigger ostaje konačna zaštita od duplikata.
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, objedinjeni league snapshot RPC, timeout/backoff pri greškama baze, lokalna kopija posljednjih uspješno učitanih podataka, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja i auth callback bez await deadlocka.
