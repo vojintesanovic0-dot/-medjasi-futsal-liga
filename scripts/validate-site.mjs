@@ -698,6 +698,17 @@ const fanGrantWrapperSource = read("sql/07_admin_rpc_wrapper.sql");
 const repricingFixSource = read("sql/14_fix_fan_reprice_match_live_status_alias.sql");
 const pushEdgeSource = read("supabase/functions/send-push/index.ts");
 
+const pinnedSupabaseSdk = "npm:@supabase/supabase-js@2.117.2";
+if (
+  !fanAdminEdgeSource.includes(pinnedSupabaseSdk) ||
+  !pushEdgeSource.includes(pinnedSupabaseSdk) ||
+  /npm:@supabase\/supabase-js@2["']/.test(pushEdgeSource)
+) {
+  fail("Supabase Edge Functions must use the same pinned Supabase JS SDK version");
+} else {
+  pass("Supabase Edge Functions use the same pinned Supabase JS SDK version");
+}
+
 const grantRpcCall = fanAdminEdgeSource.split('actor.rpc("fan_admin_grant",')[1]?.split(");")[0] || "";
 if (
   !grantRpcCall.includes("p_user:") ||

@@ -18,6 +18,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Set up Deno for Edge Function checks
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: "v2.x"
+      - name: Type-check Supabase Edge Functions
+        run: deno check --no-lock supabase/functions/fan-admin-action/index.ts supabase/functions/send-push/index.ts
       - name: Validate HTML assets, navigation, CSS, cache versions and JavaScript syntax
         run: node scripts/validate-site.mjs
       - name: Install browser smoke-test dependency
