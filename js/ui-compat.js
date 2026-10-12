@@ -79,6 +79,22 @@
     }
   }
 
+  function openAuthScreen(mode,event){
+    // Auth actions are separate controls; prevent clicks from bubbling into surrounding navigation.
+    if(event){
+      event.preventDefault?.();
+      event.stopPropagation?.();
+    }
+    const selectedMode=mode==="register"?"register":"login";
+    if(typeof window.showSection!=="function") return false;
+    window.showSection("login");
+    if(typeof window.setAuthMode==="function"){
+      window.setAuthMode(selectedMode,selectedMode==="register"?"registerUsername":"loginEmail");
+    }
+    return false;
+  }
+  window.openAuthScreen=openAuthScreen;
+
   function renderHeaderAccount(){
     const host=$("headerAccount");
     if(!host) return;
@@ -90,11 +106,11 @@
       host.innerHTML=
         '<button type="button" class="account-btn v13-login" '+
         'aria-label="Prijava ili registracija" '+
-        'onclick="window.showSection(\'login\')" '+
+        'onclick="return window.openAuthScreen(\'login\',event)" '+
         'title="Prijava ili registracija">Prijava</button>'+
         '<button type="button" class="account-btn v13-register" '+
         'aria-label="Registracija" '+
-        'onclick="window.showSection(\'login\');setTimeout(()=>window.setAuthMode?.(\'register\'),80)" '+
+        'onclick="return window.openAuthScreen(\'register\',event)" '+
         'title="Registracija">Registracija</button>';
       return;
     }
