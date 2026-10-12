@@ -139,3 +139,39 @@
   .site-header .mobile-menu-btn,
   .site-header .header-account .account-btn { transition: none !important; }
 }
+
+/* The dashboard script places the real league mark inside the ball holder. */
+.site-header .logo-ball > img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 5px !important;
+  object-fit: contain !important;
+  border-radius: inherit !important;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,.22));
+}
+.site-header .logo-ball::after { z-index: 2; }
+.site-header .dashboard-header-context {
+  min-width: 0;
+}
+.site-header .dashboard-header-context strong {
+  color: #edf7f0 !important;
+  font-weight: 850 !important;
+  letter-spacing: -.02em !important;
+}
+.site-header .dashboard-header-context span {
+  color: #8fa398 !important;
+}
+.site-header .dashboard-header-context .dashboard-context-live {
+  color: #b9f7d0 !important;
+}
+@media (max-width: 1024px) {
+  .site-header .dashboard-mobile-brand img {
+    border: 1px solid rgba(57,232,137,.22);
+    border-radius: 9px;
+    padding: 2px;
+    background: rgba(57,232,137,.05);
+  }
+}
