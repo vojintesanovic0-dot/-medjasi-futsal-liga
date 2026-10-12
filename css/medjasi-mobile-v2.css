@@ -203,3 +203,17 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 20 7v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/%3E%3Cpath d='M9 12h6M12 9v6'/%3E%3C/svg%3E") !important;
   }
 }
+
+@media (max-width: 780px) {
+  .mobile-more-close { display:grid !important; place-items:center !important; cursor:pointer !important; }
+  .mobile-more-close::before {
+    content:"×";
+    display:block;
+    color:#e8fff1;
+    font-size:26px;
+    line-height:1;
+    font-weight:400;
+  }
+  body.mobile-more-open { overflow:hidden !important; touch-action:none; }
+  body.mobile-more-open .mobile-more-panel { touch-action:pan-y; }
+}
