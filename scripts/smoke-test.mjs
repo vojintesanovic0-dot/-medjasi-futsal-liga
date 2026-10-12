@@ -28,6 +28,7 @@ const browserConsoleErrors=[];
 const failedRequests=[];
 const failedResponses=[];
 let suppressLiveRest=false;
+let suppressedLiveRestCount=0;
 page.on("pageerror",error=>pageErrors.push(error.stack||error.message));
 page.on("console",message=>{if(message.type()==="error")browserConsoleErrors.push(message.text());});
 page.on("requestfailed",request=>failedRequests.push(request.url()+" :: "+(request.failure()?.errorText||"request failed")));
@@ -35,6 +36,7 @@ page.on("response",response=>{if(/supabase\.co|cdn\.jsdelivr\.net|unpkg\.com/.te
 page.on("response",response=>{if(response.url().startsWith(base)&&response.status()>=400)missingAssets.push(response.status()+" "+response.url());});
 await page.route(/https:\/\/[^/]+\.supabase\.co\/rest\/v1\//,async route=>{
   if(!suppressLiveRest){await route.continue();return;}
+  suppressedLiveRestCount++;
   await route.fulfill({
     status:503,
     contentType:"application/json",
@@ -169,7 +171,7 @@ try{
   await page.waitForFunction(()=>!document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
-  console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, login cancel, mobile drawer/width, and live bootstrap or explicit retry state; extra REST calls are throttled after a confirmed outage; no uncaught JS errors or missing local assets");
+  console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, login cancel, mobile drawer/width, and live bootstrap or explicit retry state; suppressed extra REST requests after outage:",suppressedLiveRestCount,"; no uncaught JS errors or missing local assets");
 }finally{
   await browser.close();
   await new Promise(done=>server.close(done));
