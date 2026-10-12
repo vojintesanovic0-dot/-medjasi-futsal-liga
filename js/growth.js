@@ -11,6 +11,7 @@ const team=id=>TM().find(t=>String(t.id)===String(id));
 const tname=id=>team(id)?.name||"Ekipa";
 const note=(m,t="success")=>typeof toast==="function"?toast(m,t):alert(m);
 let follows=new Set(), sponsors=[], seasons=[], followsUserId=null;
+let loadPromise=null, loadRetryAfter=0, loadFailureCount=0;
 function standings(){
   const m=new Map(TM().map(t=>[String(t.id),{name:t.name,played:0,wins:0,draws:0,losses:0,gf:0,ga:0,pts:0}]));
   MT().filter(x=>x.status==="finished").forEach(x=>{
@@ -36,44 +37,94 @@ function downloadICS(list){
   a.href=URL.createObjectURL(new Blob([buildICS(list)],{type:"text/calendar;charset=utf-8"}));
   a.download="medjasi-futsal-liga.ics";a.click();
 }
+function isTransientLoadError(error){
+  const status=Number(error?.status||error?.statusCode||error?.response?.status||0);
+  const code=String(error?.code||"");
+  const name=String(error?.name||"");
+  const message=String(error?.message||error||"").toLowerCase();
+  return status===503||status===504||code==="PGRST002"||code==="PGRST003"||
+    name==="AbortError"||name==="TimeoutError"||
+    /connection pool|schema cache|timed out acquiring connection|failed to fetch|networkerror|load failed/.test(message);
+}
+function withRequestTimeout(query){
+  try{
+    return typeof AbortSignal!=="undefined"&&typeof AbortSignal.timeout==="function"
+      ? query.abortSignal(AbortSignal.timeout(7000))
+      : query;
+  }catch(error){return query;}
+}
 async function load(){
   const client=sb();
-  if(!client)return;
-  const current=user();
-  const [followResult,sponsorResult,seasonResult]=await Promise.all([
-    current
-      ? client.from("fan_team_follows").select("team_id").eq("user_id",current.id)
-      : Promise.resolve({data:[],error:null}),
-    client.from("sponsors").select("*").eq("active",true).order("sort_order"),
-    client.from("seasons").select("*")
-  ]);
+  if(!client)return false;
+  if(loadPromise)return loadPromise;
+  if(Date.now()<loadRetryAfter)return false;
 
-  if(!current){
-    follows=new Set();
-    followsUserId=null;
-  }else if(followResult.error){
-    console.warn("Liga info follows temporarily unavailable:",followResult.error);
-    // Never show another account's cached follow state after an auth change.
-    if(followsUserId!==String(current.id)){
+  const requestedUser=user();
+  loadPromise=(async()=>{
+    const [followResult,sponsorResult,seasonResult]=await Promise.all([
+      requestedUser
+        ? withRequestTimeout(client.from("fan_team_follows").select("team_id").eq("user_id",requestedUser.id))
+        : Promise.resolve({data:[],error:null}),
+      withRequestTimeout(client.from("sponsors").select("*")).eq("active",true).order("sort_order"),
+      withRequestTimeout(client.from("seasons").select("*"))
+    ]);
+    const errors=[followResult,sponsorResult,seasonResult].filter(result=>result?.error);
+    const latestUser=user();
+    if(String(latestUser?.id||"")!==String(requestedUser?.id||"")){
       follows=new Set();
-      followsUserId=String(current.id);
+      followsUserId=latestUser?.id?String(latestUser.id):null;
+      return false;
     }
-  }else{
-    follows=new Set((followResult.data||[]).map(row=>String(row.team_id)));
-    followsUserId=String(current.id);
-  }
 
-  if(sponsorResult.error){
-    console.warn("Liga info sponsors temporarily unavailable:",sponsorResult.error);
-  }else{
-    sponsors=sponsorResult.data||[];
+    if(!requestedUser){
+      follows=new Set();
+      followsUserId=null;
+    }else if(followResult.error){
+      console.warn("Liga info follows temporarily unavailable:",followResult.error);
+      if(followsUserId!==String(requestedUser.id)){
+        follows=new Set();
+        followsUserId=String(requestedUser.id);
+      }
+    }else{
+      follows=new Set((followResult.data||[]).map(row=>String(row.team_id)));
+      followsUserId=String(requestedUser.id);
+    }
+
+    if(sponsorResult.error){
+      console.warn("Liga info sponsors temporarily unavailable:",sponsorResult.error);
+    }else{
+      sponsors=sponsorResult.data||[];
+    }
+    if(seasonResult.error){
+      console.warn("Liga info seasons temporarily unavailable:",seasonResult.error);
+    }else{
+      seasons=seasonResult.data||[];
+    }
+
+    if(errors.length){
+      loadFailureCount=Math.min(loadFailureCount+1,5);
+      const transient=errors.some(result=>isTransientLoadError(result.error));
+      loadRetryAfter=Date.now()+(transient
+        ? Math.min(120000,15000*Math.pow(2,loadFailureCount-1))
+        : 30000);
+    }else{
+      loadFailureCount=0;
+      loadRetryAfter=0;
+    }
+    renderSponsors();
+    return errors.length===0;
+  })();
+
+  try{
+    return await loadPromise;
+  }catch(error){
+    console.warn("Liga info podaci privremeno nisu dostupni:",error);
+    loadFailureCount=Math.min(loadFailureCount+1,5);
+    loadRetryAfter=Date.now()+Math.min(120000,15000*Math.pow(2,loadFailureCount-1));
+    return false;
+  }finally{
+    loadPromise=null;
   }
-  if(seasonResult.error){
-    console.warn("Liga info seasons temporarily unavailable:",seasonResult.error);
-  }else{
-    seasons=seasonResult.data||[];
-  }
-  renderSponsors();
 }
 function info(){
   const r=$("gxInfoRoot"); if(!r)return;

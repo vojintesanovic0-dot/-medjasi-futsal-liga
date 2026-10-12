@@ -382,6 +382,21 @@ if (!growth.includes("if(sponsorResult.error)") || !growth.includes("if(seasonRe
   fail("Liga info must preserve the last valid sponsor/season data when a refresh query fails");
 } else pass("Liga info keeps the last valid state during partial service failures");
 
+const growthLoadStart = growth.indexOf("async function load()");
+const growthLoadEnd = growth.indexOf("function info()", growthLoadStart);
+const growthLoad = growthLoadStart >= 0 && growthLoadEnd > growthLoadStart ? growth.slice(growthLoadStart, growthLoadEnd) : "";
+if (
+  !growthLoad.includes("if(loadPromise)return loadPromise") ||
+  !growthLoad.includes("Date.now()<loadRetryAfter") ||
+  !growth.includes("AbortSignal.timeout(7000)") ||
+  !growthLoad.includes("Math.min(120000,15000*Math.pow(2,loadFailureCount-1))") ||
+  !growthLoad.includes("String(latestUser?.id||\"\")!==String(requestedUser?.id||\"\")")
+) {
+  fail("Liga info refresh must deduplicate in-flight requests, time out, back off after API errors, and isolate account changes");
+} else {
+  pass("Liga info refresh deduplicates requests, times out, backs off after API errors, and guards account changes");
+}
+
 const hasDirectTabRouter =
   dashboard.includes("window.medjasiGame?.openTab?.(key)===true") &&
   dashboard.includes("const retry=()=>{") &&

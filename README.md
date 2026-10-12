@@ -48,6 +48,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, objedinjeni league snapshot RPC, timeout/backoff pri greškama baze, lokalna kopija posljednjih uspješno učitanih podataka, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja i auth callback bez await deadlocka.
 - `js/extras.js` + `css/extras.css`: statistika+ (strijelci, asistenti, fair play), .ics kalendar, dijeljenje rezultata kao slika, opciona tema i admin audit UI.
+- `js/growth.js`: deduplicirano učitavanje „Liga info“ podataka, timeouti i eksponencijalni backoff pri greškama API-ja; čuva prethodne rezultate i sprečava da zakašnjeli odgovor prethodnog korisnika promijeni trenutno stanje.
 - `service-worker.js`: nova verzija cache-a, offline stranica i keširanje jsDelivr Supabase biblioteke.
 - `supabase/functions/fan-admin-action/index.ts`: administratorski RPC pozivi koriste JWT stvarnog administratora kako bi provjere `auth.uid()` ostale ispravne.
 - Vidljivi naziv lige je normalizovan na `Međasi` bez promjene tehničkih identifikatora i ruta.
