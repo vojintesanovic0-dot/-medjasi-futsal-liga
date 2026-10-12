@@ -380,7 +380,8 @@ if (
 
 if (!growth.includes("if(sponsorResult.error)") || !growth.includes("if(seasonResult.error)")) {
   fail("Liga info must preserve the last valid sponsor/season data when a refresh query fails");
-}
+} else pass("Liga info keeps the last valid state during partial service failures");
+
 const growthLoadStart = growth.indexOf("async function load()");
 const growthLoadEnd = growth.indexOf("function info()", growthLoadStart);
 const growthLoad = growthLoadStart >= 0 && growthLoadEnd > growthLoadStart ? growth.slice(growthLoadStart, growthLoadEnd) : "";
@@ -395,7 +396,6 @@ if (
 } else {
   pass("Liga info refresh deduplicates requests, times out, backs off after API errors, and guards account changes");
 }
- else pass("Liga info keeps the last valid state during partial service failures");
 
 const hasDirectTabRouter =
   dashboard.includes("window.medjasiGame?.openTab?.(key)===true") &&
