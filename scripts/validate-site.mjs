@@ -1456,6 +1456,22 @@ if (
   pass("A partial unique index enforces at most one active season");
 }
 
+const authProfileMigration = read("sql/26_create_profile_for_auth_users.sql");
+if (
+  !authProfileMigration.includes("security definer") ||
+  !authProfileMigration.includes("set search_path = pg_catalog") ||
+  !authProfileMigration.includes("after insert on auth.users") ||
+  !authProfileMigration.includes("on conflict (id) do nothing") ||
+  !authProfileMigration.includes("revoke all on function public.handle_new_auth_user_profile() from public, anon, authenticated") ||
+  !authProfileMigration.includes("left join public.profiles p on p.id = u.id") ||
+  !authProfileMigration.includes("where p.id is null") ||
+  authProfileMigration.includes("new.raw_user_meta_data ->> 'role'")
+) {
+  fail("Auth signup must create only a normal profile with a locked-down trigger and a non-destructive missing-profile backfill");
+} else {
+  pass("Auth signup creates a normal profile safely and backfills only missing profiles");
+}
+
 const sectionNavigationStart = app.indexOf("function showSection(id)");
 const sectionNavigationEnd = app.indexOf("/* =========================================================\n   MODAL", sectionNavigationStart);
 const sectionNavigation = sectionNavigationStart >= 0 && sectionNavigationEnd > sectionNavigationStart
