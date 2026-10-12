@@ -241,6 +241,100 @@ try{
   assert.equal(resetProbe.message,"Ako nalog postoji, link za promjenu lozinke je poslat na email.","Password reset must confirm the request without revealing whether the account exists.");
   console.log("PASS password reset uses the entered email and safe redirect without sending a real email");
   await page.evaluate(()=>{delete window.__resetPasswordProbe;});
+  await page.locator("#loginEmail").fill("login-smoke@example.com");
+  await page.locator("#loginPassword").fill("smoke-pass");
+  const loginLogoutProbe=await page.evaluate(async()=>{
+    const client=window.supabaseClient;
+    if(!client?.auth||typeof client.auth.signInWithPassword!=="function"||typeof client.auth.signOut!=="function"||typeof client.auth.getSession!=="function")throw new Error("Supabase Auth unavailable for isolated login smoke test");
+    const saved={
+      signIn:client.auth.signInWithPassword,
+      signInOwn:Object.prototype.hasOwnProperty.call(client.auth,"signInWithPassword"),
+      signOut:client.auth.signOut,
+      signOutOwn:Object.prototype.hasOwnProperty.call(client.auth,"signOut"),
+      getSession:client.auth.getSession,
+      getSessionOwn:Object.prototype.hasOwnProperty.call(client.auth,"getSession"),
+      from:client.from,
+      fromOwn:Object.prototype.hasOwnProperty.call(client,"from"),
+      rpc:client.rpc,
+      rpcOwn:Object.prototype.hasOwnProperty.call(client,"rpc"),
+      game:window.medjasiGame,
+      gameRefresh:window.medjasiGame?.refresh
+    };
+    window.__loginSmoke={email:"login-smoke@example.com",getSessionCalled:false,profileLookupCalled:false,rpcCalls:[],gameRefreshCalled:false};
+    const fakeUser={id:"11111111-2222-4333-8444-555555555555",email:"login-smoke@example.com",user_metadata:{username:"SmokeFan"}};
+    client.auth.signInWithPassword=async({email,password})=>{
+      window.__loginSmoke.email=email;
+      window.__loginSmoke.password=password;
+      return {data:{user:fakeUser,session:{access_token:"smoke-token",user:fakeUser}},error:null};
+    };
+    client.auth.getSession=async()=>{
+      window.__loginSmoke.getSessionCalled=true;
+      return {data:{session:{access_token:"smoke-token",user:fakeUser}},error:null};
+    };
+    client.auth.signOut=async()=>({error:null});
+    client.from=function(table,...args){
+      if(table!=="profiles")return saved.from.call(this,table,...args);
+      window.__loginSmoke.profileLookupCalled=true;
+      const builder={
+        select(){return this;},
+        eq(){return this;},
+        maybeSingle(){return this;},
+        abortSignal(){return this;},
+        then(resolve,reject){return Promise.resolve({data:{id:fakeUser.id,username:"SmokeFan",role:"user"},error:null}).then(resolve,reject);}
+      };
+      return builder;
+    };
+    client.rpc=function(name,...args){
+      window.__loginSmoke.rpcCalls.push(name);
+      return saved.rpc.call(this,name,...args);
+    };
+    if(window.medjasiGame)window.medjasiGame.refresh=()=>{window.__loginSmoke.gameRefreshCalled=true;};
+    else window.medjasiGame={refresh(){window.__loginSmoke.gameRefreshCalled=true;}};
+    try{
+      await window.login();
+      await new Promise(resolve=>setTimeout(resolve,80));
+      const loginState={
+        homeActive:!!document.querySelector("#home.section.active"),
+        accountText:document.querySelector("#headerAccount .v13-auth-copy strong")?.textContent||"",
+        currentUser:window.currentUser?{id:window.currentUser.id,email:window.currentUser.email,username:window.currentUser.user_metadata?.username}:null,
+        currentProfile:window.currentProfile?{id:window.currentProfile.id,username:window.currentProfile.username,role:window.currentProfile.role}:null,
+        accountHtml:document.getElementById("headerAccount")?.innerHTML||"",
+        loginButtonDisabled:document.getElementById("loginSubmitButton")?.disabled,
+        ...window.__loginSmoke
+      };
+      await window.logout();
+      await new Promise(resolve=>setTimeout(resolve,80));
+      const logoutState={
+        homeActive:!!document.querySelector("#home.section.active"),
+        loginButtonText:document.querySelector("#headerAccount button")?.textContent||"",
+        profileButtonCount:document.querySelectorAll("#headerAccount .v13-auth-main").length
+      };
+      return {loginState,logoutState};
+    }finally{
+      if(saved.signInOwn)client.auth.signInWithPassword=saved.signIn;else delete client.auth.signInWithPassword;
+      if(saved.signOutOwn)client.auth.signOut=saved.signOut;else delete client.auth.signOut;
+      if(saved.getSessionOwn)client.auth.getSession=saved.getSession;else delete client.auth.getSession;
+      if(saved.fromOwn)client.from=saved.from;else delete client.from;
+      if(saved.rpcOwn)client.rpc=saved.rpc;else delete client.rpc;
+      if(saved.game){window.medjasiGame=saved.game;if(saved.gameRefresh)window.medjasiGame.refresh=saved.gameRefresh;else delete window.medjasiGame.refresh;}else delete window.medjasiGame;
+      delete window.__loginSmoke;
+    }
+  });
+  assert.equal(loginLogoutProbe.loginState.homeActive,true,"Successful login must return to the homepage.");
+  assert.ok(loginLogoutProbe.loginState.accountText.includes("SmokeFan"),"Successful login must visibly update the account header.");
+  assert.equal(loginLogoutProbe.loginState.getSessionCalled,true,"Login must validate the active Supabase session.");
+  assert.equal(loginLogoutProbe.loginState.profileLookupCalled,true,"Login must load the user's profile.");
+  assert.ok(loginLogoutProbe.loginState.rpcCalls.includes("get_league_snapshot"),"Login must request the league snapshot.");
+  assert.equal(loginLogoutProbe.loginState.gameRefreshCalled,true,"Login must refresh Fan Game state.");
+  assert.equal(loginLogoutProbe.loginState.loginButtonDisabled,false,"Login submit must be re-enabled after success.");
+  assert.equal(loginLogoutProbe.logoutState.homeActive,true,"Logout must return to the homepage.");
+  assert.ok(loginLogoutProbe.logoutState.loginButtonText.includes("Prijava"),"Logout must restore the logged-out header.");
+  assert.equal(loginLogoutProbe.logoutState.profileButtonCount,0,"Logout must remove the authenticated profile button.");
+  console.log("PASS isolated login/logout updates the account header and returns home without a real session");
+  await page.evaluate(()=>window.showSection("login"));
+  await page.waitForFunction(()=>!!document.querySelector("#login.section.active"),null,{timeout:5000});
+  await page.locator("#loginEmail").fill("");
+  await page.locator("#loginPassword").fill("");
   await page.locator('[data-auth-mode="register"][data-auth-focus-target="registerUsername"]').click();
   await page.waitForFunction(()=>document.activeElement?.id==="registerUsername",null,{timeout:3000});
   await page.locator('[data-auth-mode="login"][data-auth-focus-target="loginEmail"]').click();
