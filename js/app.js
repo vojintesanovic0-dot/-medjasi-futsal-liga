@@ -1460,7 +1460,7 @@ async function resetPassword(){
 ========================================================= */
 
 async function register(){
-  const username =
+  let username =
     document
       .getElementById("registerUsername")
       ?.value
@@ -1509,6 +1509,18 @@ async function register(){
   }
 
 
+  // Match the profile trigger's normalization before checking uniqueness.
+  username=String(username)
+    .replace(/[^\\p{L}\\p{N}_\\-.]/gu,"")
+    .slice(0,30);
+  if(username.length<3){
+    message.textContent="Korisničko ime mora imati najmanje 3 slova ili broja. Dozvoljeni su i znakovi _ . -.";
+    return;
+  }
+  const usernameInput=document.getElementById("registerUsername");
+  if(usernameInput)usernameInput.value=username;
+
+
   if(!email){
 
     message.textContent =
@@ -1536,15 +1548,38 @@ async function register(){
   }
 
 
+  message.textContent="Provjeravam dostupnost korisničkog imena...";
+  try{
+    const usernameQuery=supabaseClient
+      .from("profiles")
+      .select("id")
+      .ilike("username",username.replace(/_/g,"\\\\_"))
+      .limit(1)
+      .maybeSingle();
+    const usernameCheck=typeof AbortSignal!=="undefined"&&typeof AbortSignal.timeout==="function"
+      ? await usernameQuery.abortSignal(AbortSignal.timeout(4000))
+      : await usernameQuery;
+    if(!usernameCheck.error&&usernameCheck.data){
+      message.textContent="Korisničko ime je već zauzeto. Izaberi drugo.";
+      return;
+    }
+    if(usernameCheck.error){
+      console.warn("Provjera dostupnosti korisničkog imena nije uspjela; trigger će zaštititi jedinstvenost:",usernameCheck.error);
+    }
+  }catch(usernameCheckError){
+    // Do not block registration during a Data API outage; the Auth trigger
+    // independently guarantees a unique fallback username.
+    console.warn("Provjera korisničkog imena nije dostupna; registracija nastavlja sigurno:",usernameCheckError);
+  }
+
   message.textContent =
     "Kreiranje naloga...";
 
 
   /*
     Username stavljamo i u user_metadata.
-    Ako je email confirmation uključen,
-    profil će se napraviti kada se korisnik
-    prvi put prijavi nakon potvrde emaila.
+    Profil se kreira server-side Auth triggerom odmah pri registraciji,
+    čak i ako korisnik prvo mora potvrditi email.
   */
 
   medjasiAuthInteraction=true;
