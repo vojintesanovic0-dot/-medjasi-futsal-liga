@@ -292,17 +292,19 @@ try{
     else window.medjasiGame={refresh(){window.__loginSmoke.gameRefreshCalled=true;}};
     try{
       await window.login();
+      await new Promise(resolve=>setTimeout(resolve,80));
       const loginState={
         homeActive:!!document.querySelector("#home.section.active"),
-        accountText:document.querySelector("#headerAccount .account-name")?.textContent||"",
+        accountText:document.querySelector("#headerAccount .v13-auth-copy strong")?.textContent||"",
         loginButtonDisabled:document.getElementById("loginSubmitButton")?.disabled,
         ...window.__loginSmoke
       };
       await window.logout();
+      await new Promise(resolve=>setTimeout(resolve,80));
       const logoutState={
         homeActive:!!document.querySelector("#home.section.active"),
         loginButtonText:document.querySelector("#headerAccount button")?.textContent||"",
-        profileButtonCount:document.querySelectorAll("#headerAccount .account-name").length
+        profileButtonCount:document.querySelectorAll("#headerAccount .v13-auth-main").length
       };
       return {loginState,logoutState};
     }finally{
