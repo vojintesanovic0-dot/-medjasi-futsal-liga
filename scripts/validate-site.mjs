@@ -61,7 +61,9 @@ if (
   !leagueStatusFunction.includes('errorCode==="PGRST002"') ||
   !leagueStatusFunction.includes('errorCode==="PGRST003"') ||
   !leagueStatusFunction.includes("Servis podataka lige trenutno ne odgovara (HTTP 503)") ||
-  !leagueStatusFunction.includes("Servis podataka lige je zauzet")
+  !leagueStatusFunction.includes("Servis podataka lige je zauzet") ||
+  !leagueStatusFunction.includes('</strong> <p id="mflDataStatusMessage">') ||
+  !leagueStatusFunction.includes('</p></div> <button type="button"')
 ) {
   fail("League data status must explain PostgREST service outages and connection-pool timeouts without presenting them as an empty league");
 } else pass("League data status distinguishes PostgREST outages from an empty league");
