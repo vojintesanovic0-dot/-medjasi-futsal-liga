@@ -315,6 +315,7 @@ try{
       delete window.__loginSmoke;
     }
   });
+  console.log("DEBUG isolated login/logout state",JSON.stringify(loginLogoutProbe));
   assert.equal(loginLogoutProbe.loginState.homeActive,true,"Successful login must return to the homepage.");
   assert.ok(loginLogoutProbe.loginState.accountText.includes("SmokeFan"),"Successful login must visibly update the account header.");
   assert.equal(loginLogoutProbe.loginState.getSessionCalled,true,"Login must validate the active Supabase session.");
