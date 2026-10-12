@@ -8602,11 +8602,15 @@ function openMobileMore(){
 function closeMobileMore(){
   const drawer=document.getElementById("mobileMoreDrawer");
   if(!drawer) return;
+  const wasOpen=drawer.classList.contains("open");
   drawer.classList.remove("open");
   drawer.setAttribute("aria-hidden","true");
   document.body.classList.remove("mobile-more-open");
   const moreBtn=document.getElementById("mobileMoreBtn");
-  if(moreBtn)moreBtn.setAttribute("aria-expanded","false");
+  if(moreBtn){
+    moreBtn.setAttribute("aria-expanded","false");
+    if(wasOpen && typeof moreBtn.focus==="function")moreBtn.focus({preventScroll:true});
+  }
 }
 
 function toggleMobileMore(){
