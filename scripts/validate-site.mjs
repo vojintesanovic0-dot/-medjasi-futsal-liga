@@ -678,6 +678,8 @@ if (
   !app.includes('drawer.classList.add("open")') ||
   !app.includes('drawer.classList.remove("open")') ||
   !app.includes("function mobileMoreGo(id)") ||
+  !app.includes("function mobileMoreDashboardGo(tab)") ||
+  !app.includes("window.dashboardOpenGameTab(tab)") ||
   !app.includes("setTimeout(()=>showSection(id),40")
 ) {
   fail("Mobile More drawer must open, close, and route a selected item to its requested section");
