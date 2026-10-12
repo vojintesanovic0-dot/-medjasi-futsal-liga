@@ -1,5 +1,4 @@
 /* Međasi extras v1
-   - svijetla/tamna tema
    - strijelci / asistenti / fair play s filterima
    - .ics kalendar i dijeljenje rezultata kao slika (u prozoru utakmice)
    - klijentski limit slanja poruka i komentara
@@ -12,24 +11,7 @@ const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>
 const G=name=>{try{return (0,eval)(name)}catch{return undefined}};
 const list=name=>{const v=G(name);return Array.isArray(v)?v:[]};
 
-/* ======================= TEMA ======================= */
-const THEME_KEY="medjasi_theme";
-function applyTheme(t){
-  document.documentElement.setAttribute("data-theme",t);
-  const m=$("metaThemeColor");if(m)m.setAttribute("content",t==="light"?"#eef3f8":"#07111f");
-  const b=$("xtThemeBtn");if(b){b.textContent=t==="light"?"🌙":"☀️";b.setAttribute("aria-label",t==="light"?"Tamna tema":"Svijetla tema");b.title=b.getAttribute("aria-label")}
-}
-function initTheme(){
-  let t="dark";try{t=localStorage.getItem(THEME_KEY)||"dark"}catch{}
-  applyTheme(t);
-  const host=document.querySelector(".header-actions");
-  if(host&&!$("xtThemeBtn")){
-    const b=document.createElement("button");
-    b.id="xtThemeBtn";b.type="button";b.className="xt-theme-btn";
-    b.onclick=()=>{const n=document.documentElement.getAttribute("data-theme")==="light"?"dark":"light";try{localStorage.setItem(THEME_KEY,n)}catch{}applyTheme(n)};
-    host.prepend(b);applyTheme(t);
-  }
-}
+/* Theme switching intentionally disabled: the site uses one consistent dark theme. */
 
 /* ======================= LIMIT SLANJA (klijent) ======================= */
 const LIMITS={messages:{gap:2500,max:8},comments:{gap:4000,max:5}};
@@ -252,7 +234,7 @@ function hook(){
   const mc=$("modalContent");
   if(mc&&!mc.__xtObs){mc.__xtObs=new MutationObserver(injectMatchActions);mc.__xtObs.observe(mc,{childList:true})}
 }
-function init(){initTheme();installRateLimit();hook();afterRender()}
+function init(){installRateLimit();hook();afterRender()}
 window.medjasiExtras={downloadICS,shareResult,buildICS,computeTop,computeFair,checkLimit,state:st};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })();
