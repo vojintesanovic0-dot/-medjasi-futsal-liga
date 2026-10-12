@@ -1854,7 +1854,7 @@ function updateLeagueDataStatus(hasErrors){
   status.classList.toggle("is-warning",hasErrors);
   if(!hasErrors){status.textContent="";return;}
   if(!status.querySelector("#mflDataStatusTitle")){
-    status.innerHTML='<div class="mfl-data-status-copy"><strong id="mflDataStatusTitle"></strong><p id="mflDataStatusMessage"></p></div><button type="button" class="btn btn-small btn-blue" onclick="retryLeagueDataLoad()">Pokušaj ponovo</button>';
+    status.innerHTML='<div class="mfl-data-status-copy"><strong id="mflDataStatusTitle"></strong> <p id="mflDataStatusMessage"></p></div> <button type="button" class="btn btn-small btn-blue" onclick="retryLeagueDataLoad()">Pokušaj ponovo</button>';
   }
   const title=status.querySelector("#mflDataStatusTitle");
   const message=status.querySelector("#mflDataStatusMessage");
