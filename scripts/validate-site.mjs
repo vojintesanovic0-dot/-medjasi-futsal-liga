@@ -1471,6 +1471,21 @@ if (
   pass("A partial unique index enforces at most one active season");
 }
 
+const profileUsernameMigration = read("sql/27_handle_profile_username_collisions.sql");
+if (
+  !profileUsernameMigration.includes("security definer") ||
+  !profileUsernameMigration.includes("set search_path = pg_catalog") ||
+  !profileUsernameMigration.includes("exception when unique_violation") ||
+  !profileUsernameMigration.includes("on conflict (id) do nothing") ||
+  !profileUsernameMigration.includes("Unable to allocate a unique profile username") ||
+  !profileUsernameMigration.includes("revoke all on function public.handle_new_auth_user_profile() from public, anon, authenticated") ||
+  profileUsernameMigration.includes("new.raw_user_meta_data ->> 'role'")
+) {
+  fail("Auth profile creation must handle duplicate usernames without trusting role metadata or modifying existing profiles");
+} else {
+  pass("Auth signup safely handles duplicate usernames without changing existing profiles or roles");
+}
+
 const authProfileMigration = read("sql/26_create_profile_for_auth_users.sql");
 if (
   !authProfileMigration.includes("security definer") ||
