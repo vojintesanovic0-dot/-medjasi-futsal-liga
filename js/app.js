@@ -8615,6 +8615,15 @@ function toggleMobileMore(){
   else openMobileMore();
 }
 
+function mobileMoreDashboardGo(tab){
+  closeMobileMore();
+  if(typeof window.dashboardOpenGameTab==="function"){
+    window.dashboardOpenGameTab(tab);
+    return;
+  }
+  if(typeof toast==="function")toast("Fan Game se još učitava. Pokušaj ponovo.","error");
+}
+
 function mobileMoreGo(id){
   closeMobileMore();
   setTimeout(()=>showSection(id),40);
