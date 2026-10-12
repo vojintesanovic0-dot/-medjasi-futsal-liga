@@ -8592,6 +8592,8 @@ function openMobileMore(){
     topBtn.setAttribute("aria-expanded","false");
     topBtn.setAttribute("aria-label","Otvori meni");
   }
+  const moreBtn=document.getElementById("mobileMoreBtn");
+  if(moreBtn)moreBtn.setAttribute("aria-expanded","true");
   drawer.classList.add("open");
   drawer.setAttribute("aria-hidden","false");
   document.body.classList.add("mobile-more-open");
@@ -8603,6 +8605,8 @@ function closeMobileMore(){
   drawer.classList.remove("open");
   drawer.setAttribute("aria-hidden","true");
   document.body.classList.remove("mobile-more-open");
+  const moreBtn=document.getElementById("mobileMoreBtn");
+  if(moreBtn)moreBtn.setAttribute("aria-expanded","false");
 }
 
 function toggleMobileMore(){
