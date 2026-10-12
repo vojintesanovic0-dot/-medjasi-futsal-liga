@@ -89,8 +89,8 @@ const registerStart = app.indexOf("async function register()");
 const registerEnd = app.indexOf("async function resendConfirmation()", registerStart);
 const registerFunction = registerStart >= 0 && registerEnd > registerStart ? app.slice(registerStart, registerEnd) : "";
 if (
-  !registerFunction.includes('replace(/[^\\\\p{L}\\\\p{N}_\\\\-.]/gu,"")') ||
-  !registerFunction.includes('.ilike("username",username.replace(/_/g,"\\\\\\\\_"))') ||
+  !registerFunction.includes('replace(/[^\\p{L}\\p{N}_\\-.]/gu,"")') ||
+  !registerFunction.includes('.ilike("username",username.replace(/_/g,"\\\\_"))') ||
   !registerFunction.includes("AbortSignal.timeout(4000)") ||
   !registerFunction.includes("Korisničko ime je već zauzeto. Izaberi drugo.") ||
   !registerFunction.includes("trigger će zaštititi jedinstvenost") ||
