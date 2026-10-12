@@ -27,11 +27,20 @@ const missingAssets=[];
 const browserConsoleErrors=[];
 const failedRequests=[];
 const failedResponses=[];
+let suppressLiveRest=false;
 page.on("pageerror",error=>pageErrors.push(error.stack||error.message));
 page.on("console",message=>{if(message.type()==="error")browserConsoleErrors.push(message.text());});
 page.on("requestfailed",request=>failedRequests.push(request.url()+" :: "+(request.failure()?.errorText||"request failed")));
 page.on("response",response=>{if(/supabase\.co|cdn\.jsdelivr\.net|unpkg\.com/.test(response.url())&&response.status()>=400)failedResponses.push(response.status()+" "+response.url());});
 page.on("response",response=>{if(response.url().startsWith(base)&&response.status()>=400)missingAssets.push(response.status()+" "+response.url());});
+await page.route(/https:\/\/[^/]+\.supabase\.co\/rest\/v1\//,async route=>{
+  if(!suppressLiveRest){await route.continue();return;}
+  await route.fulfill({
+    status:503,
+    contentType:"application/json",
+    body:JSON.stringify({code:"PGRST002",details:null,hint:null,message:"Smoke test stopped extra REST traffic after detecting a live API outage."})
+  });
+});
 async function navButton(target){
   const index=await page.locator("#mainNav button").evaluateAll((buttons,id)=>buttons.findIndex(b=>{
     const handler=b.getAttribute("onclick")||"";
@@ -92,6 +101,8 @@ try{
   assert.ok(desktopLayout.sidebarVisible&&desktopLayout.sidebarWidth>0,"The desktop navigation sidebar must be visible: "+JSON.stringify(desktopLayout));
   console.log("PASS desktop layout:",JSON.stringify(desktopLayout));
   if(loadedCounts.dataWarning){
+    // The initial live bootstrap already established the outage; do not amplify it while exercising UI navigation.
+    suppressLiveRest=true;
     const warningText=await page.locator("#mflDataStatus").textContent();
     assert.ok(/Podaci lige|Osvježavanje podataka/i.test(warningText||""),"A data failure must be explained to visitors.");
     assert.ok(await page.locator("#mflDataStatus button").count()>0,"The data warning must provide a retry action.");
@@ -158,7 +169,7 @@ try{
   await page.waitForFunction(()=>!document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
-  console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, login cancel, mobile drawer/width, and data loaded or explicit retry state; no uncaught JS errors or missing local assets");
+  console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, login cancel, mobile drawer/width, and live bootstrap or explicit retry state; extra REST calls are throttled after a confirmed outage; no uncaught JS errors or missing local assets");
 }finally{
   await browser.close();
   await new Promise(done=>server.close(done));
