@@ -53,6 +53,31 @@ if (
   fail("Logout failures must reset the auth interaction flag and report network errors");
 } else pass("Logout resets auth interaction state on success and failure");
 
+const leagueStatusStart = app.indexOf("function updateLeagueDataStatus(hasErrors)");
+const leagueStatusEnd = app.indexOf("async function retryLeagueDataLoad()", leagueStatusStart);
+const leagueStatusFunction = leagueStatusStart >= 0 && leagueStatusEnd > leagueStatusStart ? app.slice(leagueStatusStart, leagueStatusEnd) : "";
+if (
+  !app.includes("let lastLeagueLoadError=null;") ||
+  !leagueStatusFunction.includes('errorCode==="PGRST002"') ||
+  !leagueStatusFunction.includes('errorCode==="PGRST003"') ||
+  !leagueStatusFunction.includes("Servis podataka lige trenutno ne odgovara (HTTP 503)") ||
+  !leagueStatusFunction.includes("Servis podataka lige je zauzet")
+) {
+  fail("League data status must explain PostgREST service outages and connection-pool timeouts without presenting them as an empty league");
+} else pass("League data status distinguishes PostgREST outages from an empty league");
+
+const liveHealthScript = read("scripts/check-live-supabase.mjs");
+const liveHealthWorkflow = read(".github/workflows/live-supabase-health.yml");
+if (
+  !liveHealthScript.includes("/rest/v1/rpc/get_league_snapshot") ||
+  !liveHealthScript.includes("AbortSignal.timeout(10000)") ||
+  !liveHealthScript.includes("process.exitCode=1") ||
+  !liveHealthWorkflow.includes("branches: [main]") ||
+  !liveHealthWorkflow.includes("node scripts/check-live-supabase.mjs")
+) {
+  fail("Live Supabase health must be checked separately from the browser shell smoke test");
+} else pass("Live Supabase health has a separate production-only workflow");
+
 const authUi = read("js/auth-ui.js");
 if (
   !authMarkup.includes('<form class="form auth-form" id="loginForm"') ||
