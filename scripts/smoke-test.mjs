@@ -296,6 +296,9 @@ try{
       const loginState={
         homeActive:!!document.querySelector("#home.section.active"),
         accountText:document.querySelector("#headerAccount .v13-auth-copy strong")?.textContent||"",
+        currentUser:window.currentUser?{id:window.currentUser.id,email:window.currentUser.email,username:window.currentUser.user_metadata?.username}:null,
+        currentProfile:window.currentProfile?{id:window.currentProfile.id,username:window.currentProfile.username,role:window.currentProfile.role}:null,
+        accountHtml:document.getElementById("headerAccount")?.innerHTML||"",
         loginButtonDisabled:document.getElementById("loginSubmitButton")?.disabled,
         ...window.__loginSmoke
       };
