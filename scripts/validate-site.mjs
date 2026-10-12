@@ -66,6 +66,11 @@ if (
   fail("League data status must explain PostgREST service outages and connection-pool timeouts without presenting them as an empty league");
 } else pass("League data status distinguishes PostgREST outages from an empty league");
 
+const liveHealthSyntax = spawnSync(process.execPath, ["--check", "scripts/check-live-supabase.mjs"], { encoding: "utf8" });
+if (liveHealthSyntax.status !== 0) {
+  fail("Live Supabase health probe must pass Node.js syntax validation: " + (liveHealthSyntax.stderr || liveHealthSyntax.stdout || "unknown syntax error"));
+} else pass("Live Supabase health probe passes Node.js syntax validation");
+
 const liveHealthScript = read("scripts/check-live-supabase.mjs");
 const liveHealthWorkflow = read(".github/workflows/live-supabase-health.yml");
 if (
