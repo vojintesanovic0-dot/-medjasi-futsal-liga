@@ -245,28 +245,51 @@ try{
   await page.locator("#loginPassword").fill("smoke-pass");
   const loginLogoutProbe=await page.evaluate(async()=>{
     const client=window.supabaseClient;
-    if(!client?.auth||typeof client.auth.signInWithPassword!=="function"||typeof client.auth.signOut!=="function")throw new Error("Supabase Auth unavailable for isolated login smoke test");
+    if(!client?.auth||typeof client.auth.signInWithPassword!=="function"||typeof client.auth.signOut!=="function"||typeof client.auth.getSession!=="function")throw new Error("Supabase Auth unavailable for isolated login smoke test");
     const saved={
       signIn:client.auth.signInWithPassword,
       signInOwn:Object.prototype.hasOwnProperty.call(client.auth,"signInWithPassword"),
       signOut:client.auth.signOut,
       signOutOwn:Object.prototype.hasOwnProperty.call(client.auth,"signOut"),
-      checkAuth:window.checkAuth,
-      loadAll:window.loadAll,
-      game:window.medjasiGame
+      getSession:client.auth.getSession,
+      getSessionOwn:Object.prototype.hasOwnProperty.call(client.auth,"getSession"),
+      from:client.from,
+      fromOwn:Object.prototype.hasOwnProperty.call(client,"from"),
+      rpc:client.rpc,
+      rpcOwn:Object.prototype.hasOwnProperty.call(client,"rpc"),
+      game:window.medjasiGame,
+      gameRefresh:window.medjasiGame?.refresh
     };
-    window.__loginSmokeSaved=saved;
-    window.__loginSmoke={email:"login-smoke@example.com",checkAuthCalled:false,loadAllCalled:false,gameRefreshCalled:false};
+    window.__loginSmoke={email:"login-smoke@example.com",getSessionCalled:false,profileLookupCalled:false,rpcCalls:[],gameRefreshCalled:false};
     const fakeUser={id:"11111111-2222-4333-8444-555555555555",email:"login-smoke@example.com",user_metadata:{username:"SmokeFan"}};
     client.auth.signInWithPassword=async({email,password})=>{
       window.__loginSmoke.email=email;
       window.__loginSmoke.password=password;
       return {data:{user:fakeUser,session:{access_token:"smoke-token",user:fakeUser}},error:null};
     };
+    client.auth.getSession=async()=>{
+      window.__loginSmoke.getSessionCalled=true;
+      return {data:{session:{access_token:"smoke-token",user:fakeUser}},error:null};
+    };
     client.auth.signOut=async()=>({error:null});
-    window.checkAuth=async()=>{window.__loginSmoke.checkAuthCalled=true;window.updateAuthUI(false);return null;};
-    window.loadAll=async()=>{window.__loginSmoke.loadAllCalled=true;return true;};
-    window.medjasiGame={refresh(){window.__loginSmoke.gameRefreshCalled=true;}};
+    client.from=function(table,...args){
+      if(table!=="profiles")return saved.from.call(this,table,...args);
+      window.__loginSmoke.profileLookupCalled=true;
+      const builder={
+        select(){return this;},
+        eq(){return this;},
+        maybeSingle(){return this;},
+        abortSignal(){return this;},
+        then(resolve,reject){return Promise.resolve({data:{id:fakeUser.id,username:"SmokeFan",role:"user"},error:null}).then(resolve,reject);}
+      };
+      return builder;
+    };
+    client.rpc=function(name,...args){
+      window.__loginSmoke.rpcCalls.push(name);
+      return saved.rpc.call(this,name,...args);
+    };
+    if(window.medjasiGame)window.medjasiGame.refresh=()=>{window.__loginSmoke.gameRefreshCalled=true;};
+    else window.medjasiGame={refresh(){window.__loginSmoke.gameRefreshCalled=true;}};
     try{
       await window.login();
       const loginState={
@@ -278,26 +301,26 @@ try{
       await window.logout();
       const logoutState={
         homeActive:!!document.querySelector("#home.section.active"),
-        accountText:document.querySelector("#headerAccount .account-name")?.textContent||"",
         loginButtonText:document.querySelector("#headerAccount button")?.textContent||"",
         profileButtonCount:document.querySelectorAll("#headerAccount .account-name").length
       };
       return {loginState,logoutState};
     }finally{
-      if(saved.signInOwn)client.auth.signInWithPassword=saved.signIn;
-      else delete client.auth.signInWithPassword;
-      if(saved.signOutOwn)client.auth.signOut=saved.signOut;
-      else delete client.auth.signOut;
-      window.checkAuth=saved.checkAuth;
-      window.loadAll=saved.loadAll;
-      window.medjasiGame=saved.game;
-      delete window.__loginSmokeSaved;
+      if(saved.signInOwn)client.auth.signInWithPassword=saved.signIn;else delete client.auth.signInWithPassword;
+      if(saved.signOutOwn)client.auth.signOut=saved.signOut;else delete client.auth.signOut;
+      if(saved.getSessionOwn)client.auth.getSession=saved.getSession;else delete client.auth.getSession;
+      if(saved.fromOwn)client.from=saved.from;else delete client.from;
+      if(saved.rpcOwn)client.rpc=saved.rpc;else delete client.rpc;
+      if(saved.game)window.medjasiGame=saved.game;else delete window.medjasiGame;
+      if(saved.game&&saved.gameRefresh)window.medjasiGame.refresh=saved.gameRefresh;
+      delete window.__loginSmoke;
     }
   });
   assert.equal(loginLogoutProbe.loginState.homeActive,true,"Successful login must return to the homepage.");
   assert.ok(loginLogoutProbe.loginState.accountText.includes("SmokeFan"),"Successful login must visibly update the account header.");
-  assert.equal(loginLogoutProbe.loginState.checkAuthCalled,true,"Login must check the authenticated profile.");
-  assert.equal(loginLogoutProbe.loginState.loadAllCalled,true,"Login must refresh league data.");
+  assert.equal(loginLogoutProbe.loginState.getSessionCalled,true,"Login must validate the active Supabase session.");
+  assert.equal(loginLogoutProbe.loginState.profileLookupCalled,true,"Login must load the user's profile.");
+  assert.ok(loginLogoutProbe.loginState.rpcCalls.includes("get_league_snapshot"),"Login must request the league snapshot.");
   assert.equal(loginLogoutProbe.loginState.gameRefreshCalled,true,"Login must refresh Fan Game state.");
   assert.equal(loginLogoutProbe.loginState.loginButtonDisabled,false,"Login submit must be re-enabled after success.");
   assert.equal(loginLogoutProbe.logoutState.homeActive,true,"Logout must return to the homepage.");
