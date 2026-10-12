@@ -388,7 +388,7 @@ const growthLoad = growthLoadStart >= 0 && growthLoadEnd > growthLoadStart ? gro
 if (
   !growthLoad.includes("if(loadPromise)return loadPromise") ||
   !growthLoad.includes("Date.now()<loadRetryAfter") ||
-  !growthLoad.includes("AbortSignal.timeout(7000)") ||
+  !growth.includes("AbortSignal.timeout(7000)") ||
   !growthLoad.includes("Math.min(120000,15000*Math.pow(2,loadFailureCount-1))") ||
   !growthLoad.includes("String(latestUser?.id||\"\")!==String(requestedUser?.id||\"\")")
 ) {
