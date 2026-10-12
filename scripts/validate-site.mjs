@@ -53,6 +53,19 @@ if (
   fail("Logout failures must reset the auth interaction flag and report network errors");
 } else pass("Logout resets auth interaction state on success and failure");
 
+const leagueStatusStart = app.indexOf("function updateLeagueDataStatus(hasErrors)");
+const leagueStatusEnd = app.indexOf("async function retryLeagueDataLoad()", leagueStatusStart);
+const leagueStatusFunction = leagueStatusStart >= 0 && leagueStatusEnd > leagueStatusStart ? app.slice(leagueStatusStart, leagueStatusEnd) : "";
+if (
+  !app.includes("let lastLeagueLoadError=null;") ||
+  !leagueStatusFunction.includes('errorCode==="PGRST002"') ||
+  !leagueStatusFunction.includes('errorCode==="PGRST003"') ||
+  !leagueStatusFunction.includes("Servis podataka lige trenutno ne odgovara (HTTP 503)") ||
+  !leagueStatusFunction.includes("Servis podataka lige je zauzet")
+) {
+  fail("League data status must explain PostgREST 503/schema-cache and connection-pool timeout failures without presenting them as an empty league");
+} else pass("League data status distinguishes PostgREST service outages from an empty league");
+
 const authUi = read("js/auth-ui.js");
 if (
   !authMarkup.includes('<form class="form auth-form" id="loginForm"') ||
