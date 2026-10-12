@@ -76,7 +76,7 @@ const liveHealthWorkflow = read(".github/workflows/live-supabase-health.yml");
 if (
   !liveHealthScript.includes("/rest/v1/rpc/get_league_snapshot") ||
   !liveHealthScript.includes("AbortSignal.timeout(10000)") ||
-  !liveHealthScript.includes("process.exitCode=1") ||
+  !/\bprocess\.exitCode\s*=\s*1\b/.test(liveHealthScript) ||
   !liveHealthWorkflow.includes("branches: [main]") ||
   !liveHealthWorkflow.includes("node scripts/check-live-supabase.mjs")
 ) {
