@@ -1434,6 +1434,17 @@ if (
   pass("Profile role protection removes the superseded trigger and retains the current role guard");
 }
 
+const singleActiveSeasonMigration = read("sql/25_enforce_single_active_season.sql");
+if (
+  !singleActiveSeasonMigration.includes("create unique index if not exists seasons_only_one_active_idx") ||
+  !singleActiveSeasonMigration.includes("where is_active is true") ||
+  !singleActiveSeasonMigration.includes("Resolve duplicate active seasons before applying this constraint.")
+) {
+  fail("The database must enforce at most one active season, with a clear preflight for legacy duplicates");
+} else {
+  pass("A partial unique index enforces at most one active season");
+}
+
 const sectionNavigationStart = app.indexOf("function showSection(id)");
 const sectionNavigationEnd = app.indexOf("/* =========================================================\n   MODAL", sectionNavigationStart);
 const sectionNavigation = sectionNavigationStart >= 0 && sectionNavigationEnd > sectionNavigationStart
