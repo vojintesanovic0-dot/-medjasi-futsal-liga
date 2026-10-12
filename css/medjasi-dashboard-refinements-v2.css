@@ -440,7 +440,8 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
 }
 @media(min-width:1025px) and (max-width:1279px){
   main{grid-template-columns:minmax(0,1fr)!important;}
-  .dashboard-right-rail{display:none!important;}
+  .dashboard-right-rail{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-column:1!important;grid-row:2!important;position:static!important;max-height:none!important;min-width:0!important;align-self:start!important;overflow:visible!important;gap:10px!important;}
+  .dashboard-right-rail .dashboard-rail-panel{min-width:0!important;margin:0!important;}
 }
 
 
