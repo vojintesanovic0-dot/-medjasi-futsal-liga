@@ -1511,7 +1511,7 @@ async function register(){
 
   // Match the profile trigger's normalization before checking uniqueness.
   username=String(username)
-    .replace(/[^\\p{L}\\p{N}_\\-.]/gu,"")
+    .replace(/[^\p{L}\p{N}_\-.]/gu,"")
     .slice(0,30);
   if(username.length<3){
     message.textContent="Korisničko ime mora imati najmanje 3 slova ili broja. Dozvoljeni su i znakovi _ . -.";
@@ -1553,7 +1553,7 @@ async function register(){
     const usernameQuery=supabaseClient
       .from("profiles")
       .select("id")
-      .ilike("username",username.replace(/_/g,"\\\\_"))
+      .ilike("username",username.replace(/_/g,"\\_"))
       .limit(1)
       .maybeSingle();
     const usernameCheck=typeof AbortSignal!=="undefined"&&typeof AbortSignal.timeout==="function"
