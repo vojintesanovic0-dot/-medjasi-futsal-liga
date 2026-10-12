@@ -1837,6 +1837,7 @@ function refreshCommentsOnly(){
    Distinguish an actually empty league from a failed refresh.
 ========================================================= */
 let hasSuccessfulLeagueSnapshot=false;
+let lastLeagueLoadError=null;
 
 function updateLeagueDataStatus(hasErrors){
   let status=document.getElementById("mflDataStatus");
@@ -1867,9 +1868,22 @@ function updateLeagueDataStatus(hasErrors){
   const title=status.querySelector("#mflDataStatusTitle");
   const message=status.querySelector("#mflDataStatusMessage");
   if(title)title.textContent=hasSuccessfulLeagueSnapshot?"Osvježavanje podataka nije uspjelo":"Podaci lige se nisu mogli učitati";
+  const loadError=lastLeagueLoadError;
+  const errorCode=String(loadError?.code||"").toUpperCase();
+  const errorStatus=Number(loadError?.status||loadError?.statusCode||loadError?.response?.status||0);
+  const serviceUnavailable=errorStatus===503||errorCode==="PGRST002";
+  const poolTimeout=errorStatus===504||errorCode==="PGRST003";
   if(message)message.textContent=hasSuccessfulLeagueSnapshot
-    ?"Prikazujemo posljednje uspješno učitane podatke. Provjeri vezu i pokušaj osvježiti."
-    :"Provjeri internet vezu. Rezultati i ostali podaci nisu potvrđeni, pa prazni prikazi ne znače da je liga prazna.";
+    ?"Prikazujemo posljednje uspješno učitane podatke. "+(serviceUnavailable
+      ?"Servis podataka trenutno ne odgovara (HTTP 503). Pokušaj ponovo za kratko vrijeme."
+      :poolTimeout
+        ?"Servis podataka je zauzet i zahtjev je istekao. Pokušaj ponovo za kratko vrijeme."
+        :"Osvježavanje nije uspjelo. Provjeri vezu i pokušaj ponovo.")
+    :serviceUnavailable
+      ?"Servis podataka lige trenutno ne odgovara (HTTP 503). Podaci nisu potvrđeni; pokušaj ponovo za kratko vrijeme."
+      :poolTimeout
+        ?"Servis podataka lige je zauzet (istek vremena čekanja). Podaci nisu potvrđeni; pokušaj ponovo za kratko vrijeme."
+        :"Provjeri internet vezu. Rezultati i ostali podaci nisu potvrđeni, pa prazni prikazi ne znače da je liga prazna.";
 }
 
 async function retryLeagueDataLoad(){
@@ -2024,6 +2038,7 @@ async function loadAll(){
 
     const [teamsResult,playersResult,matchesResult,goalsResult,cardsResult,commentsResult,messagesResult,galleryResult,matchPlayersResult]=results;
     hadLoadErrors=results.some(r=>!!r.error||!!r.skipped);
+    lastLeagueLoadError=results.find(r=>r.error&&!r.skipped)?.error||results.find(r=>r.error)?.error||null;
     results.forEach(r=>{if(r.error&&!r.skipped)console.error(r.error)});
 
     /* Ako upit padne, zadržavamo prethodne podatke umjesto da ispraznimo ekran. */
@@ -2043,6 +2058,7 @@ async function loadAll(){
     renderAll();
   }catch(error){
     hadLoadErrors=true;
+    lastLeagueLoadError=error;
     console.error("Greška pri učitavanju:",error);
   }finally{
     loadAllActive=false;
@@ -2053,6 +2069,7 @@ async function loadAll(){
   }
   const refreshedSuccessfully=!hadLoadErrors;
   if(refreshedSuccessfully){
+    lastLeagueLoadError=null;
     hasSuccessfulLeagueSnapshot=true;
     lastSuccessfulLoadAt=Date.now();
     persistLeagueSnapshot();
