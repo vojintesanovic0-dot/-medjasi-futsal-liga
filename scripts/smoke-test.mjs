@@ -311,8 +311,7 @@ try{
       if(saved.getSessionOwn)client.auth.getSession=saved.getSession;else delete client.auth.getSession;
       if(saved.fromOwn)client.from=saved.from;else delete client.from;
       if(saved.rpcOwn)client.rpc=saved.rpc;else delete client.rpc;
-      if(saved.game)window.medjasiGame=saved.game;else delete window.medjasiGame;
-      if(saved.game&&saved.gameRefresh)window.medjasiGame.refresh=saved.gameRefresh;
+      if(saved.game){window.medjasiGame=saved.game;if(saved.gameRefresh)window.medjasiGame.refresh=saved.gameRefresh;else delete window.medjasiGame.refresh;}else delete window.medjasiGame;
       delete window.__loginSmoke;
     }
   });
