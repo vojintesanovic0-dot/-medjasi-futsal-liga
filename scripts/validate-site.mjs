@@ -132,6 +132,8 @@ if (
 } else pass("Browser smoke test covers signup username normalization without creating an account");
 
 const authUi = read("js/auth-ui.js");
+const uiCompat = read("js/ui-compat.js");
+const authHeaderCss = read("css/medjasi-premium-header-v1.css");
 if (
   !authMarkup.includes('<form class="form auth-form" id="loginForm"') ||
   !authMarkup.includes('<form class="form auth-form" id="registerForm"') ||
@@ -150,6 +152,17 @@ if (
 ) {
   fail("Login/register forms must enforce native input validation, prevent duplicate submits, and provide accessible password visibility controls");
 } else pass("Login/register forms validate required/email/password fields, guard duplicate submissions, and expose accessible password toggles");
+
+if (
+  !uiCompat.includes("function openAuthScreen(mode,event)") ||
+  !uiCompat.includes("window.openAuthScreen=openAuthScreen") ||
+  !uiCompat.includes("window.openAuthScreen") ||
+  !authHeaderCss.includes("#headerAccount:has(.v13-register)") ||
+  !authHeaderCss.includes("flex: 0 0 68px !important") ||
+  !authHeaderCss.includes("pointer-events: auto !important")
+) {
+  fail("Header login/register buttons must route to the selected auth mode and have non-overlapping mobile hit targets");
+} else pass("Header login/register actions route explicitly and reserve separate hit targets from the mobile menu");
 
 const resetStart = app.indexOf("async function resetPassword()");
 const resetEnd = app.indexOf("/* =========================================================\n   REGISTER", resetStart);
