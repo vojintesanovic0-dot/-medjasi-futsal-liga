@@ -215,7 +215,7 @@ window.dashboardOpenGameTab=function(tab){
     }
     const sidebar=document.createElement("aside");
     sidebar.className="app-sidebar";sidebar.id="appSidebar";
-    sidebar.innerHTML='<div class="sidebar-live-panel"><div class="sidebar-panel-title"><span>LIVE / MATCH CENTER</span><span>×</span></div><div id="sidebarLiveMatch"><div class="dashboard-empty">Provjera utakmica uživo…</div></div></div><div class="sidebar-fan-panel"><div class="sidebar-panel-title"><span>FAN NOVČANIK</span></div><div class="sidebar-fan-level"><div class="sidebar-fan-ring" aria-hidden="true">F</div><div class="sidebar-fan-meta"><b><span id="sidebarFanPoints">—</span> poena</b><small>Raspoloživi poeni</small></div></div></div><div class="sidebar-season-panel"><div class="sidebar-panel-title"><span>SEZONA U TOKU</span><b>↗</b></div><div class="sidebar-season-line"><span id="sidebarSeasonGames">Učitavanje rasporeda</span><b>● ONLINE</b></div><div class="sidebar-season-track"><span></span></div></div>';
+    sidebar.innerHTML='<div class="sidebar-live-panel"><div class="sidebar-panel-title"><span>LIVE / MATCH CENTER</span></div><div id="sidebarLiveMatch"><div class="dashboard-empty">Provjera utakmica uživo…</div></div></div><div class="sidebar-fan-panel"><div class="sidebar-panel-title"><span>FAN NOVČANIK</span></div><div class="sidebar-fan-level"><div class="sidebar-fan-ring" aria-hidden="true">F</div><div class="sidebar-fan-meta"><b><span id="sidebarFanPoints">—</span> poena</b><small>Raspoloživi poeni</small></div></div></div><div class="sidebar-season-panel"><div class="sidebar-panel-title"><span>SEZONA U TOKU</span><b>↗</b></div><div class="sidebar-season-line"><span id="sidebarSeasonGames">Učitavanje rasporeda</span><b>● ONLINE</b></div><div class="sidebar-season-track"><span></span></div></div>';
     if(logo)sidebar.appendChild(logo);
     const scroll=document.createElement("div");scroll.className="sidebar-scroll";
     if(nav)scroll.appendChild(nav);
@@ -259,16 +259,7 @@ window.dashboardOpenGameTab=function(tab){
 
     const livePanel=sidebar.querySelector(".sidebar-live-panel");
     sidebar.insertBefore(scroll,livePanel);
-    const quickPanel=document.createElement("section");
-    quickPanel.className="sidebar-quick-panel";
-    quickPanel.innerHTML='<div class="sidebar-panel-title"><span>BRZI PRISTUP</span></div>'+
-      '<div class="sidebar-quick-grid">'+
-      '<button type="button" onclick="dashboardOpenGameTab(\'shop\')"><span class="sidebar-quick-icon">♜</span><span>Fan Shop</span></button>'+
-      '<button type="button" onclick="dashboardOpenGameTab(\'fanbase\')"><span class="sidebar-quick-icon">♟</span><span>Fan Base</span></button>'+
-      '<button type="button" onclick="dashboardOpenGameTab(\'mine\')"><span class="sidebar-quick-icon">▣</span><span>Tiketi</span></button>'+
-      '<button type="button" onclick="dashboardOpenGameTab(\'collection\')"><span class="sidebar-quick-icon">⬡</span><span>Kolekcija</span></button>'+
-      '</div>';
-    sidebar.insertBefore(quickPanel,livePanel);
+
 
     if(logo)sidebar.insertBefore(logo,sidebar.firstChild);
     document.body.insertBefore(sidebar,header);
@@ -315,15 +306,11 @@ window.dashboardOpenGameTab=function(tab){
         button.setAttribute("aria-label",label);button.title=title;button.setAttribute("onclick",onclick);
         const icons={
           "dashboard-glow-toggle":'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.4A8.3 8.3 0 0 1 9.6 3.5 8.5 8.5 0 1 0 20.5 14.4Z"/></svg>',
-          "dashboard-table-shortcut":'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8l1 5a5 5 0 0 1-10 0l1-5Z"/><path d="M8 6H4v2a4 4 0 0 0 4 4M16 6h4v2a4 4 0 0 1-4 4M12 14v5M8 21h8M9 17h6"/></svg>',
-          "dashboard-settings-shortcut":'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z"/></svg>'
         };
         button.innerHTML=icons[className]||'<span aria-hidden="true">'+icon+'</span>';
         actions.insertBefore(button,mobile||null);
       };
       addAction("dashboard-glow-toggle","Smanji svjetlosne efekte","Smanji svjetlosne efekte","☾","toggleDashboardGlow()");
-      addAction("dashboard-table-shortcut","Otvori tabelu","Tabela","♜","showSection('table')");
-      addAction("dashboard-settings-shortcut","Profil i postavke","Profil i postavke","⚙","dashboardSettings()");
     }
 
     home.className="section active dashboard-home";
@@ -335,7 +322,7 @@ window.dashboardOpenGameTab=function(tab){
           <h1>MEĐASI <span>FUTSAL LIGA</span></h1>
           <h2>Strast. Zajednica. Futsal.</h2>
           <p>Prati utakmice, rezultate, statistiku, igrače i budi dio najveće futsal zajednice u regiji.</p>
-          <div class="dashboard-hero-actions"><button class="btn btn-green" onclick="showSection('matches')">▶ &nbsp; Pogledaj utakmice</button><button class="btn btn-ghost" onclick="showSection('community')">♟ &nbsp; Pridruži se zajednici</button></div>
+          <div class="dashboard-hero-actions"><button class="btn btn-green" onclick="showSection('matches')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7z"/></svg>Pogledaj utakmice</button><button class="btn btn-ghost" onclick="showSection('community')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c.5-3.7 2.3-5.5 5.5-5.5s5 1.8 5.5 5.5M16 11a3 3 0 1 0 0-6M17 14c2.2.5 3.5 2.5 3.5 6"/></svg>Pridruži se zajednici</button></div>
         </div>
         <div class="dashboard-hero-mark"><img src="./images/icon-512.png" alt="Međasi Futsal Liga"><span>SEZONA 2026/27</span></div>
       </section>
@@ -347,8 +334,8 @@ window.dashboardOpenGameTab=function(tab){
       </section>
       <section class="dashboard-middle-grid">
         <article class="dashboard-panel dashboard-next-panel"><div class="dashboard-section-head"><h2>Naredna utakmica</h2><small>SLJEDEĆA</small></div><div id="dashboardNextMatch"><div class="dashboard-empty">Učitavanje utakmice…</div></div></article>
-        <article class="dashboard-panel dashboard-live-panel"><div class="dashboard-section-head"><h2><span style="color:#ff5866">●</span> Live</h2><button onclick="showSection('matches')">Svi mečevi →</button></div><div id="dashboardHomeLive"></div><button class="dashboard-table-link" onclick="showSection('matches')">Pogledaj sve utakmice →</button></article>
-        <article class="dashboard-panel dashboard-table-panel"><div class="dashboard-section-head"><h2>Tabela</h2><button onclick="showSection('table')">Pogledaj kompletnu tabelu →</button></div><table class="dashboard-mini-table"><thead><tr><th>#</th><th>EKIPA</th><th>U</th><th>B</th><th>FORMA</th></tr></thead><tbody id="dashboardMiniTableBody"><tr><td colspan="5">Učitavanje tabele…</td></tr></tbody></table><button class="dashboard-table-link" onclick="showSection('table')">Pogledaj kompletnu tabelu →</button></article>
+        <article class="dashboard-panel dashboard-live-panel"><div class="dashboard-section-head"><h2><span style="color:#ff5866">●</span> Live</h2><button onclick="showSection('matches')">Svi mečevi →</button></div><div id="dashboardHomeLive"></div></article>
+        <article class="dashboard-panel dashboard-table-panel"><div class="dashboard-section-head"><h2>Tabela</h2><button onclick="showSection('table')">Pogledaj kompletnu tabelu →</button></div><table class="dashboard-mini-table"><thead><tr><th>#</th><th>EKIPA</th><th>U</th><th>B</th><th>FORMA</th></tr></thead><tbody id="dashboardMiniTableBody"><tr><td colspan="5">Učitavanje tabele…</td></tr></tbody></table></article>
       </section>
       <section class="dashboard-community-row">
         <article class="dashboard-community-panel"><div class="dashboard-community-symbol"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v11H9l-5 3z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg></div><div class="dashboard-community-copy"><h2>Navijački centar</h2><p>Budi dio naše zajednice! Dijeli, komentariši, navijaj i poveži se sa drugim futsal fanovima.</p><button onclick="showSection('community')">Otvori zajednicu →</button></div></article>
@@ -386,7 +373,7 @@ window.dashboardOpenGameTab=function(tab){
     if(!$("dashboardRightRail"))main.insertAdjacentHTML("beforeend",mainRails);
     if(!$("dashboardFooter")){
       const footer=document.createElement("footer");footer.id="dashboardFooter";footer.className="dashboard-footer";
-      footer.innerHTML='<div class="dashboard-footer-season"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span>SEZONA 2026/27</span></div><div class="dashboard-footer-brand">MEĐASI FUTSAL LIGA &nbsp; • &nbsp; STRAST &nbsp; • &nbsp; ZAJEDNICA &nbsp; • &nbsp; FUTSAL</div><div class="dashboard-footer-stats"><span>♜ <b id="footerTeams">0</b> ekipa</span><span>♟ <b id="footerPlayers">0</b> igrača</span><span>▣ <b id="footerMatches">0</b> utakmica</span></div><div class="dashboard-footer-social"><span aria-hidden="true">▶</span><span aria-hidden="true">◎</span><span aria-hidden="true">♪</span><span aria-hidden="true">f</span></div>';
+      footer.innerHTML='<div class="dashboard-footer-season"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span>SEZONA 2026/27</span></div><div class="dashboard-footer-brand">MEĐASI FUTSAL LIGA &nbsp; • &nbsp; STRAST &nbsp; • &nbsp; ZAJEDNICA &nbsp; • &nbsp; FUTSAL</div><div class="dashboard-footer-stats"><span><b id="footerTeams">0</b> ekipa</span><span><b id="footerPlayers">0</b> igrača</span><span><b id="footerMatches">0</b> utakmica</span></div>';
       document.body.appendChild(footer);
     }
   }
