@@ -99,6 +99,17 @@ if (
   fail("Signup must normalize usernames, check case-insensitive availability, and remain resilient during Data API outages");
 } else pass("Signup normalizes usernames, checks availability, and relies on the server trigger during API outages");
 
+const loginLogoutSmokeSource = read("scripts/smoke-test.mjs");
+if (
+  !loginLogoutSmokeSource.includes("login-smoke@example.com") ||
+  !loginLogoutSmokeSource.includes("await window.login()") ||
+  !loginLogoutSmokeSource.includes("await window.logout()") ||
+  !loginLogoutSmokeSource.includes("Successful login must visibly update the account header") ||
+  !loginLogoutSmokeSource.includes("without a real session")
+) {
+  fail("Browser smoke test must exercise successful login and logout without a real session");
+} else pass("Browser smoke test covers login/logout UI state without creating a real session");
+
 const resetPasswordSmokeSource = read("scripts/smoke-test.mjs");
 if (
   !resetPasswordSmokeSource.includes("reset-smoke@example.com") ||
