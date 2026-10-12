@@ -122,3 +122,23 @@
   .mobile-bottom button{min-height:54px!important;font-size:7px!important}
   .section{padding-inline:8px!important}
 }
+
+/* Stability pass: mobile menus, overlays, tables and opened section content. */
+@media (max-width: 780px) {
+  html, body { max-width: 100%; overflow-x: clip; }
+  #mainNav { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  #mainNav button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; }
+  main > .section.active { min-width: 0; width: 100%; overflow-wrap: anywhere; }
+  .section.active .card, .section.active .grid, .section.active .filters,
+  .section.active .gallery-grid, .section.active .chat-composer { min-width: 0; max-width: 100%; }
+  .section.active .filters { align-items: stretch; }
+  .section.active .filters > input, .section.active .filters > select { flex: 1 1 100%; min-width: 0; max-width: 100%; }
+  .section.active .table-wrap { display: block; width: 100%; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  .section.active .table-wrap table { min-width: 620px; }
+  .section.active img, .section.active video, .section.active canvas { max-width: 100%; height: auto; }
+  .modal, .modal-overlay, [role="dialog"] { max-width: 100vw; }
+  .modal-box, [role="dialog"] > * { max-width: calc(100vw - 24px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
