@@ -11899,6 +11899,8 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
 
 /* FINAL PUBLIC UI API — keep inline buttons reliable */
 window.login=login;
+window.register=register;
+window.resetPassword=resetPassword;
 window.exitAuthScreen=exitAuthScreen;
 window.logout=logout;
 window.showSection=showSection;
