@@ -149,6 +149,71 @@ try{
   assert.equal(await page.locator("#registerPassword").getAttribute("type"),"text","Registration password visibility toggle must work.");
   await page.locator("#authTabLogin").click();
   assert.equal(await page.locator("#registerPassword").getAttribute("type"),"password","Switching modes must conceal any revealed password.");
+  await page.locator("#authTabRegister").click();
+  await page.waitForFunction(()=>document.querySelector("#registerPanel")?.hidden===false);
+  await page.locator("#registerUsername").fill("Mëđasi_Fan!");
+  await page.locator("#registerEmail").fill("signup-smoke@example.com");
+  await page.locator("#registerPassword").fill("abcdef");
+  await page.locator("#registerPasswordConfirm").fill("abcdef");
+  await page.evaluate(async()=>{
+    const client=window.supabaseClient;
+    if(!client?.auth||typeof client.from!=="function")throw new Error("Supabase client unavailable for isolated signup smoke test");
+    window.__signupTestOriginals={
+      from:client.from,
+      fromOwn:Object.prototype.hasOwnProperty.call(client,"from"),
+      signUp:client.auth.signUp,
+      signUpOwn:Object.prototype.hasOwnProperty.call(client.auth,"signUp")
+    };
+    client.from=function(table){
+      window.__signupTestLookup={table};
+      const builder={
+        select(columns){window.__signupTestLookup.columns=columns;return this;},
+        ilike(column,pattern){window.__signupTestLookup.column=column;window.__signupTestLookup.pattern=pattern;return this;},
+        limit(value){window.__signupTestLookup.limit=value;return this;},
+        maybeSingle(){return this;},
+        abortSignal(){return this;},
+        then(resolve,reject){return Promise.resolve({data:null,error:null}).then(resolve,reject);}
+      };
+      return builder;
+    };
+    client.auth.signUp=async options=>{
+      window.__signupTestPayload={email:options.email,username:options.options?.data?.username};
+      return {data:{user:null,session:null},error:{message:"SMOKE_TEST_SIGNUP_INTERCEPTED"}};
+    };
+    let result;
+    try{
+      await window.register();
+      result={
+        message:document.getElementById("registerMessage")?.textContent||"",
+        username:document.getElementById("registerUsername")?.value||"",
+        lookup:window.__signupTestLookup,
+        payload:window.__signupTestPayload
+      };
+    }finally{
+      if(window.__signupTestOriginals){
+        if(window.__signupTestOriginals.fromOwn)client.from=window.__signupTestOriginals.from;
+        else delete client.from;
+        if(window.__signupTestOriginals.signUpOwn)client.auth.signUp=window.__signupTestOriginals.signUp;
+        else delete client.auth.signUp;
+      }
+      delete window.__signupTestOriginals;
+    }
+    return result;
+  });
+  const signupProbe=await page.evaluate(()=>({
+    message:document.getElementById("registerMessage")?.textContent||"",
+    username:document.getElementById("registerUsername")?.value||"",
+    lookup:window.__signupTestLookup,
+    payload:window.__signupTestPayload
+  }));
+  assert.equal(signupProbe.message,"SMOKE_TEST_SIGNUP_INTERCEPTED","The isolated signup test must stop before creating a real account.");
+  assert.equal(signupProbe.username,"Mëđasi_Fan","Signup must normalize invalid characters before profile lookup.");
+  assert.equal(signupProbe.payload?.username,"Mëđasi_Fan","Supabase Auth must receive the normalized username.");
+  assert.equal(signupProbe.lookup?.table,"profiles");
+  assert.equal(signupProbe.lookup?.column,"username");
+  assert.equal(signupProbe.lookup?.pattern,"Mëđasi\\_Fan","Username lookup must escape underscores as literal characters.");
+  console.log("PASS signup username normalization and case-insensitive availability check");
+  await page.locator("#authTabLogin").click();
   await page.locator('[data-auth-mode="register"][data-auth-focus-target="registerUsername"]').click();
   await page.waitForFunction(()=>document.activeElement?.id==="registerUsername",null,{timeout:3000});
   await page.locator('[data-auth-mode="login"][data-auth-focus-target="loginEmail"]').click();
@@ -171,7 +236,7 @@ try{
   await page.waitForFunction(()=>!document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
-  console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, login cancel, mobile drawer/width, and live bootstrap or explicit retry state; suppressed extra REST requests after outage:",suppressedLiveRestCount,"; no uncaught JS errors or missing local assets");
+  console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, auth validation and isolated signup username handling, login cancel, mobile drawer/width, and live bootstrap or explicit retry state; suppressed extra REST requests after outage:",suppressedLiveRestCount,"; no uncaught JS errors or missing local assets");
 }finally{
   await browser.close();
   await new Promise(done=>server.close(done));
