@@ -1,3 +1,8 @@
+/* The auxiliary news/upcoming rail belongs below the dashboard on mobile, not in the desktop workspace. */
+@media(min-width:1025px){
+  main{grid-template-columns:minmax(0,1fr)!important}
+  .dashboard-right-rail{display:none!important;}
+}
 /* =========================================================
    MEDJASI DASHBOARD REFINEMENTS V2
    Real desktop dashboard + responsive mobile navigation.
