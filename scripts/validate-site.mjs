@@ -157,7 +157,7 @@ if (
   !uiCompat.includes("function openAuthScreen(mode,event)") ||
   !uiCompat.includes("window.openAuthScreen=openAuthScreen") ||
   !uiCompat.includes("window.openAuthScreen") ||
-  (uiCompat.match(/window\\.openAuthScreen\\(/g) || []).length !== 2 ||
+  (uiCompat.match(/window\.openAuthScreen\(/g) || []).length !== 2 ||
   !authHeaderCss.includes("#headerAccount:has(.v13-register)") ||
   !authHeaderCss.includes("flex: 0 0 68px !important") ||
   !authHeaderCss.includes("pointer-events: auto !important")
