@@ -35,7 +35,7 @@ page.on("response",response=>{if(response.url().startsWith(base)&&response.statu
 async function navButton(target){
   const index=await page.locator("#mainNav button").evaluateAll((buttons,id)=>buttons.findIndex(b=>{
     const handler=b.getAttribute("onclick")||"";
-    return id==="game" ? handler.includes("dashboardOpenGameTab('matches')") : handler.includes("showSection('"+id+"')");
+    return handler.includes("showSection('"+id+"')");
   }),target);
   assert.notEqual(index,-1,"Missing navigation button for "+target);
   const button=page.locator("#mainNav button").nth(index);
