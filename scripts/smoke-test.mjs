@@ -214,6 +214,33 @@ try{
   assert.equal(signupProbe.lookup?.pattern,"Mëđasi\\_Fan","Username lookup must escape underscores as literal characters.");
   console.log("PASS signup username normalization and case-insensitive availability check");
   await page.locator("#authTabLogin").click();
+  await page.locator("#loginEmail").fill("reset-smoke@example.com");
+  await page.evaluate(async()=>{
+    const client=window.supabaseClient;
+    if(!client?.auth||typeof client.auth.resetPasswordForEmail!=="function")throw new Error("Password reset API unavailable for isolated smoke test");
+    const hadOwn=Object.prototype.hasOwnProperty.call(client.auth,"resetPasswordForEmail");
+    const original=client.auth.resetPasswordForEmail;
+    client.auth.resetPasswordForEmail=async(email,options)=>{
+      window.__resetPasswordProbe={email,redirectTo:options?.redirectTo};
+      return {error:null};
+    };
+    try{
+      await window.resetPassword();
+    }finally{
+      if(hadOwn)client.auth.resetPasswordForEmail=original;
+      else delete client.auth.resetPasswordForEmail;
+    }
+  });
+  const resetProbe=await page.evaluate(()=>({
+    message:document.getElementById("loginMessage")?.textContent||"",
+    request:window.__resetPasswordProbe,
+    expectedRedirect:window.location.origin+window.location.pathname
+  }));
+  assert.equal(resetProbe.request?.email,"reset-smoke@example.com","Password reset must use the email entered by the user.");
+  assert.equal(resetProbe.request?.redirectTo,resetProbe.expectedRedirect,"Password reset must return users to this site.");
+  assert.equal(resetProbe.message,"Ako nalog postoji, link za promjenu lozinke je poslat na email.","Password reset must confirm the request without revealing whether the account exists.");
+  console.log("PASS password reset uses the entered email and safe redirect without sending a real email");
+  await page.evaluate(()=>{delete window.__resetPasswordProbe;});
   await page.locator('[data-auth-mode="register"][data-auth-focus-target="registerUsername"]').click();
   await page.waitForFunction(()=>document.activeElement?.id==="registerUsername",null,{timeout:3000});
   await page.locator('[data-auth-mode="login"][data-auth-focus-target="loginEmail"]').click();
