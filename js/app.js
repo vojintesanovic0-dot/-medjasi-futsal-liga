@@ -11465,7 +11465,7 @@ async function notifyPush(type,title,body,matchId=null){
         type,
         title:String(title||"").slice(0,160),
         body:String(body||"").slice(0,1000),
-        match_id:matchId||currentMatchId||null
+        match_id:type==="news"?null:(matchId??currentMatchId??null)
       })
     });
     if(!response.ok){
