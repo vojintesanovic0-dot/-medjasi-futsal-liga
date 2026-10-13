@@ -544,12 +544,7 @@ try{
   const dashboardRoutes=[["shop","Fan Shop"],["fanbase","Fan Base"],["mine","Moji tiketi"],["live","Live centar"],["board","Nagrade i poredak"],["collection","Kolekcija"],["club","Moja tribina"],["mvp","MVP"]];
   await page.evaluate(()=>{
     window.__mobileMoreDashboardProbe=null;
-    window.__mobileMoreCloseTrace=[];
-    window.__mobileMoreCloseOriginal=window.closeMobileMore;
-    window.closeMobileMore=function(){
-      window.__mobileMoreCloseTrace.push(new Error("closeMobileMore called").stack);
-      return window.__mobileMoreCloseOriginal.apply(this,arguments);
-    };
+    window.__mobileMoreDashboardOriginal=window.dashboardOpenGameTab;
     window.dashboardOpenGameTab=(tab)=>{window.__mobileMoreDashboardProbe=tab;};
   });
   for(const [tab,label] of dashboardRoutes){
@@ -561,40 +556,18 @@ try{
         getComputedStyle(panel).display!=="none"&&
         getComputedStyle(panel).visibility!=="hidden";
     },null,{timeout:5000});
-    await page.evaluate(()=>{if(window.__mobileMoreCloseTrace)window.__mobileMoreCloseTrace.length=0;});
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
-    const shortcutHandle=await shortcut.elementHandle();
-    // Let Playwright scroll the independently scrollable drawer grid, then
-    // verify the drawer is still open and the shortcut is inside the actual viewport.
-    await shortcut.scrollIntoViewIfNeeded();
-    await page.waitForFunction(el=>{
-      if(!el||!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"))return false;
-      const rect=el.getBoundingClientRect();
-      const grid=el.closest(".mobile-more-grid");
-      const gridRect=grid?.getBoundingClientRect();
-      const style=getComputedStyle(el);
-      return rect.width>0&&rect.height>0&&gridRect&&
-        rect.top>=Math.max(0,gridRect.top)-1&&rect.bottom<=Math.min(innerHeight,gridRect.bottom)+1&&
-        rect.top>=-1&&rect.bottom<=innerHeight+1&&
-        style.display!=="none"&&style.visibility!=="hidden"&&Number(style.opacity)!==0;
-    },shortcutHandle,{timeout:5000});
-    const hitTarget=await shortcut.evaluate(el=>{
-      const rect=el.getBoundingClientRect();
-      const x=rect.left+rect.width/2,y=rect.top+rect.height/2;
-      const hit=document.elementFromPoint(x,y);
-      return {x,y,hitTag:hit?.tagName||null,hitText:(hit?.textContent||"").trim().slice(0,50),hitsShortcut:!!hit&&(hit===el||el.contains(hit)),drawerOpen:!!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),closeTrace:(window.__mobileMoreCloseTrace||[]).slice(-5)};
-    });
-    assert.ok(hitTarget.hitsShortcut,"Mobile drawer shortcut is visually covered by another layer: "+JSON.stringify(hitTarget));
-    await page.mouse.click(hitTarget.x,hitTarget.y);
+    // Playwright's trial click verifies that the actual target is visible, stable,
+    // and receives pointer events before we perform the real tap.
+    await shortcut.click({trial:true,timeout:5000});
+    await shortcut.click({timeout:5000});
     assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),tab,tab+" shortcut must call its matching dashboard tab.");
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   }
   await page.evaluate(()=>{
-    if(window.__mobileMoreCloseOriginal)window.closeMobileMore=window.__mobileMoreCloseOriginal;
-    delete window.__mobileMoreCloseOriginal;
-    delete window.__mobileMoreCloseTrace;
+    if(window.__mobileMoreDashboardOriginal)window.dashboardOpenGameTab=window.__mobileMoreDashboardOriginal;
+    delete window.__mobileMoreDashboardOriginal;
     delete window.__mobileMoreDashboardProbe;
-    delete window.dashboardOpenGameTab;
   });
   console.log("PASS all 8 mobile dashboard shortcuts route to their matching tabs");
 
