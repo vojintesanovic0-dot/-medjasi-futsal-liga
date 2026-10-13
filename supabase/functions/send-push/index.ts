@@ -33,17 +33,17 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
 
     const role = profile?.role;
-    let payload: unknown;
+    let requestPayload: unknown;
     try {
-      payload = await req.json();
+      requestPayload = await req.json();
     } catch {
       return Response.json({ error: "Invalid JSON body" }, { status: 400, headers: corsHeaders });
     }
-    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    if (!requestPayload || typeof requestPayload !== "object" || Array.isArray(requestPayload)) {
       return Response.json({ error: "Request body must be a JSON object" }, { status: 400, headers: corsHeaders });
     }
 
-    const { type, title, body, match_id } = payload as Record<string, unknown>;
+    const { type, title, body, match_id } = requestPayload as Record<string, unknown>;
     const eventType = typeof type === "string" ? type.trim() : "";
     const safeMatchId = match_id == null
       ? null
