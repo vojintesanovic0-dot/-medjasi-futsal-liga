@@ -26,7 +26,8 @@
     destination: "community",
     title: "",
     caption: "",
-    body: ""
+    body: "",
+    blurPlayer: false
   };
 
   function isAdmin(){
@@ -248,12 +249,19 @@
     };
     const preset=presets[template]||presets.player;
 
-    /* Visual composition changes by template. */
+    /* Visual composition changes by template. Blur only the player photo;
+       all background graphics and the lower text panel remain sharp. */
+    ctx.save();
+    if(state.blurPlayer && "filter" in ctx) ctx.filter="blur(18px)";
     if(cutoutBlob){
       const big=["mvp","scorer","winner","captain","legend"].includes(template);
       fitImage(ctx,img,big?20:80,big?35:120,big?1040:920,big?990:900,true);
     }else{
       fitImage(ctx,img,0,50,1080,980,false);
+    }
+    ctx.restore();
+
+    if(!cutoutBlob){
       ctx.fillStyle="rgba(0,0,0,.20)";
       ctx.fillRect(0,50,1080,980);
     }
@@ -403,6 +411,7 @@
     state.title=$("graphicNewsTitle")?.value || "";
     state.caption=$("graphicCaption")?.value || "";
     state.body=$("graphicNewsBody")?.value || "";
+    state.blurPlayer=!!$("graphicBlurPlayer")?.checked;
 
     const player=currentPlayer();
     const team=teamForPlayer(player);
@@ -475,6 +484,10 @@
             </select>
           </div>
 
+          <div class="graphic-engine-effects">
+            <label><input type="checkbox" id="graphicBlurPlayer"> Zamuti igrača</label>
+          </div>
+
           <div class="form-group">
             <label>Objavi u</label>
             <select id="graphicDestination">
@@ -543,6 +556,7 @@
     $("graphicGenerateBtn")?.addEventListener("click",async()=>{syncState();try{await generate()}catch(e){console.error(e);toast(e.message||"Greška pri generisanju.","error")}});
     $("graphicPublishBtn")?.addEventListener("click",async()=>{syncState();await publish()});
     $("graphicTemplate")?.addEventListener("change",syncState);
+    $("graphicBlurPlayer")?.addEventListener("change",syncState);
     $("graphicDestination")?.addEventListener("change",()=>{
       syncState();
       $("graphicNewsFields").hidden=$("graphicDestination").value!=="news";
