@@ -7,7 +7,7 @@ const SUPABASE_URL =
 "https://mesryrrjnsnhadoahbux.supabase.co";
 
 const SUPABASE_KEY =
-"sb_publishable_MVCdydxN-3CMuHpp8a5Nqg_aw5ZPDjH";
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lc3J5cnJqbnNuaGFkb2FoYnV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3NzQzOTEsImV4cCI6MjEwNjM1MDM5MX0.nS9mDrmaCFv7xyJD7r-R8CIF3kCnx-jBqLQibZZDO1s";
 
 
 
