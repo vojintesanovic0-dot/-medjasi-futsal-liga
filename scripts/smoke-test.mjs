@@ -112,7 +112,27 @@ try{
   }else{
     assert.ok(loadedCounts.teams>=3&&loadedCounts.players>=12,"Live league data should load before the site is considered healthy.");
   }
-  for(const id of ["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info"])await clickSection(id);
+  for(const id of ["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info"]){
+    await clickSection(id);
+    await page.waitForTimeout(30);
+    const desktopSectionLayout=await page.evaluate(()=>{
+      const visibleOverflow=[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({el,rect})=>{
+        if(rect.width<=0||rect.height<=0||rect.bottom<=0||rect.top>=innerHeight||el.closest(".fx-bg")||el.closest('[aria-hidden="true"]'))return false;
+        for(let parent=el.parentElement;parent&&parent!==document.documentElement;parent=parent.parentElement){
+          const style=getComputedStyle(parent);
+          if((style.overflowX==="auto"||style.overflowX==="scroll")&&parent.clientWidth>0&&parent.scrollWidth>parent.clientWidth+2)return false;
+        }
+        for(let node=el;node&&node!==document.documentElement;node=node.parentElement){
+          const style=getComputedStyle(node);
+          if(style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
+        }
+        return rect.right>innerWidth+2||rect.left< -2;
+      }).slice(0,10).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",left:Math.round(rect.left),right:Math.round(rect.right),width:Math.round(rect.width)}));
+      return {viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,visibleOverflow};
+    });
+    assert.ok(desktopSectionLayout.document<=innerWidth+2&&desktopSectionLayout.body<=innerWidth+2&&desktopSectionLayout.visibleOverflow.length===0,"Desktop horizontal overflow in section "+id+": "+JSON.stringify(desktopSectionLayout));
+  }
+  console.log("PASS desktop layout stays within viewport across all 12 main sections");
   await page.waitForFunction(()=>!!document.querySelector("#gxInfoRoot .gx-table-wrap"),null,{timeout:8000});
   const desktopInfoLayout=await page.evaluate(()=>({
     viewport:innerWidth,
