@@ -152,3 +152,19 @@
  bindForm("registerForm","register","registerSubmitButton","Kreiranje naloga…","Kreiraj nalog","registerMessage");
  setAuthMode(section()?.dataset.authMode||"login");
 })();
+
+/* ---------- Mobilna donja traka: otvaranje profila/prijave ---------- */
+(function(){
+  "use strict";
+  window.mflOpenProfile=function(){
+    var btn=document.querySelector(".account-profile-btn");
+    if(btn){
+      btn.click();
+    }else if(typeof window.showSection==="function"){
+      window.showSection("login");
+    }
+    document.querySelectorAll(".mobile-bottom button").forEach(function(b){b.classList.remove("active");});
+    var tab=document.querySelector('.mobile-bottom button[data-nav="profile"]');
+    if(tab)tab.classList.add("active");
+  };
+})();
