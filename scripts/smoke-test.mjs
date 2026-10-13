@@ -67,15 +67,13 @@ try{
   await page.goto(base,{waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mainNav button").first().waitFor({timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
-  // The data set can legitimately be smaller than the historical smoke-test
-  // thresholds. Wait for a completed render, then compare it with counts visible
-  // to the same anonymous Supabase client used by the page.
-  await page.waitForFunction(()=>{
-    const status=document.getElementById("mflDataStatus");
-    if(status&&!status.hidden)return true;
-    const teams=document.getElementById("statTeams")?.textContent?.trim();
-    return !!teams&&teams!==""&&teams!=="-";
-  },null,{timeout:30000});
+  // Counter text starts at "0"; it is not a signal that async initialization finished.
+  // Wait for the explicit app lifecycle state before comparing any counts.
+  await page.waitForFunction(()=>window.__MEDJASI_APP_READY_STATE==="ready"||window.__MEDJASI_APP_READY_STATE==="failed",null,{timeout:30000});
+  const appReadyState=await page.evaluate(()=>window.__MEDJASI_APP_READY_STATE||"missing");
+  if(appReadyState!=="ready"){
+    throw new Error("Aplikacija nije završila inicijalizaciju (state="+appReadyState+"). Browser errors: "+browserConsoleErrors.join(" | "));
+  }
 
   const statusVisible=await page.evaluate(()=>{
     const status=document.getElementById("mflDataStatus");
