@@ -349,11 +349,19 @@ try{
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mobileMoreBtn").waitFor({state:"visible",timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
-  const mobileWidth=await page.evaluate(()=>({
-    viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,
-    topMenuVisible:!!document.querySelector("#mobileMenuBtn")&&(getComputedStyle(document.querySelector("#mobileMenuBtn")).display!=="none"&&getComputedStyle(document.querySelector("#mobileMenuBtn")).visibility!=="hidden"&&getComputedStyle(document.querySelector("#mobileMenuBtn")).pointerEvents!=="none")
-  }));
-  assert.ok(mobileWidth.document<=mobileWidth.viewport+2&&mobileWidth.body<=mobileWidth.viewport+2,"Horizontal overflow on mobile: "+JSON.stringify(mobileWidth));
+  const mobileWidth=await page.evaluate(()=>{
+    const visibleOverflow=[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({el,rect})=>{
+      if(rect.width<=0||rect.height<=0||rect.bottom<=0||rect.top>=innerHeight||el.closest(".fx-bg")||el.closest('[aria-hidden="true"]'))return false;
+      for(let node=el;node&&node!==document.documentElement;node=node.parentElement){
+        const style=getComputedStyle(node);
+        if(style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
+      }
+      return rect.right>innerWidth+2||rect.left< -2;
+    }).slice(0,12).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",right:Math.round(rect.right),left:Math.round(rect.left),width:Math.round(rect.width)}));
+    const menu=document.querySelector("#mobileMenuBtn"),style=menu?getComputedStyle(menu):null;
+    return {viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,topMenuVisible:!!menu&&style.display!=="none"&&style.visibility!=="hidden"&&style.pointerEvents!=="none",visibleOverflow};
+  });
+  assert.ok(mobileWidth.document<=mobileWidth.viewport+2&&mobileWidth.body<=mobileWidth.viewport+2&&mobileWidth.visibleOverflow.length===0,"Horizontal overflow on mobile: "+JSON.stringify(mobileWidth));
   assert.equal(mobileWidth.topMenuVisible,false,"The duplicate top hamburger must be hidden on phones.");
   await page.locator("#mobileMoreBtn").click();
   await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
