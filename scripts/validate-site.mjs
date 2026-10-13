@@ -18,6 +18,7 @@ const game = read("js/game.js");
 const dashboard = read("js/dashboard-layout-v1.js");
 const growth = read("js/growth.js");
 const css = read("css/medjasi-dashboard-refinements-v2.css");
+const headerFixCss = read("css/medjasi-header-fix-v1.css");
 
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((m) => m[1]);
 const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
@@ -703,6 +704,14 @@ if (
 ) {
   fail("Mobile More drawer must open, close, and route a selected item to its requested section");
 } else pass("Mobile More drawer items open the selected section and close the drawer");
+
+if (
+  !headerFixCss.includes("Hide the duplicate header hamburger on tablet and desktop") ||
+  !headerFixCss.includes("html body #mobileMenuBtn") ||
+  !headerFixCss.includes("pointer-events: none !important;")
+) {
+  fail("The duplicate header hamburger must remain hidden on tablet/desktop while preserving the established sidebar navigation");
+} else pass("Duplicate header hamburger stays hidden on tablet/desktop while sidebar navigation remains available");
 
 
 const dashboardShortcutRoutes = ["shop","fanbase","mine","live","board","collection","club","mvp"];

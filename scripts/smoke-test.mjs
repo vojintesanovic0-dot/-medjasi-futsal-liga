@@ -102,6 +102,24 @@ try{
   assert.equal(desktopLayout.visiblePhonePreviews,0,"The mobile phone mockup must not occupy the desktop layout: "+JSON.stringify(desktopLayout));
   assert.ok(desktopLayout.sidebarVisible&&desktopLayout.sidebarWidth>0,"The desktop navigation sidebar must be visible: "+JSON.stringify(desktopLayout));
   console.log("PASS desktop layout:",JSON.stringify(desktopLayout));
+  await page.setViewportSize({width:1100,height:900});
+  const tabletHeader=await page.evaluate(()=>{
+    const button=document.querySelector("#mobileMenuBtn");
+    const sidebar=document.getElementById("appSidebar");
+    const rect=sidebar?.getBoundingClientRect();
+    return {
+      viewport:innerWidth,
+      documentWidth:document.documentElement.scrollWidth,
+      bodyWidth:document.body.scrollWidth,
+      hamburgerDisplay:button?getComputedStyle(button).display:"missing",
+      sidebarVisible:!!sidebar&&getComputedStyle(sidebar).display!=="none"&&(rect?.width||0)>0
+    };
+  });
+  assert.ok(tabletHeader.documentWidth<=1102&&tabletHeader.bodyWidth<=1102,"Tablet layout must not overflow: "+JSON.stringify(tabletHeader));
+  assert.equal(tabletHeader.hamburgerDisplay,"none","Duplicate header hamburger must be hidden on tablet widths.");
+  assert.equal(tabletHeader.sidebarVisible,true,"The established sidebar navigation must remain available when the header hamburger is removed.");
+  console.log("PASS 1100px tablet layout: no overflow, duplicate hamburger hidden, sidebar navigation available");
+  await page.setViewportSize({width:1365,height:900});
   if(loadedCounts.dataWarning){
     // The initial live bootstrap already established the outage; do not amplify it while exercising UI navigation.
     suppressLiveRest=true;
