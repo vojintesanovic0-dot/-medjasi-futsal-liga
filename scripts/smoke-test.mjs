@@ -407,6 +407,13 @@ try{
     ["chat","Chat"],["news","Vijesti"],["game","Pogodi"],["info","Liga info"]
   ];
   for(const [sectionId,label] of mobileRoutes){
+    await page.waitForFunction(()=>{
+      const button=document.querySelector("#mobileMoreBtn");
+      if(!button)return false;
+      const rect=button.getBoundingClientRect(),style=getComputedStyle(button);
+      return style.display!=="none"&&style.visibility!=="hidden"&&Number(style.opacity)!==0&&
+        rect.width>0&&rect.height>0&&rect.bottom>0&&rect.top<innerHeight;
+    },null,{timeout:7000});
     await page.locator("#mobileMoreBtn").click();
     await page.waitForFunction(()=>{
       const drawer=document.querySelector("#mobileMoreDrawer"),panel=drawer?.querySelector(".mobile-more-panel");
