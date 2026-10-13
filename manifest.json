@@ -21,6 +21,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "./images/medjasi-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ],
   "display_override": [
@@ -29,5 +35,45 @@
   ],
   "categories": [
     "sports"
+  ],
+  "id": "./",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Utakmice",
+      "short_name": "Utakmice",
+      "url": "./#matches",
+      "icons": [
+        {
+          "src": "./images/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Tabela",
+      "short_name": "Tabela",
+      "url": "./#table",
+      "icons": [
+        {
+          "src": "./images/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Galerija",
+      "short_name": "Galerija",
+      "url": "./#gallery",
+      "icons": [
+        {
+          "src": "./images/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }
