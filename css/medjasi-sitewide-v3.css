@@ -101,19 +101,6 @@ main{
   background:linear-gradient(90deg,var(--m11-green),rgba(57,245,139,0));
 }
 
-#table .section-title,
-#matches .section-title,
-#teams .section-title,
-#players .section-title,
-#stats .section-title,
-#comments .section-title,
-#chat .section-title,
-#gallery .section-title,
-#login .section-title,
-#admin .section-title{
-  font-size:0!important;
-}
-
 #table .section-title::before{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h16v16H4z'/%3E%3Cpath d='M8 8h8M8 12h8M8 16h5'/%3E%3C/svg%3E");
 }
