@@ -107,6 +107,32 @@ async function clickSection(target){
   await page.waitForFunction(id=>!!document.querySelector("#"+id+".section.active"),target,{timeout:8000});
 }
 try{
+  // Negative-path regression: simulate a complete Supabase outage in an isolated page.
+  // The normal smoke-test page below still uses the live service.
+  currentStep="simulated Supabase outage must surface a league-data warning";
+  const outagePage=await browser.newPage({viewport:{width:1365,height:900},serviceWorkers:"block"});
+  try{
+    await outagePage.route(/^https:\/\/[^/]+\.supabase\.co\//,async route=>{
+      await route.fulfill({
+        status:503,
+        contentType:"application/json",
+        body:JSON.stringify({code:"PGRST002",details:null,hint:null,message:"Synthetic smoke-test outage"})
+      });
+    });
+    await outagePage.goto(base,{waitUntil:"domcontentloaded",timeout:30000});
+    await outagePage.waitForFunction(()=>window.__MEDJASI_APP_READY_STATE==="ready"||window.__MEDJASI_APP_READY_STATE==="failed",null,{timeout:30000});
+    await outagePage.waitForFunction(()=>{
+      const status=document.getElementById("mflDataStatus");
+      return !!status&&!status.hidden;
+    },null,{timeout:15000});
+    const outageWarning=await outagePage.locator("#mflDataStatusMessage").textContent();
+    assert.match(outageWarning||"",/Podaci lige|Servis podataka/i,"A simulated Supabase outage must show a visible league-data failure warning.");
+    assert.match(outageWarning||"",/503|nisu mogli učitati|nisu potvrđeni|nije uspjelo/i,"The warning must communicate that league data could not be confirmed.");
+    console.log("PASS negative-path smoke: simulated Supabase HTTP 503 produces a visible league-data warning");
+  }finally{
+    await outagePage.close();
+  }
+
   currentStep="initial page navigation and live data bootstrap";
   await page.goto(base,{waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mainNav button").first().waitFor({timeout:10000});
