@@ -821,3 +821,12 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
   }
 }
 .mobile-more-close{font-size:16px!important;line-height:1!important}
+
+
+/* Short desktop viewports: give the navigation priority over secondary sidebar cards. */
+@media (min-width:1025px) and (max-height:900px){
+  .app-sidebar{gap:4px!important;padding-top:6px!important;padding-bottom:6px!important}
+  .app-sidebar .logo{height:52px!important;min-height:52px!important}
+  .sidebar-scroll{min-height:0!important;overflow-y:auto!important}
+  .sidebar-fan-panel,.sidebar-season-panel{display:none!important}
+}
