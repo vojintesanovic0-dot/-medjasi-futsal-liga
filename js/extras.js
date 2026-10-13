@@ -1,5 +1,4 @@
 /* Međasi extras v1
-   - svijetla/tamna tema
    - strijelci / asistenti / fair play s filterima
    - .ics kalendar i dijeljenje rezultata kao slika (u prozoru utakmice)
    - klijentski limit slanja poruka i komentara
@@ -13,6 +12,50 @@ const G=name=>{try{return (0,eval)(name)}catch{return undefined}};
 const list=name=>{const v=G(name);return Array.isArray(v)?v:[]};
 
 /* Theme switching is intentionally disabled; the league keeps its dark theme. */
+
+/* ======================= LIMIT SLANJA (klijent) ======================= */
+const LIMITS={messages:{gap:2500,max:8},comments:{gap:4000,max:5}};
+const sent={messages:[],comments:[]};
+const lastText={messages:new Map(),comments:new Map()};
+function checkLimit(table,row){
+  const L=LIMITS[table];if(!L)return null;
+  const now=Date.now();
+  sent[table]=sent[table].filter(t=>now-t<60000);
+  const arr=sent[table];
+  if(arr.length&&now-arr[arr.length-1]<L.gap)return "Prebrzo šalješ. Pričekaj nekoliko sekundi.";
+  if(arr.length>=L.max)return "Previše poruka u kratkom roku. Pokušaj za minut.";
+  const r=Array.isArray(row)?row[0]:row;
+  const txt=String(r?.content||"").trim().toLowerCase();
+  if(txt){
+    const prev=lastText[table].get(txt);
+    if(prev&&now-prev<60000)return "Ista poruka je već poslana. Pričekaj prije ponovnog slanja.";
+    lastText[table].set(txt,now);
+    if(lastText[table].size>50){for(const [k,v] of lastText[table])if(now-v>60000)lastText[table].delete(k)}
+  }
+  arr.push(now);return null;
+}
+function failedBuilder(message){
+  const res={data:null,error:{message,code:"RATE_LIMIT"}};
+  const b={select(){return b},single(){return b},maybeSingle(){return b},
+    then:(ok,no)=>Promise.resolve(res).then(ok,no),catch:no=>Promise.resolve(res).catch(no)};
+  return b;
+}
+function installRateLimit(){
+  const c=window.supabaseClient;if(!c||c.__xtRL)return;
+  const orig=c.from.bind(c);
+  c.from=function(table){
+    const b=orig(table);
+    if(LIMITS[table]&&typeof b.insert==="function"){
+      const oi=b.insert.bind(b);
+      b.insert=function(row,...rest){
+        const err=checkLimit(table,row);
+        return err?failedBuilder(err):oi(row,...rest);
+      };
+    }
+    return b;
+  };
+  c.__xtRL=true;
+}
 
 function installRateLimit(){
   const c=window.supabaseClient;if(!c||c.__xtRL)return;
