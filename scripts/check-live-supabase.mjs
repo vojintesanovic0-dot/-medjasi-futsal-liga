@@ -37,7 +37,9 @@ if (!url || !key) {
     ["comments", "/rest/v1/comments?select=id%2Ccreated_at&order=created_at.desc%2Cid.desc&limit=300"],
     ["messages", "/rest/v1/messages?select=id%2Ccreated_at&order=created_at.desc%2Cid.desc&limit=300"],
     ["gallery", "/rest/v1/gallery?select=id%2Ccreated_at&order=created_at.desc%2Cid.desc&limit=200"],
-    ["match_players", "/rest/v1/match_players?select=match_id%2Cplayer_id&order=match_id.asc%2Cplayer_id.asc&limit=1000"]
+    ["match_players", "/rest/v1/match_players?select=match_id%2Cplayer_id&order=match_id.asc%2Cplayer_id.asc&limit=1000"],
+    // Public News must remain readable without granting anon EXECUTE on is_admin().
+    ["news", "/rest/v1/news?select=id%2Cpublished%2Ccreated_at&order=created_at.desc%2Cid.desc&limit=100"]
   ];
 
   for (const [name, path] of tableProbes) {
