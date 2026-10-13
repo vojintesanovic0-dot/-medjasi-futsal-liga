@@ -45,6 +45,21 @@ Object.defineProperty(window, "supabaseClient", {
 let currentUser = null;
 let currentProfile = null;
 
+// Keep legacy modules that read window.currentUser/currentProfile synchronized
+// with the canonical global lexical bindings above.
+Object.defineProperties(window, {
+  currentUser: {
+    configurable: true,
+    get: () => currentUser,
+    set: value => { currentUser = value; }
+  },
+  currentProfile: {
+    configurable: true,
+    get: () => currentProfile,
+    set: value => { currentProfile = value; }
+  }
+});
+
 let teams = [];
 let players = [];
 let matches = [];
