@@ -611,6 +611,36 @@ try{
     const preview=document.getElementById("graphicResultPreview");
     return !!preview&&!preview.hidden&&preview.complete&&preview.naturalWidth===1080&&preview.naturalHeight===1350;
   },null,{timeout:15000});
+  // Verify each publishing destination with isolated Supabase mocks (no real writes).
+  await page.evaluate(()=>{
+    const save={supabaseClient:window.supabaseClient,sbClient:window.sbClient,currentUser:window.currentUser,currentProfile:window.currentProfile,toast:window.toast,loadV9Community:window.loadV9Community,loadAll:window.loadAll,loadNews:window.loadNews,showSection:window.showSection};
+    window.__graphicPublishTest={save,uploads:0,records:[],toasts:[]};
+    window.currentUser={id:"graphic-smoke-admin",email:"admin@example.test"};
+    window.currentProfile={username:"Graphic Smoke Admin"};
+    window.toast=message=>window.__graphicPublishTest.toasts.push(String(message));
+    window.loadV9Community=()=>{};window.loadAll=()=>{};window.loadNews=()=>{};window.showSection=()=>{};
+    window.supabaseClient={storage:{from:()=>({upload:async()=>{window.__graphicPublishTest.uploads++;return {error:null};},getPublicUrl:()=>({data:{publicUrl:"https://example.test/graphic-smoke.png"}})})}};
+    window.sbClient=()=>({from:table=>({insert:async row=>{window.__graphicPublishTest.records.push({table,row});return {error:null};}})});
+  });
+  for(const [destination,table] of [["community","community_posts"],["chat","messages"],["news","news"]]){
+    await page.locator("#graphicDestination").selectOption(destination);
+    await page.locator("#graphicPublishBtn").evaluate(el=>el.click());
+    await page.waitForFunction(expected=>window.__graphicPublishTest?.records?.length===expected,window.__graphicPublishTest ? (await page.evaluate(()=>window.__graphicPublishTest.records.length))+1 : 1,{timeout:5000});
+    const record=await page.evaluate(()=>window.__graphicPublishTest.records.at(-1));
+    assert.equal(record.table,table,"Graphic publish destination "+destination+" must insert into "+table+".");
+    assert.ok(record.row.image_url||record.row.media_url,"Published graphic must include the uploaded image URL.");
+  }
+  const publishCounts=await page.evaluate(()=>({uploads:window.__graphicPublishTest.uploads,records:window.__graphicPublishTest.records.length}));
+  assert.equal(publishCounts.uploads,3,"Each publish destination must upload its generated graphic.");
+  assert.equal(publishCounts.records,3,"Each publish destination must create exactly one database record.");
+  await page.evaluate(()=>{
+    const t=window.__graphicPublishTest;if(!t)return;
+    for(const key of ["supabaseClient","sbClient","currentUser","currentProfile","toast","loadV9Community","loadAll","loadNews","showSection"]){
+      if(t.save[key]===undefined)delete window[key];else window[key]=t.save[key];
+    }
+    delete window.__graphicPublishTest;
+  });
+  console.log("PASS Graphic Engine publishing: Community, Chat and News create mocked upload/database records without touching production data.");
   console.log("PASS Graphic Engine: generated 1080x1350 canvas, valid PNG/JPG downloads, and background-removal invalidates stale output until regenerated");
   await page.evaluate(()=>{
     const saved=window.__graphicEngineTestOriginals;
