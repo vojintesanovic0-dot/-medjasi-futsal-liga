@@ -648,7 +648,6 @@ main{
     min-height:40px!important;
     margin-bottom:14px!important;
   }
-    }
   #gallery .section-title::after{font-size:27px!important}
   .section-title::before{
     width:34px;height:34px;flex-basis:34px;border-radius:10px;
