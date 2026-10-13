@@ -557,10 +557,29 @@ try{
         getComputedStyle(panel).visibility!=="hidden";
     },null,{timeout:5000});
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
-    // Playwright's trial click verifies that the actual target is visible, stable,
-    // and receives pointer events before we perform the real tap.
-    await shortcut.click({trial:true,timeout:5000});
-    await shortcut.click({timeout:5000});
+    const shortcutHandle=await shortcut.elementHandle();
+    // Scroll the actual inner list; the drawer panel itself stays fixed to the viewport.
+    await shortcut.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(120);
+    await page.waitForFunction(el=>{
+      if(!el||!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"))return false;
+      const rect=el.getBoundingClientRect();
+      const grid=el.closest(".mobile-more-grid");
+      const gridRect=grid?.getBoundingClientRect();
+      const style=getComputedStyle(el);
+      return rect.width>0&&rect.height>0&&gridRect&&
+        rect.top>=Math.max(0,gridRect.top)-1&&rect.bottom<=Math.min(innerHeight,gridRect.bottom)+1&&
+        rect.top>=-1&&rect.bottom<=innerHeight+1&&
+        style.display!=="none"&&style.visibility!=="hidden"&&Number(style.opacity)!==0;
+    },shortcutHandle,{timeout:5000});
+    const hitTarget=await shortcutHandle.evaluate(el=>{
+      const rect=el.getBoundingClientRect();
+      const x=rect.left+rect.width/2,y=rect.top+rect.height/2;
+      const hit=document.elementFromPoint(x,y);
+      return {x,y,hitTag:hit?.tagName||null,hitText:(hit?.textContent||"").trim().slice(0,50),hitsShortcut:!!hit&&(hit===el||el.contains(hit)),drawerOpen:!!document.querySelector("#mobileMoreDrawer")?.classList.contains("open")};
+    });
+    assert.ok(hitTarget.hitsShortcut&&hitTarget.drawerOpen,"Mobile drawer shortcut is not actually tappable: "+JSON.stringify(hitTarget));
+    await page.mouse.click(hitTarget.x,hitTarget.y);
     assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),tab,tab+" shortcut must call its matching dashboard tab.");
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   }
