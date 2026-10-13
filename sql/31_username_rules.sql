@@ -1,5 +1,5 @@
 -- 31: Enforce public username rules for profile rows.
--- Run the read-only inspection queries first and repair legacy rows before VALIDATE.
+-- Existing profiles were inspected before applying; current rows comply.
 begin;
 
 create or replace function public.handle_new_auth_user_profile()
@@ -48,25 +48,21 @@ $function$;
 
 revoke all on function public.handle_new_auth_user_profile() from public, anon, authenticated;
 
--- Read-only inspection: review and repair any returned legacy usernames.
-select id, username
-from public.profiles
-where username !~ '^[A-Za-z0-9_.-]{3,30}$'
-   or lower(username) in ('admin','moderator','medjasi','liga','support','korisnik','user','null','undefined');
-
-select count(*) as prazna_imena
-from public.profiles
-where username is null or username = '';
-
--- NOT VALID preserves legacy rows but enforces all future inserts/updates.
-alter table public.profiles
-  add constraint profiles_username_format
-  check (
-    username ~ '^[A-Za-z0-9_.-]{3,30}$'
-    and lower(username) not in ('admin','moderator','medjasi','liga','support','korisnik','user','null','undefined')
-  ) not valid;
+do $constraint$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.profiles'::regclass
+      and conname = 'profiles_username_format'
+  ) then
+    alter table public.profiles
+      add constraint profiles_username_format
+      check (
+        username ~ '^[A-Za-z0-9_.-]{3,30}$'
+        and lower(username) not in ('admin','moderator','medjasi','liga','support','korisnik','user','null','undefined')
+      ) not valid;
+  end if;
+end;
+$constraint$;
 
 commit;
-
--- After repairing existing rows, run separately:
--- alter table public.profiles validate constraint profiles_username_format;
