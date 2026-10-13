@@ -1758,6 +1758,36 @@ if (
   pass("Dashboard auxiliary rail is desktop-hidden and mobile-responsive");
 }
 
+
+const graphicEngine = read("js/graphic-engine.js");
+const removeBackgroundStart = graphicEngine.indexOf("async function removeBackground()");
+const removeBackgroundEnd = graphicEngine.indexOf("function fitImage(", removeBackgroundStart);
+const removeBackgroundFunction = removeBackgroundStart >= 0 && removeBackgroundEnd > removeBackgroundStart
+  ? graphicEngine.slice(removeBackgroundStart, removeBackgroundEnd) : "";
+const sourceStart = graphicEngine.indexOf("function setSource(file, label)");
+const sourceEnd = graphicEngine.indexOf("async function loadPlayerPhoto()", sourceStart);
+const sourceFunction = sourceStart >= 0 && sourceEnd > sourceStart
+  ? graphicEngine.slice(sourceStart, sourceEnd) : "";
+const dirtyStart = graphicEngine.indexOf("function markDesignDirty()");
+const dirtyEnd = graphicEngine.indexOf("function syncState()", dirtyStart);
+const dirtyFunction = dirtyStart >= 0 && dirtyEnd > dirtyStart
+  ? graphicEngine.slice(dirtyStart, dirtyEnd) : "";
+if (
+  !removeBackgroundFunction.includes("cutoutBlob = await removeBackground(sourceFile") ||
+  !removeBackgroundFunction.includes("markDesignDirty();") ||
+  removeBackgroundFunction.indexOf("markDesignDirty();") < removeBackgroundFunction.indexOf("cutoutBlob = await removeBackground(sourceFile") ||
+  !sourceFunction.includes("generatedBlob = null;") ||
+  !sourceFunction.includes("revoke(generatedPreviewUrl);") ||
+  !dirtyFunction.includes("generatedBlob=null;") ||
+  !dirtyFunction.includes('setAttribute("disabled","")') ||
+  !dirtyFunction.includes("graphicResultPreview") ||
+  !graphicEngine.includes('if(!generatedBlob){toast("Prvo generiši grafiku.","error");return;}')
+) {
+  fail("Graphic editor must invalidate stale generated output after background removal or source changes, hide its preview, disable export/publish, and guard exports");
+} else {
+  pass("Graphic editor invalidates stale generated output after background removal/source changes and requires regeneration before export or publish");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();

@@ -159,7 +159,8 @@
         $("graphicSourceName").textContent = " Fotografija bez pozadine";
       }
 
-      toast("Pozadina je uklonjena. Originalna fotografija ostaje sačuvana.");
+      markDesignDirty();
+      toast("Pozadina je uklonjena. Originalna fotografija ostaje sačuvana. Ponovo generiši grafiku prije izvoza ili objave.");
     }catch(error){
       console.error("Graphic Engine remove background:", error);
       toast("Uklanjanje pozadine nije uspjelo. Fotografija ostaje netaknuta.","error");
