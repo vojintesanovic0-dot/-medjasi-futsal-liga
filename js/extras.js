@@ -234,6 +234,46 @@ function hook(){
   const mc=$("modalContent");
   if(mc&&!mc.__xtObs){mc.__xtObs=new MutationObserver(injectMatchActions);mc.__xtObs.observe(mc,{childList:true})}
 }
+
+/* ---------- MFL: mobilna pretraga — dugme Otkaži i čitljiv placeholder ---------- */
+function enhanceMflSearch(){
+  var input=document.getElementById("v7Search");
+  if(!input||input.dataset.mflSearch)return false;
+  var wrap=input.closest(".v7-search-wrap");
+  if(!wrap)return false;
+  input.dataset.mflSearch="1";
+  input.placeholder="Pretraži ekipe, igrače, vijesti";
+  var cancel=document.createElement("button");
+  cancel.type="button";
+  cancel.className="mfl-search-cancel";
+  cancel.textContent="Otkaži";
+  cancel.setAttribute("aria-label","Otkaži pretragu");
+  cancel.addEventListener("mousedown",function(e){e.preventDefault()});
+  cancel.addEventListener("click",function(){
+    input.value="";
+    input.dispatchEvent(new Event("input",{bubbles:true}));
+    input.blur();
+    var results=document.getElementById("v7SearchResults");
+    if(results)results.classList.remove("open");
+  });
+  wrap.appendChild(cancel);
+  return true;
+}
+function observeMflSearch(){
+  if(enhanceMflSearch())return;
+  if(!document.body||window.__mflSearchObserver)return;
+  window.__mflSearchObserver=new MutationObserver(function(){
+    if(enhanceMflSearch()){
+      window.__mflSearchObserver.disconnect();
+      window.__mflSearchObserver=null;
+    }
+  });
+  window.__mflSearchObserver.observe(document.body,{childList:true,subtree:true});
+}
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",observeMflSearch,{once:true});
+}else observeMflSearch();
+
 function init(){installRateLimit();hook();afterRender()}
 window.medjasiExtras={downloadICS,shareResult,buildICS,computeTop,computeFair,checkLimit,state:st};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
