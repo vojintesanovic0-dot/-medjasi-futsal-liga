@@ -675,3 +675,25 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     scroll-padding-bottom: 20px !important;
   }
 }
+
+
+/* Final drawer layout: fixed heading, independently scrollable shortcut grid. */
+@media (max-width: 1024px) {
+  .mobile-more-drawer.open .mobile-more-panel {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .mobile-more-drawer.open .mobile-more-head {
+    flex: 0 0 auto !important;
+  }
+  .mobile-more-drawer.open .mobile-more-grid {
+    display: grid !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
