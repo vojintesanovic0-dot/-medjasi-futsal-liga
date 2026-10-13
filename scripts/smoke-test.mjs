@@ -544,6 +544,12 @@ try{
   const dashboardRoutes=[["shop","Fan Shop"],["fanbase","Fan Base"],["mine","Moji tiketi"],["live","Live centar"],["board","Nagrade i poredak"],["collection","Kolekcija"],["club","Moja tribina"],["mvp","MVP"]];
   await page.evaluate(()=>{
     window.__mobileMoreDashboardProbe=null;
+    window.__mobileMoreCloseTrace=[];
+    window.__mobileMoreCloseOriginal=window.closeMobileMore;
+    window.closeMobileMore=function(){
+      window.__mobileMoreCloseTrace.push(new Error("closeMobileMore called").stack);
+      return window.__mobileMoreCloseOriginal.apply(this,arguments);
+    };
     window.dashboardOpenGameTab=(tab)=>{window.__mobileMoreDashboardProbe=tab;};
   });
   for(const [tab,label] of dashboardRoutes){
@@ -555,6 +561,7 @@ try{
         getComputedStyle(panel).display!=="none"&&
         getComputedStyle(panel).visibility!=="hidden";
     },null,{timeout:5000});
+    await page.evaluate(()=>{if(window.__mobileMoreCloseTrace)window.__mobileMoreCloseTrace.length=0;});
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     const shortcutHandle=await shortcut.elementHandle();
     // Let Playwright scroll the independently scrollable drawer grid, then
@@ -575,14 +582,20 @@ try{
       const rect=el.getBoundingClientRect();
       const x=rect.left+rect.width/2,y=rect.top+rect.height/2;
       const hit=document.elementFromPoint(x,y);
-      return {x,y,hitTag:hit?.tagName||null,hitText:(hit?.textContent||"").trim().slice(0,50),hitsShortcut:!!hit&&(hit===el||el.contains(hit)),drawerOpen:!!document.querySelector("#mobileMoreDrawer")?.classList.contains("open")};
+      return {x,y,hitTag:hit?.tagName||null,hitText:(hit?.textContent||"").trim().slice(0,50),hitsShortcut:!!hit&&(hit===el||el.contains(hit)),drawerOpen:!!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),closeTrace:(window.__mobileMoreCloseTrace||[]).slice(-5)};
     });
     assert.ok(hitTarget.hitsShortcut,"Mobile drawer shortcut is visually covered by another layer: "+JSON.stringify(hitTarget));
     await page.mouse.click(hitTarget.x,hitTarget.y);
     assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),tab,tab+" shortcut must call its matching dashboard tab.");
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   }
-  await page.evaluate(()=>{delete window.__mobileMoreDashboardProbe;delete window.dashboardOpenGameTab;});
+  await page.evaluate(()=>{
+    if(window.__mobileMoreCloseOriginal)window.closeMobileMore=window.__mobileMoreCloseOriginal;
+    delete window.__mobileMoreCloseOriginal;
+    delete window.__mobileMoreCloseTrace;
+    delete window.__mobileMoreDashboardProbe;
+    delete window.dashboardOpenGameTab;
+  });
   console.log("PASS all 8 mobile dashboard shortcuts route to their matching tabs");
 
   console.log("PASS mobile More drawer: open/close, Escape, backdrop, 12 section routes, 8 dashboard routes, and aria-expanded state");
