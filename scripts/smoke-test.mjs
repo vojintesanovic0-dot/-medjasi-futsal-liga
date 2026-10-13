@@ -67,7 +67,8 @@ try{
   await page.goto(base,{waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mainNav button").first().waitFor({timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
-  // Counters can start at zero and app init can finish even when loadAll() fails.
+  // "loaded" means the requests completed without reported query errors; it does not
+  // imply that production contains a minimum number of teams, players, or matches.
   // Wait for both lifecycle and explicit league-data states before comparing counts.
   await page.waitForFunction(()=>
     (window.__MEDJASI_APP_READY_STATE==="ready"||window.__MEDJASI_APP_READY_STATE==="failed") &&
@@ -170,14 +171,12 @@ try{
   console.log("PASS 1100px tablet layout: no overflow, duplicate hamburger hidden, sidebar navigation available");
   await page.setViewportSize({width:1365,height:900});
   if(loadedCounts.dataWarning){
-    // The initial live bootstrap already established the outage; do not amplify it while exercising UI navigation.
-    suppressLiveRest=true;
+    // Keep the diagnostic useful, but the final network/error assertions below make
+    // an actual failed bootstrap fail the smoke test.
     const warningText=await page.locator("#mflDataStatus").textContent();
     assert.ok(/Podaci lige|Osvježavanje podataka/i.test(warningText||""),"A data failure must be explained to visitors.");
     assert.ok(await page.locator("#mflDataStatus button").count()>0,"The data warning must provide a retry action.");
-    console.log("WARN live Supabase data is unavailable; clear retry state is visible:",JSON.stringify({warning:warningText,browserConsoleErrors,failedResponses:failedResponses.slice(0,8)}));
-  }else{
-    assert.ok(loadedCounts.teams>=3&&loadedCounts.players>=12,"Live league data should load before the site is considered healthy.");
+    console.log("WARN live Supabase data warning is visible:",JSON.stringify({warning:warningText,browserConsoleErrors,failedResponses:failedResponses.slice(0,8)}));
   }
   for(const id of ["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info"])await clickSection(id);
   await page.locator("#headerAccount button").filter({hasText:"Prijava"}).first().click();
@@ -587,7 +586,10 @@ try{
   console.log("PASS mobile section audit: all 13 primary sections activate at 390px and have no visible horizontal overflow");
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
-  console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, auth validation and isolated signup username handling, login cancel, mobile drawer/width, and live bootstrap or explicit retry state; suppressed extra REST requests after outage:",suppressedLiveRestCount,"; no uncaught JS errors or missing local assets");
+  assert.equal(browserConsoleErrors.length,0,"Browser console errors:\n"+browserConsoleErrors.join("\n"));
+  assert.equal(failedRequests.length,0,"Failed network requests:\n"+failedRequests.join("\n"));
+  assert.equal(failedResponses.length,0,"Failed external/API responses:\n"+failedResponses.join("\n"));
+  console.log("PASS browser smoke: visible counts match anonymous Supabase counts; lifecycle/data states healthy; navigation, desktop/tablet/mobile layouts and auth checks pass; no JS/console errors, failed requests/responses, or missing local assets");
 }finally{
   await browser.close();
   await new Promise(done=>server.close(done));
