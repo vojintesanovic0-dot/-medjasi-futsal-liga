@@ -202,3 +202,14 @@ button,a,[role="button"],summary,label{touch-action:manipulation}
     visibility:hidden!important;
   }
 }
+
+/* ---------- v3.4: profil u modalu na mobilnom ---------- */
+@media (max-width:780px){
+  #modal .v9-profile-stats{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;margin:16px 0 4px!important}
+  #modal .v9-profile-stat{text-align:center!important;padding:12px 10px!important;border-radius:14px!important;background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.08)!important}
+  #modal .v9-profile-stat b{display:block!important;font-size:22px!important;line-height:1.1!important;color:#f4fff8!important}
+  #modal .v9-profile-stat span{display:block!important;margin-top:3px!important;font-size:12px!important;color:#8fa4b5!important}
+  #modal .v9-profile-full h2 .v9-admin-badge{display:inline-block!important;margin-left:8px!important;padding:3px 8px!important;border-radius:999px!important;background:rgba(57,245,139,.15)!important;color:#39f58b!important;font-size:11px!important;font-weight:800!important;vertical-align:middle!important}
+  #modal .v9-profile-full .v9-avatar-big{margin:-30px auto 10px!important}
+  #modal .modal-box{max-height:88vh!important;overflow-y:auto!important}
+}
