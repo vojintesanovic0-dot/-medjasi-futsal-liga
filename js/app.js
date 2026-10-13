@@ -6149,6 +6149,8 @@ function getMatchEvents(id){
    MATCH TABS
 ========================================================= */
 
+function showMatchLineup(){switchMatchTab("lineup");}
+
 function switchMatchTab(
   name
 ){
@@ -6525,6 +6527,7 @@ function openMatch(id){
             ${aGoals}
 
           </div>
+          <button class="btn btn-small" style="margin-top:10px" onclick="showMatchLineup()">Vidi postave ›</button>
 
         </div>
 
