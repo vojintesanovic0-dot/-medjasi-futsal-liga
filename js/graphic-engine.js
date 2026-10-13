@@ -29,6 +29,8 @@
     body: "",
     graphicHeadline: "",
     graphicSubtitle: "",
+    graphicCoachName: "",
+    photoBlur: false,
     matchHome: "MEĐASI",
     matchOpponent: "",
     matchScore: "",
@@ -210,6 +212,8 @@
       g.addColorStop(0,"#061018"); g.addColorStop(.5,"#0d2632"); g.addColorStop(1,"#020608");
     }else if(template==="scorer"){
       g.addColorStop(0,"#0d0715"); g.addColorStop(.55,"#29103b"); g.addColorStop(1,"#040205");
+    }else if(template==="trainer"){
+      g.addColorStop(0,"#101a0d"); g.addColorStop(.5,"#315022"); g.addColorStop(1,"#030603");
     }else if(template==="matchresult"){
       g.addColorStop(0,"#06170f"); g.addColorStop(.5,"#16482b"); g.addColorStop(1,"#020604");
     }else if(template==="upcoming"){
@@ -269,6 +273,7 @@
       mvp:      {kicker:"MVP LIGE", tag:"⭐ MVP"},
       scorer:   {kicker:"TOP STRIJELAC", tag:" GOAL"},
       matchday: {kicker:"MATCHDAY", tag:" MATCHDAY"},
+      trainer:  {kicker:"STRUČNI ŠTAB", tag:" TRENER"},
       matchresult:{kicker:"KONAČAN REZULTAT", tag:" REZULTAT"},
       upcoming: {kicker:"NAJAVA UTAKMICE", tag:" NAJAVA"},
       winner:   {kicker:"WINNER", tag:" POBJEDNIK"},
@@ -284,10 +289,13 @@
 
     /* Visual composition changes by template. */
     if(cutoutBlob){
-      const big=["mvp","scorer","winner","captain","legend","matchresult","upcoming"].includes(template);
+      const big=["mvp","scorer","winner","captain","legend","trainer","matchresult","upcoming"].includes(template);
       fitImage(ctx,img,big?20:80,big?35:120,big?1040:920,big?990:900,true);
     }else{
+      ctx.save();
+      if(state.photoBlur) ctx.filter="blur(8px)";
       fitImage(ctx,img,0,50,1080,980,false,state.photoZoom,state.photoFocusY);
+      ctx.restore();
       ctx.fillStyle="rgba(0,0,0,"+state.photoShade+")";
       ctx.fillRect(0,50,1080,980);
     }
@@ -304,7 +312,7 @@
     ctx.fillText(preset.kicker,60,1100);
 
     const defaultHeadlines={matchresult:"REZULTAT UTAKMICE",upcoming:"SLJEDEĆA UTAKMICA"};
-    let headline=state.graphicHeadline.trim() || defaultHeadlines[template] || name;
+    let headline=(template==="trainer" ? (state.graphicCoachName.trim() || state.graphicHeadline.trim() || "TRENER") : (state.graphicHeadline.trim() || defaultHeadlines[template] || name));
     let sub=teamName + (number ? "  " + number : "");
     if(template==="lineup") sub=teamName + (position ? " · "+position : "") + (number ? " · "+number : "");
     if(template==="transfer") sub="NOVI IGRAČ · "+teamName;
@@ -317,6 +325,7 @@
     if(template==="scorer") sub="STRIJELAC · "+teamName+"  ";
     if(template==="winner") sub="POBJEDNIK · "+teamName+"  ";
     if(template==="matchday") sub="DAN UTAKMICE · "+teamName+"  ";
+    if(template==="trainer") sub="STRUČNI ŠTAB · "+teamName;
     if(template==="matchresult") sub="KONAČAN REZULTAT · "+teamName;
     if(template==="upcoming") sub="SLJEDEĆA UTAKMICA · "+teamName;
     if(state.graphicSubtitle.trim()) sub=state.graphicSubtitle.trim();
@@ -508,7 +517,7 @@
     if(!clean){toast("Unesi naziv postavki.","error");return;}
     if(presets[clean]&&!window.confirm("Postavke s tim nazivom već postoje. Želiš li ih zamijeniti?"))return;
     presets[clean]={
-      template:state.template,graphicHeadline:state.graphicHeadline,graphicSubtitle:state.graphicSubtitle,
+      template:state.template,graphicHeadline:state.graphicHeadline,graphicSubtitle:state.graphicSubtitle,graphicCoachName:state.graphicCoachName,photoBlur:state.photoBlur,
       matchHome:state.matchHome,matchOpponent:state.matchOpponent,matchScore:state.matchScore,matchDate:state.matchDate,matchVenue:state.matchVenue,accentColor:state.accentColor,
       photoZoom:state.photoZoom,photoFocusY:state.photoFocusY,photoShade:state.photoShade,fontFamily:state.fontFamily,
       destination:state.destination,caption:state.caption,title:state.title,body:state.body
@@ -533,6 +542,8 @@
     if(preset.template&&$("graphicTemplate"))$("graphicTemplate").value=preset.template;
     if(preset.graphicHeadline!==undefined&&$("graphicHeadline"))$("graphicHeadline").value=preset.graphicHeadline;
     if(preset.graphicSubtitle!==undefined&&$("graphicSubtitle"))$("graphicSubtitle").value=preset.graphicSubtitle;
+    if(preset.graphicCoachName!==undefined&&$("graphicCoachName"))$("graphicCoachName").value=preset.graphicCoachName;
+    if($("graphicPhotoBlur"))$("graphicPhotoBlur").checked=!!preset.photoBlur;
     if(preset.matchHome!==undefined&&$("graphicMatchHome"))$("graphicMatchHome").value=preset.matchHome;
     if(preset.matchOpponent!==undefined&&$("graphicMatchOpponent"))$("graphicMatchOpponent").value=preset.matchOpponent;
     if(preset.matchScore!==undefined&&$("graphicMatchScore"))$("graphicMatchScore").value=preset.matchScore;
@@ -557,6 +568,8 @@
     const template=$("graphicTemplate")?.value||"player";
     const fields=$("graphicMatchFields");
     if(fields) fields.hidden=template!=="matchresult" && template!=="upcoming";
+    const coachFields=$("graphicCoachFields");
+    if(coachFields) coachFields.hidden=template!=="trainer";
   }
 
   function markDesignDirty(){
@@ -582,6 +595,8 @@
     state.body=$("graphicNewsBody")?.value || "";
     state.graphicHeadline=$("graphicHeadline")?.value || "";
     state.graphicSubtitle=$("graphicSubtitle")?.value || "";
+    state.graphicCoachName=$("graphicCoachName")?.value || "";
+    state.photoBlur=!!$("graphicPhotoBlur")?.checked;
     state.matchHome=$("graphicMatchHome")?.value || "MEĐASI";
     state.matchOpponent=$("graphicMatchOpponent")?.value || "";
     state.matchScore=$("graphicMatchScore")?.value || "";
@@ -674,6 +689,11 @@
               <label for="graphicPhotoShade">Zatamnjenje fotografije <span id="graphicPhotoShadeValue">20%</span></label>
               <input id="graphicPhotoShade" type="range" min="0" max="0.6" step="0.05" value="0.2">
             </div>
+            <div class="form-group graphic-engine-blur-control">
+              <label for="graphicPhotoBlur">Efekat fotografije</label>
+              <label class="graphic-engine-blur-toggle"><input id="graphicPhotoBlur" type="checkbox"> Zamućena / blur pozadina</label>
+              <small class="muted">Dodaje mekši, filmski izgled fotografiji.</small>
+            </div>
             <div class="form-group">
               <label for="graphicFontFamily">Stil teksta</label>
               <select id="graphicFontFamily"><option value="Arial">Moderan</option><option value="Impact">Sportski / snažan</option><option value="Georgia">Klasičan</option></select>
@@ -686,6 +706,7 @@
               <option value="player"> Player Spotlight</option>
               <option value="mvp">⭐ MVP Lige</option>
               <option value="scorer"> Top Strijelac</option>
+              <option value="trainer"> Trener</option>
               <option value="matchday"> Matchday</option>
               <option value="matchresult"> Rezultat utakmice</option>
               <option value="upcoming"> Najava utakmice</option>
@@ -698,6 +719,11 @@
               <option value="captain">© Kapiten</option>
               <option value="legend"> Legenda lige</option>
             </select>
+          </div>
+
+          <div id="graphicCoachFields" class="graphic-engine-match-fields" hidden>
+            <div class="form-group"><label for="graphicCoachName">Ime i prezime trenera</label><input id="graphicCoachName" maxlength="60" placeholder="Ime i prezime trenera"></div>
+            <p class="graphic-engine-help muted">Ime trenera se prikazuje kao glavni naslov grafike.</p>
           </div>
 
           <div id="graphicMatchFields" class="graphic-engine-match-fields" hidden>
@@ -789,6 +815,8 @@
     $("graphicLoadPresetBtn")?.addEventListener("click",loadPreset);
     $("graphicHeadline")?.addEventListener("input",markDesignDirty);
     $("graphicSubtitle")?.addEventListener("input",markDesignDirty);
+    $("graphicCoachName")?.addEventListener("input",markDesignDirty);
+    $("graphicPhotoBlur")?.addEventListener("change",markDesignDirty);
     ["graphicMatchHome","graphicMatchOpponent","graphicMatchScore","graphicMatchDate","graphicMatchVenue"].forEach(id=>$(id)?.addEventListener("input",markDesignDirty));
     $("graphicAccentColor")?.addEventListener("input",markDesignDirty);
     $("graphicTemplate")?.addEventListener("change",()=>{markDesignDirty();updateMatchFieldsVisibility();});
