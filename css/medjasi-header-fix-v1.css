@@ -232,3 +232,14 @@
 @media(prefers-reduced-motion:reduce){
   .site-header .header-actions>button,.site-header .header-account .account-btn{transition:none!important}
 }
+
+
+/* The final-loaded header stylesheet owns the phone navigation decision. */
+@media (max-width: 780px) {
+  html body #mobileMenuBtn,
+  html body .site-header .header-inner .header-actions .mobile-menu-btn {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
