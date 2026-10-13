@@ -405,3 +405,14 @@ button,a,[role="button"],summary,label{touch-action:manipulation}
   #modal .modal-box:has(.v9-profile-full){height:auto!important}
 }
 
+
+/* ---------- v3.8: kartice na početnoj su klikabilne ---------- */
+#home .dashboard-kpi,
+#home .dashboard-next-panel,
+#home .dashboard-live-panel,
+#home .dashboard-table-panel,
+#home .dashboard-rank-panel,
+#home .dashboard-community-panel{
+  cursor:pointer;
+  -webkit-tap-highlight-color:rgba(57,245,139,.12);
+}
