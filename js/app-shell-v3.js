@@ -42,18 +42,14 @@
   var overlayOpen = false;
   function isOverlayOpen(){
     return document.body.classList.contains("mobile-more-open") ||
-      !!document.querySelector('.modal.show, .modal.open, [role="dialog"][aria-modal="true"], .mobile-more-drawer.open');
+      !!document.querySelector('[class*="modal"].show, [class*="modal"].open, .mobile-more-drawer.open');
   }
   function closeOverlays(){
     if (document.body.classList.contains("mobile-more-open") && typeof window.closeMobileMore === "function") {
       window.closeMobileMore();
     }
-    document.querySelectorAll(".modal.show, .modal.open, [role=\"dialog\"][aria-modal=\"true\"]").forEach(function(el){
-      if (el.classList.contains("modal")) el.classList.remove("show","open");
-      else if (el.hasAttribute("data-mfl-history-overlay")) {
-        el.hidden = true;
-        el.removeAttribute("data-mfl-history-overlay");
-      }
+    document.querySelectorAll('[class*="modal"].show, [class*="modal"].open').forEach(function(el){
+      el.classList.remove("show","open");
     });
   }
   function syncOverlay(){
