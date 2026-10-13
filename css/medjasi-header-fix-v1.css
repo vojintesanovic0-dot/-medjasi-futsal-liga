@@ -253,3 +253,18 @@
     pointer-events: none !important;
   }
 }
+
+
+/* Preserve legibility on compact phones without widening the header. */
+@media (max-width: 390px) {
+  .site-header .dashboard-mobile-brand strong {
+    font-size: 9px !important;
+  }
+  .site-header .dashboard-mobile-brand span {
+    font-size: 6px !important;
+    letter-spacing: .08em !important;
+  }
+  .site-header .v7-search-wrap input {
+    font-size: 9px !important;
+  }
+}
