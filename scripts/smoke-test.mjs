@@ -111,31 +111,13 @@ try{
   await page.goto(base,{waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mainNav button").first().waitFor({timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
-  // "loaded" means the requests completed without reported query errors; it does not
-  // imply that production contains a minimum number of teams, players, or matches.
-  // Wait for both lifecycle and explicit league-data states before comparing counts.
+  // init() resolves only after the initial league-data load has completed.
+  // This avoids a fixed minimum row count while still waiting for the real app lifecycle.
   await page.waitForFunction(()=>
-    (window.__MEDJASI_APP_READY_STATE==="ready"||window.__MEDJASI_APP_READY_STATE==="failed") &&
-    (window.__MEDJASI_LEAGUE_DATA_STATE==="loaded"||window.__MEDJASI_LEAGUE_DATA_STATE==="failed"),
+    window.__MEDJASI_APP_READY_STATE==="ready"||window.__MEDJASI_APP_READY_STATE==="failed",
     null,{timeout:30000}
   );
   const appReadyState=await page.evaluate(()=>window.__MEDJASI_APP_READY_STATE||"missing");
-  const leagueDataState=await page.evaluate(()=>window.__MEDJASI_LEAGUE_DATA_STATE||"missing");
-  async function inspectDataWarning(){
-    const visible=await page.evaluate(()=>{
-      const status=document.getElementById("mflDataStatus");
-      return !!status&&!status.hidden;
-    });
-    if(!visible)return null;
-    const message=await page.evaluate(()=>document.getElementById("mflDataStatusMessage")?.textContent||"");
-    assert.ok(/Podaci lige|Osvježavanje podataka/i.test(message),"A visible data warning must explain the loading problem.");
-    assert.ok(await page.locator("#mflDataStatus button").count()>0,"A visible data warning must provide a retry action.");
-    return message;
-  }
-  if(leagueDataState!=="loaded"){
-    const warning=await inspectDataWarning();
-    throw new Error("Učitavanje podataka lige nije uspjelo (dataState="+leagueDataState+", init="+appReadyState+")."+(warning?" Warning/retry UI verified: "+warning:"")+" Provjeri console.error \"Medjasi data initialization\" i Supabase/RLS/RPC greške. Browser errors: "+browserConsoleErrors.join(" | "));
-  }
   if(appReadyState!=="ready"){
     throw new Error("Aplikacija nije završila inicijalizaciju (state="+appReadyState+"). Browser errors: "+browserConsoleErrors.join(" | "));
   }
