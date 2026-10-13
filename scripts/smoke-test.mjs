@@ -130,7 +130,7 @@ try{
       }).slice(0,10).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",left:Math.round(rect.left),right:Math.round(rect.right),width:Math.round(rect.width)}));
       return {viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,visibleOverflow};
     });
-    assert.ok(desktopSectionLayout.document<=innerWidth+2&&desktopSectionLayout.body<=innerWidth+2&&desktopSectionLayout.visibleOverflow.length===0,"Desktop horizontal overflow in section "+id+": "+JSON.stringify(desktopSectionLayout));
+    assert.ok(desktopSectionLayout.document<=desktopSectionLayout.viewport+2&&desktopSectionLayout.body<=desktopSectionLayout.viewport+2&&desktopSectionLayout.visibleOverflow.length===0,"Desktop horizontal overflow in section "+id+": "+JSON.stringify(desktopSectionLayout));
   }
   console.log("PASS desktop layout stays within viewport across all 12 main sections");
   await page.waitForFunction(()=>!!document.querySelector("#gxInfoRoot .gx-table-wrap"),null,{timeout:8000});
