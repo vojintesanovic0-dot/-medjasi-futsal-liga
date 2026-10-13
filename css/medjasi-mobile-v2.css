@@ -350,3 +350,35 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @media (prefers-reduced-motion: reduce) {
   main > .section.active { animation: none !important; }
 }
+
+
+/* Keep modal dismissal obvious: the legacy close button has no text node. */
+#modal .modal-box > button.close,
+.modal .modal-box > button.close {
+  display: grid !important;
+  place-items: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(57,245,139,.3) !important;
+  border-radius: 12px !important;
+  background: #102923 !important;
+  color: #f4fff8 !important;
+  cursor: pointer !important;
+  z-index: 5 !important;
+}
+#modal .modal-box > button.close::before,
+.modal .modal-box > button.close::before {
+  content: "×";
+  display: block;
+  color: #f4fff8;
+  font: 600 26px/1 system-ui, sans-serif;
+}
+@media (max-width: 640px) {
+  #modal .modal-box > button.close,
+  .modal .modal-box > button.close {
+    top: 10px !important;
+    right: 10px !important;
+  }
+}
