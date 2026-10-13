@@ -880,3 +880,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     -webkit-overflow-scrolling: touch !important;
   }
 }
+
+
+/* Ensure the drawer list gets a real flex viewport so lower destinations stay tappable. */
+@media (max-width: 1024px) {
+  html body #mobileMoreDrawer.open .mobile-more-panel {
+    box-sizing: border-box !important;
+  }
+  html body #mobileMoreDrawer.open .mobile-more-grid {
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    flex: 1 1 0% !important;
+    align-content: start !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+}
