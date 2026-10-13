@@ -485,7 +485,14 @@ try{
         rect.top>=Math.max(0,gridRect.top)-1&&rect.bottom<=Math.min(innerHeight,gridRect.bottom)+1&&
         getComputedStyle(el).visibility!=="hidden";
     },shortcutHandle,{timeout:5000});
-    await shortcut.click();
+    const hitTarget=await shortcut.evaluate(el=>{
+      const rect=el.getBoundingClientRect();
+      const x=rect.left+rect.width/2,y=rect.top+rect.height/2;
+      const hit=document.elementFromPoint(x,y);
+      return {x,y,hitTag:hit?.tagName||null,hitText:(hit?.textContent||"").trim().slice(0,50),hitsShortcut:!!hit&&(hit===el||el.contains(hit)),drawerOpen:!!document.querySelector("#mobileMoreDrawer")?.classList.contains("open")};
+    });
+    assert.ok(hitTarget.hitsShortcut,"Mobile drawer shortcut is visually covered by another layer: "+JSON.stringify(hitTarget));
+    await page.mouse.click(hitTarget.x,hitTarget.y);
     assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),tab,tab+" shortcut must call its matching dashboard tab.");
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   }
