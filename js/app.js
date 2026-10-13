@@ -2828,11 +2828,40 @@ function formHTML(teamId){
 }
 
 
+function tableOrder(list){
+  const map=new Map();
+  (teams||[]).forEach(t=>map.set(String(t.id),{id:String(t.id),points:0,gf:0,ga:0,name:t.name||""}));
+  list.forEach(m=>{
+    const h=map.get(String(m.home_team_id)),a=map.get(String(m.away_team_id));
+    if(!h||!a)return;
+    const hs=Number(m.home_score||0),as=Number(m.away_score||0);
+    h.gf+=hs;h.ga+=as;a.gf+=as;a.ga+=hs;
+    if(hs>as)h.points+=3;else if(hs<as)a.points+=3;else{h.points++;a.points++;}
+  });
+  return [...map.values()].sort((a,b)=>b.points-a.points||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf||a.name.localeCompare(b.name));
+}
+function previousPositions(){
+  const finished=(matches||[]).filter(m=>m.status==="finished");
+  if(!finished.length)return new Map();
+  const maxRound=Math.max(...finished.map(m=>Number(m.round)||0));
+  if(!maxRound)return new Map();
+  const before=finished.filter(m=>(Number(m.round)||0)<maxRound);
+  if(!before.length)return new Map();
+  const map=new Map();tableOrder(before).forEach((row,i)=>map.set(row.id,i+1));return map;
+}
+function movementHTML(teamId,currentPos,prevMap){
+  const prev=prevMap.get(String(teamId));if(!prev)return "";
+  const diff=prev-currentPos;
+  if(diff>0)return '<span class="mv up">▲'+diff+'</span>';
+  if(diff<0)return '<span class="mv down">▼'+(-diff)+'</span>';
+  return '<span class="mv same">·</span>';
+}
+
 function renderTable(){
 
   const rows =
     sortedTableRows();
-
+  const prevMap=previousPositions();
 
   document.getElementById("tableBody").innerHTML =
     rows.length
@@ -2845,6 +2874,7 @@ function renderTable(){
                   <span class="rank">
                     ${i+1}
                   </span>
+                  ${movementHTML(s.team.id,i+1,prevMap)}
                 </td>
 
                 <td>
@@ -8067,11 +8097,23 @@ document.addEventListener(
    REALTIME
 ========================================================= */
 
+function showGoalOverlay(e){
+  if(document.hidden)return;
+  const el=document.createElement("div");
+  el.className="goal-overlay";
+  el.innerHTML=`<div class="goal-overlay-card"><div class="goal-overlay-ball">⚽</div><div class="goal-overlay-title">GOOOL!</div><div class="goal-overlay-text">${esc(e.title||"")}</div><div class="goal-overlay-sub">${esc(e.body||"")}</div></div>`;
+  document.body.appendChild(el);
+  try{navigator.vibrate?.([120,60,120]);}catch(_){}
+  setTimeout(()=>el.classList.add("out"),2800);
+  setTimeout(()=>el.remove(),3400);
+}
+
 function handleLeagueEvent(event){
   const e=event?.new;
   if(!e?.event_type) return;
   const eventIcon=e.event_type==="goal"?"⚽":e.event_type==="card"?"🟨":"🏁";
   addLeagueNotification({title:e.title||"Novo dešavanje",text:e.body||"",icon:eventIcon,type:e.event_type,key:"league-event:"+e.id,browser:true});
+  if(e.event_type==="goal")showGoalOverlay(e);
 
   // The acting UI sends the single push after its database write succeeds.
   // Keep realtime responsible for in-app notifications and data refresh only,
