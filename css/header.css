@@ -27,3 +27,8 @@ html body header.site-header{
 @media (min-width:781px){
   .mfl-search-cancel{display:none!important}
 }
+
+/* Sadržaj počinje ispod fiksiranog headera (visina headera + mali razmak) */
+html body main{
+  padding-top:calc(var(--site-header-h) + 16px)!important;
+}
