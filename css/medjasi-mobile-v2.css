@@ -773,3 +773,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     pointer-events: auto !important;
   }
 }
+
+
+/* A transitioning transform can leave lower shortcuts below the viewport.
+   The drawer backdrop may animate, but the interactive panel must settle in place. */
+@media (max-width: 1024px) {
+  .mobile-more-drawer.open .mobile-more-panel {
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
