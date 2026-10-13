@@ -28,6 +28,7 @@
     caption: "",
     body: "",
     graphicHeadline: "",
+    graphicSubtitle: "",
     accentColor: "#b7ff55",
     photoZoom: 1,
     photoFocusY: 0,
@@ -304,6 +305,7 @@
     if(template==="scorer") sub="STRIJELAC · "+teamName+"  ";
     if(template==="winner") sub="POBJEDNIK · "+teamName+"  ";
     if(template==="matchday") sub="DAN UTAKMICE · "+teamName+"  ";
+    if(state.graphicSubtitle.trim()) sub=state.graphicSubtitle.trim();
 
     drawText(ctx,headline,60,1180,58,"800");
     drawText(ctx,sub,60,1230,30,"600");
@@ -481,7 +483,7 @@
     if(!clean){toast("Unesi naziv postavki.","error");return;}
     if(presets[clean]&&!window.confirm("Postavke s tim nazivom već postoje. Želiš li ih zamijeniti?"))return;
     presets[clean]={
-      template:state.template,graphicHeadline:state.graphicHeadline,accentColor:state.accentColor,
+      template:state.template,graphicHeadline:state.graphicHeadline,graphicSubtitle:state.graphicSubtitle,accentColor:state.accentColor,
       photoZoom:state.photoZoom,photoFocusY:state.photoFocusY,photoShade:state.photoShade,fontFamily:state.fontFamily,
       destination:state.destination,caption:state.caption,title:state.title,body:state.body
     };
@@ -504,6 +506,7 @@
     if(!preset){toast("Postavke s tim nazivom nisu pronađene.","error");return;}
     if(preset.template&&$("graphicTemplate"))$("graphicTemplate").value=preset.template;
     if(preset.graphicHeadline!==undefined&&$("graphicHeadline"))$("graphicHeadline").value=preset.graphicHeadline;
+    if(preset.graphicSubtitle!==undefined&&$("graphicSubtitle"))$("graphicSubtitle").value=preset.graphicSubtitle;
     if(/^#[0-9a-f]{6}$/i.test(preset.accentColor||"")&&$("graphicAccentColor"))$("graphicAccentColor").value=preset.accentColor;
     if(Number.isFinite(Number(preset.photoZoom))&&$("graphicPhotoZoom"))$("graphicPhotoZoom").value=preset.photoZoom;
     if(Number.isFinite(Number(preset.photoFocusY))&&$("graphicPhotoFocusY"))$("graphicPhotoFocusY").value=preset.photoFocusY;
@@ -540,6 +543,7 @@
     state.caption=$("graphicCaption")?.value || "";
     state.body=$("graphicNewsBody")?.value || "";
     state.graphicHeadline=$("graphicHeadline")?.value || "";
+    state.graphicSubtitle=$("graphicSubtitle")?.value || "";
     state.accentColor=$("graphicAccentColor")?.value || "#b7ff55";
     state.photoZoom=Number($("graphicPhotoZoom")?.value||1);
     state.photoFocusY=Number($("graphicPhotoFocusY")?.value||0);
@@ -601,8 +605,12 @@
 
           <div class="graphic-engine-editor-fields">
             <div class="form-group">
-              <label>Naslov na grafici</label>
+              <label for="graphicHeadline">Glavni naslov</label>
               <input id="graphicHeadline" maxlength="80" placeholder="Prazno = ime igrača ili podrazumijevani naslov">
+            </div>
+            <div class="form-group">
+              <label for="graphicSubtitle">Podnaslov / dodatni tekst</label>
+              <input id="graphicSubtitle" maxlength="100" placeholder="Prazno = podaci iz predloška">
             </div>
             <div class="form-group graphic-color-field">
               <label for="graphicAccentColor">Akcentna boja</label>
@@ -726,6 +734,7 @@
     $("graphicSavePresetBtn")?.addEventListener("click",savePreset);
     $("graphicLoadPresetBtn")?.addEventListener("click",loadPreset);
     $("graphicHeadline")?.addEventListener("input",markDesignDirty);
+    $("graphicSubtitle")?.addEventListener("input",markDesignDirty);
     $("graphicAccentColor")?.addEventListener("input",markDesignDirty);
     $("graphicTemplate")?.addEventListener("change",markDesignDirty);
     ["graphicPhotoZoom","graphicPhotoFocusY","graphicPhotoShade","graphicFontFamily"].forEach(id=>$(id)?.addEventListener("input",()=>{
