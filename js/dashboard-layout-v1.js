@@ -324,7 +324,7 @@ window.dashboardOpenGameTab=function(tab){
           <p>Prati utakmice, rezultate, statistiku, igrače i budi dio najveće futsal zajednice u regiji.</p>
           <div class="dashboard-hero-actions"><button class="btn btn-green" onclick="showSection('matches')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7z"/></svg>Pogledaj utakmice</button><button class="btn btn-ghost" onclick="showSection('community')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c.5-3.7 2.3-5.5 5.5-5.5s5 1.8 5.5 5.5M16 11a3 3 0 1 0 0-6M17 14c2.2.5 3.5 2.5 3.5 6"/></svg>Pridruži se zajednici</button></div>
         </div>
-        <div class="dashboard-hero-mark"><img src="./images/icon-512.png" alt="Međasi Futsal Liga"><span>SEZONA 2026/27</span></div>
+        <div class="dashboard-hero-mark"><img src="./images/icon-512.png" alt="Međasi Futsal Liga"><span>SEZONA <b data-season-label>2026/27</b></span></div>
       </section>
       <section class="dashboard-kpis" aria-label="Statistika lige">
         <article class="dashboard-kpi"><span class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><path d="M5 20c.7-4 3-6 7-6s6.3 2 7 6M3 11a2.5 2.5 0 0 0 0 5m18-5a2.5 2.5 0 0 1 0 5"/></svg></span><div><small>EKIPE</small><div data-slot="statTeams"></div><em>U ligi</em></div></article>
@@ -373,7 +373,7 @@ window.dashboardOpenGameTab=function(tab){
     if(!$("dashboardRightRail"))main.insertAdjacentHTML("beforeend",mainRails);
     if(!$("dashboardFooter")){
       const footer=document.createElement("footer");footer.id="dashboardFooter";footer.className="dashboard-footer";
-      footer.innerHTML='<div class="dashboard-footer-season"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span>SEZONA 2026/27</span></div><div class="dashboard-footer-brand">MEĐASI FUTSAL LIGA &nbsp; • &nbsp; STRAST &nbsp; • &nbsp; ZAJEDNICA &nbsp; • &nbsp; FUTSAL</div><div class="dashboard-footer-stats"><span><b id="footerTeams">0</b> ekipa</span><span><b id="footerPlayers">0</b> igrača</span><span><b id="footerMatches">0</b> utakmica</span></div>';
+      footer.innerHTML='<div class="dashboard-footer-season"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span>SEZONA <b data-season-label>2026/27</b></span></div><div class="dashboard-footer-brand">MEĐASI FUTSAL LIGA &nbsp; • &nbsp; STRAST &nbsp; • &nbsp; ZAJEDNICA &nbsp; • &nbsp; FUTSAL</div><div class="dashboard-footer-stats"><span><b id="footerTeams">0</b> ekipa</span><span><b id="footerPlayers">0</b> igrača</span><span><b id="footerMatches">0</b> utakmica</span></div>';
       document.body.appendChild(footer);
     }
     if(typeof window.updateMflSeasonLabels==="function")window.updateMflSeasonLabels();
