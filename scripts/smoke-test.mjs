@@ -32,14 +32,14 @@ const supabaseRequestStartedAt=new WeakMap();
 const supabaseRequestTimeline=[];
 page.on("request",request=>{
   const url=request.url();
-  if(!/\\.supabase\\.co\\//.test(url))return;
+  if(!/\.supabase\.co\//.test(url))return;
   const ts=Date.now();
   supabaseRequestStartedAt.set(request,ts);
   supabaseRequestTimeline.push({event:"request",url,method:request.method(),resourceType:request.resourceType(),ts,pageUrl:page.url()});
 });
 page.on("requestfailed",request=>{
   const url=request.url();
-  if(!/\\.supabase\\.co\\//.test(url))return;
+  if(!/\.supabase\.co\//.test(url))return;
   const ts=Date.now();
   failedSupabaseDetails.push({
     url,
@@ -57,7 +57,7 @@ page.on("framenavigated",frame=>{
   if(frame===page.mainFrame())supabaseRequestTimeline.push({event:"main-frame-navigation",ts:Date.now(),url:frame.url()});
 });
 page.on("response",response=>{
-  if(/\\.supabase\\.co\\//.test(response.url())){
+  if(/\.supabase\.co\//.test(response.url())){
     supabaseRequestTimeline.push({event:"response",url:response.url(),status:response.status(),ts:Date.now(),pageUrl:page.url()});
   }
 });
