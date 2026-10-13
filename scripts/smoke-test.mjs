@@ -406,7 +406,7 @@ try{
   await page.setViewportSize({width:320,height:740});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mobileMoreBtn").waitFor({state:"visible",timeout:10000});
-  const narrowMobile=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth}));
+  const narrowMobile=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,overflowing:[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(x=>x.rect.width>0&&x.rect.right>innerWidth+2&&getComputedStyle(x.el).position!=="fixed").slice(0,12).map(x=>({tag:x.el.tagName,id:x.el.id,classes:typeof x.el.className==="string"?x.el.className:"",right:Math.round(x.rect.right),width:Math.round(x.rect.width),scrollWidth:x.el.scrollWidth}))}));
   assert.ok(narrowMobile.document<=narrowMobile.viewport+2&&narrowMobile.body<=narrowMobile.viewport+2,"Horizontal overflow on a narrow 320px phone: "+JSON.stringify(narrowMobile));
   await page.locator("#mobileMoreBtn").click();
   const narrowDrawerColumns=await page.locator(".mobile-more-grid").evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(" ").length);
