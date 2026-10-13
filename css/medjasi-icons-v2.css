@@ -36,19 +36,13 @@
 .dashboard-hero-actions .btn{
   display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;
 }
-.dashboard-hero-actions .btn-green,.dashboard-hero-actions .btn-ghost{font-size:0!important;}
+.dashboard-hero-actions .btn-green,.dashboard-hero-actions .btn-ghost{font-size:12px!important;}
 .dashboard-hero-actions .btn::before{
   content:"";display:block;flex:0 0 17px;width:17px;height:17px;
   background-position:center;background-size:contain;background-repeat:no-repeat;
 }
 .dashboard-hero-actions .btn-green::before{background-image:var(--mfl-icon-ball);}
 .dashboard-hero-actions .btn-ghost::before{background-image:var(--mfl-icon-community);}
-.dashboard-hero-actions .btn-green::after{
-  content:"Pogledaj utakmice";font-size:12px;line-height:1.2;font-weight:900;
-}
-.dashboard-hero-actions .btn-ghost::after{
-  content:"Pridruži se zajednici";font-size:12px;line-height:1.2;font-weight:900;
-}
 /* Main section headings whose icons were not covered by the first icon pass. */
 #community .section-title::before{background-image:var(--mfl-icon-community)!important;}
 #news .section-title::before{background-image:var(--mfl-icon-newspaper)!important;}
