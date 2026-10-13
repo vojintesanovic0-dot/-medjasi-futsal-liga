@@ -831,3 +831,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     -webkit-overflow-scrolling: touch !important;
   }
 }
+
+
+/* Cancel legacy slide transitions on the panel itself, including the close→reopen
+   interval. The drawer's visibility state controls opening; the panel must stay tappable. */
+@media (max-width: 1024px) {
+  html body #mobileMoreDrawer .mobile-more-panel {
+    transition: none !important;
+    animation: none !important;
+  }
+  html body #mobileMoreDrawer.open .mobile-more-panel {
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}
