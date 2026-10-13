@@ -536,6 +536,74 @@ try{
     assert.ok(layout.document<=layout.viewport+2&&layout.body<=layout.viewport+2&&layout.visibleOverflow.length===0,"Mobile layout overflow in "+sectionId+": "+JSON.stringify(layout));
   }
   console.log("PASS mobile section audit: all 13 primary sections activate at 390px and have no visible horizontal overflow");
+  // Exercise the actual graphic canvas and both download formats with a tiny local fixture.
+  // Background removal is mocked at the remote module boundary so CI never downloads an AI model.
+  await page.evaluate(()=>{
+    window.__graphicEngineTestOriginals={
+      isAdmin:window.isAdmin,
+      isAdminOwn:Object.prototype.hasOwnProperty.call(window,"isAdmin")
+    };
+    window.isAdmin=()=>true;
+    if(typeof window.initGraphicEngine!=="function")throw new Error("Graphic Engine initializer is unavailable.");
+    window.initGraphicEngine();
+    window.showSection("admin");
+  });
+  await page.locator("#graphicEngineCard").waitFor({state:"attached",timeout:8000});
+  const fixturePng=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=","base64");
+  await page.locator("#graphicFile").setInputFiles({name:"graphic-smoke.png",mimeType:"image/png",buffer:fixturePng});
+  assert.equal(await page.locator("#graphicGenerateBtn").isDisabled(),false,"Selecting a valid image must enable generation.");
+  assert.equal(await page.locator("#graphicExportPngBtn").isDisabled(),true,"PNG export must be disabled before generation.");
+  assert.equal(await page.locator("#graphicExportJpegBtn").isDisabled(),true,"JPG export must be disabled before generation.");
+  await page.locator("#graphicGenerateBtn").click();
+  await page.waitForFunction(()=>{
+    const preview=document.getElementById("graphicResultPreview");
+    return !!preview&&!preview.hidden&&preview.complete&&preview.naturalWidth===1080&&preview.naturalHeight===1350;
+  },null,{timeout:15000});
+  assert.equal(await page.locator("#graphicExportPngBtn").isDisabled(),false,"PNG export must be enabled after successful generation.");
+  assert.equal(await page.locator("#graphicExportJpegBtn").isDisabled(),false,"JPG export must be enabled after successful generation.");
+  const pngDownloadPromise=page.waitForEvent("download");
+  await page.locator("#graphicExportPngBtn").click();
+  const pngDownload=await pngDownloadPromise;
+  const pngPath=await pngDownload.path();
+  assert.ok(pngPath,"PNG export must produce a downloadable file.");
+  const pngBytes=await readFile(pngPath);
+  assert.equal(pngBytes.subarray(0,8).toString("hex"),"89504e470d0a1a0a","PNG export must have a valid PNG signature.");
+  assert.ok(pngBytes.length>1000,"PNG export must contain rendered graphic content.");
+  const jpgDownloadPromise=page.waitForEvent("download");
+  await page.locator("#graphicExportJpegBtn").click();
+  const jpgDownload=await jpgDownloadPromise;
+  const jpgPath=await jpgDownload.path();
+  assert.ok(jpgPath,"JPG export must produce a downloadable file.");
+  const jpgBytes=await readFile(jpgPath);
+  assert.equal(jpgBytes[0],0xff,"JPG export must start with JPEG SOI.");
+  assert.equal(jpgBytes[1],0xd8,"JPG export must have a valid JPEG signature.");
+  assert.ok(jpgBytes.length>1000,"JPG export must contain rendered graphic content.");
+  await page.route("https://esm.sh/@imgly/background-removal@1.7.0",route=>route.fulfill({
+    status:200,
+    contentType:"application/javascript; charset=utf-8",
+    headers:{"access-control-allow-origin":"*"},
+    body:'export async function removeBackground(file){return new Blob([await file.arrayBuffer()],{type:"image/png"});}'
+  }));
+  await page.locator("#graphicRemoveBgBtn").click();
+  await page.waitForFunction(()=>{
+    const source=document.getElementById("graphicSourceName");
+    const result=document.getElementById("graphicResultPreview");
+    return source?.textContent?.includes("bez pozadine")&&result?.hidden===true;
+  },null,{timeout:10000});
+  assert.equal(await page.locator("#graphicPublishBtn").isDisabled(),true,"Background removal must invalidate the old generated graphic before publishing.");
+  assert.equal(await page.locator("#graphicExportPngBtn").isDisabled(),true,"Background removal must disable stale PNG export.");
+  assert.equal(await page.locator("#graphicExportJpegBtn").isDisabled(),true,"Background removal must disable stale JPG export.");
+  await page.locator("#graphicGenerateBtn").click();
+  await page.waitForFunction(()=>{
+    const preview=document.getElementById("graphicResultPreview");
+    return !!preview&&!preview.hidden&&preview.complete&&preview.naturalWidth===1080&&preview.naturalHeight===1350;
+  },null,{timeout:15000});
+  console.log("PASS Graphic Engine: generated 1080x1350 canvas, valid PNG/JPG downloads, and background-removal invalidates stale output until regenerated");
+  await page.evaluate(()=>{
+    const saved=window.__graphicEngineTestOriginals;
+    if(saved){if(saved.isAdminOwn)window.isAdmin=saved.isAdmin;else delete window.isAdmin;}
+    delete window.__graphicEngineTestOriginals;
+  });
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
   console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, auth validation and isolated signup username handling, login cancel, mobile drawer/width, and live bootstrap or explicit retry state; suppressed extra REST requests after outage:",suppressedLiveRestCount,"; no uncaught JS errors or missing local assets");
