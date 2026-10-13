@@ -1524,6 +1524,27 @@ if (
   pass("Fan Game math helpers are restricted to internal execution while preserving the repricing function");
 }
 
+if (
+  !app.includes("if(!window.__medjasiOverlayDismissBound)") ||
+  !app.includes('if(event.key!=="Escape")return;') ||
+  !app.includes('moreBtn.setAttribute("aria-expanded","true")') ||
+  !app.includes('moreBtn.setAttribute("aria-expanded","false")') ||
+  !app.includes("moreBtn.focus({preventScroll:true})") ||
+  !app.includes("if(nav.contains(event.target)||button?.contains(event.target))return;")
+) {
+  fail("Transient overlays and mobile navigation must support Escape/outside-click dismissal and restore the More button focus");
+} else pass("Transient overlays close predictably and mobile More navigation restores accessible focus/state");
+
+if (
+  !growth.includes('String(a.name||"").localeCompare(String(b.name||""),"bs")') ||
+  !growth.includes("if(!Number.isFinite(s.getTime()))return;") ||
+  !growth.includes("URL.revokeObjectURL(url)") ||
+  !growth.includes("String(x).replace(")
+) {
+  fail("Liga Info standings and calendar export must sort deterministically, reject invalid dates, sanitize event fields, and release export URLs");
+} else pass("Liga Info sorting is deterministic and calendar export validates dates, sanitizes fields, and releases object URLs");
+
+
 const defaultFunctionGrantMigration = read("sql/19_revoke_default_function_execute.sql");
 if (
   !defaultFunctionGrantMigration.includes("alter default privileges for role postgres") ||
