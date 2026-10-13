@@ -1647,6 +1647,25 @@ if (
   pass("Dashboard auxiliary rail is desktop-hidden and mobile-responsive");
 }
 
+// Guard the specific service-worker, calendar, and push regressions found in the review.
+const pushConfigMigration = read("sql/28_harden_push_config.sql");
+if (
+  !sw.includes("if (response && response.ok)") ||
+  !growth.includes('localeCompare(String(b.name||""),"bs")') ||
+  !growth.includes("if(!Number.isFinite(s.getTime()))return;") ||
+  !growth.includes("URL.revokeObjectURL(url)") ||
+  !pushEdgeSource.includes('title: String(title || "Međasi Futsal Liga")') ||
+  !pushEdgeSource.includes("const safeMatchId = match_id == null ? null : String(match_id);") ||
+  !pushEdgeSource.includes("safeMatchId.length > 100") ||
+  !pushEdgeSource.includes("type: eventType") ||
+  !pushConfigMigration.includes("alter table public.push_config enable row level security;") ||
+  !pushConfigMigration.includes("revoke all privileges on table public.push_config from public, anon, authenticated;")
+) {
+  fail("PWA navigation caching, standings/calendar safety, push payload validation, and push_config hardening must remain in place");
+} else {
+  pass("PWA navigation, calendar export, push payload validation, and private push-config hardening are protected against regressions");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
