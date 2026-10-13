@@ -344,6 +344,23 @@ const SECTION_STATE_KEY = "medjasi_active_section_v1";
 let medjasiAuthInteraction = false;
 let medjasiSectionRestoreTimer = null;
 
+let medjasiUserInteracted = false;
+
+// A delayed startup/focus restore must never overwrite a section the user has
+// already chosen. Register before init() starts its asynchronous auth/data work.
+if(!window.__MEDJASI_SECTION_INTERACTION_GUARD__){
+  window.__MEDJASI_SECTION_INTERACTION_GUARD__ = true;
+  const markSectionInteraction = () => {
+    medjasiUserInteracted = true;
+    if(medjasiSectionRestoreTimer !== null){
+      clearTimeout(medjasiSectionRestoreTimer);
+      medjasiSectionRestoreTimer = null;
+    }
+  };
+  document.addEventListener("pointerdown", markSectionInteraction, {capture:true,passive:true});
+  document.addEventListener("keydown", markSectionInteraction, true);
+}
+
 function rememberActiveSection(id){
   try{
     if(id) sessionStorage.setItem(SECTION_STATE_KEY,String(id));
@@ -362,6 +379,7 @@ function getRememberedSection(){
 
 function restoreRememberedSection(){
   try{
+    if(medjasiUserInteracted) return false;
     const saved=getRememberedSection();
     if(!saved || saved==="login") return false;
     const section=document.getElementById(saved);
