@@ -868,8 +868,8 @@
       })
       .catch(error=>console.error("Service Worker nije registrovan:",error));
   };
-  if(document.readyState==="complete") registerWorker();
-  else window.addEventListener("load",registerWorker,{once:true});
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",registerWorker,{once:true});
+  else registerWorker();
 })();
 </script>
 </body>
