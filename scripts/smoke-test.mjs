@@ -83,20 +83,28 @@ try{
   );
   const appReadyState=await page.evaluate(()=>window.__MEDJASI_APP_READY_STATE||"missing");
   const leagueDataState=await page.evaluate(()=>window.__MEDJASI_LEAGUE_DATA_STATE||"missing");
+  async function inspectDataWarning(){
+    const visible=await page.evaluate(()=>{
+      const status=document.getElementById("mflDataStatus");
+      return !!status&&!status.hidden;
+    });
+    if(!visible)return null;
+    const message=await page.evaluate(()=>document.getElementById("mflDataStatusMessage")?.textContent||"");
+    assert.ok(/Podaci lige|Osvježavanje podataka/i.test(message),"A visible data warning must explain the loading problem.");
+    assert.ok(await page.locator("#mflDataStatus button").count()>0,"A visible data warning must provide a retry action.");
+    return message;
+  }
   if(leagueDataState!=="loaded"){
-    throw new Error("Učitavanje podataka lige nije uspjelo (dataState="+leagueDataState+", init="+appReadyState+"). Provjeri console.error \"Medjasi data initialization\" i Supabase/RLS/RPC greške. Browser errors: "+browserConsoleErrors.join(" | "));
+    const warning=await inspectDataWarning();
+    throw new Error("Učitavanje podataka lige nije uspjelo (dataState="+leagueDataState+", init="+appReadyState+")."+(warning?" Warning/retry UI verified: "+warning:"")+" Provjeri console.error \"Medjasi data initialization\" i Supabase/RLS/RPC greške. Browser errors: "+browserConsoleErrors.join(" | "));
   }
   if(appReadyState!=="ready"){
     throw new Error("Aplikacija nije završila inicijalizaciju (state="+appReadyState+"). Browser errors: "+browserConsoleErrors.join(" | "));
   }
 
-  const statusVisible=await page.evaluate(()=>{
-    const status=document.getElementById("mflDataStatus");
-    return !!status&&!status.hidden;
-  });
-  if(statusVisible){
-    const message=await page.evaluate(()=>document.getElementById("mflDataStatusMessage")?.textContent||"");
-    throw new Error("Aplikacija je prikazala grešku pri učitavanju: "+message);
+  const visibleWarning=await inspectDataWarning();
+  if(visibleWarning){
+    throw new Error("Aplikacija je prikazala grešku pri učitavanju: "+visibleWarning);
   }
 
   async function countVisible(table){
@@ -176,14 +184,6 @@ try{
   assert.equal(tabletHeader.sidebarVisible,true,"The established sidebar navigation must remain available when the header hamburger is removed.");
   console.log("PASS 1100px tablet layout: no overflow, duplicate hamburger hidden, sidebar navigation available");
   await page.setViewportSize({width:1365,height:900});
-  if(loadedCounts.dataWarning){
-    // Keep the diagnostic useful, but the final network/error assertions below make
-    // an actual failed bootstrap fail the smoke test.
-    const warningText=await page.locator("#mflDataStatus").textContent();
-    assert.ok(/Podaci lige|Osvježavanje podataka/i.test(warningText||""),"A data failure must be explained to visitors.");
-    assert.ok(await page.locator("#mflDataStatus button").count()>0,"The data warning must provide a retry action.");
-    console.log("WARN live Supabase data warning is visible:",JSON.stringify({warning:warningText,browserConsoleErrors,failedResponses:failedResponses.slice(0,8)}));
-  }
   for(const id of ["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info"])await clickSection(id);
   await page.locator("#headerAccount button").filter({hasText:"Prijava"}).first().click();
   await page.waitForFunction(()=>!!document.querySelector("#login.section.active"),null,{timeout:5000});
