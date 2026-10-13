@@ -38,5 +38,5 @@ jobs:
         run: npm install --no-save playwright
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Diagnose mobile overflow and validate drawer routes in Chromium
+      - name: Validate desktop/mobile overflow and drawer routes in Chromium
         run: node scripts/smoke-test.mjs
