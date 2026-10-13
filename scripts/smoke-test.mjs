@@ -428,10 +428,11 @@ try{
     await page.waitForFunction(()=>{
       const drawer=document.querySelector("#mobileMoreDrawer");
       const panel=drawer?.querySelector(".mobile-more-panel");
-      return !!drawer?.classList.contains("open") && !!panel &&
-        getComputedStyle(panel).display!=="none" &&
-        getComputedStyle(panel).visibility!=="hidden";
-    },null,{timeout:5000});
+      if(!drawer?.classList.contains("open")||!panel)return false;
+      const style=getComputedStyle(panel),rect=panel.getBoundingClientRect();
+      return style.display!=="none"&&style.visibility!=="hidden"&&
+        rect.height>0&&rect.top<innerHeight-2&&rect.bottom<=innerHeight+2;
+    },null,{timeout:7000});
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     await shortcut.scrollIntoViewIfNeeded();
     await shortcut.click();
