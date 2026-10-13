@@ -54,3 +54,9 @@
 .graphic-engine-match-fields .form-group{min-width:0;margin:0}
 .graphic-engine-match-fields .graphic-engine-help{grid-column:1/-1}
 @media(max-width:640px){.graphic-engine-match-fields{grid-template-columns:1fr;padding:11px}}
+
+/* Blur option in the existing Graphic Engine editor */
+.graphic-engine-blur-control{display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:0}
+.graphic-engine-blur-toggle{display:flex;align-items:center;gap:9px;color:#e9f4e8;font-size:.92rem;cursor:pointer}
+.graphic-engine-blur-toggle input{accent-color:#b7ff55;width:18px;height:18px;flex:0 0 auto}
+.graphic-engine-blur-control small{line-height:1.45}
