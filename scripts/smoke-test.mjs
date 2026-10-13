@@ -390,10 +390,19 @@ try{
   await page.locator("#mobileMoreDrawer .mobile-more-backdrop").click({position:{x:5,y:5}});
   await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
 
-  await page.locator("#mobileMoreBtn").click();
-  await page.locator('.mobile-more-grid button[onclick="mobileMoreGo(\'players\')"]').click();
-  await page.waitForFunction(()=>document.querySelector("#players.section")?.classList.contains("active"),null,{timeout:5000});
-  await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  const mobileRoutes=[
+    ["home","Početna"],["matches","Utakmice"],["table","Tabela"],["teams","Ekipe"],
+    ["players","Igrači"],["stats","Statistika"],["gallery","Galerija"],["community","Community"],
+    ["chat","Chat"],["news","Vijesti"],["game","Pogodi"],["info","Liga info"]
+  ];
+  for(const [sectionId,label] of mobileRoutes){
+    await page.locator("#mobileMoreBtn").click();
+    await page.locator(".mobile-more-grid button").filter({hasText:label}).first().click();
+    await page.waitForFunction((id)=>document.querySelector("#"+id+".section")?.classList.contains("active"),sectionId,{timeout:7000});
+    await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  }
+  console.log("PASS all 12 direct mobile More destinations route to their matching sections");
+
 
   await page.evaluate(()=>{
     window.__mobileMoreDashboardProbe=null;
