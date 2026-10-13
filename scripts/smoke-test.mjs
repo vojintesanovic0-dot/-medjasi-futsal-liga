@@ -624,8 +624,8 @@ try{
   });
   for(const [destination,table] of [["community","community_posts"],["chat","messages"],["news","news"]]){
     await page.locator("#graphicDestination").evaluate((el,value)=>{el.value=value;el.dispatchEvent(new Event("change",{bubbles:true}));},destination);
-    await page.locator("#graphicPublishBtn").evaluate(el=>el.click());
     const expectedCount=(await page.evaluate(()=>window.__graphicPublishTest.records.length))+1;
+    await page.locator("#graphicPublishBtn").evaluate(el=>el.click());
     await page.waitForFunction(expected=>window.__graphicPublishTest?.records?.length===expected,expectedCount,{timeout:5000});
     const record=await page.evaluate(()=>window.__graphicPublishTest.records.at(-1));
     assert.equal(record.table,table,"Graphic publish destination "+destination+" must insert into "+table+".");
