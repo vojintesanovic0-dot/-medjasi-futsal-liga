@@ -453,24 +453,24 @@ try{
         getComputedStyle(panel).display!=="none"&&
         getComputedStyle(panel).visibility!=="hidden";
     },null,{timeout:5000});
-    // Let the drawer's slide-in transition finish before scrolling/clicking its lower rows.
-    await page.waitForTimeout(350);
+    // Wait for the drawer's transition to finish and its panel to settle inside the viewport.
+    await page.waitForFunction(()=>{
+      const drawer=document.querySelector("#mobileMoreDrawer");
+      const panel=drawer?.querySelector(".mobile-more-panel");
+      if(!drawer?.classList.contains("open")||!panel)return false;
+      const rect=panel.getBoundingClientRect(),style=getComputedStyle(panel);
+      return style.display!=="none"&&style.visibility!=="hidden"&&
+        rect.height>0&&rect.top>=-1&&rect.bottom<=innerHeight+2;
+    },null,{timeout:7000});
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     const shortcutHandle=await shortcut.elementHandle();
-    // Scroll the drawer's actual scroll container to the shortcut before clicking.
-    // The panel has a fixed heading; the grid itself is the independently scrollable region.
+    // Scroll the independently scrollable shortcut grid to the selected button.
     await shortcut.evaluate(el=>{
       const grid=el.closest(".mobile-more-grid");
       if(!grid)return;
       const gridRect=grid.getBoundingClientRect(),rect=el.getBoundingClientRect();
       grid.scrollTo({top:grid.scrollTop+rect.top-gridRect.top-(grid.clientHeight-rect.height)/2,behavior:"instant"});
     });
-    const scrollDebug=await shortcut.evaluate(el=>{
-      const grid=el.closest(".mobile-more-grid"),panel=el.closest(".mobile-more-panel");
-      const r=el.getBoundingClientRect(),g=grid?.getBoundingClientRect(),p=panel?.getBoundingClientRect();
-      return {label:(el.textContent||"").trim(),gridScrollTop:grid?.scrollTop,gridScrollHeight:grid?.scrollHeight,gridClientHeight:grid?.clientHeight,gridRect:g?{top:Math.round(g.top),bottom:Math.round(g.bottom)}:null,buttonRect:{top:Math.round(r.top),bottom:Math.round(r.bottom)},panelRect:p?{top:Math.round(p.top),bottom:Math.round(p.bottom)}:null,gridOverflow:getComputedStyle(grid).overflowY,panelDisplay:getComputedStyle(panel).display,panelTransform:getComputedStyle(panel).transform};
-    });
-    console.log("MOBILE DRAWER SCROLL DEBUG "+JSON.stringify(scrollDebug));
     await page.waitForFunction(el=>{
       if(!el)return false;
       const rect=el.getBoundingClientRect();
