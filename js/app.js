@@ -5128,17 +5128,27 @@ async function changeMinute(id,minute){
 
   try{
     const patch={current_minute:value};
-    if(match.status==="live")patch.live_started_at=new Date(Date.now()-value*60000).toISOString();
+    if(match.status==="live"){
+      const pausedSeconds=Math.max(0,Number(match.paused_seconds||0));
+      const end=match.paused_at?Date.parse(match.paused_at):Date.now();
+      patch.live_started_at=new Date((Number.isFinite(end)?end:Date.now())-(value*60+pausedSeconds)*1000).toISOString();
+    }
     const {data,error}=await sbClient().from("matches")
       .update(patch)
       .eq("id",id)
-      .select("id,current_minute,live_started_at")
+      .select("id,current_minute,live_started_at,paused_at,paused_seconds,match_format")
       .maybeSingle();
     if(error)throw error;
     if(!data)throw new Error("Baza nije potvrdila promjenu minute.");
 
     const local=matches.find(x=>String(x.id)===String(id));
-    if(local){local.current_minute=data.current_minute;if("live_started_at" in data)local.live_started_at=data.live_started_at;}
+    if(local){
+      local.current_minute=data.current_minute;
+      if("live_started_at" in data)local.live_started_at=data.live_started_at;
+      if("paused_at" in data)local.paused_at=data.paused_at;
+      if("paused_seconds" in data)local.paused_seconds=data.paused_seconds;
+      if("match_format" in data)local.match_format=data.match_format;
+    }
 
     try{
       const refreshed=await loadAll();
