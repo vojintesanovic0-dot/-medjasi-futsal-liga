@@ -11555,6 +11555,20 @@ async function disableRealPush(){
 }
 function renderPushUI(){if(!$('v7PushStatus')||!$('v7PushButton'))return;const on=localStorage.getItem('medjasi_push_enabled')==='1';$('v7PushStatus').textContent=on?'🔔 Push obavještenja su uključena.':'Push obavještenja nisu uključena.';$('v7PushStatus').className='v7-push-status '+(on?'ok':'');$('v7PushButton').textContent=on?'🔕 Isključi push':'🔔 Uključi push';$('v7PushButton').onclick=on?disableRealPush:subscribeRealPush}
 function ensureSeasonAdmin(){if(!$('adminContent')||!isAdm()||$('v7SeasonCard'))return;const c=document.createElement('div');c.id='v7SeasonCard';c.className='card';c.style.marginTop='20px';c.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SEZONE</span><h3>🏆 Upravljanje sezonama</h3><p class="muted">Ako postoji aktivna sezona, automatski se dodjeljuje novim utakmicama.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="actions"><input id="v7SeasonName" placeholder="npr. 2026/27" style="max-width:220px"><button class="btn btn-green" onclick="medjasiV7.addSeason()">＋ Nova sezona</button></div><div id="v7SeasonList" style="margin-top:12px"></div>`;$('adminContent').appendChild(c);renderSeasons()}
+function updateMflSeasonLabels(){
+  const seasons=Array.isArray(V7?.seasons)?V7.seasons:[];
+  const season=seasons.find(item=>item&&item.is_active)||seasons[0];
+  const name=String(season?.name||"").trim();
+  if(!name)return false;
+  const labels=[
+    [".v10-eyebrow b",name],
+    [".v10-floating-card b",name],
+    [".dashboard-hero-mark span","SEZONA "+name],
+    ["#dashboardFooter .dashboard-footer-season span","SEZONA "+name]
+  ];
+  labels.forEach(([selector,value])=>document.querySelectorAll(selector).forEach(node=>{node.textContent=value;}));
+  return true;
+}
 async function loadSeasons(){
   if(!supabaseClient || typeof supabaseClient.from!=="function"){
     V7.seasons=Array.isArray(V7.seasons)?V7.seasons:[];
@@ -11566,6 +11580,7 @@ async function loadSeasons(){
     if(error)throw error;
     V7.seasons=data||[];
     renderSeasons();
+    updateMflSeasonLabels();
     return true;
   }catch(error){
     console.error("Učitavanje sezona nije uspjelo:",error);
