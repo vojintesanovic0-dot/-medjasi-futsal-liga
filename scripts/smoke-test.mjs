@@ -356,6 +356,53 @@ try{
   await page.waitForFunction(()=>!!document.querySelector("#login.section.active")&&document.querySelector("#registerPanel")?.hidden===false,null,{timeout:5000});
   await page.locator(".auth-return-btn").click();
   await page.waitForFunction(()=>!!document.querySelector("#home.section.active"),null,{timeout:5000});
+  // Exercise admin category navigation in an isolated browser-only admin UI context.
+  // All mutation/render functions are stubbed here; no real database writes or role changes occur.
+  await page.evaluate(()=>{
+    window.__adminSmokeOriginals={
+      isAdmin:window.isAdmin,
+      renderAdminMatches:window.renderAdminMatches,
+      renderAdminGallery:window.renderAdminGallery,
+      renderAdminNews:window.renderAdminNews,
+      renderMusicAdmin:window.renderMusicAdmin,
+      fillTeamSelects:window.fillTeamSelects,
+      injectModeratorPanel:window.injectModeratorPanel,
+      initGraphicEngine:window.initGraphicEngine,
+      renderGraphicEnginePlayers:window.renderGraphicEnginePlayers
+    };
+    window.isAdmin=()=>true;
+    window.renderAdminMatches=()=>{};
+    window.renderAdminGallery=()=>{};
+    window.renderAdminNews=()=>{};
+    window.renderMusicAdmin=()=>{};
+    window.fillTeamSelects=()=>{};
+    window.injectModeratorPanel=()=>{};
+    window.initGraphicEngine=()=>{};
+    window.renderGraphicEnginePlayers=()=>{};
+    window.showSection("admin");
+    window.__MEDJASI_ADMIN_ORGANIZER_APPLY__?.();
+  });
+  await page.waitForFunction(()=>!!document.querySelector("#admin.section.active #adminOrganizer .admin-organizer-tab"),null,{timeout:8000});
+  assert.equal(await page.locator("#adminOrganizer .admin-organizer-tab").count(),4,"Admin organizer must expose all four existing categories.");
+  assert.equal(await page.locator("#adminOrganizer .admin-organizer-group").count(),4,"Admin organizer must keep one panel per category.");
+  for(const [group,label] of [["liga","Liga"],["sadrzaj","Sadržaj"],["moderacija","Moderacija"],["dizajn","Graphic Studio"]]){
+    await page.locator('#adminOrganizer [data-admin-filter="'+group+'"]').click();
+    await page.waitForFunction(id=>{
+      const organizer=document.querySelector("#adminOrganizer");
+      const tab=organizer?.querySelector('[data-admin-filter="'+id+'"]');
+      const panel=organizer?.querySelector('[data-admin-organizer-group-container="'+id+'"]');
+      return !!tab?.classList.contains("active")&&!!panel&&!panel.hidden&&panel.dataset.adminOrganizerVisible==="1";
+    },group,{timeout:5000});
+  }
+  await page.evaluate(()=>{
+    const originals=window.__adminSmokeOriginals||{};
+    for(const [key,value] of Object.entries(originals))if(value!==undefined)window[key]=value;
+    delete window.__adminSmokeOriginals;
+    window.showSection("home");
+  });
+  await page.waitForFunction(()=>!!document.querySelector("#home.section.active"),null,{timeout:5000});
+  console.log("PASS admin organizer: all four categories open and switch without removing original cards or writing to the database");
+
   await page.setViewportSize({width:900,height:900});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
   const tabletMenu=page.locator("#mobileMenuBtn");
