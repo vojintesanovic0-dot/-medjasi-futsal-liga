@@ -404,7 +404,6 @@ try{
   console.log("PASS all 12 direct mobile More destinations route to their matching sections");
 
 
-  await page.evaluate(()=>{
   const dashboardRoutes=[["shop","Fan Shop"],["fanbase","Fan Base"],["mine","Moji tiketi"],["live","Live centar"],["board","Nagrade i poredak"],["collection","Kolekcija"],["club","Moja tribina"],["mvp","MVP"]];
   await page.evaluate(()=>{
     window.__mobileMoreDashboardProbe=null;
