@@ -30,11 +30,11 @@ const failedResponses=[];
 let suppressLiveRest=false;
 let suppressedLiveRestCount=0;
 page.on("pageerror",error=>pageErrors.push(error.stack||error.message));
-page.on("console",message=>{if(message.type()==="error")browserConsoleErrors.push(message.text());});
+page.on("console",message=>{if(message.type()==="error")browserConsoleErrors.push(message.text()+" (source: "+JSON.stringify(message.location()?.url||"unavailable")+")");});
 page.on("requestfailed",request=>failedRequests.push(request.url()+" :: "+(request.failure()?.errorText||"request failed")));
 page.on("response",response=>{if(/supabase\.co|cdn\.jsdelivr\.net|unpkg\.com/.test(response.url())&&response.status()>=400)failedResponses.push(response.status()+" "+response.url());});
 page.on("response",response=>{if(response.url().startsWith(base)&&response.status()>=400)missingAssets.push(response.status()+" "+response.url());});
-await page.route(/https:\/\/[^/]+\.supabase\.co\/rest\/v1\//,async route=>{
+// The smoke test validates our UI and API integration, not the third-party YouTube player.\n// Keep the embedded player from loading in CI so its browser permission-policy\n// diagnostics cannot mask real app errors; Supabase and local-site requests remain live and checked.\nawait page.route(/^https:\/\/(?:www\\.)?(?:youtube-nocookie\\.com|youtube\\.com)\/embed\//,async route=>{\n  await route.fulfill({status:200,contentType:"text/html; charset=utf-8",body:"<!doctype html><html><head><meta charset=\\\"utf-8\\\"></head><body></body></html>"});\n});\nawait page.route(/https:\/\/[^/]+\.supabase\.co\/rest\/v1\//,async route=>{
   if(!suppressLiveRest){await route.continue();return;}
   suppressedLiveRestCount++;
   await route.fulfill({
