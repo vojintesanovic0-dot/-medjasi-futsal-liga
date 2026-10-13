@@ -33,10 +33,24 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
 
     const role = profile?.role;
-    const { type, title, body, match_id } = await req.json();
-    const eventType = String(type || "").trim();
-    const safeMatchId = match_id == null ? null : String(match_id);
-    if (safeMatchId !== null && safeMatchId.length > 100) {
+    let requestPayload: unknown;
+    try {
+      requestPayload = await req.json();
+    } catch {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400, headers: corsHeaders });
+    }
+    if (!requestPayload || typeof requestPayload !== "object" || Array.isArray(requestPayload)) {
+      return Response.json({ error: "Request body must be a JSON object" }, { status: 400, headers: corsHeaders });
+    }
+
+    const { type, title, body, match_id } = requestPayload as Record<string, unknown>;
+    const eventType = typeof type === "string" ? type.trim() : "";
+    const safeMatchId = match_id == null
+      ? null
+      : (typeof match_id === "string" || typeof match_id === "number")
+        ? String(match_id).trim()
+        : "";
+    if (safeMatchId !== null && (!safeMatchId || safeMatchId.length > 100)) {
       return Response.json({ error: "Invalid match_id" }, { status: 400, headers: corsHeaders });
     }
     const allowedPushTypes = new Set(["goal", "card", "live", "finish", "match_finished", "news"]);
