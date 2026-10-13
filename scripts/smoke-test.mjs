@@ -623,7 +623,7 @@ try{
     window.sbClient=()=>({from:table=>({insert:async row=>{window.__graphicPublishTest.records.push({table,row});return {error:null};}})});
   });
   for(const [destination,table] of [["community","community_posts"],["chat","messages"],["news","news"]]){
-    await page.locator("#graphicDestination").selectOption(destination);
+    await page.locator("#graphicDestination").evaluate((el,value)=>{el.value=value;el.dispatchEvent(new Event("change",{bubbles:true}));},destination);
     await page.locator("#graphicPublishBtn").evaluate(el=>el.click());
     const expectedCount=(await page.evaluate(()=>window.__graphicPublishTest.records.length))+1;
     await page.waitForFunction(expected=>window.__graphicPublishTest?.records?.length===expected,expectedCount,{timeout:5000});
