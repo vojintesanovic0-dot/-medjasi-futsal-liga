@@ -1,0 +1,56 @@
+.graphic-engine-card{margin-top:20px;overflow:hidden}
+.graphic-engine-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+.graphic-engine-head h3{margin:6px 0 5px}
+.graphic-engine-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:22px}
+.graphic-engine-controls{min-width:0}
+.graphic-engine-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.graphic-engine-actions .btn{flex:1 1 180px}
+.graphic-engine-preview{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+.graphic-preview-label{grid-column:1/-1;font-size:11px;letter-spacing:.16em;font-weight:800;opacity:.7;margin-top:4px}
+.graphic-preview-frame,.graphic-result-frame{min-height:240px;border-radius:16px;border:1px solid rgba(255,255,255,.09);background:repeating-conic-gradient(rgba(255,255,255,.05) 0 25%,transparent 0 50%) 50%/20px 20px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.graphic-preview-frame img{width:100%;height:300px;object-fit:contain}
+.graphic-result-frame{grid-column:1/-1;min-height:430px}
+.graphic-result-frame img{width:100%;max-height:620px;object-fit:contain}
+.graphic-news-fields{display:block}
+.graphic-news-fields[hidden]{display:none}
+.graphic-engine-card select,.graphic-engine-card input,.graphic-engine-card textarea{width:100%}
+@media(max-width:850px){.graphic-engine-grid{grid-template-columns:1fr}.graphic-engine-preview{grid-template-columns:1fr}.graphic-preview-label{grid-column:1}.graphic-result-frame{grid-column:1}}
+
+
+/* Graphic Engine enhancement v2 — scoped to the existing admin graphics module */
+.graphic-engine-card{border:1px solid rgba(183,255,85,.2);background:linear-gradient(145deg,rgba(13,25,18,.98),rgba(8,12,10,.98));box-shadow:0 18px 48px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.035)}
+.graphic-engine-head{padding:4px 2px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.graphic-engine-head .hero-kicker{color:#b7ff55;letter-spacing:.14em;font-size:11px;font-weight:800}
+.graphic-engine-head h3{font-size:clamp(20px,2vw,27px);line-height:1.2}
+.graphic-engine-head p{max-width:680px;line-height:1.55}
+.graphic-engine-card .form-group label{display:block;margin-bottom:7px;font-weight:700;color:rgba(255,255,255,.9)}
+.graphic-engine-card select,.graphic-engine-card input:not([type="file"]):not([type="color"]),.graphic-engine-card textarea{border:1px solid rgba(255,255,255,.13);border-radius:11px;min-height:43px;padding:10px 12px;background:rgba(3,8,5,.7);color:inherit;outline:none;transition:border-color .18s,box-shadow .18s}
+.graphic-engine-card select:focus,.graphic-engine-card input:focus,.graphic-engine-card textarea:focus{border-color:rgba(183,255,85,.7);box-shadow:0 0 0 3px rgba(183,255,85,.09)}
+.graphic-engine-editor-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,.65fr);gap:12px}
+.graphic-color-control{display:flex;align-items:center;gap:10px;min-height:43px}
+.graphic-engine-card input[type="color"]{width:48px;height:40px;padding:3px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:#101610;cursor:pointer}
+.graphic-color-control span,.graphic-engine-help{font-size:12px;line-height:1.45;opacity:.72}
+.graphic-engine-actions .btn{min-height:42px;border-radius:11px;font-weight:750;transition:transform .16s,filter .16s,border-color .16s}
+.graphic-engine-actions .btn:not(:disabled):hover{filter:brightness(1.08);transform:translateY(-1px)}
+.graphic-engine-actions .btn:disabled{opacity:.45;cursor:not-allowed}
+.graphic-export-actions{padding:12px;border:1px solid rgba(255,255,255,.075);border-radius:14px;background:rgba(255,255,255,.025)}
+.graphic-engine-help{margin:4px 2px 0}
+.graphic-preview-frame,.graphic-result-frame{border-color:rgba(183,255,85,.15);box-shadow:inset 0 0 28px rgba(0,0,0,.15)}
+.graphic-preview-label{color:#b7ff55}
+#graphicStatus{min-height:20px;margin-top:10px}
+@media(max-width:640px){.graphic-engine-head{flex-direction:column}.graphic-engine-editor-fields{grid-template-columns:1fr}.graphic-engine-actions .btn{flex-basis:100%}.graphic-export-actions{padding:9px}.graphic-preview-frame{min-height:180px}.graphic-preview-frame img{height:220px}.graphic-result-frame{min-height:280px}}
+
+/* Graphic Engine enhancement v3 — editor controls */
+.graphic-engine-adjustments{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px;margin:14px 0;border:1px solid rgba(183,255,85,.13);border-radius:14px;background:rgba(255,255,255,.025)}
+.graphic-engine-adjustments .form-group{min-width:0;margin:0}
+.graphic-engine-adjustments label span{float:right;color:#b7ff55;font-variant-numeric:tabular-nums}
+.graphic-engine-adjustments input[type="range"]{width:100%;min-height:28px;padding:0;accent-color:#b7ff55;cursor:pointer}
+.graphic-engine-adjustments select{width:100%}
+@media(max-width:640px){.graphic-engine-adjustments{grid-template-columns:1fr;padding:11px}}
+
+
+/* Match graphic inputs — scoped to the existing Graphic Engine card */
+.graphic-engine-match-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px;margin:14px 0;border:1px solid rgba(183,255,85,.16);border-radius:14px;background:rgba(183,255,85,.035)}
+.graphic-engine-match-fields .form-group{min-width:0;margin:0}
+.graphic-engine-match-fields .graphic-engine-help{grid-column:1/-1}
+@media(max-width:640px){.graphic-engine-match-fields{grid-template-columns:1fr;padding:11px}}
