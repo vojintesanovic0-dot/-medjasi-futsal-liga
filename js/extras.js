@@ -207,7 +207,7 @@ function renderAudit(){
 async function loadAudit(){
   const body=$("xtAuditBody");if(!body)return;
   body.innerHTML='<p class="muted">Učitavanje…</p>';
-  const {data,error}=await window.supabaseClient.from("admin_audit_log").select("*").order("created_at",{ascending:false}).limit(50);
+  const {data,error}=await window.sbClient().from("admin_audit_log").select("*").order("created_at",{ascending:false}).limit(50);
   if(error){body.innerHTML='<p class="muted">Log nije dostupan ('+esc(error.message)+'). Pokreni sql/05_rate_limit_and_audit.sql.</p>';return}
   const diff=r=>{if(r.op!=="UPDATE"||!r.old_data||!r.new_data)return "";return Object.keys(r.new_data).filter(k=>JSON.stringify(r.new_data[k])!==JSON.stringify(r.old_data[k])&&k!=="updated_at").slice(0,6).join(", ")};
   body.innerHTML='<div class="table-wrap"><table class="xt-table"><thead><tr><th>Vrijeme</th><th>Tabela</th><th>Akcija</th><th>ID</th><th>Promjena</th><th>Admin</th></tr></thead><tbody>'+
