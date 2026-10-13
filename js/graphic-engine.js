@@ -78,6 +78,9 @@
     }
     if(result) result.hidden = true;
     if(name) name.textContent = label || file?.name || "Nije odabrana fotografija";
+    $("graphicPublishBtn")?.setAttribute("disabled","");
+    $("graphicExportPngBtn")?.setAttribute("disabled","");
+    $("graphicExportJpegBtn")?.setAttribute("disabled","");
     $("graphicGenerateBtn")?.removeAttribute("disabled");
   }
 
@@ -488,9 +491,23 @@
     if(preset.caption!==undefined&&$("graphicCaption"))$("graphicCaption").value=preset.caption;
     if(preset.title!==undefined&&$("graphicNewsTitle"))$("graphicNewsTitle").value=preset.title;
     if(preset.body!==undefined&&$("graphicNewsBody"))$("graphicNewsBody").value=preset.body;
-    syncState();
+    markDesignDirty();
     if($("graphicNewsFields"))$("graphicNewsFields").hidden=state.destination!=="news";
     toast("Postavke „"+key+"“ su učitane. Ponovo generiši grafiku da primijeniš promjene.");
+  }
+
+  function markDesignDirty(){
+    syncState();
+    generatedBlob=null;
+    revoke(generatedPreviewUrl);
+    generatedPreviewUrl=null;
+    const result=$("graphicResultPreview");
+    if(result) result.hidden=true;
+    $("graphicPublishBtn")?.setAttribute("disabled","");
+    $("graphicExportPngBtn")?.setAttribute("disabled","");
+    $("graphicExportJpegBtn")?.setAttribute("disabled","");
+    const status=$("graphicStatus");
+    if(status) status.textContent="Postavke su promijenjene. Ponovo generiši grafiku prije izvoza ili objave.";
   }
 
   function syncState(){
@@ -663,9 +680,9 @@
     $("graphicExportJpegBtn")?.addEventListener("click",()=>exportGraphic("image/jpeg"));
     $("graphicSavePresetBtn")?.addEventListener("click",savePreset);
     $("graphicLoadPresetBtn")?.addEventListener("click",loadPreset);
-    $("graphicHeadline")?.addEventListener("input",syncState);
-    $("graphicAccentColor")?.addEventListener("input",syncState);
-    $("graphicTemplate")?.addEventListener("change",syncState);
+    $("graphicHeadline")?.addEventListener("input",markDesignDirty);
+    $("graphicAccentColor")?.addEventListener("input",markDesignDirty);
+    $("graphicTemplate")?.addEventListener("change",markDesignDirty);
     $("graphicDestination")?.addEventListener("change",()=>{
       syncState();
       $("graphicNewsFields").hidden=$("graphicDestination").value!=="news";
