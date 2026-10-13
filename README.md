@@ -51,10 +51,10 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, objedinjeni league snapshot RPC, timeout/backoff pri greškama baze, lokalna kopija posljednjih uspješno učitanih podataka, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja i auth callback bez await deadlocka.
-- `js/extras.js` + `css/extras.css`: statistika+ (strijelci, asistenti, fair play), .ics kalendar, dijeljenje rezultata kao slika, opciona tema i admin audit UI.
+- `js/extras.js` + `css/extras.css`: statistika+ (strijelci, asistenti, fair play), .ics kalendar, dijeljenje rezultata kao slika i admin audit UI; prekidač svijetle/tamne teme je uklonjen, a tamni izgled ostaje aktivan.
 - `js/growth.js`: deduplicirano učitavanje „Liga info“ podataka, timeouti i eksponencijalni backoff pri greškama API-ja; čuva prethodne rezultate i sprečava da zakašnjeli odgovor prethodnog korisnika promijeni trenutno stanje.
 - `service-worker.js`: nova verzija cache-a, offline stranica i keširanje jsDelivr Supabase biblioteke.
 - `supabase/functions/fan-admin-action/index.ts`: administratorski RPC pozivi koriste JWT stvarnog administratora kako bi provjere `auth.uid()` ostale ispravne.
 - Vidljivi naziv lige je normalizovan na `Međasi` bez promjene tehničkih identifikatora i ruta.
 
-- Nakon izmjena registracije ažurirani su `index.html` i Service Worker cache ključevi (`app.js?v=20261012v52`, PWA cache v158), kako bi korisnici dobili novi JavaScript umjesto stare keširane verzije.
+- Mobilna navigacija koristi donju traku i meni „Više”; `Escape` zatvara meni. Ažurirane su verzije `app.js?v=20261012v54`, `extras.js/css?v=20261013v2`, `medjasi-header-fix-v1.css?v=2` i PWA cache `medjasi-futsal-pwa-v178`.
