@@ -440,8 +440,20 @@ try{
     await routeButton.evaluate(el=>el.click());
     await page.waitForFunction((id)=>document.querySelector("#"+id+".section")?.classList.contains("active"),sectionId,{timeout:7000});
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+    const sectionLayout=await page.evaluate(()=>{
+      const visibleOverflow=[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({el,rect})=>{
+        if(rect.width<=0||rect.height<=0||rect.bottom<=0||rect.top>=innerHeight||el.closest(".fx-bg")||el.closest('[aria-hidden="true"]'))return false;
+        for(let node=el;node&&node!==document.documentElement;node=node.parentElement){
+          const style=getComputedStyle(node);
+          if(style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
+        }
+        return rect.right>innerWidth+2||rect.left< -2;
+      }).slice(0,10).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",right:Math.round(rect.right),left:Math.round(rect.left),width:Math.round(rect.width)}));
+      return {viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,visibleOverflow};
+    });
+    assert.ok(sectionLayout.document<=sectionLayout.viewport+2&&sectionLayout.body<=sectionLayout.viewport+2&&sectionLayout.visibleOverflow.length===0,"Horizontal overflow in mobile section "+sectionId+": "+JSON.stringify(sectionLayout));
   }
-  console.log("PASS all 12 direct mobile More destinations route to their matching sections");
+  console.log("PASS all 12 mobile More destinations open correctly without horizontal overflow");
 
   await page.setViewportSize({width:320,height:740});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
