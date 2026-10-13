@@ -22,11 +22,24 @@ const css = read("css/medjasi-dashboard-refinements-v2.css");
 const extras = read("js/extras.js");
 const extrasCss = read("css/extras.css");
 const mobileCss = read("css/medjasi-mobile-v2.css");
+const pushConfigMigration = read("sql/28_harden_push_config.sql");
 
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((m) => m[1]);
 const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
 if (duplicates.length) fail(`Duplicate HTML IDs: ${duplicates.join(", ")}`);
 else pass(`No duplicate IDs across ${ids.length} HTML IDs`);
+
+if (
+  !pushConfigMigration.includes("do $") ||
+  !pushConfigMigration.includes("end;\\n$;") ||
+  !pushConfigMigration.includes("alter table public.push_config enable row level security") ||
+  !pushConfigMigration.includes("revoke all privileges on table public.push_config from public, anon, authenticated") ||
+  !pushConfigMigration.includes("commit;")
+) {
+  fail("Push configuration migration must have a valid DO-block terminator, enable RLS, revoke browser-role privileges, and commit");
+} else {
+  pass("Push configuration migration guards its schema, enables RLS, and revokes browser-role table access");
+}
 
 if (
   html.includes('class="xt-theme-btn"') ||
