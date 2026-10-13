@@ -57,7 +57,7 @@ Deno.serve(async (req: Request) => {
       const userId = typeof body.user_id === "string" ? body.user_id.trim() : "";
       const amount = Number(body.amount);
       const reason = (typeof body.reason === "string" ? body.reason.trim() : "") || "Admin grant";
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
         return Response.json({ error: "Invalid user_id" }, { status: 400, headers: corsHeaders });
       }
       if (!Number.isInteger(amount) || amount === 0 || Math.abs(amount) > 1000) {
@@ -70,7 +70,7 @@ Deno.serve(async (req: Request) => {
     }else if(action==="set_odds"){
       const marketId = typeof body.market_id === "string" ? body.market_id.trim() : "";
       const odds = Number(body.odds);
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(marketId)) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(marketId)) {
         return Response.json({ error: "Invalid market_id" }, { status: 400, headers: corsHeaders });
       }
       if (!Number.isFinite(odds) || odds < 1.01 || odds > 100) {
