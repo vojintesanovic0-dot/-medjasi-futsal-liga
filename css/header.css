@@ -1,0 +1,29 @@
+/* =========================================================
+   MEĐASI — HEADER (Faza 1)
+   Jedna fiksirana traka, isto na desktopu i mobilnom.
+   Učitava se ZADNJE u index.html, pa pobjeđuje starija pravila.
+========================================================= */
+
+:root{
+  --site-header-h:72px;
+}
+@media (max-width:780px){
+  :root{ --site-header-h:64px; }
+}
+
+html body header.site-header{
+  position:fixed!important;
+  top:0!important;
+  right:0!important;
+  left:var(--dash-sidebar,0px)!important;
+  width:auto!important;
+  height:var(--site-header-h)!important;
+  min-height:var(--site-header-h)!important;
+  margin:0!important;
+  z-index:1300!important;
+}
+
+/* Dugme "Otkaži" za mobilnu pretragu ne smije da se vidi na desktopu */
+@media (min-width:781px){
+  .mfl-search-cancel{display:none!important}
+}
