@@ -358,6 +358,15 @@ try{
   assert.ok(mobileWidth.document<=mobileWidth.viewport+2&&mobileWidth.body<=mobileWidth.viewport+2,"Horizontal overflow on mobile: "+JSON.stringify(mobileWidth));
   assert.equal(mobileWidth.topMenuVisible,false,"The duplicate top hamburger must be hidden on mobile; bottom navigation and More drawer are the mobile navigation.");
 
+  // The global modal must have a visible, accessible close control on mobile.
+  await page.evaluate(()=>document.getElementById("modal")?.classList.add("active"));
+  const modalClose=page.locator("#modal .modal-box > button.close");
+  await modalClose.waitFor({state:"visible",timeout:3000});
+  assert.equal(await modalClose.getAttribute("aria-label"),"Zatvori prozor","Modal close control must have an accessible label.");
+  await modalClose.click();
+  await page.waitForFunction(()=>!document.getElementById("modal")?.classList.contains("active"),null,{timeout:3000});
+  console.log("PASS mobile modal has a visible accessible close control and dismisses correctly");
+
   // Exercise the complete More drawer without touching real user data.
   await page.locator("#mobileMoreBtn").click();
   await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
