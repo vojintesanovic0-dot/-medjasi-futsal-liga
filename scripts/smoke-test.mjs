@@ -375,6 +375,17 @@ try{
   });
   assert.ok(mobileWidth.document<=mobileWidth.viewport+2&&mobileWidth.body<=mobileWidth.viewport+2&&mobileWidth.visibleOverflow.length===0,"Horizontal overflow on mobile: "+JSON.stringify(mobileWidth));
   assert.equal(mobileWidth.topMenuVisible,false,"The duplicate top hamburger must be hidden on phones.");
+  assert.equal(await page.locator(".xt-theme-btn, #themeToggle, [data-theme-toggle]").count(),0,"The removed light/dark theme toggle must not return.");
+  await page.setViewportSize({width:320,height:740});
+  const compactWidth=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth}));
+  assert.ok(compactWidth.document<=compactWidth.viewport+2&&compactWidth.body<=compactWidth.viewport+2,"Horizontal overflow on a compact 320px phone: "+JSON.stringify(compactWidth));
+  await page.locator("#mobileMoreBtn").click();
+  await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  const compactDrawer=await page.locator(".mobile-more-grid").evaluate(el=>({columns:getComputedStyle(el).gridTemplateColumns.split(" ").length,scrollHeight:el.scrollHeight,clientHeight:el.clientHeight}));
+  assert.equal(compactDrawer.columns,1,"The More drawer must use one column on 320px phones.");
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  await page.setViewportSize({width:390,height:844});
   await page.locator("#mobileMoreBtn").click();
   await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   await page.keyboard.press("Escape");
