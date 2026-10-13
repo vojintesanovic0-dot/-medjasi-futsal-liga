@@ -8288,6 +8288,7 @@ function subscribeRealtime(){
 ========================================================= */
 
 async function init(){
+  window.__MEDJASI_LEAGUE_DATA_STATE="loading";
 
   // Paint the last confirmed public league snapshot immediately when available.
   // A later REST failure then shows a stale-data warning instead of a blank league.
@@ -8307,6 +8308,7 @@ async function init(){
     console.error("Supabase podaci su privremeno nedostupni; statički dio stranice ostaje aktivan.");
     try{renderAll();}catch(renderError){console.error("Statistički prikaz stranice:",renderError);}
     updateLeagueDataStatus(true);
+    window.__MEDJASI_LEAGUE_DATA_STATE="failed";
     return;
   }
 
@@ -8327,6 +8329,7 @@ async function init(){
   } catch (error) {
     console.error("Medjasi data initialization:", error);
   }
+  window.__MEDJASI_LEAGUE_DATA_STATE=leagueDataLoaded ? "loaded" : "failed";
 
   if(leagueDataLoaded){
     try {
