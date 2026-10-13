@@ -405,15 +405,21 @@ try{
 
 
   await page.evaluate(()=>{
+  const dashboardRoutes=[["shop","Fan Shop"],["fanbase","Fan Base"],["mine","Moji tiketi"],["live","Live centar"],["board","Nagrade i poredak"],["collection","Kolekcija"],["club","Moja tribina"],["mvp","MVP"]];
+  await page.evaluate(()=>{
     window.__mobileMoreDashboardProbe=null;
     window.dashboardOpenGameTab=(tab)=>{window.__mobileMoreDashboardProbe=tab;};
   });
-  await page.locator("#mobileMoreBtn").click();
-  await page.locator('.mobile-more-grid button[onclick="mobileMoreDashboardGo(\'shop\')"]').click();
-  assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),"shop","Fan Shop shortcut must call the corresponding dashboard tab.");
-  await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  for(const [tab,label] of dashboardRoutes){
+    await page.locator("#mobileMoreBtn").click();
+    await page.locator(".mobile-more-grid button").filter({hasText:label}).first().click();
+    assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),tab,tab+" shortcut must call its matching dashboard tab.");
+    await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  }
   await page.evaluate(()=>{delete window.__mobileMoreDashboardProbe;delete window.dashboardOpenGameTab;});
-  console.log("PASS mobile More drawer: open/close, Escape, backdrop, section routing, Fan Shop routing, and aria-expanded state");
+  console.log("PASS all 8 mobile dashboard shortcuts route to their matching tabs");
+
+  console.log("PASS mobile More drawer: open/close, Escape, backdrop, 12 section routes, 8 dashboard routes, and aria-expanded state");
 
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
