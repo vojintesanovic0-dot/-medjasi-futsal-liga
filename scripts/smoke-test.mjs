@@ -133,6 +133,14 @@ try{
     assert.ok(desktopSectionLayout.document<=desktopSectionLayout.viewport+2&&desktopSectionLayout.body<=desktopSectionLayout.viewport+2&&desktopSectionLayout.visibleOverflow.length===0,"Desktop horizontal overflow in section "+id+": "+JSON.stringify(desktopSectionLayout));
   }
   console.log("PASS desktop layout stays within viewport across all 12 main sections");
+  await clickSection("matches");
+  await page.evaluate(()=>{
+    sessionStorage.setItem("medjasi_active_section_v1","info");
+    window.restoreRememberedSection?.();
+  });
+  assert.equal(await page.locator("#matches.section").evaluate(el=>el.classList.contains("active")),true,"A delayed remembered-section restore must not override the section selected by the user.");
+  console.log("PASS delayed remembered-section restore cannot override a user-selected section");
+
   await page.waitForFunction(()=>!!document.querySelector("#gxInfoRoot .gx-table-wrap"),null,{timeout:8000});
   const desktopInfoLayout=await page.evaluate(()=>({
     viewport:innerWidth,
