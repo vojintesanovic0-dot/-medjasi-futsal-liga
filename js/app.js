@@ -30,6 +30,37 @@ function initializeSupabaseClient(){
 
 initializeSupabaseClient();
 
+/* Offline stand-in: if the Supabase SDK cannot be loaded, queries resolve to
+   an explicit error result instead of throwing on a null client. */
+const SB_OFFLINE_ERROR = {
+  message: "Podaci trenutno nisu dostupni. Provjeri internet vezu i pokušaj ponovo.",
+  code: "DB_OFFLINE",
+  details: "",
+  hint: ""
+};
+const SB_OFFLINE_RESULT = () => ({ data: null, error: SB_OFFLINE_ERROR, count: null, status: 0, statusText: "offline" });
+function createOfflineDbStub(){
+  let chain;
+  chain = new Proxy(function(){}, {
+    get(_target, prop){
+      if(prop === "then") return (resolve, reject) => Promise.resolve(SB_OFFLINE_RESULT()).then(resolve, reject);
+      if(prop === "catch") return reject => Promise.resolve(SB_OFFLINE_RESULT()).catch(reject);
+      if(prop === "finally") return fn => Promise.resolve(SB_OFFLINE_RESULT()).finally(fn);
+      if(prop === Symbol.toPrimitive) return () => "";
+      if(prop === Symbol.iterator) return undefined;
+      return chain;
+    },
+    apply(){ return chain; },
+    construct(){ return chain; }
+  });
+  return chain;
+}
+const SB_OFFLINE_DB = createOfflineDbStub();
+function sbClient(){
+  return supabaseClient || initializeSupabaseClient() || SB_OFFLINE_DB;
+}
+window.sbClient = sbClient;
+
 /* Legacy patch layers use window.supabaseClient. The getter also permits
    late SDK initialization when an optional module runs before a CDN finishes. */
 Object.defineProperty(window, "supabaseClient", {
@@ -213,7 +244,7 @@ async function loadFanPublicStyles(ids=[]){
   const valid=missing.filter(id=>/^[0-9a-f-]{36}$/i.test(id));
   if(!valid.length) return fanPublicStyles;
   try{
-    const {data,error}=await supabaseClient.rpc("fan_public_cosmetics",{p_users:valid});
+    const {data,error}=await sbClient().rpc("fan_public_cosmetics",{p_users:valid});
     if(error){ console.warn("Fan cosmetics:",error); return fanPublicStyles; }
     const received=new Set();
     (data||[]).forEach(row=>{
@@ -1295,7 +1326,7 @@ async function checkAuth(){
 
   let sessionResult;
   try{
-    sessionResult=await supabaseClient.auth.getSession();
+    sessionResult=await sbClient().auth.getSession();
   }catch(error){
     currentUser=null;
     currentProfile=null;
@@ -1380,7 +1411,7 @@ async function login(){
 
   let result;
   try{
-    result=await supabaseClient.auth.signInWithPassword({email,password});
+    result=await sbClient().auth.signInWithPassword({email,password});
   }catch(error){
     medjasiAuthInteraction=false;
     setBusy(false);
@@ -1454,7 +1485,7 @@ async function resetPassword(){
 
   if(message)message.textContent="Šaljem link za promjenu lozinke...";
   try{
-    const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{
+    const {error}=await sbClient().auth.resetPasswordForEmail(email,{
       redirectTo:window.location.origin+window.location.pathname
     });
     if(error){
@@ -1600,7 +1631,7 @@ async function register(){
   medjasiAuthInteraction=true;
   let signupResult;
   try{
-    signupResult=await supabaseClient.auth.signUp({
+    signupResult=await sbClient().auth.signUp({
       email,
       password,
       options:{
@@ -1678,7 +1709,7 @@ async function resendConfirmation(){
   }
   if(message)message.textContent="Šaljem novu potvrdu...";
   try{
-    const {error}=await supabaseClient.auth.resend({
+    const {error}=await sbClient().auth.resend({
       type:"signup",
       email,
       options:{emailRedirectTo:window.location.origin+window.location.pathname}
@@ -1708,7 +1739,7 @@ async function logout(){
 
   medjasiAuthInteraction=true;
   try{
-    const {error}=await supabaseClient.auth.signOut();
+    const {error}=await sbClient().auth.signOut();
     if(error){
       medjasiAuthInteraction=false;
       alert(error.message||"Odjava nije uspjela. Pokušaj ponovo.");
@@ -1863,7 +1894,7 @@ let realtimeCommentTimer=0;
 function refreshMessagesOnly(){
   clearTimeout(realtimeMessageTimer);
   realtimeMessageTimer=setTimeout(async()=>{
-    const {data,error}=await supabaseClient.from("messages").select("*").order("created_at",{ascending:false}).limit(300);
+    const {data,error}=await sbClient().from("messages").select("*").order("created_at",{ascending:false}).limit(300);
     if(error){console.error(error);return}
     messages=(data||[]).slice().reverse();
     try{renderChat()}catch(e){console.error(e)}
@@ -1873,7 +1904,7 @@ function refreshMessagesOnly(){
 function refreshCommentsOnly(){
   clearTimeout(realtimeCommentTimer);
   realtimeCommentTimer=setTimeout(async()=>{
-    const {data,error}=await supabaseClient.from("comments").select("*").order("created_at",{ascending:false}).limit(300);
+    const {data,error}=await sbClient().from("comments").select("*").order("created_at",{ascending:false}).limit(300);
     if(error){console.error(error);return}
     comments=data||[];
     try{renderComments()}catch(e){console.error(e)}
@@ -1970,7 +2001,7 @@ async function loadAll(){
       const PAGE=1000;
       let from=0,all=[];
       for(;;){
-        let q=withRequestTimeout(supabaseClient.from(table).select("*"));
+        let q=withRequestTimeout(sbClient().from(table).select("*"));
         if(orderCol) q=q.order(orderCol,{ascending:true});
         // Stable tie-breakers prevent gaps between pages. The optional
         // match_players join table is keyed by match_id/player_id and may not
@@ -1995,7 +2026,7 @@ async function loadAll(){
     /* Chat, komentari i galerija: samo najnoviji zapisi. */
     const fetchRecent=async(table,limit)=>{
       const {data,error}=await withRequestTimeout(
-        supabaseClient.from(table).select("*")
+        sbClient().from(table).select("*")
       ).order("created_at",{ascending:false})
         .order("id",{ascending:false})
         .limit(limit);
@@ -2023,7 +2054,7 @@ async function loadAll(){
     const snapshotKeys=["teams","players","matches","goals","cards","comments","messages","gallery","match_players"];
     let snapshotResponse;
     try{
-      snapshotResponse=await withRequestTimeout(supabaseClient.rpc("get_league_snapshot"));
+      snapshotResponse=await withRequestTimeout(sbClient().rpc("get_league_snapshot"));
     }catch(error){
       snapshotResponse={data:null,error};
     }
@@ -4137,7 +4168,7 @@ async function sendChat(){
 
     const username=currentProfile?.username || currentUser.user_metadata?.username || currentUser.email?.split("@")[0] || "Korisnik";
 
-    const {error}=await supabaseClient.from("messages").insert({
+    const {error}=await sbClient().from("messages").insert({
       user_id:currentUser.id,
       username:String(username).slice(0,30),
       content,
@@ -4255,7 +4286,7 @@ async function adminAddGalleryImage(){
 
   try{
     const image_url=await uploadFile(file,"gallery");
-    const {data:inserted,error}=await supabaseClient.from("gallery").insert({
+    const {data:inserted,error}=await sbClient().from("gallery").insert({
       image_url,
       title:title.slice(0,100) || "Fotografija lige",
       description:description.slice(0,250),
@@ -4297,7 +4328,7 @@ async function removeLeagueMediaObject(publicUrl,expectedFolder){
   const path=leagueMediaObjectPath(publicUrl,expectedFolder);
   if(!path)return false;
   if(!supabaseClient?.storage)throw new Error("Skladište datoteka trenutno nije dostupno.");
-  const {error}=await supabaseClient.storage.from("liga-images").remove([path]);
+  const {error}=await sbClient().storage.from("liga-images").remove([path]);
   if(error)throw error;
   return true;
 }
@@ -4309,7 +4340,7 @@ async function adminDeleteGalleryImage(id){
   if(!confirm(`Obrisati "${item.title||"ovu fotografiju"}" iz galerije?`))return;
 
   try{
-    const {error}=await supabaseClient.from("gallery").delete().eq("id",id);
+    const {error}=await sbClient().from("gallery").delete().eq("id",id);
     if(error)throw error;
   }catch(error){
     console.error("Brisanje galerijske stavke nije uspjelo:",error);
@@ -4390,12 +4421,12 @@ async function uploadFile(file,folder){
   }
 
   const filename=parts.join("/")+"/"+crypto.randomUUID()+"."+extension;
-  const {error}=await supabaseClient.storage.from("liga-images").upload(
+  const {error}=await sbClient().storage.from("liga-images").upload(
     filename,file,{upsert:false,contentType:mime}
   );
   if(error)throw error;
 
-  const {data}=supabaseClient.storage.from("liga-images").getPublicUrl(filename);
+  const {data}=sbClient().storage.from("liga-images").getPublicUrl(filename);
   if(!data?.publicUrl)throw new Error("Skladište nije vratilo javni URL datoteke.");
   return data.publicUrl;
 }
@@ -4687,7 +4718,7 @@ async function addMatch(){
       .maybeSingle();
     if(seasonError)throw new Error("Ne mogu provjeriti aktivnu sezonu. Utakmica nije sačuvana.");
 
-    const {data:created,error}=await supabaseClient.from("matches").insert({
+    const {data:created,error}=await sbClient().from("matches").insert({
       home_team_id:home,
       away_team_id:away,
       match_date:dateValue.toISOString(),
@@ -4968,7 +4999,7 @@ async function changeMatchStatus(id,status){
 
   let updateResult;
   try{
-    updateResult=await supabaseClient.from("matches")
+    updateResult=await sbClient().from("matches")
       .update(patch)
       .eq("id",id)
       .select("*")
@@ -5029,7 +5060,7 @@ async function changeMinute(id,minute){
   if(!match)return alert("Utakmica nije pronađena.");
 
   try{
-    const {data,error}=await supabaseClient.from("matches")
+    const {data,error}=await sbClient().from("matches")
       .update({current_minute:value})
       .eq("id",id)
       .select("id,current_minute")
@@ -5342,12 +5373,12 @@ async function saveLineup(matchId){
 
   try{
     // Read server truth first; never delete the roster before a successful upsert.
-    const {data:existingRows,error:readError}=await supabaseClient.from("match_players")
+    const {data:existingRows,error:readError}=await sbClient().from("match_players")
       .select("player_id")
       .eq("match_id",matchId);
     if(readError)throw readError;
 
-    const {error:upsertError}=await supabaseClient.from("match_players")
+    const {error:upsertError}=await sbClient().from("match_players")
       .upsert(rows,{onConflict:"match_id,player_id"});
     if(upsertError)throw upsertError;
 
@@ -5358,7 +5389,7 @@ async function saveLineup(matchId){
     let cleanupError=null;
     for(const playerId of [...new Set(toRemove)]){
       try{
-        const {error}=await supabaseClient.from("match_players")
+        const {error}=await sbClient().from("match_players")
           .delete()
           .eq("match_id",matchId)
           .eq("player_id",playerId);
@@ -5653,7 +5684,7 @@ async function makeSubstitution(matchId,side){
   let outgoingChanged=false;
   let incomingChanged=false;
   try{
-    const {data:rows,error:readError}=await supabaseClient.from("match_players")
+    const {data:rows,error:readError}=await sbClient().from("match_players")
       .select("player_id,is_active")
       .eq("match_id",matchId)
       .in("player_id",[out,incoming]);
@@ -5665,7 +5696,7 @@ async function makeSubstitution(matchId,side){
     if(!outRow.is_active)throw new Error("Igrač koji izlazi više nije aktivan. Osvježi postavu.");
     if(inRow.is_active)throw new Error("Igrač koji ulazi već je aktivan. Osvježi postavu.");
 
-    const {data:outUpdated,error:outError}=await supabaseClient.from("match_players")
+    const {data:outUpdated,error:outError}=await sbClient().from("match_players")
       .update({is_active:false})
       .eq("match_id",matchId)
       .eq("player_id",out)
@@ -5676,7 +5707,7 @@ async function makeSubstitution(matchId,side){
     if(!outUpdated)throw new Error("Igrač koji izlazi promijenio je status. Osvježi postavu.");
     outgoingChanged=true;
 
-    const {data:inUpdated,error:inError}=await supabaseClient.from("match_players")
+    const {data:inUpdated,error:inError}=await sbClient().from("match_players")
       .update({is_active:true})
       .eq("match_id",matchId)
       .eq("player_id",incoming)
@@ -5687,7 +5718,7 @@ async function makeSubstitution(matchId,side){
     if(!inUpdated)throw new Error("Igrač koji ulazi promijenio je status. Osvježi postavu.");
     incomingChanged=true;
 
-    const {error:historyError}=await supabaseClient.from("match_substitutions").insert({
+    const {error:historyError}=await sbClient().from("match_substitutions").insert({
       match_id:matchId,
       team_id:sideTeam,
       player_out_id:out,
@@ -5699,7 +5730,7 @@ async function makeSubstitution(matchId,side){
     let rollbackFailed=false;
     if(incomingChanged){
       try{
-        const {error}=await supabaseClient.from("match_players").update({is_active:false})
+        const {error}=await sbClient().from("match_players").update({is_active:false})
           .eq("match_id",matchId).eq("player_id",incoming).eq("is_active",true);
         if(error)throw error;
       }catch(rollbackError){
@@ -5709,7 +5740,7 @@ async function makeSubstitution(matchId,side){
     }
     if(outgoingChanged){
       try{
-        const {error}=await supabaseClient.from("match_players").update({is_active:true})
+        const {error}=await sbClient().from("match_players").update({is_active:true})
           .eq("match_id",matchId).eq("player_id",out).eq("is_active",false);
         if(error)throw error;
       }catch(rollbackError){
@@ -6957,12 +6988,12 @@ function openMatch(id){
 async function refreshLiveMatchSnapshot(matchId){
   if(!supabaseClient?.from)throw new Error("Supabase nije dostupan za osvježavanje utakmice.");
   const [matchResult,goalsResult,cardsResult,playersResult]=await Promise.all([
-    supabaseClient.from("matches").select("*").eq("id",matchId).maybeSingle(),
-    supabaseClient.from("goals").select("*").eq("match_id",matchId)
+    sbClient().from("matches").select("*").eq("id",matchId).maybeSingle(),
+    sbClient().from("goals").select("*").eq("match_id",matchId)
       .order("minute",{ascending:true}).order("second",{ascending:true}),
-    supabaseClient.from("cards").select("*").eq("match_id",matchId)
+    sbClient().from("cards").select("*").eq("match_id",matchId)
       .order("minute",{ascending:true}),
-    supabaseClient.from("match_players").select("*").eq("match_id",matchId)
+    sbClient().from("match_players").select("*").eq("match_id",matchId)
       .order("player_id",{ascending:true})
   ]);
   const failed=[matchResult,goalsResult,cardsResult,playersResult].find(result=>result.error);
@@ -7277,7 +7308,7 @@ async function addGoal(matchId){
 
   let result;
   try{
-    result=await supabaseClient.from("goals").insert({
+    result=await sbClient().from("goals").insert({
       match_id:matchId,player_id,minute,second
     });
   }catch(error){
@@ -7503,7 +7534,7 @@ async function addCard(matchId){
   if(submitButton)submitButton.disabled=true;
 
   try{
-    const {error}=await supabaseClient.from("cards").insert({
+    const {error}=await sbClient().from("cards").insert({
       match_id:matchId,player_id,card_type,minute
     });
     if(error)throw error;
@@ -8674,10 +8705,10 @@ function removeCommentImage(){
   remove?.classList.add("hidden");
 }
 
-async function addMusicTrack(){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}const input=document.getElementById("adminYoutubeUrl"),title=document.getElementById("adminYoutubeTitle"),provider=document.getElementById("adminMusicProvider")?.value||"youtube",raw=(input?.value||"").trim();let payload=null;if(provider==="spotify"){if(!getSpotifyEmbed(raw)){toast("Unesi ispravan Spotify link.","error");return;}payload={provider:"spotify",spotify_url:raw,youtube_music_id:null};}else{const id=getYoutubeId(raw);if(!id){toast("Unesi ispravan YouTube link.","error");return;}payload={provider:"youtube",youtube_music_id:id,spotify_url:null};}const next=Math.max(0,...musicTracks.map(t=>Number(t.sort_order)||0))+1;const {error}=await supabaseClient.from("music_tracks").insert({...payload,title:(title?.value||"").trim()||"Pjesma",sort_order:next,is_active:true});if(error){toast(error.message,"error");return;}if(input)input.value="";if(title)title.value="";await loadMusicSettings({force:true});toast("Pjesma je dodata u playlistu.","success");}
-async function deleteMusicTrack(id){if(!isAdmin())return;if(!confirm("Obrisati ovu pjesmu iz playliste?"))return;const {error}=await supabaseClient.from("music_tracks").delete().eq("id",id);if(error){toast(error.message,"error");return;}await loadMusicSettings({force:true});toast("Pjesma je obrisana.","success");}
-async function moveMusicTrack(id,direction){if(!isAdmin())return;const list=[...musicTracks],idx=list.findIndex(t=>t.id===id),target=idx+direction;if(idx<0||target<0||target>=list.length)return;[list[idx],list[target]]=[list[target],list[idx]];for(let i=0;i<list.length;i++){const {error}=await supabaseClient.from("music_tracks").update({sort_order:i+1}).eq("id",list[i].id);if(error){toast(error.message,"error");return;}}await loadMusicSettings({force:true});}
-async function toggleMusicPlaylist(enabled){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}if(enabled&&!musicTracks.length){toast("Prvo dodaj barem jednu pjesmu.","error");return;}const {error}=await supabaseClient.from("site_settings").update({youtube_music_enabled:enabled}).eq("id",1);if(error){toast(error.message,"error");return;}musicSettings.youtube_music_enabled=enabled;currentMusicSignature="";initMusic();renderMusicAdmin();toast(enabled?"Playlist je uključena.":"Muzika je zaustavljena.","success");}
+async function addMusicTrack(){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}const input=document.getElementById("adminYoutubeUrl"),title=document.getElementById("adminYoutubeTitle"),provider=document.getElementById("adminMusicProvider")?.value||"youtube",raw=(input?.value||"").trim();let payload=null;if(provider==="spotify"){if(!getSpotifyEmbed(raw)){toast("Unesi ispravan Spotify link.","error");return;}payload={provider:"spotify",spotify_url:raw,youtube_music_id:null};}else{const id=getYoutubeId(raw);if(!id){toast("Unesi ispravan YouTube link.","error");return;}payload={provider:"youtube",youtube_music_id:id,spotify_url:null};}const next=Math.max(0,...musicTracks.map(t=>Number(t.sort_order)||0))+1;const {error}=await sbClient().from("music_tracks").insert({...payload,title:(title?.value||"").trim()||"Pjesma",sort_order:next,is_active:true});if(error){toast(error.message,"error");return;}if(input)input.value="";if(title)title.value="";await loadMusicSettings({force:true});toast("Pjesma je dodata u playlistu.","success");}
+async function deleteMusicTrack(id){if(!isAdmin())return;if(!confirm("Obrisati ovu pjesmu iz playliste?"))return;const {error}=await sbClient().from("music_tracks").delete().eq("id",id);if(error){toast(error.message,"error");return;}await loadMusicSettings({force:true});toast("Pjesma je obrisana.","success");}
+async function moveMusicTrack(id,direction){if(!isAdmin())return;const list=[...musicTracks],idx=list.findIndex(t=>t.id===id),target=idx+direction;if(idx<0||target<0||target>=list.length)return;[list[idx],list[target]]=[list[target],list[idx]];for(let i=0;i<list.length;i++){const {error}=await sbClient().from("music_tracks").update({sort_order:i+1}).eq("id",list[i].id);if(error){toast(error.message,"error");return;}}await loadMusicSettings({force:true});}
+async function toggleMusicPlaylist(enabled){if(!isAdmin()){toast("Nemaš admin ovlaštenje.","error");return;}if(enabled&&!musicTracks.length){toast("Prvo dodaj barem jednu pjesmu.","error");return;}const {error}=await sbClient().from("site_settings").update({youtube_music_enabled:enabled}).eq("id",1);if(error){toast(error.message,"error");return;}musicSettings.youtube_music_enabled=enabled;currentMusicSignature="";initMusic();renderMusicAdmin();toast(enabled?"Playlist je uključena.":"Muzika je zaustavljena.","success");}
 async function loadModeratorUsers(){
   if(!isAdmin()) return;
 
@@ -8896,7 +8927,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   const rpc4 = async (name, params = {}) => {
     const { data, error } =
-      await supabaseClient.rpc(name, params);
+      await sbClient().rpc(name, params);
 
     if (error) {
       console.error(name, error);
@@ -10714,7 +10745,7 @@ document.addEventListener("DOMContentLoaded",()=>{
         window.currentUser.user_metadata?.username ||
         window.currentUser.email?.split("@")[0] || "Korisnik";
 
-      const {error}=await supabaseClient.from("messages").insert({
+      const {error}=await sbClient().from("messages").insert({
         user_id:window.currentUser.id,
         username:String(username).slice(0,30),
         content,
@@ -10899,7 +10930,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
 
     const payload=sub.toJSON();
-    const {error}=await supabaseClient.from("push_subscriptions").upsert({
+    const {error}=await sbClient().from("push_subscriptions").upsert({
       user_id:window.currentUser.id,
       endpoint:sub.endpoint,
       p256dh:payload.keys?.p256dh||null,
@@ -10919,7 +10950,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       const reg=await navigator.serviceWorker.getRegistration("./");
       const sub=await reg?.pushManager.getSubscription();
       if(sub){
-        await supabaseClient.from("push_subscriptions").delete().eq("endpoint",sub.endpoint);
+        await sbClient().from("push_subscriptions").delete().eq("endpoint",sub.endpoint);
         await sub.unsubscribe();
       }
     }catch(e){console.warn(e)}
@@ -11034,7 +11065,7 @@ function ensureAdminNews(){
 }
 async function loadNews(){
   ensureNewsUI();
-  const query=supabaseClient.from('news').select('*').order('created_at',{ascending:false}).limit(100);
+  const query=sbClient().from('news').select('*').order('created_at',{ascending:false}).limit(100);
   const {data,error}=isAdm()?await query:await query.eq('published',true);
   if(error){console.warn('News:',error);return false}
   V7.news=data||[];
@@ -11052,7 +11083,7 @@ function renderNews(){
   grid.innerHTML=publicNews.slice(1).map(n=>`<article class="v7-news-card card"><div class="v7-news-media">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div class="v7-news-body"><div class="v7-news-kicker">${escV(n.kicker||'VIJEST')}</div><div class="v7-news-title">${escV(n.title)}</div><div class="v7-news-lead">${escV(n.lead||'')}</div><div class="v7-news-meta"><span>${formatV(n.created_at)}</span><span>${escV(n.author_name||'Liga')}</span></div><div class="v7-news-actions"><button class="btn btn-green btn-small" onclick="medjasiV7.openNews('${n.id}')">Otvori</button><button class="btn btn-small" onclick="medjasiV7.shareNews('${n.id}')">↗ Chat</button></div></div></article>`).join('');
 }
 function openNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n)return;showModal(`<div class="modal-title"><span class="hero-kicker">${escV(n.kicker||'VIJEST')}</span><h2>${escV(n.title)}</h2><p class="muted">${formatV(n.created_at)} · ${escV(n.author_name||'Međasi Futsal Liga')}</p></div><div class="v7-news-media" style="border-radius:16px">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div style="white-space:pre-wrap;line-height:1.75;margin-top:18px">${escV(n.body||n.lead||'')}</div><div class="actions" style="margin-top:18px"><button class="btn btn-green" onclick="medjasiV7.shareNews('${n.id}')">💬 Podijeli u chat</button></div>`)}
-async function shareNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n||!currentUser){showSection('login');toastV('Prijavi se da bi podijelio vijest.','error');return}const text=`📰 ${n.title}\n${n.lead||''}`.trim();const {error}=await supabaseClient.from('messages').insert({user_id:currentUser.id,username:currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik',content:text,image_url:n.media_type==='image'?(n.media_url||n.image_url):null});if(error){toastV(error.message,'error');return}hideModal();showSection('chat');await loadAll();toastV('Vijest je podijeljena u chat.');}
+async function shareNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n||!currentUser){showSection('login');toastV('Prijavi se da bi podijelio vijest.','error');return}const text=`📰 ${n.title}\n${n.lead||''}`.trim();const {error}=await sbClient().from('messages').insert({user_id:currentUser.id,username:currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik',content:text,image_url:n.media_type==='image'?(n.media_url||n.image_url):null});if(error){toastV(error.message,'error');return}hideModal();showSection('chat');await loadAll();toastV('Vijest je podijeljena u chat.');}
 function supportedLeagueMedia(file){
   if(!file)return null;
   const type=String(file.type||"").toLowerCase();
@@ -11086,7 +11117,7 @@ async function publishNews(){
       media_type=media.kind;
     }
 
-    const {error}=await supabaseClient.from("news").insert({
+    const {error}=await sbClient().from("news").insert({
       title:title.slice(0,150),
       lead:lead.slice(0,400),
       body:body.slice(0,10000),
@@ -11121,7 +11152,7 @@ async function deleteNews(id){
   if(!confirm("Obrisati ovu vijest?"))return;
 
   try{
-    const {data:item,error:readError}=await supabaseClient.from("news")
+    const {data:item,error:readError}=await sbClient().from("news")
       .select("id,media_url")
       .eq("id",id)
       .maybeSingle();
@@ -11131,7 +11162,7 @@ async function deleteNews(id){
       return toastV("Vijest više nije dostupna.","error");
     }
 
-    const {error}=await supabaseClient.from("news").delete().eq("id",id);
+    const {error}=await sbClient().from("news").delete().eq("id",id);
     if(error)throw error;
 
     let storageCleanupFailed=false;
@@ -11161,7 +11192,7 @@ async function deleteNews(id){
 }
 async function setNewsPublished(id,published){
   if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');
-  const {error}=await supabaseClient.from('news').update({published,updated_at:new Date().toISOString()}).eq('id',id);
+  const {error}=await sbClient().from('news').update({published,updated_at:new Date().toISOString()}).eq('id',id);
   if(error)return toastV(error.message,'error');
   await loadNews();
   toastV(published?'Vijest je objavljena.':'Vijest je sklonjena iz javnosti.');
@@ -11172,7 +11203,7 @@ function matchRating(matchId,pid){const p=playerV(pid),m=matches.find(x=>String(
 function playerRatingLine(matchId,pid){const r=matchRating(matchId,pid);return `<span class="v7-rating ${ratingClass(r)}">${r.toFixed(1)}</span>`}
 function ratingRows(matchId,teamId){const ids=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&playerV(mp.player_id)?.team_id===teamId);return ids.map(mp=>{const p=playerV(mp.player_id);return p?`<tr><td>#${escV(p.jersey_number??'-')} ${escV(p.name)}</td><td>${playerRatingLine(matchId,p.id)}</td><td>${goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.player_id)===String(p.id)).length}</td><td>${goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.assist_player_id)===String(p.id)).length}</td><td>${V7.stats.find(s=>String(s.match_id)===String(matchId)&&String(s.player_id)===String(p.id))?.saves||0}</td></tr>`:''}).join('')}
 async function loadStats(){
-  const {data,error}=await supabaseClient.from("match_player_stats").select("*");
+  const {data,error}=await sbClient().from("match_player_stats").select("*");
   if(error)throw error;
   V7.stats=data||[];
   return V7.stats;
@@ -11181,7 +11212,7 @@ async function addSave(matchId,pid){
   if(!canManageMatch())return;
   const existing=V7.stats.find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(pid));
   const saves=(+existing?.saves||0)+1;
-  const {error}=await supabaseClient.from("match_player_stats").upsert({
+  const {error}=await sbClient().from("match_player_stats").upsert({
     match_id:matchId,player_id:pid,saves,updated_at:new Date().toISOString()
   },{onConflict:"match_id,player_id"});
   if(error)return toastV(error.message,"error");
@@ -11216,7 +11247,7 @@ async function finishAndSave(matchId){
     await loadStats();
     await saveRatings(id);
 
-    const {data:updated,error}=await supabaseClient.from("matches")
+    const {data:updated,error}=await sbClient().from("matches")
       .update({status:"finished"})
       .eq("id",id)
       .select("*")
@@ -11289,7 +11320,7 @@ async function saveRatings(matchId){
     const as=goals.filter(g=>String(g.match_id)===String(matchId)&&String(g.assist_player_id)===String(pid)).length;
     const st=V7.stats.find(s=>String(s.match_id)===String(matchId)&&String(s.player_id)===String(pid));
     const rating=matchRating(matchId,pid);
-    const {error}=await supabaseClient.from("match_player_stats").upsert({
+    const {error}=await sbClient().from("match_player_stats").upsert({
       match_id:matchId,
       player_id:pid,
       goals:gs,
@@ -11303,10 +11334,10 @@ async function saveRatings(matchId){
   }
 
   const all=ids.map(pid=>({pid,r:matchRating(matchId,pid)})).sort((a,b)=>b.r-a.r);
-  const clearMvp=await supabaseClient.from("match_player_stats").update({is_mvp:false}).eq("match_id",matchId);
+  const clearMvp=await sbClient().from("match_player_stats").update({is_mvp:false}).eq("match_id",matchId);
   if(clearMvp.error)throw clearMvp.error;
   if(all[0]){
-    const setMvp=await supabaseClient.from("match_player_stats").update({is_mvp:true}).eq("match_id",matchId).eq("player_id",all[0].pid);
+    const setMvp=await sbClient().from("match_player_stats").update({is_mvp:true}).eq("match_id",matchId).eq("player_id",all[0].pid);
     if(setMvp.error)throw setMvp.error;
   }
 }
@@ -11350,7 +11381,7 @@ async function addGoalWithAssist(matchId){
   if(submitButton)submitButton.disabled=true;
 
   try{
-    const {error}=await supabaseClient.from("goals").insert({
+    const {error}=await sbClient().from("goals").insert({
       match_id:matchId,player_id:playerId,assist_player_id:assistId,minute,second:0
     });
     if(error)throw error;
@@ -11398,7 +11429,7 @@ function openSeasonStats(){const by={};(V7.stats||[]).forEach(s=>{const p=player
 async function notifyPush(type,title,body,matchId=null){
   try{
     if(!currentUser||!supabaseClient?.auth?.getSession||!V7.pushEndpoint)return false;
-    const sessionResult=await supabaseClient.auth.getSession();
+    const sessionResult=await sbClient().auth.getSession();
     const token=sessionResult?.data?.session?.access_token;
     if(sessionResult?.error||!token)return false;
 
@@ -11480,7 +11511,7 @@ async function subscribeRealPush(){
       throw new Error("Preglednik nije vratio ključeve potrebne za push pretplatu.");
     }
 
-    const {error}=await supabaseClient.from("push_subscriptions").upsert({
+    const {error}=await sbClient().from("push_subscriptions").upsert({
       user_id:currentUser.id,
       endpoint:subscription.endpoint,
       p256dh:payload.keys.p256dh,
@@ -11530,7 +11561,7 @@ async function disableRealPush(){
     const reg=await navigator.serviceWorker.getRegistration("./");
     const sub=await reg?.pushManager?.getSubscription();
     if(sub){
-      const {error}=await supabaseClient.from("push_subscriptions")
+      const {error}=await sbClient().from("push_subscriptions")
         .delete().eq("endpoint",sub.endpoint);
       if(error)throw error;
 
@@ -11561,24 +11592,26 @@ function updateMflSeasonLabels(){
   const name=String(season?.name||"").trim();
   if(!name)return false;
   const labels=[
-    [".v10-eyebrow b",name],
-    [".v10-floating-card b",name],
-    [".dashboard-hero-mark span","SEZONA "+name],
-    ["#dashboardFooter .dashboard-footer-season span","SEZONA "+name]
+    [".v10-eyebrow [data-season-label]",name],
+    [".v10-floating-card [data-season-label]",name],
+    [".dashboard-hero-mark [data-season-label]",name],
+    ["#dashboardFooter .dashboard-footer-season [data-season-label]",name]
   ];
   labels.forEach(([selector,value])=>document.querySelectorAll(selector).forEach(node=>{node.textContent=value;}));
   return true;
 }
 async function loadSeasons(){
-  if(!supabaseClient || typeof supabaseClient.from!=="function"){
+  if(!supabaseClient || typeof sbClient().from!=="function"){
     V7.seasons=Array.isArray(V7.seasons)?V7.seasons:[];
     renderSeasons();
     return false;
   }
   try{
-    const {data,error}=await supabaseClient.from("seasons").select("*").order("created_at",{ascending:false});
+    const {data,error}=await sbClient().from("seasons").select("*").order("created_at",{ascending:false});
     if(error)throw error;
     V7.seasons=data||[];
+    const activeSeason=V7.seasons.find(season=>season&&season.is_active&&season.name);
+    if(activeSeason)document.querySelectorAll("[data-season-label]").forEach(el=>{el.textContent=activeSeason.name;});
     renderSeasons();
     updateMflSeasonLabels();
     return true;
@@ -11590,7 +11623,7 @@ async function loadSeasons(){
   }
 }
 function renderSeasons(){const box=$('v7SeasonList');if(!box)return;box.innerHTML=(V7.seasons||[]).map(s=>`<div class="admin-match" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><strong>${escV(s.name)}</strong><small class="muted" style="display:block;margin-top:3px">${s.is_active?'AKTIVNA':'Arhiva'}</small></div>${s.is_active?'':'<button class="btn btn-small" onclick="medjasiV7.activateSeason(\''+s.id+'\')">Postavi aktivnu</button>'}</div>`).join('')||'<div class="muted">Nema sezona.</div>'}
-async function addSeason(){if(!isAdm())return;const name=$('v7SeasonName')?.value.trim();if(!name)return;const {error}=await supabaseClient.from('seasons').insert({name,is_active:false});if(error)return toastV(error.message,'error');$('v7SeasonName').value='';await loadSeasons()}
+async function addSeason(){if(!isAdm())return;const name=$('v7SeasonName')?.value.trim();if(!name)return;const {error}=await sbClient().from('seasons').insert({name,is_active:false});if(error)return toastV(error.message,'error');$('v7SeasonName').value='';await loadSeasons()}
 async function activateSeason(id){
   if(!isAdm())return;
   const target=V7.seasons.find(season=>String(season.id)===String(id));
@@ -11648,7 +11681,7 @@ async function adminAddMedia(){
 
   try{
     const media_url=await uploadFile(file,"gallery");
-    const {data:insertedMedia,error}=await supabaseClient.from("gallery").insert({
+    const {data:insertedMedia,error}=await sbClient().from("gallery").insert({
       image_url:media_url,
       media_url,
       media_type:media.kind,
@@ -11757,7 +11790,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   const guard=()=>{if(!logged()){showSection('login');if(typeof toastV==='function')toastV('Prijavi se da bi koristio Community.','error');return false}return true};
   async function loadProfiles(ids){
     const unique=[...new Set([...(ids||[]),currentUser?.id].filter(Boolean).map(String))]; if(!unique.length)return;
-    const {data,error}=await supabaseClient.from('profiles').select('id,username,avatar_url,bio,role').in('id',unique);
+    const {data,error}=await sbClient().from('profiles').select('id,username,avatar_url,bio,role').in('id',unique);
     if(error){console.warn('Community profiles:',error);return}
     (data||[]).forEach(p=>V.profiles[String(p.id)]=p);
     await loadFanPublicStyles(unique);
@@ -11772,10 +11805,10 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
     loadInFlight=(async()=>{
       try{
         const [{data:posts,error:postError},{data:stories,error:storyError}]=await Promise.all([
-          supabaseClient.from('community_posts')
+          sbClient().from('community_posts')
             .select('id,user_id,image_url,caption,created_at,music_track_id')
             .order('created_at',{ascending:false}).limit(50),
-          supabaseClient.from('community_stories')
+          sbClient().from('community_stories')
             .select('id,user_id,image_url,caption,created_at,expires_at,music_track_id')
             .gt('expires_at',new Date().toISOString())
             .order('created_at',{ascending:false}).limit(40)
@@ -11841,7 +11874,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
       const rows=[];
       let offset=0;
       for(;;){
-        const {data,error}=await supabaseClient.from(table)
+        const {data,error}=await sbClient().from(table)
           .select(columns)
           .in("post_id",unique)
           .order("post_id",{ascending:true})
@@ -11909,7 +11942,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
 
   try{
     const url=await uploadFile(f,`community/${currentUser.id}`);
-    const {data:created,error}=await supabaseClient.from("community_posts").insert({
+    const {data:created,error}=await sbClient().from("community_posts").insert({
       user_id:currentUser.id,
       image_url:url,
       caption:q("v9PostCaption")?.value.trim()||null,
@@ -11935,35 +11968,35 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   }
 };
   window.openV9StoryComposer=function(){if(!guard())return;showModal('<div class="v9-modal-card"><div class="modal-title"><h2>🔵 Nova priča</h2><p class="muted">Priča traje 24 sata.</p></div><div class="form"><label class="v9-drop" for="v9StoryFile">📷 Izaberi fotografiju<input id="v9StoryFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden></label><img id="v9StoryPreview" class="v9-post-form-preview"><div class="form-group"><label>Opis</label><textarea id="v9StoryCaption" maxlength="300" placeholder="Kratak opis..."></textarea></div>'+communityMusicPicker("v9StoryMusic")+'<button class="btn btn-blue" onclick="publishV9Story()">Objavi priču</button></div></div>');filePreview('v9StoryFile','v9StoryPreview')};
-  window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!isAllowedRasterImage(f))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await supabaseClient.from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null,music_track_id:q('v9StoryMusic')?.value?Number(q('v9StoryMusic').value):null});if(error)throw error;hideModal();await load({force:true});toastV('Priča je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
+  window.publishV9Story=async function(){if(!guard())return;const f=q('v9StoryFile')?.files?.[0];if(!f)return toastV('Izaberi fotografiju.','error');if(!isAllowedRasterImage(f))return toastV('Dozvoljene su samo slike.','error');if(f.size>12*1024*1024)return toastV('Fotografija može imati najviše 12 MB.','error');try{const url=await uploadFile(f,`stories/${currentUser.id}`);const {error}=await sbClient().from('community_stories').insert({user_id:currentUser.id,image_url:url,caption:q('v9StoryCaption')?.value.trim()||null,music_track_id:q('v9StoryMusic')?.value?Number(q('v9StoryMusic').value):null});if(error)throw error;hideModal();await load({force:true});toastV('Priča je objavljena.')}catch(err){toastV(err.message||'Greška pri objavi.','error')}};
   window.openV9Story=function(id){const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;const p=V.profiles[String(s.user_id)]||{};showModal(`<div class="v9-story-view"><div class="v9-post-head"><img class="v9-avatar" src="${avatar(p)}"><div><b>${fanCommunityIdentityHTML(p,String(s.user_id))}</b><div class="v9-post-meta">${fmt(s.created_at)}</div></div></div><img src="${escV(s.image_url)}" alt=""><div class="v9-story-caption">${escV(s.caption||'')}</div>${communityMusicChip(s.music_track_id)}${logged()&&(String(s.user_id)===String(currentUser.id)||typeof isAdmin==='function'&&isAdmin())?`<button class="btn btn-small" onclick="deleteV9Story('${escV(s.id)}')">Obriši priču</button>`:''}</div>`) };
-  window.deleteV9Story=async function(id){if(!guard())return;const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;if(String(s.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu priču?'))return;const {error}=await supabaseClient.from('community_stories').delete().eq('id',id);if(error)return toastV(error.message,'error');hideModal();await load({force:true});toastV('Priča je obrisana.')};
+  window.deleteV9Story=async function(id){if(!guard())return;const s=V.stories.find(x=>String(x.id)===String(id));if(!s)return;if(String(s.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu priču?'))return;const {error}=await sbClient().from('community_stories').delete().eq('id',id);if(error)return toastV(error.message,'error');hideModal();await load({force:true});toastV('Priča je obrisana.')};
   window.openV9Profile=async function(id){
     await loadFanPublicStyles([id]);
-    const {data:p,error}=await supabaseClient.from('profiles').select('id,username,avatar_url,bio,role').eq('id',id).maybeSingle();if(error||!p)return toastV('Profil nije pronađen.','error');
-    const [{data:posts},{data:stories}]=await Promise.all([supabaseClient.from('community_posts').select('id,user_id,image_url,caption,created_at').eq('user_id',id).order('created_at',{ascending:false}).limit(30),supabaseClient.from('community_stories').select('id,user_id,image_url,caption,created_at,expires_at').eq('user_id',id).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false})]);
+    const {data:p,error}=await sbClient().from('profiles').select('id,username,avatar_url,bio,role').eq('id',id).maybeSingle();if(error||!p)return toastV('Profil nije pronađen.','error');
+    const [{data:posts},{data:stories}]=await Promise.all([sbClient().from('community_posts').select('id,user_id,image_url,caption,created_at').eq('user_id',id).order('created_at',{ascending:false}).limit(30),sbClient().from('community_stories').select('id,user_id,image_url,caption,created_at,expires_at').eq('user_id',id).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false})]);
     showModal(`<div class="v9-profile-full"><div class="v9-profile-cover"></div><div class="v9-profile-full-inner"><img class="v9-avatar-big" src="${avatar(p)}" alt=""><h2>${fanCommunityIdentityHTML(p,String(id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}</h2><div class="muted">${escV(p.bio||'')}</div><div class="v9-profile-actions">${logged()&&String(id)===String(currentUser.id)?'<button class="btn btn-blue" onclick="openV9EditProfile()">Uredi profil</button><button class="btn" onclick="window.openFanTickets?.()">🎟️ Moji tiketi</button>':''}</div><div class="v9-profile-stats"><div class="v9-profile-stat"><b>${posts?.length||0}</b><span>Objave</span></div><div class="v9-profile-stat"><b>${stories?.length||0}</b><span>Aktivne priče</span></div></div><div class="v9-feed">${(posts||[]).map(x=>`<div><img class="v9-post-image" style="border-radius:16px" src="${escV(x.image_url)}" alt="${escV(x.caption||'')}" onclick="openV9Lightbox('${escV(x.image_url)}')">${x.caption?`<div class="v9-post-caption" style="margin:7px 0 14px">${escV(x.caption)}</div>`:''}</div>`).join('')||'<div class="v9-empty">Još nema objava.</div>'}</div></div></div>`)
   };
   window.openV9EditProfile=function(){if(!guard())return;const p=currentProfile||{};showModal(`<div class="v9-modal-card"><div class="modal-title"><h2>👤 Uredi profil</h2></div><div class="form"><div style="text-align:center"><img id="v9AvatarPreview" class="v9-profile-avatar" src="${avatar(p)}"></div><label class="v9-drop" for="v9AvatarFile">📷 Promijeni avatar<input id="v9AvatarFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden></label><div class="form-group"><label>Korisničko ime</label><input id="v9Username" maxlength="30" value="${escV(p.username||'')}"></div><div class="form-group"><label>Opis profila</label><textarea id="v9Bio" maxlength="300" placeholder="Napiši nešto o sebi...">${escV(p.bio||'')}</textarea></div><button class="btn btn-green" onclick="saveV9Profile()">Sačuvaj promjene</button></div></div>`);filePreview('v9AvatarFile','v9AvatarPreview')};
-  window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!isAllowedRasterImage(f))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await supabaseClient.from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV('Profil je ažuriran.')}catch(err){toastV(err.message||'Greška pri čuvanju profila.','error')}};
-  window.deleteV9Post=async function(id){if(!guard())return;const p=V.posts.find(x=>String(x.id)===String(id));if(!p||String(p.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await supabaseClient.from('community_posts').delete().eq('id',id);if(error)return toastV(error.message,'error');await load({force:true});toastV('Objava je obrisana.')};
+  window.saveV9Profile=async function(){if(!guard())return;const username=q('v9Username')?.value.trim().replace(/[^\p{L}\p{N}_\-.]/gu,'').slice(0,30);const bio=q('v9Bio')?.value.trim().slice(0,300)||null;const f=q('v9AvatarFile')?.files?.[0];if(!username)return toastV('Korisničko ime je obavezno.','error');try{let avatar_url=currentProfile?.avatar_url||null;if(f){if(!isAllowedRasterImage(f))throw new Error('Avatar mora biti slika.');if(f.size>5*1024*1024)throw new Error('Avatar može imati najviše 5 MB.');avatar_url=await uploadFile(f,`avatars/${currentUser.id}`)}const {data,error}=await sbClient().from('profiles').update({username,bio,avatar_url}).eq('id',currentUser.id).select('*').single();if(error)throw error;currentProfile=data;updateAuthUI();hideModal();await render();toastV('Profil je ažuriran.')}catch(err){toastV(err.message||'Greška pri čuvanju profila.','error')}};
+  window.deleteV9Post=async function(id){if(!guard())return;const p=V.posts.find(x=>String(x.id)===String(id));if(!p||String(p.user_id)!==String(currentUser.id)&&!(typeof isAdmin==='function'&&isAdmin()))return toastV('Nemaš dozvolu.','error');if(!confirm('Obrisati ovu objavu?'))return;const {error}=await sbClient().from('community_posts').delete().eq('id',id);if(error)return toastV(error.message,'error');await load({force:true});toastV('Objava je obrisana.')};
   window.toggleV9Reaction=async function(postId,type){
     if(!guard())return;
-    const {data:existing,error:ee}=await supabaseClient.from('community_reactions').select('id,reaction').eq('post_id',postId).eq('user_id',currentUser.id).maybeSingle();
+    const {data:existing,error:ee}=await sbClient().from('community_reactions').select('id,reaction').eq('post_id',postId).eq('user_id',currentUser.id).maybeSingle();
     if(ee)return toastV(ee.message,'error');
     let error;
     if(existing&&existing.reaction===type){
-      ({error}=await supabaseClient.from('community_reactions').delete().eq('id',existing.id));
+      ({error}=await sbClient().from('community_reactions').delete().eq('id',existing.id));
     }else if(existing){
-      ({error}=await supabaseClient.from('community_reactions').update({reaction:type}).eq('id',existing.id));
+      ({error}=await sbClient().from('community_reactions').update({reaction:type}).eq('id',existing.id));
     }else{
-      ({error}=await supabaseClient.from('community_reactions').insert({post_id:postId,user_id:currentUser.id,reaction:type}));
+      ({error}=await sbClient().from('community_reactions').insert({post_id:postId,user_id:currentUser.id,reaction:type}));
     }
     if(error)return toastV(error.message,'error');
     await refreshPostMeta(postId);
   };
-  window.toggleV9Comments=async function(postId){const box=q('v9comments-'+postId);if(!box)return;if(!box.hidden){box.hidden=true;return}const {data,error}=await supabaseClient.from('community_comments').select('id,user_id,content,created_at').eq('post_id',postId).order('created_at',{ascending:true});if(error)return toastV(error.message,'error');await loadProfiles((data||[]).map(c=>c.user_id));box.innerHTML=(data||[]).map(c=>{const p=V.profiles[String(c.user_id)]||{};return `<div class="v9-comment">${fanCommunityIdentityHTML(p,String(c.user_id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}: ${escV(c.content)}</div>`}).join('')+`<div class="v9-comment-form"><input id="v9ci-${escV(postId)}" maxlength="500" placeholder="Napiši komentar..." ${logged()?'':'disabled'}><button class="btn btn-small btn-green" onclick="addV9Comment('${escV(postId)}')">Pošalji</button></div><div class="fan-community-emoji-wrap">${logged()?fanEmojiBarHTML('v9ci-'+escV(postId)):''}</div>`;box.hidden=false};
-  window.addV9Comment=async function(postId){if(!guard())return;const input=q('v9ci-'+postId);const content=input?.value.trim();if(!content)return;const {error}=await supabaseClient.from('community_comments').insert({post_id:postId,user_id:currentUser.id,content});if(error)return toastV(error.message,'error');input.value='';const box=q('v9comments-'+postId);if(box)box.hidden=true;await toggleV9Comments(postId);await refreshPostMeta(postId)};
+  window.toggleV9Comments=async function(postId){const box=q('v9comments-'+postId);if(!box)return;if(!box.hidden){box.hidden=true;return}const {data,error}=await sbClient().from('community_comments').select('id,user_id,content,created_at').eq('post_id',postId).order('created_at',{ascending:true});if(error)return toastV(error.message,'error');await loadProfiles((data||[]).map(c=>c.user_id));box.innerHTML=(data||[]).map(c=>{const p=V.profiles[String(c.user_id)]||{};return `<div class="v9-comment">${fanCommunityIdentityHTML(p,String(c.user_id))}${p.role==='admin'?'<span class="v9-admin-badge">Admin</span>':''}: ${escV(c.content)}</div>`}).join('')+`<div class="v9-comment-form"><input id="v9ci-${escV(postId)}" maxlength="500" placeholder="Napiši komentar..." ${logged()?'':'disabled'}><button class="btn btn-small btn-green" onclick="addV9Comment('${escV(postId)}')">Pošalji</button></div><div class="fan-community-emoji-wrap">${logged()?fanEmojiBarHTML('v9ci-'+escV(postId)):''}</div>`;box.hidden=false};
+  window.addV9Comment=async function(postId){if(!guard())return;const input=q('v9ci-'+postId);const content=input?.value.trim();if(!content)return;const {error}=await sbClient().from('community_comments').insert({post_id:postId,user_id:currentUser.id,content});if(error)return toastV(error.message,'error');input.value='';const box=q('v9comments-'+postId);if(box)box.hidden=true;await toggleV9Comments(postId);await refreshPostMeta(postId)};
   window.openV9Lightbox=function(url){const safe=safeUrl(url);if(!safe)return;showModal(`<div class="v9-lightbox" onclick="hideModal()"><img src="${escV(safe)}" alt="" onclick="event.stopPropagation()"></div>`) };
   function patchAuth(){
     if(window.__V10_AUTH_PATCH__)return;
