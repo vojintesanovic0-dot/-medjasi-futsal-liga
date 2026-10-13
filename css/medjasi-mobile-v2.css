@@ -401,3 +401,28 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     padding-bottom: max(84px, calc(16px + env(safe-area-inset-bottom))) !important;
   }
 }
+
+
+/* The More drawer must sit above the fixed bottom bar at every phone width. */
+@media (max-width: 1024px) {
+  body.mobile-more-open .mobile-bottom {
+    pointer-events: none !important;
+  }
+  body.mobile-more-open .mobile-more-drawer,
+  .mobile-more-drawer.open {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 1900 !important;
+    isolation: isolate !important;
+  }
+  .mobile-more-drawer.open .mobile-more-backdrop {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 0 !important;
+  }
+  .mobile-more-drawer.open .mobile-more-panel {
+    position: relative !important;
+    z-index: 1 !important;
+    pointer-events: auto !important;
+  }
+}
