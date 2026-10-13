@@ -141,6 +141,7 @@ try{
   });
   assert.equal(await page.locator("#matches.section").evaluate(el=>el.classList.contains("active")),true,"A delayed remembered-section restore must not override the section selected by the user.");
   console.log("PASS delayed remembered-section restore cannot override a user-selected section");
+  await clickSection("info");
 
   await page.waitForFunction(()=>!!document.querySelector("#gxInfoRoot .gx-table-wrap"),null,{timeout:8000});
   const desktopInfoLayout=await page.evaluate(()=>({
