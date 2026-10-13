@@ -90,9 +90,9 @@
 <link rel="stylesheet" href="./css/production.css?v=20261007v23"><link rel="stylesheet" href="./css/effects.css?v=1"><link rel="stylesheet" href="./css/game.css?v=20261007v02">
 <link rel="stylesheet" href="./css/graphic-engine.css?v=1"><link rel="stylesheet" href="./css/admin-organizer.css?v=5"><link rel="stylesheet" href="./css/medjasi-icons-v1.css?v=20261007v02"><link rel="stylesheet" href="./css/medjasi-home-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-matches-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-league-data-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-community-media-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-fan-profile-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-mobile-v2.css?v=20261013fix1"><link rel="stylesheet" href="./css/medjasi-admin-v2.css?v=1"><link rel="stylesheet" href="./css/medjasi-sitewide-v3.css?v=1"><link rel="stylesheet" href="./css/medjasi-design-v11.css?v=20261007v02"><link rel="stylesheet" href="./css/medjasi-design-v13.css?v=20261007v02"><link rel="stylesheet" href="./css/extras.css?v=20261013v2">
 <link rel="stylesheet" href="./css/header-final.css?v=9">
-<link rel="stylesheet" href="./css/medjasi-dashboard-reference-v1.css?v=2">
-<link rel="stylesheet" href="./css/medjasi-icons-v2.css?v=20261013fix1">
-<link rel="stylesheet" href="./css/medjasi-dashboard-refinements-v2.css?v=12">
+<link rel="stylesheet" href="./css/medjasi-dashboard-reference-v1.css?v=3">
+<link rel="stylesheet" href="./css/medjasi-icons-v2.css?v=20261013v03">
+<link rel="stylesheet" href="./css/medjasi-dashboard-refinements-v2.css?v=16">
 <link rel="stylesheet" href="./css/medjasi-stability-v1.css?v=4">
 <link rel="stylesheet" href="./css/auth-polish-v1.css?v=2">
 <link rel="stylesheet" href="./css/medjasi-premium-header-v1.css?v=7">
@@ -129,7 +129,7 @@
 <div class="v10-home-bg"><span></span><span></span><span></span><div class="v10-grid"></div></div>
 <section class="v10-hero">
 <div class="v10-hero-copy">
-<div class="v10-eyebrow"><i></i> ZVANIČNA STRANICA LIGE <b>2026/27</b></div>
+<div class="v10-eyebrow"><i></i> ZVANIČNA STRANICA LIGE <b data-season-label>2026/27</b></div>
 <h1>Međasi<br/><em>Futsal Liga</em></h1>
 <p>Rezultati, tabela, ekipe, igrači i atmosfera lige — brzo, moderno i na jednom mjestu.</p>
 <div class="v10-hero-actions">
@@ -142,7 +142,7 @@
 <div class="v10-orbit orbit-a"></div><div class="v10-orbit orbit-b"></div>
 <div class="v10-ball-wrap"><div class="v10-ball-glow"></div><div class="v10-ball"></div></div>
 <div class="v10-floating-card v10-fc-top"><small>STATUS LIGE</small><strong><i></i> ONLINE</strong></div>
-<div class="v10-floating-card v10-fc-bottom"><span>SEZONA</span><b>2026/27</b></div>
+<div class="v10-floating-card v10-fc-bottom"><span>SEZONA</span><b data-season-label>2026/27</b></div>
 </div>
 </section>
 <section class="v10-kpi-grid">
@@ -698,7 +698,7 @@
     Više
   </button>
 </div>
-<div aria-hidden="true" class="mobile-more-drawer" id="mobileMoreDrawer">
+<div aria-hidden="true" class="mobile-more-drawer" id="mobileMoreDrawer" onclick="if(event.target===this)closeMobileMore()">
 <div class="mobile-more-backdrop" onclick="closeMobileMore()"></div>
 <div class="mobile-more-panel">
 <div class="mobile-more-head">
@@ -706,7 +706,7 @@
 <small>MEĐASI FUTSAL LIGA</small>
 <strong>Meni</strong>
 </div>
-<button aria-label="Zatvori meni" class="mobile-more-close" onclick="closeMobileMore()" type="button"></button>
+<button aria-label="Zatvori meni" class="mobile-more-close" onclick="closeMobileMore()" type="button">&#10005;</button>
 </div>
 <div class="mobile-more-grid">
 <button onclick="mobileMoreGo('home')"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></svg></span><b>Početna</b><small>Naslovna</small></button>
@@ -836,8 +836,8 @@
 
 
 <script src="./js/app.js?v=20261013v55" defer></script>
-<script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=20261011v12" defer></script><script src="./js/growth.js?v=20261012v01" defer></script><script src="./js/community-features.js?v=20261011v11" defer></script><script src="./js/ui-compat.js?v=20261013v3" defer></script><script src="./js/admin-organizer.js?v=15" defer></script>
-<script src="./js/graphic-engine.js?v=1" defer></script><script src="./js/medjasi-v13-ui.js?v=20261007v01" defer></script><script src="./js/extras.js?v=20261013v2" defer></script>
+<script src="./js/effects.js?v=1" defer></script><script src="./js/production.js?v=20261005" defer></script><script src="./js/game.js?v=20261011v12" defer></script><script src="./js/growth.js?v=20261012v01" defer></script><script src="./js/community-features.js?v=20261013v12" defer></script><script src="./js/ui-compat.js?v=20261013v3" defer></script><script src="./js/admin-organizer.js?v=15" defer></script>
+<script src="./js/graphic-engine.js?v=2" defer></script><script src="./js/medjasi-v13-ui.js?v=20261007v01" defer></script><script src="./js/extras.js?v=20261013v3" defer></script>
 <script src="./js/dashboard-layout-v1.js?v=20261013v3" defer></script>
 <script src="./js/auth-ui.js?v=3" defer></script>
 </body>
