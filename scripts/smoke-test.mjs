@@ -567,15 +567,6 @@ try{
       grid.scrollTo({top:grid.scrollTop+rect.top-gridRect.top-(grid.clientHeight-rect.height)/2,behavior:"instant"});
     });
     await page.waitForTimeout(120);
-    const isTappable=el=>!!el&&!!document.querySelector("#mobileMoreDrawer")?.classList.contains("open")&&(()=>{
-      const rect=el.getBoundingClientRect();
-      const grid=el.closest(".mobile-more-grid"),gridRect=grid?.getBoundingClientRect();
-      const style=getComputedStyle(el);
-      return rect.width>0&&rect.height>0&&gridRect&&
-        rect.top>=Math.max(0,gridRect.top)-1&&rect.bottom<=Math.min(innerHeight,gridRect.bottom)+1&&
-        rect.top>=-1&&rect.bottom<=innerHeight+1&&
-        style.display!=="none"&&style.visibility!=="hidden"&&Number(style.opacity)!==0;
-    })();
     const visibleNow=await shortcutHandle.evaluate(el=>({
       tappable:(()=>{
         if(!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"))return false;
