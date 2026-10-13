@@ -431,7 +431,7 @@ try{
       return !!gr&&!!pr&&rect.width>0&&rect.height>0&&
         rect.top>=Math.max(0,gr.top)-1&&rect.bottom<=Math.min(innerHeight,gr.bottom)+1&&
         pr.top>=-1&&pr.bottom<=innerHeight+2&&
-        (transform==="none"||/matrix\\([^,]+,[^,]+,[^,]+,[^,]+,[^,]+,0(?:\\.0+)?\\)$/.test(transform))&&
+        (transform==="none"||/matrix\([^,]+,[^,]+,[^,]+,[^,]+,[^,]+,0(?:\.0+)?\)$/.test(transform))&&
         getComputedStyle(el).visibility!=="hidden";
     },routeHandle,{timeout:5000});
     await routeButton.click();
