@@ -558,20 +558,37 @@ try{
     },null,{timeout:5000});
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     const shortcutHandle=await shortcut.elementHandle();
-    // Scroll the actual inner list; the drawer panel itself stays fixed to the viewport.
-    await shortcut.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(120);
-    await page.waitForFunction(el=>{
-      if(!el||!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"))return false;
-      const rect=el.getBoundingClientRect();
+    // Scroll the drawer's own list explicitly; Playwright cannot always infer this
+    // nested flex/grid scroll viewport after the drawer has been reopened.
+    await shortcutHandle.evaluate(el=>{
       const grid=el.closest(".mobile-more-grid");
-      const gridRect=grid?.getBoundingClientRect();
+      if(!grid)return;
+      const gridRect=grid.getBoundingClientRect(),rect=el.getBoundingClientRect();
+      grid.scrollTo({top:grid.scrollTop+rect.top-gridRect.top-(grid.clientHeight-rect.height)/2,behavior:"instant"});
+    });
+    await page.waitForTimeout(120);
+    const isTappable=el=>!!el&&!!document.querySelector("#mobileMoreDrawer")?.classList.contains("open")&&(()=>{
+      const rect=el.getBoundingClientRect();
+      const grid=el.closest(".mobile-more-grid"),gridRect=grid?.getBoundingClientRect();
       const style=getComputedStyle(el);
       return rect.width>0&&rect.height>0&&gridRect&&
         rect.top>=Math.max(0,gridRect.top)-1&&rect.bottom<=Math.min(innerHeight,gridRect.bottom)+1&&
         rect.top>=-1&&rect.bottom<=innerHeight+1&&
         style.display!=="none"&&style.visibility!=="hidden"&&Number(style.opacity)!==0;
-    },shortcutHandle,{timeout:5000});
+    })();
+    const visibleNow=await shortcutHandle.evaluate(el=>({
+      tappable:(()=>{
+        if(!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"))return false;
+        const r=el.getBoundingClientRect(),g=el.closest(".mobile-more-grid"),gr=g?.getBoundingClientRect(),s=getComputedStyle(el);
+        return !!gr&&r.width>0&&r.height>0&&r.top>=Math.max(0,gr.top)-1&&r.bottom<=Math.min(innerHeight,gr.bottom)+1&&r.top>=-1&&r.bottom<=innerHeight+1&&s.display!=="none"&&s.visibility!=="hidden"&&Number(s.opacity)!==0;
+      })(),
+      drawerOpen:!!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),
+      scrollTop:el.closest(".mobile-more-grid")?.scrollTop,
+      gridHeight:el.closest(".mobile-more-grid")?.clientHeight,
+      gridScrollHeight:el.closest(".mobile-more-grid")?.scrollHeight,
+      rect:(()=>{const r=el.getBoundingClientRect();return {top:Math.round(r.top),bottom:Math.round(r.bottom),left:Math.round(r.left),right:Math.round(r.right)}})()
+    }));
+    if(!visibleNow.tappable)throw new Error("Mobile drawer shortcut "+label+" did not enter the visible scroll viewport: "+JSON.stringify(visibleNow));
     const hitTarget=await shortcutHandle.evaluate(el=>{
       const rect=el.getBoundingClientRect();
       const x=rect.left+rect.width/2,y=rect.top+rect.height/2;
