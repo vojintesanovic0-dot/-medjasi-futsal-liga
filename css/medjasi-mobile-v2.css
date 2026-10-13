@@ -984,3 +984,30 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     overflow-y: auto;
   }
 }
+
+
+/* Liga Info standings table: keep wide columns inside a deliberate horizontal scroll viewport. */
+@media (max-width: 1024px) {
+  #gxInfoRoot .gx-grid,
+  #gxInfoRoot .gx-grid > .card,
+  #gxInfoRoot .gx-table-card {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #gxInfoRoot .gx-table-wrap {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    overscroll-behavior-x: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  #gxInfoRoot .gx-table {
+    width: max-content !important;
+    min-width: 100% !important;
+    max-width: none !important;
+  }
+}
