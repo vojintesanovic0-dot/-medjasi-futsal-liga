@@ -697,3 +697,27 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     -webkit-overflow-scrolling: touch !important;
   }
 }
+
+
+/* Keep the drawer's measured height inclusive of padding so its scroll viewport stays on-screen. */
+@media (max-width: 780px) {
+  .mobile-more-drawer.open .mobile-more-panel {
+    box-sizing: border-box !important;
+    min-height: 0 !important;
+  }
+  .mobile-more-drawer.open .mobile-more-head {
+    min-width: 0 !important;
+  }
+  .mobile-more-drawer.open .mobile-more-grid {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-height: 100% !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+  .mobile-more-drawer.open .mobile-more-grid button {
+    flex-shrink: 0 !important;
+  }
+}
