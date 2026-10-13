@@ -667,8 +667,8 @@ if (
 const extrasJs = read("js/extras.js");
 const extrasCss = read("css/extras.css");
 if (
-  /xtThemeBtn|function\\s+initTheme|function\\s+applyTheme|Svijetla tema|Tamna tema/.test(extrasJs) ||
-  /\\.xt-theme-btn|data-theme\\s*=\\s*["']light/.test(extrasCss)
+  /xtThemeBtn|function\s+initTheme|function\s+applyTheme|Svijetla tema|Tamna tema/.test(extrasJs) ||
+  /\.xt-theme-btn|data-theme\s*=\s*["']light/.test(extrasCss)
 ) {
   fail("The removed light/dark theme toggle must not be injected or styled by the extras layer");
 } else pass("Light/dark theme toggle remains removed; dark theme is the only site theme");
