@@ -453,6 +453,8 @@ try{
         getComputedStyle(panel).display!=="none"&&
         getComputedStyle(panel).visibility!=="hidden";
     },null,{timeout:5000});
+    // Let the drawer's slide-in transition finish before scrolling/clicking its lower rows.
+    await page.waitForTimeout(350);
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     const shortcutHandle=await shortcut.elementHandle();
     // Scroll the drawer's actual scroll container to the shortcut before clicking.
