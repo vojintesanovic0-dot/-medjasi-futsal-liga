@@ -434,7 +434,13 @@ try{
         rect.height>0&&rect.top<innerHeight-2&&rect.bottom<=innerHeight+2;
     },null,{timeout:7000});
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
-    await shortcut.scrollIntoViewIfNeeded();
+    const shortcutHandle=await shortcut.elementHandle();
+    await shortcut.evaluate(el=>el.scrollIntoView({block:"center",inline:"nearest",behavior:"instant"}));
+    await page.waitForFunction(el=>{
+      if(!el)return false;
+      const rect=el.getBoundingClientRect();
+      return rect.width>0&&rect.height>0&&rect.top>=0&&rect.bottom<=innerHeight&&getComputedStyle(el).visibility!=="hidden";
+    },shortcutHandle,{timeout:5000});
     await shortcut.click();
     assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),tab,tab+" shortcut must call its matching dashboard tab.");
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
