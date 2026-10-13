@@ -3,7 +3,7 @@
 -- kada korisnik nema username u raw_user_meta_data. Ne dira role, lozinke ni ostale podatke.
 -- Prije pokretanja napravi backup baze.
 
--- POPRAVKA — pokreni tek nakon pregleda dijela A — pokreni odvojeno tek nakon pregleda dijela A
+-- Pokreni ovu datoteku tek nakon pregleda rezultata iz sql/30_public_username_no_email.sql.
 -- =====================================================================
 begin;
 
