@@ -11833,7 +11833,7 @@ window.loadAll=async function(...args){
   return r;
 };
 // Realtime safety wrapper; original subscription remains but news/stats refresh independently.
-V7.ensureNewsUI=ensureNewsUI;V7.loadNews=loadNews;V7.notifyPush=notifyPush;window.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoalWithAssist;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
+V7.ensureNewsUI=ensureNewsUI;V7.loadNews=loadNews;V7.notifyPush=notifyPush;window.loadNews=loadNews;V7.setNewsPublished=setNewsPublished;V7.addSeason=addSeason;V7.activateSeason=activateSeason;V7.openNews=openNews;V7.shareNews=shareNews;V7.shareNewsExternal=shareNewsExternal;V7.shareNewsToChat=shareNewsToChat;V7.publishNews=publishNews;V7.deleteNews=deleteNews;V7.renderNews=renderNews;V7.addGoal=addGoalWithAssist;V7.openGoal=openGoal;V7.addSave=addSave;V7.openFinished=openFinished;V7.finishAndSave=finishAndSave;V7.openMedia=openMedia;V7.adminAddMedia=adminAddMedia;V7.openSeasonStats=openSeasonStats;
 window.openGoalControl=function(id){return openGoal(id)};
 window.adminAddGalleryImage=adminAddMedia;
 window.renderAdminNews=renderAdminNews;
