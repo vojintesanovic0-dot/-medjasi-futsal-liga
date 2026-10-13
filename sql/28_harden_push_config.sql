@@ -9,7 +9,7 @@ begin
     raise exception 'Expected table public.push_config was not found; verify the deployed schema before applying this migration.';
   end if;
 end;
-$;
+$$;
 
 alter table public.push_config enable row level security;
 revoke all privileges on table public.push_config from public, anon, authenticated;
