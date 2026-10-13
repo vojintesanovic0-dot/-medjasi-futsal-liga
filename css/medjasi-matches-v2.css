@@ -265,3 +265,12 @@
 .mv{display:block;font-size:10px;font-weight:900;margin-top:2px}.mv.up{color:#39f58b}.mv.down{color:#ff5c5c}.mv.same{color:var(--muted)}
 @keyframes goalIn{from{opacity:0}to{opacity:1}}@keyframes goalPop{to{transform:scale(1)}}@keyframes goalSpin{from{transform:rotate(-360deg)}to{transform:rotate(0)}}
 @media(prefers-reduced-motion:reduce){.goal-overlay,.goal-overlay-card,.goal-overlay-ball{animation:none}}
+
+/* Live match overview mini pitch */
+#modal .court-mini{min-width:0!important;width:100%;height:230px;border-radius:14px}
+#modal .court-mini .player-on-court{width:58px}
+#modal .court-mini .player-circle{width:26px;height:26px;font-size:10px}
+#modal .court-mini .player-court-name{font-size:8px;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#modal .court-mini .player-court-number{display:none}
+#modal .court-mini .court-team-label{font-size:9px}
+.mini-pitch-wrap{margin:14px 0}
