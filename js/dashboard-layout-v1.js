@@ -70,7 +70,7 @@
     const host=$("sidebarLiveMatch");if(!host)return;
     const m=liveMatches()[0];
     if(!m){
-      host.innerHTML='<div class="dashboard-empty" style="padding:6px 0!important">Nema aktivne utakmice uživo.</div><button type="button" onclick="showSection(\'matches\')">Pogledaj raspored →</button>';
+      host.innerHTML='<div class="dashboard-empty" style="padding:6px 0!important">Nema aktivne utakmice uživo.</div><button type="button" class="btn btn-ghost btn-small" onclick="showSection(\'matches\')">Pogledaj raspored →</button>';
       return;
     }
     const home=findTeam(m.home_team_id),away=findTeam(m.away_team_id);
