@@ -1,4 +1,4 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v178";
+const CACHE_NAME = "medjasi-futsal-pwa-v179";
 const CDN_CACHE = "medjasi-cdn-v1";
 
 const APP_SHELL = [
@@ -111,16 +111,24 @@ self.addEventListener("fetch", event => {
     event.respondWith(
       fetch(request, { cache: "no-store" })
         .then(response => {
-          const copy = response.clone();
+          // A server-side 4xx/5xx page is not a valid app shell. Prefer the
+          // last known good app shell, then the explicit offline page.
+          if (!response || !response.ok) {
+            return caches.match("./index.html").then(cached =>
+              cached || caches.match("./offline.html").then(offline => offline || response)
+            );
+          }
 
+          const copy = response.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put("./index.html", copy);
           });
-
           return response;
         })
         .catch(() => {
-          return caches.match("./index.html").then(r=>r||caches.match("./offline.html"));
+          return caches.match("./index.html").then(cached =>
+            cached || caches.match("./offline.html")
+          );
         })
     );
 
