@@ -365,3 +365,892 @@
     white-space: nowrap;
   }
 }
+
+/* Mobile layout polish transferred from the validated mobile branch, retaining current main rules above. */
+/* Stability pass: mobile menus, overlays, tables and opened section content. */
+@media (max-width: 780px) {
+  html, body { max-width: 100%; overflow-x: clip; }
+  #mainNav { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  #mainNav button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; }
+  main > .section.active { min-width: 0; width: 100%; overflow-wrap: anywhere; }
+  .section.active .card, .section.active .grid, .section.active .filters,
+  .section.active .gallery-grid, .section.active .chat-composer { min-width: 0; max-width: 100%; }
+  .section.active .filters { align-items: stretch; }
+  .section.active .filters > input, .section.active .filters > select { flex: 1 1 100%; min-width: 0; max-width: 100%; }
+  .section.active .table-wrap { display: block; width: 100%; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  .section.active .table-wrap table { min-width: 620px; }
+  .section.active img, .section.active video, .section.active canvas { max-width: 100%; height: auto; }
+  .modal, .modal-overlay, [role="dialog"] { max-width: 100vw; }
+  .modal-box, [role="dialog"] > * { max-width: calc(100vw - 24px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* Accessible mobile More drawer sizing and keyboard-friendly touch targets. */
+@media (max-width: 780px) {
+  .mobile-more-drawer.open { position: fixed; inset: 0; z-index: 1300; }
+  .mobile-more-panel { max-height: min(88dvh, 760px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  .mobile-more-grid button { min-width: 0; min-height: 84px; touch-action: manipulation; }
+  .mobile-more-grid button b, .mobile-more-grid button small { overflow-wrap: anywhere; }
+}
+@media (max-width: 360px) {
+  .mobile-more-grid { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+
+/* Consistent vector icons for every destination in the mobile More drawer. */
+@media (max-width: 780px) {
+  .mobile-more-grid button span {
+    position: relative !important;
+    display: grid !important;
+    place-items: center !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 11px !important;
+    background: rgba(57,245,139,.09) !important;
+    color: transparent !important;
+    font-size: 0 !important;
+    flex: 0 0 34px !important;
+  }
+  .mobile-more-grid button span::before {
+    content: "" !important;
+    display: block !important;
+    width: 21px !important;
+    height: 21px !important;
+    background: center / contain no-repeat !important;
+  }
+  .mobile-more-grid button:nth-child(1) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 10 9-7 9 7M5.5 9v12h13V9M9 21v-7h6v7'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(2) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m12 7 3 2-1 4h-4l-1-4 3-2ZM8 4l1 3m7-3-1 3m-8 7 3-1m8 1-3-1m-5 5 2-3m4 3-2-3'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(3) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5h16v15H4zM4 10h16M4 15h16M9 5v15M15 5v15'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(4) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3'/%3E%3Ccircle cx='17' cy='9' r='2.4'/%3E%3Cpath d='M3 20v-2a6 6 0 0 1 12 0v2M15 15a4 4 0 0 1 6 3v2'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(5) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(6) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19V5m0 14h17M7 15l4-4 3 2 5-6'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(7) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Ccircle cx='8' cy='9' r='1.5'/%3E%3Cpath d='m4 17 5-5 4 4 3-3 4 4'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(8) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5h16v12H9l-5 4z'/%3E%3Cpath d='M8 9h8M8 13h5'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(9) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5h16v11H4zM8 20h8M12 16v4'/%3E%3Cpath d='M8 9h8M8 12h5'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(10) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5h16v14H4zM8 9h8M8 13h5'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(11) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 14.7 8.5 21 9.4l-4.5 4.4 1.1 6.2L12 17l-5.6 3 1.1-6.2L3 9.4l6.3-.9z'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(12) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v6M12 7h.01'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(13) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8h18v12H3zM3 8l2-4h14l2 4M8 12h8'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(14) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 20 7v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/%3E%3Cpath d='m8 12 2.5 2.5L16 9'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(15) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='15' rx='2'/%3E%3Cpath d='M7 9h10M7 13h6M7 17h3'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(16) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l4 2'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(17) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5h16v14H4zM8 9h8M8 13h8'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(18) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 19 7v10l-7 4-7-4V7z'/%3E%3Cpath d='M5 7l7 4 7-4M12 11v10'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(19) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 20V8l9-5 9 5v12zM3 9h18M8 20v-6h8v6'/%3E%3C/svg%3E") !important; }
+  .mobile-more-grid button:nth-child(20) span::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 3 2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z'/%3E%3C/svg%3E") !important; }
+}
+
+@media (max-width: 780px) {
+  .mobile-more-grid button:nth-child(21) span::before {
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 20 7v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/%3E%3Cpath d='M9 12h6M12 9v6'/%3E%3C/svg%3E") !important;
+  }
+}
+
+@media (max-width: 780px) {
+  .mobile-more-close { display:grid !important; place-items:center !important; cursor:pointer !important; }
+  .mobile-more-close::before {
+    content:"×";
+    display:block;
+    color:#e8fff1;
+    font-size:26px;
+    line-height:1;
+    font-weight:400;
+  }
+  body.mobile-more-open { overflow:hidden !important; touch-action:none; }
+  body.mobile-more-open .mobile-more-panel { touch-action:pan-y; }
+}
+
+
+/* Visual polish pass: app-like mobile screens, opaque surfaces and clear navigation. */
+:root {
+  --mfl-surface: #071317;
+  --mfl-surface-raised: #0b1b20;
+  --mfl-border: rgba(118, 159, 146, .22);
+  --mfl-accent: #39f58b;
+}
+html { -webkit-text-size-adjust: 100%; }
+body { color: #edf8f2; }
+.card, .dashboard-rail-panel, .dashboard-stat-card, .dashboard-panel,
+.mobile-more-panel, .mobile-more-grid button, .app-sidebar,
+#mainNav, .modal-box, #modal .modal-box, [role="dialog"] {
+  color: #edf8f2 !important;
+  background-color: var(--mfl-surface) !important;
+  border-color: var(--mfl-border) !important;
+}
+.card, .dashboard-rail-panel, .dashboard-panel, .modal-box, #modal .modal-box {
+  box-shadow: 0 12px 34px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.018) !important;
+}
+.section-title, .dashboard-section-head h2, .card h2, .card h3 {
+  color: #f1fff7;
+  letter-spacing: -.02em;
+}
+.section-title { line-height: 1.2; }
+.card p, .card label, .section .muted, .dashboard-rail-panel p {
+  line-height: 1.55;
+}
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--mfl-accent) !important;
+  outline-offset: 2px !important;
+}
+.section .table-wrap, .table-wrap {
+  border: 1px solid var(--mfl-border);
+  border-radius: 14px;
+  background: #061115;
+}
+.section .table-wrap th, .table-wrap th {
+  background: #102126;
+  color: #b7d2c6;
+}
+.section .table-wrap td, .table-wrap td {
+  border-color: rgba(255,255,255,.065);
+}
+.modal, .modal-overlay, #modal, .overlay {
+  background: rgba(0, 5, 7, .78) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.modal-box, #modal .modal-box {
+  background: #071317 !important;
+  border: 1px solid rgba(57,245,139,.22) !important;
+}
+@media (max-width: 780px) {
+  body { padding-bottom: env(safe-area-inset-bottom); }
+  main { padding-top: calc(var(--dash-header, 64px) + 10px) !important; }
+  main > .section.active {
+    min-height: calc(100dvh - var(--dash-header, 64px) - 88px);
+    padding-top: 8px !important;
+    padding-bottom: 20px !important;
+    animation: mfl-section-enter .18s ease-out both;
+  }
+  .section-title { font-size: clamp(21px, 5.6vw, 27px) !important; margin-bottom: 14px !important; }
+  .section.active .card, .section.active .dashboard-panel {
+    padding: 15px !important;
+    margin-bottom: 12px !important;
+    border-radius: 17px !important;
+    background: #08171b !important;
+    border: 1px solid rgba(132,174,158,.17) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.2) !important;
+  }
+  .section.active .grid { gap: 11px !important; }
+  .section.active input, .section.active select, .section.active textarea {
+    min-height: 43px;
+    border-radius: 11px !important;
+    background-color: #061115 !important;
+    color: #f2fff7 !important;
+    border-color: rgba(143,183,167,.25) !important;
+  }
+  .section.active button, .modal-box button {
+    touch-action: manipulation;
+  }
+  .mobile-bottom {
+    padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
+    background: #061115 !important;
+    border-color: rgba(57,245,139,.24) !important;
+    box-shadow: 0 12px 35px rgba(0,0,0,.55) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .mobile-bottom button { font-size: 9px !important; }
+  .mobile-bottom button.active {
+    background: #103023 !important;
+    color: #eafff3 !important;
+    box-shadow: inset 0 0 0 1px rgba(57,245,139,.24) !important;
+  }
+  .mobile-more-panel {
+    background: #061115 !important;
+    opacity: 1 !important;
+    box-shadow: 0 24px 70px rgba(0,0,0,.72) !important;
+    border: 1px solid rgba(57,245,139,.24) !important;
+  }
+  .mobile-more-grid button {
+    background: #0a1b20 !important;
+    color: #effff6 !important;
+    border: 1px solid rgba(139,179,164,.17) !important;
+    box-shadow: none !important;
+  }
+  .mobile-more-grid button:active { transform: scale(.985); }
+  .modal, .modal-overlay, #modal, .overlay {
+    background: rgba(0, 4, 6, .88) !important;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+  .modal-box, #modal .modal-box, [role="dialog"] {
+    background: #071317 !important;
+    color: #effff6 !important;
+    border: 1px solid rgba(57,245,139,.23) !important;
+    box-shadow: 0 22px 70px rgba(0,0,0,.68) !important;
+  }
+  .section.active .table-wrap { border-radius: 12px !important; }
+  .section.active table { font-size: 12px; }
+  .section.active th, .section.active td { padding: 10px 9px !important; }
+}
+@keyframes mfl-section-enter {
+  from { opacity: .65; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  main > .section.active { animation: none !important; }
+}
+
+
+/* Keep modal dismissal obvious: the legacy close button has no text node. */
+#modal .modal-box > button.close,
+.modal .modal-box > button.close {
+  display: grid !important;
+  place-items: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(57,245,139,.3) !important;
+  border-radius: 12px !important;
+  background: #102923 !important;
+  color: #f4fff8 !important;
+  cursor: pointer !important;
+  z-index: 5 !important;
+}
+#modal .modal-box > button.close::before,
+.modal .modal-box > button.close::before {
+  content: "×";
+  display: block;
+  color: #f4fff8;
+  font: 600 26px/1 system-ui, sans-serif;
+}
+@media (max-width: 640px) {
+  #modal .modal-box > button.close,
+  .modal .modal-box > button.close {
+    top: 10px !important;
+    right: 10px !important;
+  }
+}
+
+
+/* The More drawer must sit above the fixed bottom navigation, including at the last row. */
+@media (max-width: 780px) {
+  .mobile-more-drawer.open {
+    z-index: 15000 !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
+  }
+  .mobile-more-drawer.open .mobile-more-backdrop {
+    z-index: 0 !important;
+  }
+  .mobile-more-drawer.open .mobile-more-panel {
+    z-index: 1 !important;
+    pointer-events: auto !important;
+    max-height: min(88dvh, 760px) !important;
+    padding-bottom: max(84px, calc(16px + env(safe-area-inset-bottom))) !important;
+  }
+}
+
+
+/* The More drawer must sit above the fixed bottom bar at every phone width. */
+@media (max-width: 1024px) {
+  body.mobile-more-open .mobile-bottom {
+    pointer-events: none !important;
+  }
+  body.mobile-more-open .mobile-more-drawer,
+  .mobile-more-drawer.open {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 1900 !important;
+    isolation: isolate !important;
+  }
+  .mobile-more-drawer.open .mobile-more-backdrop {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 0 !important;
+  }
+  .mobile-more-drawer.open .mobile-more-panel {
+    position: relative !important;
+    z-index: 1 !important;
+    pointer-events: auto !important;
+  }
+}
+
+
+/* Give the More drawer a real scroll viewport so every shortcut stays reachable. */
+@media (max-width: 780px) {
+  .mobile-more-drawer.open .mobile-more-panel {
+    height: min(88dvh, 760px) !important;
+    max-height: calc(100dvh - 36px) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+
+/* Keep the drawer heading/close control fixed while the options list scrolls. */
+@media (max-width: 1024px) {
+  .mobile-more-drawer.open .mobile-more-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    height: min(88dvh, 760px) !important;
+    max-height: calc(100dvh - 36px) !important;
+    overflow: hidden !important;
+  }
+  .mobile-more-drawer.open .mobile-more-head {
+    flex: 0 0 auto !important;
+  }
+  .mobile-more-drawer.open .mobile-more-grid {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+
+/* Installed-PWA screen treatment: detail views should read as a screen, not a layer. */
+@media (max-width: 780px) {
+  main > .section.active {
+    box-sizing: border-box !important;
+    min-height: calc(100dvh - var(--dash-header, 64px) - 84px - env(safe-area-inset-bottom)) !important;
+    padding-top: 14px !important;
+    padding-bottom: max(104px, calc(92px + env(safe-area-inset-bottom))) !important;
+    animation: mfl-section-enter .16s ease-out both;
+  }
+  main > .section.active > .section-title,
+  main > .section.active > h1:first-child,
+  main > .section.active > h2:first-child {
+    margin: 0 0 15px !important;
+    padding: 0 2px 12px !important;
+    border-bottom: 1px solid rgba(105, 164, 140, .18) !important;
+    line-height: 1.2 !important;
+    letter-spacing: -.025em !important;
+    overflow-wrap: anywhere !important;
+  }
+  main > .section.active .card {
+    background: #08171b !important;
+    border: 1px solid rgba(132, 174, 158, .17) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .2) !important;
+  }
+  main > .section.active .card h2,
+  main > .section.active .card h3 {
+    line-height: 1.3 !important;
+    overflow-wrap: anywhere !important;
+  }
+  main > .section.active .grid,
+  main > .section.active .grid-2,
+  main > .section.active .grid-3 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  main > .section.active .table-wrap {
+    border: 1px solid rgba(132, 174, 158, .18) !important;
+    border-radius: 13px !important;
+    background: #061115 !important;
+  }
+  main > .section.active table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+  main > .section.active th {
+    background: #10241f !important;
+    color: #bff5d5 !important;
+    font-weight: 800 !important;
+  }
+  main > .section.active td {
+    color: #e5f2eb !important;
+    border-color: rgba(132, 174, 158, .12) !important;
+  }
+  .mobile-bottom {
+    bottom: max(5px, env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Player details become a focused full-screen detail screen on phones. */
+  #modal:has(.player-card) {
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    padding: 0 !important;
+    background: rgba(0, 3, 5, .96) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  #modal:has(.player-card) .modal-box {
+    display: block !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    padding: max(58px, calc(18px + env(safe-area-inset-top))) 14px max(24px, env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #061115 !important;
+    box-shadow: none !important;
+  }
+  #modal:has(.player-card) #modalContent {
+    width: 100% !important;
+    max-width: 680px !important;
+    margin-inline: auto !important;
+  }
+  #modal:has(.player-card) .player-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    margin: 0 0 16px !important;
+    padding: 15px !important;
+    border: 1px solid rgba(57, 245, 139, .24) !important;
+    border-radius: 17px !important;
+    background: linear-gradient(145deg, #0d2820, #08171b) !important;
+  }
+  #modal:has(.player-card) .player-photo {
+    flex: 0 0 84px !important;
+    width: 84px !important;
+    height: 84px !important;
+    border-radius: 15px !important;
+    object-fit: cover !important;
+    border: 1px solid rgba(57, 245, 139, .3) !important;
+  }
+  #modal:has(.player-card) .player-card h2 {
+    margin: 0 0 5px !important;
+    color: #f0fff7 !important;
+    font-size: clamp(20px, 6vw, 27px) !important;
+    line-height: 1.1 !important;
+    overflow-wrap: anywhere !important;
+  }
+  #modal:has(.player-card) .grid.grid-3,
+  #modal:has(.player-card) .grid.grid-2 {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+    margin-top: 12px !important;
+  }
+  #modal:has(.player-card) .card {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 14px !important;
+    border-radius: 14px !important;
+    background: #0a1b20 !important;
+  }
+  #modal:has(.player-card) .rank-row {
+    min-width: 0 !important;
+    gap: 9px !important;
+    padding: 10px 0 !important;
+    border-bottom: 1px solid rgba(132, 174, 158, .12) !important;
+  }
+  #modal:has(.player-card) .rank-row:last-child { border-bottom: 0 !important; }
+  #modal:has(.player-card) .rank-row strong,
+  #modal:has(.player-card) .rank-row small { overflow-wrap: anywhere !important; }
+}
+@media (max-width: 360px) {
+  #modal:has(.player-card) .player-card { align-items: flex-start !important; gap: 10px !important; padding: 12px !important; }
+  #modal:has(.player-card) .player-photo { flex-basis: 68px !important; width: 68px !important; height: 68px !important; }
+}
+
+
+/* Narrow-phone overflow and drawer hit-testing fixes from Chromium smoke tests. */
+@media (max-width: 780px) {
+  body { width: 100% !important; max-width: 100vw !important; }
+  #home, #home .dashboard-hero, #home .dashboard-hero-copy {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: clip !important;
+  }
+  #home .dashboard-hero-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  #home .dashboard-hero-actions .btn {
+    box-sizing: border-box !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+  .fx-beams, .fx-beam, .fx-court {
+    max-width: 100vw !important;
+    pointer-events: none !important;
+  }
+  body.mobile-more-open .mobile-bottom {
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+  .mobile-more-drawer.open {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483000 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    pointer-events: auto !important;
+    isolation: isolate !important;
+  }
+  .mobile-more-drawer.open .mobile-more-panel {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: min(88dvh, 760px) !important;
+    max-height: calc(100dvh - env(safe-area-inset-top) - 12px) !important;
+    margin: 0 !important;
+    border-radius: 22px 22px 0 0 !important;
+    padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+    overflow: hidden !important;
+    pointer-events: auto !important;
+    transform: none !important;
+  }
+  .mobile-more-drawer.open .mobile-more-grid {
+    min-height: 0 !important;
+    padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
+    scroll-padding-bottom: 20px !important;
+  }
+}
+
+
+/* Final drawer layout: fixed heading, independently scrollable shortcut grid. */
+@media (max-width: 1024px) {
+  .mobile-more-drawer.open .mobile-more-panel {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .mobile-more-drawer.open .mobile-more-head {
+    flex: 0 0 auto !important;
+  }
+  .mobile-more-drawer.open .mobile-more-grid {
+    display: grid !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+
+/* Keep the drawer's measured height inclusive of padding so its scroll viewport stays on-screen. */
+@media (max-width: 780px) {
+  .mobile-more-drawer.open .mobile-more-panel {
+    box-sizing: border-box !important;
+    min-height: 0 !important;
+  }
+  .mobile-more-drawer.open .mobile-more-head {
+    min-width: 0 !important;
+  }
+  .mobile-more-drawer.open .mobile-more-grid {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-height: 100% !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+  .mobile-more-drawer.open .mobile-more-grid button {
+    flex-shrink: 0 !important;
+  }
+}
+
+
+/* The open drawer owns all mobile taps; background tables must not intercept them. */
+@media (max-width: 1024px) {
+  body.mobile-more-open > main,
+  body.mobile-more-open > footer {
+    pointer-events: none !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer {
+    pointer-events: auto !important;
+    z-index: 2147483647 !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-panel,
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-backdrop {
+    pointer-events: auto !important;
+  }
+}
+
+
+/* Strongly disable all background hit targets while the mobile drawer is open. */
+@media (max-width: 1024px) {
+  body.mobile-more-open main,
+  body.mobile-more-open main *,
+  body.mobile-more-open footer,
+  body.mobile-more-open footer * {
+    pointer-events: none !important;
+  }
+  body.mobile-more-open #mobileMoreDrawer,
+  body.mobile-more-open #mobileMoreDrawer * {
+    pointer-events: auto !important;
+  }
+}
+
+
+/* The open drawer is a focused navigation layer: prevent background content from
+   becoming a click target or bleeding through if legacy stacking contexts overlap. */
+@media (max-width: 1024px) {
+  body.mobile-more-open > main,
+  body.mobile-more-open > footer {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer {
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-panel,
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-panel * {
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+}
+
+
+/* A transitioning transform can leave lower shortcuts below the viewport.
+   The drawer backdrop may animate, but the interactive panel must settle in place. */
+@media (max-width: 1024px) {
+  .mobile-more-drawer.open .mobile-more-panel {
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+
+/* Prevent legacy translateY transitions from leaving the drawer off-screen during fast taps. */
+@media (max-width: 1024px) {
+  html body #mobileMoreDrawer .mobile-more-panel {
+    transition: opacity .18s ease !important;
+  }
+  html body #mobileMoreDrawer.open .mobile-more-panel {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+
+/* Keep the opened More drawer anchored to the viewport, overriding legacy slide transforms. */
+@media (max-width: 1024px) {
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-panel,
+  body.mobile-more-open #mobileMoreDrawer .mobile-more-panel {
+    position: fixed !important;
+    inset: auto 0 0 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: min(88dvh, 760px) !important;
+    max-height: calc(100dvh - env(safe-area-inset-top) - 12px) !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    transform: none !important;
+    animation: none !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-head,
+  body.mobile-more-open #mobileMoreDrawer .mobile-more-head {
+    flex: 0 0 auto !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-grid,
+  body.mobile-more-open #mobileMoreDrawer .mobile-more-grid {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+
+/* Cancel legacy slide transitions on the panel itself, including the close→reopen
+   interval. The drawer's visibility state controls opening; the panel must stay tappable. */
+@media (max-width: 1024px) {
+  html body #mobileMoreDrawer .mobile-more-panel {
+    transition: none !important;
+    animation: none !important;
+  }
+  html body #mobileMoreDrawer.open .mobile-more-panel {
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}
+
+
+/* High-specificity final layout for the open drawer; do not depend on body class timing. */
+@media (max-width: 1024px) {
+  html body #mobileMoreDrawer.open .mobile-more-panel {
+    position: fixed !important;
+    inset: auto 0 0 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: min(88dvh, 760px) !important;
+    max-height: calc(100dvh - env(safe-area-inset-top) - 12px) !important;
+    margin: 0 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    overflow: hidden !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  html body #mobileMoreDrawer.open .mobile-more-head {
+    flex: 0 0 auto !important;
+  }
+  html body #mobileMoreDrawer.open .mobile-more-grid {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+
+/* Ensure the drawer list gets a real flex viewport so lower destinations stay tappable. */
+@media (max-width: 1024px) {
+  html body #mobileMoreDrawer.open .mobile-more-panel {
+    box-sizing: border-box !important;
+  }
+  html body #mobileMoreDrawer.open .mobile-more-grid {
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    flex: 1 1 0% !important;
+    align-content: start !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+}
+
+
+/* Compact-phone safeguards: preserve the existing app layout at 320px widths. */
+@media (max-width: 359px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  body {
+    --mobile-compact-gutter: 10px;
+  }
+
+  main {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    padding-left: var(--mobile-compact-gutter);
+    padding-right: var(--mobile-compact-gutter);
+    box-sizing: border-box;
+  }
+
+  main > .section.active,
+  main > .section.active > *,
+  main > .section.active .card,
+  main > .section.active .grid,
+  main > .section.active .grid-2,
+  main > .section.active .grid-3,
+  main > .section.active .table-wrap {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  main > .section.active .table-wrap {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  main > .section.active table {
+    width: 100%;
+  }
+
+  .mobile-bottom {
+    padding-left: max(4px, env(safe-area-inset-left));
+    padding-right: max(4px, env(safe-area-inset-right));
+    box-sizing: border-box;
+  }
+
+  .mobile-bottom button,
+  .mobile-bottom a {
+    min-width: 0;
+    padding-left: 2px;
+    padding-right: 2px;
+    font-size: 11px;
+  }
+
+  html body #mobileMoreDrawer.open .mobile-more-panel {
+    width: 100%;
+    max-width: 100%;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    box-sizing: border-box;
+  }
+
+  html body #mobileMoreDrawer.open .mobile-more-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  html body #mobileMoreDrawer.open .mobile-more-grid button {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  #modal .modal-box,
+  [role="dialog"] {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top));
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}
+
+
+/* Liga Info standings table: keep wide columns inside a deliberate horizontal scroll viewport. */
+#gxInfoRoot .gx-grid,
+#gxInfoRoot .gx-grid > .card,
+#gxInfoRoot .gx-table-card {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+#gxInfoRoot .gx-table-wrap {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  overscroll-behavior-x: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+#gxInfoRoot .gx-table {
+  width: max-content !important;
+  min-width: 100% !important;
+  max-width: none !important;
+}
+
