@@ -28,8 +28,8 @@ function standings(){
   );
 }
 function buildICS(list){
-  const esc=x=>String(x).replace(/[\\r\\n\\\\,;]/g," ");
-  const iso=x=>new Date(x).toISOString().replace(/[-:]/g,"").replace(/\\.\\d{3}Z$/,"Z");
+  const esc=x=>String(x).replace(/[\r\n\\,;]/g," ");
+  const iso=x=>new Date(x).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z");
   const out=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Medjasi Futsal Liga//EN"];
   list.filter(x=>x.match_date).forEach(m=>{
     const s=new Date(m.match_date);
@@ -37,7 +37,7 @@ function buildICS(list){
     const e=new Date(s.getTime()+60*60000);
     out.push("BEGIN:VEVENT","UID:medjasi-"+esc(m.id)+"@liga","DTSTAMP:"+iso(new Date()),"DTSTART:"+iso(s),"DTEND:"+iso(e),"SUMMARY:"+esc(tname(m.home_team_id)+" - "+tname(m.away_team_id)),"END:VEVENT");
   });
-  out.push("END:VCALENDAR"); return out.join("\\r\\n");
+  out.push("END:VCALENDAR"); return out.join("\r\n");
 }
 function downloadICS(list){
   const a=document.createElement("a");
