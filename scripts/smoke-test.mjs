@@ -258,7 +258,9 @@ try{
       rpc:client.rpc,
       rpcOwn:Object.prototype.hasOwnProperty.call(client,"rpc"),
       game:window.medjasiGame,
-      gameRefresh:window.medjasiGame?.refresh
+      gameRefresh:window.medjasiGame?.refresh,
+      openProfile:window.openV9Profile,
+      loadFanPublicStyles:window.loadFanPublicStyles
     };
     window.__loginSmoke={email:"login-smoke@example.com",getSessionCalled:false,profileLookupCalled:false,rpcCalls:[],gameRefreshCalled:false};
     const fakeUser={id:"11111111-2222-4333-8444-555555555555",email:"login-smoke@example.com",user_metadata:{username:"SmokeFan"}};
@@ -273,17 +275,22 @@ try{
     };
     client.auth.signOut=async()=>({error:null});
     client.from=function(table,...args){
-      if(table!=="profiles")return saved.from.call(this,table,...args);
-      window.__loginSmoke.profileLookupCalled=true;
+      if(!["profiles","community_posts","community_stories"].includes(table))return saved.from.call(this,table,...args);
+      if(table==="profiles")window.__loginSmoke.profileLookupCalled=true;
+      const rows=table==="profiles"?{id:fakeUser.id,username:"SmokeFan",role:"user",avatar_url:null,bio:""}:[];
       const builder={
         select(){return this;},
         eq(){return this;},
         maybeSingle(){return this;},
+        order(){return this;},
+        limit(){return this;},
+        gt(){return this;},
         abortSignal(){return this;},
-        then(resolve,reject){return Promise.resolve({data:{id:fakeUser.id,username:"SmokeFan",role:"user"},error:null}).then(resolve,reject);}
+        then(resolve,reject){return Promise.resolve({data:rows,error:null}).then(resolve,reject);}
       };
       return builder;
     };
+    window.loadFanPublicStyles=async()=>{};
     client.rpc=function(name,...args){
       window.__loginSmoke.rpcCalls.push(name);
       return saved.rpc.call(this,name,...args);
@@ -302,6 +309,14 @@ try{
         loginButtonDisabled:document.getElementById("loginSubmitButton")?.disabled,
         ...window.__loginSmoke
       };
+      document.querySelector("#headerAccount .account-btn")?.click();
+      await new Promise(resolve=>setTimeout(resolve,80));
+      const profileState={
+        modalActive:!!document.getElementById("modal")?.classList.contains("active"),
+        profileRendered:!!document.querySelector("#modal .v9-profile-full"),
+        profileHeading:document.querySelector("#modal .v9-profile-full h2")?.textContent||""
+      };
+      if(typeof window.hideModal==="function")window.hideModal();
       await window.logout();
       await new Promise(resolve=>setTimeout(resolve,80));
       const logoutState={
@@ -309,7 +324,7 @@ try{
         loginButtonText:document.querySelector("#headerAccount button")?.textContent||"",
         profileButtonCount:document.querySelectorAll("#headerAccount .v13-auth-main").length
       };
-      return {loginState,logoutState};
+      return {loginState,profileState,logoutState};
     }finally{
       if(saved.signInOwn)client.auth.signInWithPassword=saved.signIn;else delete client.auth.signInWithPassword;
       if(saved.signOutOwn)client.auth.signOut=saved.signOut;else delete client.auth.signOut;
@@ -317,6 +332,8 @@ try{
       if(saved.fromOwn)client.from=saved.from;else delete client.from;
       if(saved.rpcOwn)client.rpc=saved.rpc;else delete client.rpc;
       if(saved.game){window.medjasiGame=saved.game;if(saved.gameRefresh)window.medjasiGame.refresh=saved.gameRefresh;else delete window.medjasiGame.refresh;}else delete window.medjasiGame;
+      if(saved.openProfile)window.openV9Profile=saved.openProfile;else delete window.openV9Profile;
+      if(saved.loadFanPublicStyles)window.loadFanPublicStyles=saved.loadFanPublicStyles;else delete window.loadFanPublicStyles;
       delete window.__loginSmoke;
     }
   });
@@ -327,6 +344,9 @@ try{
   assert.ok(loginLogoutProbe.loginState.rpcCalls.includes("get_league_snapshot"),"Login must request the league snapshot.");
   assert.equal(loginLogoutProbe.loginState.gameRefreshCalled,true,"Login must refresh Fan Game state.");
   assert.equal(loginLogoutProbe.loginState.loginButtonDisabled,false,"Login submit must be re-enabled after success.");
+  assert.equal(loginLogoutProbe.profileState.modalActive,true,"Clicking the authenticated account button must open a modal.");
+  assert.equal(loginLogoutProbe.profileState.profileRendered,true,"Clicking the authenticated account button must render the requested profile.");
+  assert.ok(loginLogoutProbe.profileState.profileHeading.includes("SmokeFan"),"The profile modal must display the authenticated user's profile.");
   assert.equal(loginLogoutProbe.logoutState.homeActive,true,"Logout must return to the homepage.");
   assert.ok(loginLogoutProbe.logoutState.loginButtonText.includes("Prijava"),"Logout must restore the logged-out header.");
   assert.equal(loginLogoutProbe.logoutState.profileButtonCount,0,"Logout must remove the authenticated profile button.");
