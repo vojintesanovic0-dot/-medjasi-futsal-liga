@@ -455,6 +455,7 @@
           </div>
         </div>
         <button class="btn btn-green auth-primary-btn" id="registerSubmitButton" type="submit">Kreiraj nalog</button>
+        <p class="muted auth-consent-note" style="font-size:12px;margin:10px 0 0">Registracijom prihvataš <a href="./privatnost.html">privatnost i uslove korištenja</a>.</p>
         <p class="muted auth-message" id="registerMessage" aria-live="polite" aria-atomic="true"></p>
         <p class="auth-switch-note">Već imaš nalog? <button class="auth-inline-link" type="button" data-auth-mode="login" data-auth-focus-target="loginEmail">Prijavi se</button></p>
       </form>
@@ -730,7 +731,8 @@
 <button onclick="mobileMoreDashboardGo('board')"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v4a4 4 0 0 1-8 0V4ZM8 6H4v2a4 4 0 0 0 4 4M16 6h4v2a4 4 0 0 1-4 4M12 12v5M8 21h8M10 17h4"/></svg></span><b>Nagrade i poredak</b><small>Rang-lista navijača</small></button>
 <button onclick="mobileMoreDashboardGo('collection')"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></span><b>Kolekcija</b><small>Osvojene oznake</small></button>
 <button onclick="mobileMoreDashboardGo('club')"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-8-4.5-8-11a4 4 0 0 1 8-1 4 4 0 0 1 8 1c0 6.5-8 11-8 11Z"/></svg></span><b>Moja tribina</b><small>Navijački prostor</small></button>
-<button onclick="mobileMoreDashboardGo('mvp')"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span><b>MVP</b><small>Igrač utakmice</small></button>
+
+<button onclick="window.location.href='./privatnost.html'"><span>🔒</span>Privatnost i uslovi</button><button onclick="mobileMoreDashboardGo('mvp')"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span><b>MVP</b><small>Igrač utakmice</small></button>
 <button id="dashboardMobileAdminLink" hidden onclick="mobileMoreGo('admin')"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="m9 12 2 2 4-4"/></svg></span><b>Admin panel</b><small>Upravljanje ligom</small></button>
 </div>
 </div>
@@ -847,5 +849,6 @@
 <script src="./js/home-cards-v1.js?v=1" defer></script>
 <script src="./js/auth-ui.js?v=3" defer></script>
 <script src="./js/desktop-scroll-fix-v1.js?v=1" defer></script>
+<script src="./js/privacy-link-v1.js?v=1" defer></script>
 </body>
 </html>
