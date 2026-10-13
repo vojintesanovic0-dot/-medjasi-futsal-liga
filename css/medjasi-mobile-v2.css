@@ -382,3 +382,22 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     right: 10px !important;
   }
 }
+
+
+/* The More drawer must sit above the fixed bottom navigation, including at the last row. */
+@media (max-width: 780px) {
+  .mobile-more-drawer.open {
+    z-index: 15000 !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
+  }
+  .mobile-more-drawer.open .mobile-more-backdrop {
+    z-index: 0 !important;
+  }
+  .mobile-more-drawer.open .mobile-more-panel {
+    z-index: 1 !important;
+    pointer-events: auto !important;
+    max-height: min(88dvh, 760px) !important;
+    padding-bottom: max(84px, calc(16px + env(safe-area-inset-bottom))) !important;
+  }
+}
