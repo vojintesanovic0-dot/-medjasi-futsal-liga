@@ -361,7 +361,7 @@ try{
   await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   await page.locator("#mobileMoreBtn").click();
   await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
-  await page.locator(".mobile-more-grid button").filter({hasText:"Utakmice"}).first().click({force:true});
+  await page.locator(".mobile-more-grid button").filter({hasText:"Utakmice"}).first().click();
   await page.waitForFunction(()=>document.querySelector("#matches.section")?.classList.contains("active"),null,{timeout:7000});
   await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
