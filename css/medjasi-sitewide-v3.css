@@ -142,16 +142,6 @@ main{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339f58b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v4M12 17v4M4 12h4M16 12h4M6.3 6.3 9 9M15 15l2.7 2.7M17.7 6.3 15 9M9 15l-2.7 2.7'/%3E%3Ccircle cx='12' cy='12' r='3.5'/%3E%3C/svg%3E");
 }
 
-/* restore the actual title labels through generated text */
-#table .section-title::after{content:"Tabela";font-size:36px;position:static;width:auto;height:auto;background:none;}
-#matches .section-title::after{content:"Utakmice";font-size:36px;position:static;width:auto;height:auto;background:none;}
-#teams .section-title::after{content:"Ekipe";font-size:36px;position:static;width:auto;height:auto;background:none;}
-#players .section-title::after{content:"Igrači";font-size:36px;position:static;width:auto;height:auto;background:none;}
-#stats .section-title::after{content:"Statistika";font-size:36px;position:static;width:auto;height:auto;background:none;}
-#comments .section-title::after{content:"Komentari";font-size:36px;position:static;width:auto;height:auto;background:none;}
-#chat .section-title::after{content:"Chat";font-size:36px;position:static;width:auto;height:auto;background:none;}
-#gallery .section-title::after{content:"Galerija";font-size:34px;position:static;width:auto;height:auto;background:none;}
-#admin .section-title::after{content:"Admin panel";font-size:36px;position:static;width:auto;height:auto;background:none;}
 
 .card{
   border:1px solid var(--m11-line)!important;
@@ -671,16 +661,7 @@ main{
     min-height:40px!important;
     margin-bottom:14px!important;
   }
-  #table .section-title::after,
-  #matches .section-title::after,
-  #teams .section-title::after,
-  #players .section-title::after,
-  #stats .section-title::after,
-  #comments .section-title::after,
-  #chat .section-title::after,
-  #admin .section-title::after{
-    font-size:28px!important;
-  }
+    }
   #gallery .section-title::after{font-size:27px!important}
   .section-title::before{
     width:34px;height:34px;flex-basis:34px;border-radius:10px;
