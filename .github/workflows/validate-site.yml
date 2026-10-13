@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Check patch whitespace
+        run: git diff --check
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
