@@ -60,3 +60,13 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 - Vidljivi naziv lige je normalizovan na `Međasi` bez promjene tehničkih identifikatora i ruta.
 
 - Mobilna navigacija koristi donju traku i meni „Više”; `Escape` zatvara meni. Chromium provjera pokriva širine 320, 360, 390 i 430 px te tablet širinu 1100 px, a Service Worker pri HTTP 4xx/5xx grešci koristi keširanu početnu stranicu ili `offline.html` umjesto da sačuva neispravan odgovor. Verzije glavnih resursa su `app.js?v=20261059`, `extras.js/css?v=20261013v2`, `growth.js?v=20261013v02`, `medjasi-mobile-v2.css?v=20261013fix3`, `medjasi-header-fix-v1.css?v=4` i PWA cache `medjasi-futsal-pwa-v194`.
+
+
+## Korisnička imena — dodatne SQL skripte
+
+Ove skripte su ručni koraci za pregled i unapređenje pravila korisničkih imena; ne izvršavaju se automatski deployem. Napravi backup baze i pregledaj rezultate prije pokretanja:
+
+- `sql/30_public_username_no_email.sql` — samo pregled zapisa koji možda prikazuju email kao javno ime.
+- `sql/31_public_username_no_email_fix.sql` — opciona korekcija tek nakon pregleda izvještaja iz koraka 30.
+- `sql/32_username_rules.sql` — kompatibilno postavljanje osnovnih pravila i ograničenja korisničkog imena.
+- `sql/33_enforce_username_rules.sql` — strožija validacija formata i rezervisanih imena; pokrenuti nakon pregleda postojećih zapisa.
