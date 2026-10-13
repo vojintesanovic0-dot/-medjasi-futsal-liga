@@ -30,8 +30,8 @@ if (duplicates.length) fail(`Duplicate HTML IDs: ${duplicates.join(", ")}`);
 else pass(`No duplicate IDs across ${ids.length} HTML IDs`);
 
 if (
-  !pushConfigMigration.includes("do $") ||
-  !pushConfigMigration.includes("end;\\n$;") ||
+  !pushConfigMigration.includes("do $$") ||
+  !pushConfigMigration.includes("end;\n$$;") ||
   !pushConfigMigration.includes("alter table public.push_config enable row level security") ||
   !pushConfigMigration.includes("revoke all privileges on table public.push_config from public, anon, authenticated") ||
   !pushConfigMigration.includes("commit;")
