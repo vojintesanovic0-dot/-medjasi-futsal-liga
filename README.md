@@ -59,4 +59,4 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 - `supabase/functions/send-push/index.ts`: push naslov koristi pravilan naziv lige, tip obavijesti dolazi iz provjerene vrijednosti, a `match_id` ima ograničenu dužinu. Nakon odobrenja promjena potrebno je deployati Edge funkciju da izmjene važe u produkciji.
 - Vidljivi naziv lige je normalizovan na `Međasi` bez promjene tehničkih identifikatora i ruta.
 
-- Trenutna grana osvježava `index.html` i Service Worker ključeve pri relevantnim izmjenama; trenutno su `app.js?v=20261013v57`, `growth.js?v=20261012v02`, `css/medjasi-mobile-v2.css?v=20261013v13` i PWA cache `medjasi-futsal-pwa-v189`.
+- Trenutna grana osvježava `index.html` i Service Worker ključeve pri relevantnim izmjenama; trenutno su `app.js?v=20261013v57`, `growth.js?v=20261012v02`, `css/medjasi-mobile-v2.css?v=20261013v14` i PWA cache `medjasi-futsal-pwa-v190`.
