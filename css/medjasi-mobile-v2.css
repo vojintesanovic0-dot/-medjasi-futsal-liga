@@ -1009,3 +1009,24 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   min-width: 100% !important;
   max-width: none !important;
 }
+
+/* Decorative pitch/beams must never enlarge the document's scrollable width on phones. */
+@media (max-width: 600px) {
+  html body .fx-bg {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    overflow: clip !important;
+    contain: layout paint !important;
+    pointer-events: none !important;
+  }
+  html body .fx-bg .fx-beams,
+  html body .fx-bg .fx-court,
+  html body .fx-bg .fx-grain,
+  html body .fx-bg .fx-vig {
+    max-width: 100% !important;
+    overflow: clip !important;
+  }
+}
