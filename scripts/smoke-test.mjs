@@ -432,7 +432,9 @@ try{
         getComputedStyle(panel).visibility!=="hidden" &&
         getComputedStyle(panel).transform==="matrix(1, 0, 0, 1, 0, 0)";
     },null,{timeout:5000});
-    await page.locator(".mobile-more-grid button").filter({hasText:label}).first().click();
+    const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
+    await shortcut.scrollIntoViewIfNeeded();
+    await shortcut.click();
     assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),tab,tab+" shortcut must call its matching dashboard tab.");
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   }
