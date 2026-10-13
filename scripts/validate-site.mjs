@@ -1683,6 +1683,17 @@ if (
   pass("Header context and Fan Game navigation selection update on the user's click");
 }
 
+if(
+  !app.includes('window.__MEDJASI_APP_READY_STATE="loading"') ||
+  !app.includes("window.__MEDJASI_USER_NAVIGATED_DURING_INIT") ||
+  !app.includes("if(!window.__MEDJASI_USER_NAVIGATED_DURING_INIT)") ||
+  !app.includes("restoreRememberedSection();")
+){
+  fail("Slow startup must not override a section selected by the user while data is loading");
+}else{
+  pass("Slow startup preserves user-selected navigation instead of restoring a stale section over it");
+}
+
 const gameTabRouterStart = dashboard.indexOf("window.dashboardOpenGameTab=function(tab)");
 const gameTabRouterEnd = dashboard.indexOf("window.toggleDashboardGlow", gameTabRouterStart);
 const gameTabRouter = gameTabRouterStart >= 0 && gameTabRouterEnd > gameTabRouterStart
