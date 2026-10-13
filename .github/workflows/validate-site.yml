@@ -6,6 +6,7 @@ on:
       - main
       - "fix/mobile-functionality-theme-cleanup-20261013"
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
