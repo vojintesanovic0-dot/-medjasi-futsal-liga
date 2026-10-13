@@ -808,3 +808,16 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
 @media(max-width:1024px){
   .dashboard-right-rail{display:flex!important;grid-column:1!important;grid-row:2!important;position:static!important;top:auto!important;max-height:none!important;width:100%!important;min-width:0!important;align-self:stretch!important;}
 }
+
+
+/* Mobile "Više" drawer: leave a tappable outside edge and a visible close glyph. */
+@media (max-width: 1024px){
+  .mobile-more-drawer.open .mobile-more-panel{
+    left:10px!important;
+    right:10px!important;
+    bottom:10px!important;
+    width:auto!important;
+    border-radius:22px!important;
+  }
+}
+.mobile-more-close{font-size:16px!important;line-height:1!important}
