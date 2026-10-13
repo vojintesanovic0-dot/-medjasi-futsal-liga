@@ -801,3 +801,10 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
   .site-header .v7-search-wrap input{font-size:10px!important}
 }
 
+/* Rail: sakrij pomoćni panel na desktopu; na telefonu prikaži ga ispod dashboarda. */
+@media(min-width:1025px){
+  .dashboard-right-rail{display:none!important;}
+}
+@media(max-width:1024px){
+  .dashboard-right-rail{display:flex!important;grid-column:1!important;grid-row:2!important;position:static!important;top:auto!important;max-height:none!important;width:100%!important;min-width:0!important;align-self:stretch!important;}
+}
