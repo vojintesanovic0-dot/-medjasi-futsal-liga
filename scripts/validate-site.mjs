@@ -31,7 +31,7 @@ else pass(`No duplicate IDs across ${ids.length} HTML IDs`);
 
 if (
   !pushConfigMigration.includes("do $$") ||
-  !pushConfigMigration.includes("end;\n$$;") ||
+  !/end;\s*\$\$;/i.test(pushConfigMigration) ||
   !pushConfigMigration.includes("alter table public.push_config enable row level security") ||
   !pushConfigMigration.includes("revoke all privileges on table public.push_config from public, anon, authenticated") ||
   !pushConfigMigration.includes("commit;")
