@@ -128,15 +128,27 @@ if (liveHealthSyntax.status !== 0) {
 
 const liveHealthScript = read("scripts/check-live-supabase.mjs");
 const liveHealthWorkflow = read(".github/workflows/live-supabase-health.yml");
+const liveHealthModuleProbes = [
+  "/rest/v1/news?",
+  "/rest/v1/community_posts?",
+  "/rest/v1/community_comments?",
+  "/rest/v1/community_stories?",
+  "/rest/v1/music_tracks?",
+  "/rest/v1/fan_shop_items?",
+  "/rest/v1/fan_markets?",
+  "/rest/v1/seasons?",
+  "/rest/v1/site_settings?"
+];
 if (
   !liveHealthScript.includes("/rest/v1/rpc/get_league_snapshot") ||
   !liveHealthScript.includes("AbortSignal.timeout(10000)") ||
   !/\bprocess\.exitCode\s*=\s*1\b/.test(liveHealthScript) ||
+  !liveHealthModuleProbes.every(path => liveHealthScript.includes(path)) ||
   !liveHealthWorkflow.includes("branches: [main]") ||
   !liveHealthWorkflow.includes("node scripts/check-live-supabase.mjs")
 ) {
-  fail("Live Supabase health must be checked separately from the browser shell smoke test");
-} else pass("Live Supabase health has a separate production-only workflow");
+  fail("Live Supabase health must cover the league snapshot and all public module endpoints separately from browser shell smoke tests");
+} else pass("Live Supabase health covers league, news, community, playlist, Fan Shop, markets, seasons, and site settings");
 
 const registerStart = app.indexOf("async function register()");
 const registerEnd = app.indexOf("async function resendConfirmation()", registerStart);
