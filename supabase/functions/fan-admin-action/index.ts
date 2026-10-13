@@ -33,17 +33,50 @@ Deno.serve(async (req: Request) => {
       global: { headers: { Authorization: auth } }
     });
 
-    const body=await req.json();
-    const action=String(body.action||"");
+    let body: Record<string, unknown>;
+    try {
+      const parsed: unknown = await req.json();
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return Response.json({ error: "Request body must be a JSON object" }, { status: 400, headers: corsHeaders });
+      }
+      body = parsed as Record<string, unknown>;
+    } catch {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400, headers: corsHeaders });
+    }
+
+    const action = typeof body.action === "string" ? body.action.trim() : "";
     let data, error;
-    if(action==="generate_markets"){
-      ({data,error}=await actor.rpc("fan_generate_markets",{p_match:String(body.match_id)}));
-    }else if(action==="settle_match"){
-      ({data,error}=await actor.rpc("fan_settle_match",{p_match:String(body.match_id)}));
+    if(action==="generate_markets" || action==="settle_match"){
+      const matchId = String(body.match_id ?? "").trim();
+      if (!matchId || matchId.length > 100) {
+        return Response.json({ error: "Invalid match_id" }, { status: 400, headers: corsHeaders });
+      }
+      const rpcName = action === "generate_markets" ? "fan_generate_markets" : "fan_settle_match";
+      ({data,error}=await actor.rpc(rpcName,{p_match:matchId}));
     }else if(action==="grant"){
-      ({data,error}=await actor.rpc("fan_admin_grant",{p_user:String(body.user_id),p_amount:Number(body.amount),p_reason:String(body.reason||"Admin grant")}));
+      const userId = typeof body.user_id === "string" ? body.user_id.trim() : "";
+      const amount = Number(body.amount);
+      const reason = (typeof body.reason === "string" ? body.reason.trim() : "") || "Admin grant";
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)) {
+        return Response.json({ error: "Invalid user_id" }, { status: 400, headers: corsHeaders });
+      }
+      if (!Number.isInteger(amount) || amount === 0 || Math.abs(amount) > 1000) {
+        return Response.json({ error: "amount must be a non-zero integer between -1000 and 1000" }, { status: 400, headers: corsHeaders });
+      }
+      if (reason.length > 200) {
+        return Response.json({ error: "reason must be at most 200 characters" }, { status: 400, headers: corsHeaders });
+      }
+      ({data,error}=await actor.rpc("fan_admin_grant",{p_user:userId,p_amount:amount,p_reason:reason}));
     }else if(action==="set_odds"){
-      ({data,error}=await actor.rpc("fan_set_odds",{p_market:String(body.market_id),p_odds:Number(body.odds)}));
+      const marketId = typeof body.market_id === "string" ? body.market_id.trim() : "";
+      const odds = Number(body.odds);
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(marketId)) {
+        return Response.json({ error: "Invalid market_id" }, { status: 400, headers: corsHeaders });
+      }
+      if (!Number.isFinite(odds) || odds < 1.01 || odds > 100) {
+        return Response.json({ error: "odds must be between 1.01 and 100" }, { status: 400, headers: corsHeaders });
+      }
+      ({data,error}=await actor.rpc("fan_set_odds",{p_market:marketId,p_odds:odds}));
     }else{
       return Response.json({error:"Unknown action"},{status:400,headers:corsHeaders});
     }
