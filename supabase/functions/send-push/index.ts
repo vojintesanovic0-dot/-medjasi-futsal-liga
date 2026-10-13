@@ -34,7 +34,11 @@ Deno.serve(async (req: Request) => {
 
     const role = profile?.role;
     const { type, title, body, match_id } = await req.json();
-    const eventType = String(type || "");
+    const eventType = String(type || "").trim();
+    const safeMatchId = match_id == null ? null : String(match_id);
+    if (safeMatchId !== null && safeMatchId.length > 100) {
+      return Response.json({ error: "Invalid match_id" }, { status: 400, headers: corsHeaders });
+    }
     const allowedPushTypes = new Set(["goal", "card", "live", "finish", "match_finished", "news"]);
 
     // Only administrators and moderators may broadcast to every subscriber.
@@ -69,10 +73,10 @@ Deno.serve(async (req: Request) => {
     if (subError) throw subError;
 
     const payload = JSON.stringify({
-      title: String(title || "Medjaši Futsal Liga").slice(0, 160),
+      title: String(title || "Međasi Futsal Liga").slice(0, 160),
       body: String(body || "").slice(0, 1000),
-      type: String(type || "general").slice(0, 40),
-      match_id: match_id || null,
+      type: eventType,
+      match_id: safeMatchId,
       url: "./"
     });
 
