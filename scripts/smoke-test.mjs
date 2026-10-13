@@ -32,7 +32,7 @@ let suppressedLiveRestCount=0;
 page.on("pageerror",error=>pageErrors.push(error.stack||error.message));
 page.on("console",message=>{if(message.type()==="error")browserConsoleErrors.push(message.text());});
 page.on("requestfailed",request=>failedRequests.push(request.url()+" :: "+(request.failure()?.errorText||"request failed")));
-page.on("response",response=>{if(/supabase\.co|cdn\.jsdelivr\.net|unpkg\.com/.test(response.url())&&response.status()>=400)failedResponses.push(response.status()+" "+response.url());});
+page.on("response",async response=>{if(/supabase\.co|cdn\.jsdelivr\.net|unpkg\.com/.test(response.url())&&response.status()>=400){const body=await response.text().catch(()=> "");const safeBody=body.replace(/\s+/g," ").slice(0,220);failedResponses.push(response.status()+" "+response.url()+(safeBody?" :: "+safeBody:""));}});
 page.on("response",response=>{if(response.url().startsWith(base)&&response.status()>=400)missingAssets.push(response.status()+" "+response.url());});
 await page.route(/https:\/\/[^/]+\.supabase\.co\/rest\/v1\//,async route=>{
   if(!suppressLiveRest){await route.continue();return;}
