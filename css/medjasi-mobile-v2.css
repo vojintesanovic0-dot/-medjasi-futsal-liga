@@ -738,3 +738,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     pointer-events: auto !important;
   }
 }
+
+
+/* Strongly disable all background hit targets while the mobile drawer is open. */
+@media (max-width: 1024px) {
+  body.mobile-more-open main,
+  body.mobile-more-open main *,
+  body.mobile-more-open footer,
+  body.mobile-more-open footer * {
+    pointer-events: none !important;
+  }
+  body.mobile-more-open #mobileMoreDrawer,
+  body.mobile-more-open #mobileMoreDrawer * {
+    pointer-events: auto !important;
+  }
+}
