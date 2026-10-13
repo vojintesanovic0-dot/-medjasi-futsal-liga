@@ -67,19 +67,62 @@ try{
   await page.goto(base,{waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mainNav button").first().waitFor({timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
-  try{
-    await page.waitForFunction(()=>{
-      const teams=Number(document.getElementById("statTeams")?.textContent?.trim()||0);
-      const players=Number(document.getElementById("statPlayers")?.textContent?.trim()||0);
-      const status=document.getElementById("mflDataStatus");
-      return (teams>=3&&players>=12&&(!status||status.hidden))||(!!status&&!status.hidden);
-    },null,{timeout:30000});
-  }catch(error){
-    const snapshot=await page.evaluate(()=>({teams:document.getElementById("statTeams")?.textContent,players:document.getElementById("statPlayers")?.textContent,matches:document.getElementById("statMatches")?.textContent,status:document.getElementById("mflDataStatus")?.textContent,supabaseSdk:typeof window.supabase?.createClient,supabaseClient:!!window.supabaseClient?.from}));
-    console.log("LIVE DATA LOAD DIAGNOSTIC:",JSON.stringify({snapshot,browserConsoleErrors,failedRequests,failedResponses}));
-    throw error;
+  // The data set can legitimately be smaller than the historical smoke-test
+  // thresholds. Wait for a completed render, then compare it with counts visible
+  // to the same anonymous Supabase client used by the page.
+  await page.waitForFunction(()=>{
+    const status=document.getElementById("mflDataStatus");
+    if(status&&!status.hidden)return true;
+    const teams=document.getElementById("statTeams")?.textContent?.trim();
+    return !!teams&&teams!==""&&teams!=="-";
+  },null,{timeout:30000});
+
+  const statusVisible=await page.evaluate(()=>{
+    const status=document.getElementById("mflDataStatus");
+    return !!status&&!status.hidden;
+  });
+  if(statusVisible){
+    const message=await page.evaluate(()=>document.getElementById("mflDataStatusMessage")?.textContent||"");
+    throw new Error("Aplikacija je prikazala grešku pri učitavanju: "+message);
   }
-  const loadedCounts=await page.evaluate(()=>({teams:Number(document.getElementById("statTeams")?.textContent?.trim()||0),players:Number(document.getElementById("statPlayers")?.textContent?.trim()||0),matches:Number(document.getElementById("statMatches")?.textContent?.trim()||0),dataWarning:!!document.getElementById("mflDataStatus")&&!document.getElementById("mflDataStatus").hidden}));
+
+  async function countVisible(table){
+    return page.evaluate(async tableName=>{
+      const client=window.supabaseClient;
+      if(!client?.from)return {count:null,error:"Supabase klijent nije dostupan"};
+      const {count,error}=await client.from(tableName).select("*",{count:"exact",head:true});
+      return {count:count??null,error:error?.message||null};
+    },table);
+  }
+
+  const shown=await page.evaluate(()=>({
+    teams:Number(document.getElementById("statTeams")?.textContent?.trim()||0),
+    players:Number(document.getElementById("statPlayers")?.textContent?.trim()||0)
+  }));
+  const expectedTeams=await countVisible("teams");
+  const expectedPlayers=await countVisible("players");
+  if(expectedTeams.error||expectedPlayers.error){
+    throw new Error("Ne mogu provjeriti broj redova u bazi: "+(expectedTeams.error||expectedPlayers.error));
+  }
+  assert.equal(shown.teams,expectedTeams.count,
+    "Ekipe u prikazu ("+shown.teams+") ne odgovaraju broju koji baza vraća anonimnom posjetiocu ("+expectedTeams.count+")");
+  assert.equal(shown.players,expectedPlayers.count,
+    "Igrači u prikazu ("+shown.players+") ne odgovaraju broju koji baza vraća anonimnom posjetiocu ("+expectedPlayers.count+")");
+
+  const minTeams=Number(process.env.SMOKE_MIN_TEAMS||0);
+  const minPlayers=Number(process.env.SMOKE_MIN_PLAYERS||0);
+  assert.ok(Number.isFinite(minTeams)&&minTeams>=0,"SMOKE_MIN_TEAMS mora biti nenegativan broj.");
+  assert.ok(Number.isFinite(minPlayers)&&minPlayers>=0,"SMOKE_MIN_PLAYERS mora biti nenegativan broj.");
+  if(shown.teams<minTeams)throw new Error("Premalo ekipa: "+shown.teams+" < "+minTeams);
+  if(shown.players<minPlayers)throw new Error("Premalo igrača: "+shown.players+" < "+minPlayers);
+
+  const loadedCounts=await page.evaluate(()=>({
+    teams:Number(document.getElementById("statTeams")?.textContent?.trim()||0),
+    players:Number(document.getElementById("statPlayers")?.textContent?.trim()||0),
+    matches:Number(document.getElementById("statMatches")?.textContent?.trim()||0),
+    dataWarning:!!document.getElementById("mflDataStatus")&&!document.getElementById("mflDataStatus").hidden
+  }));
+  console.log("Live league data loaded and matches anonymous table counts:",JSON.stringify({loadedCounts,minimums:{teams:minTeams,players:minPlayers}}));
   console.log("Live league data loaded:",JSON.stringify(loadedCounts));
   const desktopLayout=await page.evaluate(()=>{
     const viewport=innerWidth;
