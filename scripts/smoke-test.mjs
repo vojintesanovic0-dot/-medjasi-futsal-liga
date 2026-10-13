@@ -487,7 +487,7 @@ try{
         if(style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
       }
       return rect.right>innerWidth+2||rect.left< -2;
-    }).slice(0,12).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",text:(el.textContent||"").trim().replace(/\\s+/g," ").slice(0,60),left:Math.round(rect.left),right:Math.round(rect.right),width:Math.round(rect.width)}));
+    }).slice(0,12).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",text:(el.textContent||"").trim().replace(/\s+/g," ").slice(0,60),left:Math.round(rect.left),right:Math.round(rect.right),width:Math.round(rect.width)}));
     return {
       viewport:innerWidth,
       document:document.documentElement.scrollWidth,
@@ -747,7 +747,7 @@ try{
     for(const tab of gameTabs){
       await page.locator('#gameRoot [data-act="tab"][data-id="'+tab.id+'"]').click();
       assert.equal(await page.evaluate(()=>window.medjasiGame?.getActiveTab()),tab.id,"Fan Game tab "+tab.label+" must update the active tab state.");
-      assert.equal(await page.locator('#gameRoot [data-act="tab"][data-id="'+tab.id+'"]').getAttribute("class").then(value=>/\\bactive\\b/.test(value||"")),true,"Fan Game tab "+tab.label+" must show its active state.");
+      assert.equal(await page.locator('#gameRoot [data-act="tab"][data-id="'+tab.id+'"]').getAttribute("class").then(value=>/\bactive\b/.test(value||"")),true,"Fan Game tab "+tab.label+" must show its active state.");
       assert.ok((await page.locator("#gameRoot .fg-body").textContent()||"").trim().length>0,"Fan Game tab "+tab.label+" must render visible content.");
     }
     console.log("PASS actual Fan Game tab controls:",gameTabs.map(tab=>tab.id).join(", "));
