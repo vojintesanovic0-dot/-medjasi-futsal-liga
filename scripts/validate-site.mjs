@@ -919,6 +919,17 @@ if (
 }
 
 if (
+  !pushEdgeSource.includes("Invalid JSON body") ||
+  !pushEdgeSource.includes("Request body must be a JSON object") ||
+  !pushEdgeSource.includes('typeof type === "string"') ||
+  !pushEdgeSource.includes("safeMatchId.length > 100")
+) {
+  fail("Push Edge Function must reject malformed request bodies and invalid match identifiers before broadcasting");
+} else {
+  pass("Push Edge Function validates JSON shape and match identifiers before broadcasting");
+}
+
+if (
   !repricingFixSource.includes("when p.status = ''live'' then") ||
   !repricingFixSource.includes("when mt.status = ''live'' then") ||
   !repricingFixSource.includes("private.fan_reprice_match(text)")
