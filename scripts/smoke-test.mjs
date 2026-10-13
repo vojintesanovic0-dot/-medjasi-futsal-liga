@@ -50,6 +50,13 @@ async function navButton(target){
   }),target);
   assert.notEqual(index,-1,"Missing navigation button for "+target);
   const button=page.locator("#mainNav button").nth(index);
+  await button.evaluate(el=>{
+    const sidebar=document.querySelector(".app-sidebar");
+    if(!sidebar)return;
+    const rect=el.getBoundingClientRect(),viewport=sidebar.getBoundingClientRect();
+    if(rect.top<viewport.top)sidebar.scrollTop-=viewport.top-rect.top+8;
+    else if(rect.bottom>viewport.bottom)sidebar.scrollTop+=rect.bottom-viewport.bottom+8;
+  });
   await button.scrollIntoViewIfNeeded();
   const geometry=await button.evaluate(el=>{
     const r=el.getBoundingClientRect(),nav=document.querySelector("#mainNav"),n=nav?.getBoundingClientRect(),sidebar=document.querySelector(".app-sidebar"),sb=sidebar?.getBoundingClientRect();
