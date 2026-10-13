@@ -543,6 +543,12 @@ try{
 
   const dashboardRoutes=[["shop","Fan Shop"],["fanbase","Fan Base"],["mine","Moji tiketi"],["live","Live centar"],["board","Nagrade i poredak"],["collection","Kolekcija"],["club","Moja tribina"],["mvp","MVP"]];
   await page.evaluate(()=>{
+    window.__mobileMoreCloseTrace=[];
+    const originalClose=window.closeMobileMore;
+    window.closeMobileMore=function(){
+      window.__mobileMoreCloseTrace.push({open:!!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),stack:(new Error()).stack});
+      return originalClose.apply(this,arguments);
+    };
     window.__mobileMoreDashboardProbe=null;
     window.__mobileMoreDashboardOriginal=window.dashboardOpenGameTab;
     window.dashboardOpenGameTab=(tab)=>{window.__mobileMoreDashboardProbe=tab;};
@@ -581,7 +587,7 @@ try{
       gridScrollHeight:el.closest(".mobile-more-grid")?.scrollHeight,
       rect:(()=>{const r=el.getBoundingClientRect();return {top:Math.round(r.top),bottom:Math.round(r.bottom),left:Math.round(r.left),right:Math.round(r.right)}})()
     }));
-    if(!visibleNow.tappable)throw new Error("Mobile drawer shortcut "+label+" did not enter the visible scroll viewport: "+JSON.stringify(visibleNow));
+    if(!visibleNow.tappable){const closeTrace=await page.evaluate(()=>window.__mobileMoreCloseTrace?.slice(-8)||[]);throw new Error("Mobile drawer shortcut "+label+" did not enter the visible scroll viewport: "+JSON.stringify({visibleNow,closeTrace}));}
     const hitTarget=await shortcutHandle.evaluate(el=>{
       const rect=el.getBoundingClientRect();
       const x=rect.left+rect.width/2,y=rect.top+rect.height/2;
