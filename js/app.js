@@ -1734,7 +1734,7 @@ window.resendConfirmation=resendConfirmation;
 
 async function logout(){
   if(!supabaseClient?.auth?.signOut){
-    alert("Odjava je trenutno nedostupna jer servis prijave nije učitan.");
+    toast("Odjava je trenutno nedostupna jer servis prijave nije učitan.","error");
     return;
   }
 
@@ -1743,7 +1743,7 @@ async function logout(){
     const {error}=await sbClient().auth.signOut();
     if(error){
       medjasiAuthInteraction=false;
-      alert(error.message||"Odjava nije uspjela. Pokušaj ponovo.");
+      toast(error.message||"Odjava nije uspjela. Pokušaj ponovo.","error");
       return;
     }
 
@@ -1762,7 +1762,7 @@ async function logout(){
   }catch(error){
     medjasiAuthInteraction=false;
     console.error("Odjava nije uspjela:",error);
-    alert(error?.message||"Odjava nije uspjela zbog mrežne greške. Pokušaj ponovo.");
+    toast(error?.message||"Odjava nije uspjela zbog mrežne greške. Pokušaj ponovo.","error");
   }finally{
     medjasiAuthInteraction=false;
   }
