@@ -808,3 +808,22 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
 @media(max-width:1024px){
   .dashboard-right-rail{display:flex!important;grid-column:1!important;grid-row:2!important;position:static!important;top:auto!important;max-height:none!important;width:100%!important;min-width:0!important;align-self:stretch!important;}
 }
+
+
+/* Mobile "Više" drawer: keep an outside edge tappable and show a close glyph. */
+@media (max-width:1024px){
+  .mobile-more-drawer.open .mobile-more-panel{left:10px!important;right:10px!important;bottom:10px!important;width:auto!important;border-radius:22px!important}
+}
+.mobile-more-close{font-size:16px!important;line-height:1!important}
+
+/* Short desktop viewports: prioritize navigation over secondary sidebar cards. */
+@media (min-width:1025px) and (max-height:900px){
+  .app-sidebar{gap:4px!important;padding-top:6px!important;padding-bottom:6px!important}
+  .app-sidebar .logo{height:52px!important;min-height:52px!important}
+  .sidebar-scroll{min-height:0!important;overflow-y:auto!important}
+  .sidebar-fan-panel,.sidebar-season-panel{display:none!important}
+}
+
+/* Remove redundant theme control and top hamburger; keep bottom mobile "Više" navigation. */
+.site-header .dashboard-glow-toggle{display:none!important}
+@media (max-width:1024px){.site-header .mobile-menu-btn{display:none!important}}
