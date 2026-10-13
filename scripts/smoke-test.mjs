@@ -625,8 +625,14 @@ try{
   for(const [destination,table] of [["community","community_posts"],["chat","messages"],["news","news"]]){
     await page.locator("#graphicDestination").evaluate((el,value)=>{el.value=value;el.dispatchEvent(new Event("change",{bubbles:true}));},destination);
     const expectedCount=(await page.evaluate(()=>window.__graphicPublishTest.records.length))+1;
+    assert.equal(await page.locator("#graphicPublishBtn").isDisabled(),false,"Publish must be enabled for destination "+destination+".");
     await page.locator("#graphicPublishBtn").evaluate(el=>el.click());
-    await page.waitForFunction(expected=>window.__graphicPublishTest?.records?.length===expected,expectedCount,{timeout:5000});
+    try{
+      await page.waitForFunction(expected=>window.__graphicPublishTest?.records?.length===expected,expectedCount,{timeout:5000});
+    }catch(error){
+      const diagnostic=await page.evaluate(()=>({destination:document.getElementById("graphicDestination")?.value,publishDisabled:document.getElementById("graphicPublishBtn")?.disabled,uploads:window.__graphicPublishTest?.uploads,records:window.__graphicPublishTest?.records,toasts:window.__graphicPublishTest?.toasts}));
+      throw new Error("Graphic publish test failed for "+destination+": "+JSON.stringify(diagnostic)+"; "+error.message);
+    }
     const record=await page.evaluate(()=>window.__graphicPublishTest.records.at(-1));
     assert.equal(record.table,table,"Graphic publish destination "+destination+" must insert into "+table+".");
     assert.ok(record.row.image_url||record.row.media_url,"Published graphic must include the uploaded image URL.");
