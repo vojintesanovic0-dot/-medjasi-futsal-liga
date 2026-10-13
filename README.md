@@ -57,4 +57,6 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 - `supabase/functions/fan-admin-action/index.ts`: administratorski RPC pozivi koriste JWT stvarnog administratora kako bi provjere `auth.uid()` ostale ispravne.
 - Vidljivi naziv lige je normalizovan na `Međasi` bez promjene tehničkih identifikatora i ruta.
 
-- Nakon izmjena registracije ažurirani su `index.html` i Service Worker cache ključevi (`app.js?v=20261012v52`, PWA cache v175), kako bi korisnici dobili novi JavaScript umjesto stare keširane verzije.
+- Nakon izmjena registracije ažurirani su `index.html` i Service Worker cache ključevi (`app.js?v=20261012v52`, PWA cache v176), kako bi korisnici dobili novi JavaScript umjesto stare keširane verzije.
+
+- Mobile PWA visual polish: `css/medjasi-mobile-v2.css?v=20261013v3`; service-worker cache `medjasi-futsal-pwa-v176`.
