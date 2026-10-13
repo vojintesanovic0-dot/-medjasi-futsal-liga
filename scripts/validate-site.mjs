@@ -23,6 +23,7 @@ const extras = read("js/extras.js");
 const extrasCss = read("css/extras.css");
 const mobileCss = read("css/medjasi-mobile-v2.css");
 const pushConfigMigration = read("sql/28_harden_push_config.sql");
+const newsPolicyMigration = read("sql/29_fix_public_news_read_policy.sql");
 
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((m) => m[1]);
 const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
@@ -41,7 +42,7 @@ if (
 }
 
 if (
-  !pushConfigMigration.includes("do $$") ||
+  !pushConfigMigration.includes("do $") ||
   !/end;\s*\$\$;/i.test(pushConfigMigration) ||
   !pushConfigMigration.includes("alter table public.push_config enable row level security") ||
   !pushConfigMigration.includes("revoke all privileges on table public.push_config from public, anon, authenticated") ||
@@ -50,6 +51,19 @@ if (
   fail("Push configuration migration must have a valid DO-block terminator, enable RLS, revoke browser-role privileges, and commit");
 } else {
   pass("Push configuration migration guards its schema, enables RLS, and revokes browser-role table access");
+}
+
+if (
+  !newsPolicyMigration.includes("drop policy if exists news_public_read on public.news") ||
+  !newsPolicyMigration.includes("create policy news_public_read_anon") ||
+  !newsPolicyMigration.includes("for select\nto anon\nusing (published = true)") ||
+  !newsPolicyMigration.includes("create policy news_public_read_authenticated") ||
+  !newsPolicyMigration.includes("or (select public.is_admin())") ||
+  newsPolicyMigration.includes("to anon\nusing (\n  published = true\n  or (select public.is_admin())")
+) {
+  fail("Public News RLS must let anon read published items without executing the admin helper, while preserving admin draft access");
+} else {
+  pass("News read policies separate anonymous published-only access from authenticated admin draft access");
 }
 
 if (
