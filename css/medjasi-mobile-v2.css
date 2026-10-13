@@ -796,3 +796,38 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     opacity: 1 !important;
   }
 }
+
+
+/* Keep the opened More drawer anchored to the viewport, overriding legacy slide transforms. */
+@media (max-width: 1024px) {
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-panel,
+  body.mobile-more-open #mobileMoreDrawer .mobile-more-panel {
+    position: fixed !important;
+    inset: auto 0 0 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: min(88dvh, 760px) !important;
+    max-height: calc(100dvh - env(safe-area-inset-top) - 12px) !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    transform: none !important;
+    animation: none !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-head,
+  body.mobile-more-open #mobileMoreDrawer .mobile-more-head {
+    flex: 0 0 auto !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-grid,
+  body.mobile-more-open #mobileMoreDrawer .mobile-more-grid {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
