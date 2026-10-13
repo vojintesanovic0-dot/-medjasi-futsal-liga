@@ -231,6 +231,7 @@ function auditChangeText(r){
   return Object.keys(r.new_data).filter(k=>k!=="updated_at"&&JSON.stringify(r.new_data[k])!==JSON.stringify(r.old_data[k])).slice(0,4).map(k=>k+": "+fmtAuditVal(r.old_data[k])+" → "+fmtAuditVal(r.new_data[k])).join("; ");
 }
 function renderAuditRows(names){
+  window.auditChange=auditChange;window.loadAudit=loadAudit;
   const body=$("xtAuditBody");if(!body)return;
   const tableOptions=AUDIT_TABLES.map(t=>'<option value="'+esc(t)+'"'+(t===auditFilter?' selected':'')+'>'+esc(t)+'</option>').join("");
   const rows=auditRows.map(r=>'<tr><td>'+esc(new Date(r.created_at).toLocaleString("bs-BA"))+'</td><td>'+esc(r.table_name)+'</td><td>'+esc(r.op)+'</td><td>'+esc(r.row_id||"")+'</td><td>'+esc(auditChangeText(r))+'</td><td>'+esc(names[r.actor]||String(r.actor||"").slice(0,8))+'</td></tr>').join("");
