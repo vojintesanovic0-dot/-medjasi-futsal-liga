@@ -144,7 +144,8 @@ if (
   !liveHealthScript.includes("AbortSignal.timeout(10000)") ||
   !/\bprocess\.exitCode\s*=\s*1\b/.test(liveHealthScript) ||
   !liveHealthModuleProbes.every(path => liveHealthScript.includes(path)) ||
-  !liveHealthWorkflow.includes("branches: [main]") ||
+  !liveHealthWorkflow.includes("- main") ||
+  !liveHealthWorkflow.includes("- fix/mobile-functionality-theme-cleanup-20261013") ||
   !liveHealthWorkflow.includes("node scripts/check-live-supabase.mjs")
 ) {
   fail("Live Supabase health must cover the league snapshot and all public module endpoints separately from browser shell smoke tests");
