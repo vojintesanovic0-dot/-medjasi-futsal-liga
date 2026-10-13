@@ -592,6 +592,8 @@ try{
     await page.mouse.click(hitTarget.x,hitTarget.y);
     assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),tab,tab+" shortcut must call its matching dashboard tab.");
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+    // Let focus restoration and the close transition finish before the next rapid tap.
+    await page.waitForTimeout(120);
   }
   await page.evaluate(()=>{
     if(window.__mobileMoreDashboardOriginal)window.dashboardOpenGameTab=window.__mobileMoreDashboardOriginal;
