@@ -17,6 +17,102 @@ button,a,[role="button"],summary,label{touch-action:manipulation}
 .site-header .dashboard-glow-toggle{display:none!important}
 .site-header .mobile-menu-btn{display:none!important}
 
+/* ---------- v3.1: donja traka uz ivicu ekrana + ujednačene ikonice ---------- */
+@media (max-width:780px){
+
+  /* Donja traka: puna širina, zalijepljena za dno, bez zaobljenja i bez razmaka od ivica
+     (kao tab bar u native aplikaciji). Visina uključuje safe-area za iPhone. */
+  .mobile-bottom{
+    left:0!important;
+    right:0!important;
+    bottom:0!important;
+    border-radius:0!important;
+    border:0!important;
+    border-top:1px solid rgba(255,255,255,.08)!important;
+    height:auto!important;
+    min-height:calc(64px + env(safe-area-inset-bottom,0px))!important;
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))!important;
+    box-shadow:0 -8px 24px rgba(0,0,0,.35)!important;
+    align-items:stretch!important;
+  }
+  .mobile-bottom button{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:3px!important;
+    min-height:52px!important;
+    padding:4px 0!important;
+    border-radius:12px!important;
+  }
+
+  /* Ikonice donje trake: jednaka kutija 26px, glif 22px, centriran. */
+  .mobile-bottom button > span{
+    width:26px!important;
+    height:26px!important;
+    display:grid!important;
+    place-items:center!important;
+    margin:0 auto!important;
+  }
+  .mobile-bottom button > span::before{
+    width:22px!important;
+    height:22px!important;
+    margin:0!important;
+    background-size:contain!important;
+    background-position:center!important;
+    background-repeat:no-repeat!important;
+  }
+
+  /* Stavke menija "Više": ikona u kvadratu (44px) centrirana vertikalno uz naslov i opis. */
+  .mobile-more-grid button{
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr)!important;
+    grid-template-areas:"ic t" "ic s"!important;
+    align-items:center!important;
+    column-gap:12px!important;
+    row-gap:2px!important;
+    text-align:left!important;
+  }
+  .mobile-more-grid button > span:first-child{
+    grid-area:ic!important;
+    width:44px!important;
+    height:44px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    align-self:center!important;
+    position:relative!important;
+    top:auto!important;
+    border-radius:14px!important;
+    margin:0!important;
+  }
+  /* Vidljiva ikona stavke menija je ::before (pozadinska slika iz medjasi-mobile-v2.css).
+     Inline <svg> je providan (boja je prozirna), pa se sakriva da ne zauzima mjesto. */
+  .mobile-more-grid button > span:first-child > svg{
+    display:none!important;
+  }
+  .mobile-more-grid button > span:first-child::before{
+    content:""!important;
+    display:block!important;
+    width:22px!important;
+    height:22px!important;
+    flex:0 0 22px!important;
+    margin:0!important;
+    background-size:contain!important;
+    background-position:center!important;
+    background-repeat:no-repeat!important;
+  }
+  .mobile-more-grid button > b{
+    grid-area:t!important;
+    align-self:end!important;
+    margin:0!important;
+  }
+  .mobile-more-grid button > small{
+    grid-area:s!important;
+    align-self:start!important;
+    margin:0!important;
+  }
+}
 
 /* Obavještenje o novoj verziji PWA. */
 .mfl-app-toast{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:10000;display:flex;align-items:center;gap:10px;padding:12px 12px 12px 16px;border-radius:16px;background:#102923;color:#f4fff8;border:1px solid rgba(57,245,139,.35);box-shadow:0 14px 40px rgba(0,0,0,.45);font:600 14px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;opacity:0;transform:translateY(12px);transition:opacity .25s ease,transform .25s ease}
