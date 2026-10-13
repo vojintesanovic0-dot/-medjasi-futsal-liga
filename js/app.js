@@ -10069,16 +10069,6 @@ document.addEventListener("DOMContentLoaded",()=>{
       </div>
 
 
-      <div class="crud-section">
-        <div class="crud-title">
-          <span>🖼️ Galerija</span>
-          <span class="muted">${gallery.length}</span>
-        </div>
-
-        <div class="crud-list">
-          ${galleryHtml}
-        </div>
-      </div>
     `;
 
     adminContent.appendChild(card);
@@ -11867,7 +11857,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   const toastV=(m,t)=>typeof window.toast==='function'?window.toast(m,t):alert(m);
   const escV=v=>typeof esc==='function'?esc(v??''):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const fallback='./images/icon-192.png';
-  const avatar=p=>escV(p?.avatar_url||fallback);
+  const avatar=p=>escV(window.medjasiUserAvatar?window.medjasiUserAvatar(p):(p?.avatar_url||fallback));
   function fanCommunityIdentityHTML(p,id){
     const s=window.getFanPublicStyle?.(id)||{};
     const color=s.name_color?'style="color:'+escV(s.name_color)+'"':"";

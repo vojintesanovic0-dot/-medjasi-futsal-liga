@@ -123,7 +123,7 @@
       "Korisnik"
     );
 
-    const avatar=escapeHtml(profile.avatar_url||fallbackAvatar);
+    const avatar=escapeHtml(window.medjasiUserAvatar?window.medjasiUserAvatar(profile):(profile.avatar_url||fallbackAvatar));
     const isAdmin=profile.role==="admin";
 
     host.innerHTML=
