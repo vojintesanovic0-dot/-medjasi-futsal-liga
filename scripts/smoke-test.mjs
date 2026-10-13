@@ -421,6 +421,19 @@ try{
       const gr=grid.getBoundingClientRect(),r=el.getBoundingClientRect();
       grid.scrollTo({top:grid.scrollTop+r.top-gr.top-(grid.clientHeight-r.height)/2,behavior:"instant"});
     });
+    const routeHandle=await routeButton.elementHandle();
+    await page.waitForFunction(el=>{
+      if(!el)return false;
+      const rect=el.getBoundingClientRect();
+      const grid=el.closest(".mobile-more-grid"),panel=el.closest(".mobile-more-panel");
+      const gr=grid?.getBoundingClientRect(),pr=panel?.getBoundingClientRect();
+      const transform=panel?getComputedStyle(panel).transform:"";
+      return !!gr&&!!pr&&rect.width>0&&rect.height>0&&
+        rect.top>=Math.max(0,gr.top)-1&&rect.bottom<=Math.min(innerHeight,gr.bottom)+1&&
+        pr.top>=-1&&pr.bottom<=innerHeight+2&&
+        (transform==="none"||/matrix\\([^,]+,[^,]+,[^,]+,[^,]+,[^,]+,0(?:\\.0+)?\\)$/.test(transform))&&
+        getComputedStyle(el).visibility!=="hidden";
+    },routeHandle,{timeout:5000});
     await routeButton.click();
     await page.waitForFunction((id)=>document.querySelector("#"+id+".section")?.classList.contains("active"),sectionId,{timeout:7000});
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
