@@ -8379,7 +8379,6 @@ window.__MEDJASI_APP_READY=init().then(()=>{
 },error=>{
   window.__MEDJASI_APP_READY_STATE="failed";
   console.error("Medjasi app initialization failed:",error);
-  throw error;
 });
   /* =========================================
    GLOBALNA YOUTUBE MUZIKA
