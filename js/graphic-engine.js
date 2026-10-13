@@ -290,7 +290,10 @@
     /* Visual composition changes by template. */
     if(cutoutBlob){
       const big=["mvp","scorer","winner","captain","legend","trainer","matchresult","upcoming"].includes(template);
+      ctx.save();
+      if(state.photoBlur) ctx.filter="blur(8px)";
       fitImage(ctx,img,big?20:80,big?35:120,big?1040:920,big?990:900,true);
+      ctx.restore();
     }else{
       ctx.save();
       if(state.photoBlur) ctx.filter="blur(8px)";
