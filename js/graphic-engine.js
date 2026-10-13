@@ -26,7 +26,9 @@
     destination: "community",
     title: "",
     caption: "",
-    body: ""
+    body: "",
+    graphicHeadline: "",
+    accentColor: "#b7ff55"
   };
 
   function isAdmin(){
@@ -177,7 +179,7 @@
     }
   }
 
-  function drawBackground(ctx, template){
+  function drawBackground(ctx, template, accentColor="#b7ff55"){
     const g = ctx.createLinearGradient(0,0,1080,1350);
     if(template==="mvp"){
       g.addColorStop(0,"#07150f"); g.addColorStop(.55,"#102e1c"); g.addColorStop(1,"#020604");
@@ -193,7 +195,7 @@
     ctx.fillStyle=g; ctx.fillRect(0,0,1080,1350);
 
     ctx.globalAlpha=.12;
-    ctx.strokeStyle="#b7ff55";
+    ctx.strokeStyle=accentColor;
     ctx.lineWidth=2;
     for(let x=-1350;x<1080;x+=90){
       ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+1350,1350);ctx.stroke();
@@ -221,8 +223,9 @@
     canvas.width=1080; canvas.height=1350;
     const ctx=canvas.getContext("2d");
     const template=state.template;
+    const accentColor=/^#[0-9a-f]{6}$/i.test(state.accentColor) ? state.accentColor : "#b7ff55";
 
-    drawBackground(ctx,template);
+    drawBackground(ctx,template,accentColor);
 
     const source = cutoutBlob || sourceFile;
     const img = await blobToImage(source);
@@ -259,16 +262,16 @@
     }
 
     /* Accent stripe + lower information panel. */
-    ctx.fillStyle="#b7ff55";
+    ctx.fillStyle=accentColor;
     ctx.fillRect(60,1045,210,8);
     ctx.fillStyle="rgba(0,0,0,.60)";
     ctx.fillRect(0,1020,1080,330);
 
-    ctx.fillStyle="#b7ff55";
+    ctx.fillStyle=accentColor;
     ctx.font="700 28px Arial";
     ctx.fillText(preset.kicker,60,1100);
 
-    let headline=name;
+    let headline=state.graphicHeadline.trim() || name;
     let sub=teamName + (number ? "  " + number : "");
     if(template==="lineup") sub=teamName + (position ? " · "+position : "") + (number ? " · "+number : "");
     if(template==="transfer") sub="NOVI IGRAČ · "+teamName;
@@ -303,6 +306,8 @@
     if(status) status.textContent=" Grafika je spremna za objavu.";
 
     $("graphicPublishBtn")?.removeAttribute("disabled");
+    $("graphicExportPngBtn")?.removeAttribute("disabled");
+    $("graphicExportJpegBtn")?.removeAttribute("disabled");
   }
 
   async function publish(){
@@ -396,6 +401,98 @@
     }
   }
 
+  function downloadBlob(blob, filename){
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");
+    link.href=url;
+    link.download=filename;
+    link.hidden=true;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+
+  async function exportGraphic(mimeType){
+    if(!generatedBlob){toast("Prvo generiši grafiku.","error");return;}
+    try{
+      let blob=generatedBlob;
+      let extension="png";
+      if(mimeType==="image/jpeg"){
+        const img=await blobToImage(generatedBlob);
+        const canvas=document.createElement("canvas");
+        canvas.width=img.naturalWidth||1080;
+        canvas.height=img.naturalHeight||1350;
+        const ctx=canvas.getContext("2d");
+        ctx.fillStyle="#ffffff";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        blob=await new Promise((resolve,reject)=>canvas.toBlob(
+          value=>value?resolve(value):reject(new Error("JPG nije napravljen.")),
+          "image/jpeg",0.92
+        ));
+        extension="jpg";
+      }
+      const safeName=(state.graphicHeadline.trim()||currentPlayer()?.name||"medjasi-grafika")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+        .replace(/[^a-zA-Z0-9_-]+/g,"-").replace(/^-|-$/g,"").slice(0,60)||"medjasi-grafika";
+      downloadBlob(blob,safeName+"."+extension);
+      toast("Grafika je preuzeta kao "+extension.toUpperCase()+".");
+    }catch(error){
+      console.error("Graphic Engine export:",error);
+      toast(error?.message||"Izvoz grafike nije uspio.","error");
+    }
+  }
+
+  const PRESET_KEY="medjasi-graphic-engine-presets-v1";
+  function readPresets(){
+    try{
+      const value=JSON.parse(localStorage.getItem(PRESET_KEY)||"{}");
+      return value&&typeof value==="object"&&!Array.isArray(value)?value:{};
+    }catch(_){return {};}
+  }
+
+  function savePreset(){
+    syncState();
+    const presets=readPresets();
+    const name=window.prompt("Naziv postavki predloška:","Moj predložak");
+    if(name===null)return;
+    const clean=name.trim().slice(0,60);
+    if(!clean){toast("Unesi naziv postavki.","error");return;}
+    if(presets[clean]&&!window.confirm("Postavke s tim nazivom već postoje. Želiš li ih zamijeniti?"))return;
+    presets[clean]={
+      template:state.template,graphicHeadline:state.graphicHeadline,accentColor:state.accentColor,
+      destination:state.destination,caption:state.caption,title:state.title,body:state.body
+    };
+    try{
+      localStorage.setItem(PRESET_KEY,JSON.stringify(presets));
+      toast("Postavke „"+clean+"“ su sačuvane u ovom pregledniku.");
+    }catch(error){
+      console.error("Graphic Engine save preset:",error);
+      toast("Postavke nije moguće sačuvati u ovom pregledniku.","error");
+    }
+  }
+
+  function loadPreset(){
+    const presets=readPresets();
+    const names=Object.keys(presets);
+    if(!names.length){toast("Još nema sačuvanih postavki.","info");return;}
+    const choice=window.prompt("Upiši naziv postavki za učitavanje:\n"+names.join("\n"),names[0]);
+    if(choice===null)return;
+    const key=choice.trim(),preset=presets[key];
+    if(!preset){toast("Postavke s tim nazivom nisu pronađene.","error");return;}
+    if(preset.template&&$("graphicTemplate"))$("graphicTemplate").value=preset.template;
+    if(preset.graphicHeadline!==undefined&&$("graphicHeadline"))$("graphicHeadline").value=preset.graphicHeadline;
+    if(/^#[0-9a-f]{6}$/i.test(preset.accentColor||"")&&$("graphicAccentColor"))$("graphicAccentColor").value=preset.accentColor;
+    if(preset.destination&&$("graphicDestination"))$("graphicDestination").value=preset.destination;
+    if(preset.caption!==undefined&&$("graphicCaption"))$("graphicCaption").value=preset.caption;
+    if(preset.title!==undefined&&$("graphicNewsTitle"))$("graphicNewsTitle").value=preset.title;
+    if(preset.body!==undefined&&$("graphicNewsBody"))$("graphicNewsBody").value=preset.body;
+    syncState();
+    if($("graphicNewsFields"))$("graphicNewsFields").hidden=state.destination!=="news";
+    toast("Postavke „"+key+"“ su učitane. Ponovo generiši grafiku da primijeniš promjene.");
+  }
+
   function syncState(){
     state.playerId=$("graphicPlayer")?.value || "";
     state.template=$("graphicTemplate")?.value || "player";
@@ -403,6 +500,8 @@
     state.title=$("graphicNewsTitle")?.value || "";
     state.caption=$("graphicCaption")?.value || "";
     state.body=$("graphicNewsBody")?.value || "";
+    state.graphicHeadline=$("graphicHeadline")?.value || "";
+    state.accentColor=$("graphicAccentColor")?.value || "#b7ff55";
 
     const player=currentPlayer();
     const team=teamForPlayer(player);
@@ -457,6 +556,17 @@
             <button id="graphicRemoveBgBtn" type="button" class="btn btn-green"> Ukloni pozadinu</button>
           </div>
 
+          <div class="graphic-engine-editor-fields">
+            <div class="form-group">
+              <label>Naslov na grafici</label>
+              <input id="graphicHeadline" maxlength="80" placeholder="Prazno = ime igrača ili podrazumijevani naslov">
+            </div>
+            <div class="form-group graphic-color-field">
+              <label for="graphicAccentColor">Akcentna boja</label>
+              <div class="graphic-color-control"><input id="graphicAccentColor" type="color" value="#b7ff55"><span>Boja detalja i naglasaka</span></div>
+            </div>
+          </div>
+
           <div class="form-group">
             <label>Vrsta grafike</label>
             <select id="graphicTemplate">
@@ -504,6 +614,13 @@
             <button id="graphicGenerateBtn" type="button" class="btn btn-green" disabled> Generiši grafiku</button>
             <button id="graphicPublishBtn" type="button" class="btn btn-blue" disabled> Objavi grafiku</button>
           </div>
+          <div class="graphic-engine-actions graphic-export-actions">
+            <button id="graphicExportPngBtn" type="button" class="btn btn-blue" disabled>Preuzmi PNG</button>
+            <button id="graphicExportJpegBtn" type="button" class="btn btn-blue" disabled>Preuzmi JPG</button>
+            <button id="graphicSavePresetBtn" type="button" class="btn btn-green">Sačuvaj postavke</button>
+            <button id="graphicLoadPresetBtn" type="button" class="btn btn-blue">Učitaj postavke</button>
+          </div>
+          <p class="graphic-engine-help muted">Postavke predloška čuvaju se lokalno u ovom pregledniku. Originalna fotografija se ne mijenja.</p>
 
           <div id="graphicStatus" class="muted" aria-live="polite"></div>
         </div>
@@ -542,6 +659,12 @@
     $("graphicRemoveBgBtn")?.addEventListener("click",removeBackground);
     $("graphicGenerateBtn")?.addEventListener("click",async()=>{syncState();try{await generate()}catch(e){console.error(e);toast(e.message||"Greška pri generisanju.","error")}});
     $("graphicPublishBtn")?.addEventListener("click",async()=>{syncState();await publish()});
+    $("graphicExportPngBtn")?.addEventListener("click",()=>exportGraphic("image/png"));
+    $("graphicExportJpegBtn")?.addEventListener("click",()=>exportGraphic("image/jpeg"));
+    $("graphicSavePresetBtn")?.addEventListener("click",savePreset);
+    $("graphicLoadPresetBtn")?.addEventListener("click",loadPreset);
+    $("graphicHeadline")?.addEventListener("input",syncState);
+    $("graphicAccentColor")?.addEventListener("input",syncState);
     $("graphicTemplate")?.addEventListener("change",syncState);
     $("graphicDestination")?.addEventListener("change",()=>{
       syncState();
