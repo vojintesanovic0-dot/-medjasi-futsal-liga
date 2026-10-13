@@ -1,0 +1,247 @@
+const CACHE_NAME = "medjasi-futsal-pwa-v194";
+const CDN_CACHE = "medjasi-cdn-v1";
+
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./css/app.css?v=20261013fix2",
+  "./js/app.js?v=20261013v58",
+  "./js/effects.js?v=1",
+  "./css/production.css?v=20261007v23",
+  "./css/visual-redesign-v1.css?v=1",
+  "./css/effects.css?v=1",
+  "./css/game.css?v=20261007v02",
+  "./js/production.js?v=20261005",
+  "./js/game.js?v=20261011v12",
+  "./js/growth.js?v=20261013v02",
+  "./js/community-features.js?v=20261013v12",
+  "./js/ui-compat.js?v=20261013v3",
+  "./css/admin-organizer.css?v=5",
+  "./css/graphic-engine.css?v=2",
+  "./css/extras.css?v=20261013v2",
+  "./css/header-final.css?v=9",
+  "./js/extras.js?v=20261013v3",
+  "./offline.html",
+  "./css/medjasi-icons-v1.css?v=20261013fix4",
+  "./css/medjasi-icons-v2.css?v=20261013fix2",
+  "./css/medjasi-home-v2.css?v=1",
+  "./css/medjasi-matches-v2.css?v=1",
+  "./css/medjasi-league-data-v2.css?v=1",
+  "./css/medjasi-community-media-v2.css?v=1",
+  "./css/medjasi-fan-profile-v2.css?v=1",
+  "./css/medjasi-mobile-v2.css?v=20261013fix3",
+  "./css/medjasi-admin-v2.css?v=1",
+  "./css/medjasi-sitewide-v3.css?v=2",
+  "./css/medjasi-dashboard-reference-v1.css?v=3",
+  "./css/medjasi-dashboard-refinements-v2.css?v=13",
+  "./css/medjasi-stability-v1.css?v=4",
+  "./css/auth-polish-v1.css?v=2",
+  "./css/medjasi-header-fix-v1.css?v=4",
+  "./css/medjasi-app-mobile-v3.css?v=3",
+  "./js/home-cards-v1.js?v=1",
+  "./css/medjasi-premium-header-v1.css?v=7",
+  "./js/dashboard-layout-v1.js?v=20261013v4",
+  "./js/auth-ui.js?v=3",
+  "./css/medjasi-design-v11.css?v=20261007v02",
+  "./css/medjasi-design-v13.css?v=20261007v02",
+  "./js/admin-organizer.js?v=15",
+  "./js/graphic-engine.js?v=4",
+  "./js/medjasi-v13-ui.js?v=20261007v01",
+  "./images/icon-192.png",
+  "./images/icon-512.png"
+];
+
+// Instalacija
+self.addEventListener("install", event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
+  );
+});
+
+// Aktivacija i brisanje starih cache verzija
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys =>
+        Promise.all(
+          keys
+            .filter(key => key !== CACHE_NAME && key !== CDN_CACHE)
+            .map(key => caches.delete(key))
+        )
+      )
+      .then(() => self.clients.claim())
+  );
+});
+
+// Učitavanje stranice i fajlova
+self.addEventListener("fetch", event => {
+  const request = event.request;
+
+  if (request.method !== "GET") {
+    return;
+  }
+
+  const url = new URL(request.url);
+
+  // Supabase biblioteka sa jsDelivr-a: keširamo je za offline/ponovljeno učitavanje.
+  if(url.origin !== self.location.origin){
+    if(url.hostname === "cdn.jsdelivr.net"){
+      event.respondWith(
+        caches.open(CDN_CACHE).then(cache =>
+          cache.match(request).then(hit => {
+            const net=fetch(request)
+              .then(response=>{
+                if(response&&(response.status===200||response.type==="opaque")){
+                  cache.put(request,response.clone());
+                }
+                return response;
+              })
+              .catch(()=>hit);
+            return hit||net;
+          })
+        )
+      );
+    }
+    return;
+  }
+
+  // Navigation: only cache a successful document response. A server error
+  // page must never replace the last known-good application shell.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request, { cache: "no-store" })
+        .then(response => {
+          if (!response || !response.ok) {
+            return caches.match("./index.html").then(cached =>
+              cached || caches.match("./offline.html").then(offline => offline || response)
+            );
+          }
+
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put("./index.html", copy);
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match("./index.html").then(cached =>
+            cached || caches.match("./offline.html")
+          );
+        })
+    );
+    return;
+  }
+
+  // JS/CSS: uvijek prvo uzmi svježu verziju sa servera.
+  // Ovo sprečava da stari Service Worker zadrži pokvareni app.js nakon deploya.
+  if (url.pathname.endsWith(".js") || url.pathname.endsWith(".css") || url.pathname.endsWith(".html")) {
+    event.respondWith(
+      fetch(request, { cache: "no-store" })
+        .then(response => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Ostali lokalni fajlovi
+  event.respondWith(
+    caches.match(request)
+      .then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return fetch(request)
+          .then(response => {
+            if (!response || response.status !== 200) {
+              return response;
+            }
+
+            const copy = response.clone();
+
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, copy);
+            });
+
+            return response;
+          });
+      })
+  );
+});
+
+
+// =====================================================
+// PUSH NOTIFIKACIJE
+// =====================================================
+
+self.addEventListener("push", event => {
+  let data = {};
+
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (error) {
+    data = {
+      title: "Međasi Futsal Liga",
+      body: event.data ? event.data.text() : "Nova obavijest"
+    };
+  }
+
+  const title = data.title || "Međasi Futsal Liga";
+
+  const options = {
+    body: data.body || "Nova obavijest",
+    icon: "./images/icon-192.png",
+    badge: "./images/icon-192.png",
+    vibrate: [200, 100, 200],
+    data: {
+      url: data.url || "./"
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+
+// =====================================================
+// KLIK NA PUSH NOTIFIKACIJU
+// =====================================================
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+
+  const targetUrl =
+    event.notification.data &&
+    event.notification.data.url
+      ? event.notification.data.url
+      : "./";
+
+  const target=new URL(targetUrl,self.registration.scope).href;
+  event.waitUntil(
+    clients.matchAll({
+      type: "window",
+      includeUncontrolled: true
+    }).then(async clientList=>{
+      for(const client of clientList){
+        if(client.url===target&&"focus" in client) return client.focus();
+      }
+      for(const client of clientList){
+        if("focus" in client&&"navigate" in client){
+          try{await client.navigate(target)}catch(error){}
+          return client.focus();
+        }
+      }
+      if(clients.openWindow) return clients.openWindow(target);
+    })
+  );
+});
