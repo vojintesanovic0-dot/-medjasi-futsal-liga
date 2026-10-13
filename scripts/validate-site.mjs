@@ -19,11 +19,26 @@ const game = read("js/game.js");
 const dashboard = read("js/dashboard-layout-v1.js");
 const growth = read("js/growth.js");
 const css = read("css/medjasi-dashboard-refinements-v2.css");
+const extras = read("js/extras.js");
+const extrasCss = read("css/extras.css");
 
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((m) => m[1]);
 const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
 if (duplicates.length) fail(`Duplicate HTML IDs: ${duplicates.join(", ")}`);
 else pass(`No duplicate IDs across ${ids.length} HTML IDs`);
+
+if (
+  html.includes('class="xt-theme-btn"') ||
+  html.includes("data-theme-toggle") ||
+  extras.includes('className="xt-theme-btn"') ||
+  extras.includes('class="xt-theme-btn"') ||
+  extrasCss.includes(".xt-theme-btn") ||
+  /data-theme\s*=\s*["']light["']/i.test(html)
+) {
+  fail("The removed light/dark theme switcher must not be rendered or reintroduced by the extras layer");
+} else {
+  pass("The light/dark theme switcher remains removed; the site keeps its single dark theme");
+}
 
 const authStart = html.indexOf('<section class="section auth-section" id="login">');
 const authEnd = html.indexOf("<!-- ================= LEAGUE INFO ================= -->", authStart);
