@@ -4956,6 +4956,7 @@ function renderAdminMatches(){
                 ${
                   m.status === "live"
                     ? `
+                      <button class="btn btn-small" onclick="togglePause(\'${m.id}\')">${m.paused_at?"▶ Nastavi":"⏸ Pauza"}</button>
                       <button
                         class="btn btn-small"
                         onclick="
