@@ -288,10 +288,13 @@ try{
       fromOwn:Object.prototype.hasOwnProperty.call(client,"from"),
       rpc:client.rpc,
       rpcOwn:Object.prototype.hasOwnProperty.call(client,"rpc"),
+      openProfile:window.openV9Profile,
       game:window.medjasiGame,
       gameRefresh:window.medjasiGame?.refresh
     };
-    window.__loginSmoke={email:"login-smoke@example.com",getSessionCalled:false,profileLookupCalled:false,rpcCalls:[],gameRefreshCalled:false};
+    window.__loginSmoke={email:"login-smoke@example.com",getSessionCalled:false,profileLookupCalled:false,rpcCalls:[],gameRefreshCalled:false,profileOpenId:null};
+    const originalOpenProfile=window.openV9Profile;
+    window.openV9Profile=async id=>{window.__loginSmoke.profileOpenId=String(id);return originalOpenProfile(id);};
     const fakeUser={id:"11111111-2222-4333-8444-555555555555",email:"login-smoke@example.com",user_metadata:{username:"SmokeFan"}};
     client.auth.signInWithPassword=async({email,password})=>{
       window.__loginSmoke.email=email;
@@ -304,19 +307,26 @@ try{
     };
     client.auth.signOut=async()=>({error:null});
     client.from=function(table,...args){
-      if(table!=="profiles")return saved.from.call(this,table,...args);
-      window.__loginSmoke.profileLookupCalled=true;
+      if(!["profiles","community_posts","community_stories"].includes(table))return saved.from.call(this,table,...args);
+      if(table==="profiles")window.__loginSmoke.profileLookupCalled=true;
       const builder={
         select(){return this;},
         eq(){return this;},
         maybeSingle(){return this;},
         abortSignal(){return this;},
-        then(resolve,reject){return Promise.resolve({data:{id:fakeUser.id,username:"SmokeFan",role:"user"},error:null}).then(resolve,reject);}
+        order(){return this;},
+        limit(){return this;},
+        gt(){return this;},
+        then(resolve,reject){
+          const data=table==="profiles"?{id:fakeUser.id,username:"SmokeFan",bio:"Profil testni opis",role:"user"}:[];
+          return Promise.resolve({data,error:null}).then(resolve,reject);
+        }
       };
       return builder;
     };
     client.rpc=function(name,...args){
       window.__loginSmoke.rpcCalls.push(name);
+      if(name==="fan_public_cosmetics")return Promise.resolve({data:[],error:null});
       return saved.rpc.call(this,name,...args);
     };
     if(window.medjasiGame)window.medjasiGame.refresh=()=>{window.__loginSmoke.gameRefreshCalled=true;};
@@ -333,6 +343,15 @@ try{
         loginButtonDisabled:document.getElementById("loginSubmitButton")?.disabled,
         ...window.__loginSmoke
       };
+      document.querySelector("#headerAccount .v13-auth-main")?.click();
+      await new Promise(resolve=>setTimeout(resolve,120));
+      const profileState={
+        openCalledId:window.__loginSmoke.profileOpenId,
+        modalActive:!!document.getElementById("modal")?.classList.contains("active"),
+        heading:document.querySelector("#modal .v9-profile-full h2")?.textContent||"",
+        bio:document.querySelector("#modal .v9-profile-full .muted")?.textContent||""
+      };
+      if(profileState.modalActive)window.hideModal();
       await window.logout();
       await new Promise(resolve=>setTimeout(resolve,80));
       const logoutState={
@@ -340,13 +359,14 @@ try{
         loginButtonText:document.querySelector("#headerAccount button")?.textContent||"",
         profileButtonCount:document.querySelectorAll("#headerAccount .v13-auth-main").length
       };
-      return {loginState,logoutState};
+      return {loginState,profileState,logoutState};
     }finally{
       if(saved.signInOwn)client.auth.signInWithPassword=saved.signIn;else delete client.auth.signInWithPassword;
       if(saved.signOutOwn)client.auth.signOut=saved.signOut;else delete client.auth.signOut;
       if(saved.getSessionOwn)client.auth.getSession=saved.getSession;else delete client.auth.getSession;
       if(saved.fromOwn)client.from=saved.from;else delete client.from;
       if(saved.rpcOwn)client.rpc=saved.rpc;else delete client.rpc;
+      if(saved.openProfile)window.openV9Profile=saved.openProfile;else delete window.openV9Profile;
       if(saved.game){window.medjasiGame=saved.game;if(saved.gameRefresh)window.medjasiGame.refresh=saved.gameRefresh;else delete window.medjasiGame.refresh;}else delete window.medjasiGame;
       delete window.__loginSmoke;
     }
@@ -358,10 +378,14 @@ try{
   assert.ok(loginLogoutProbe.loginState.rpcCalls.includes("get_league_snapshot"),"Login must request the league snapshot.");
   assert.equal(loginLogoutProbe.loginState.gameRefreshCalled,true,"Login must refresh Fan Game state.");
   assert.equal(loginLogoutProbe.loginState.loginButtonDisabled,false,"Login submit must be re-enabled after success.");
+  assert.equal(loginLogoutProbe.profileState.openCalledId,"11111111-2222-4333-8444-555555555555","The signed-in profile control must invoke the profile view for the current user.");
+  assert.equal(loginLogoutProbe.profileState.modalActive,true,"Clicking the signed-in profile control must open the profile modal.");
+  assert.ok(loginLogoutProbe.profileState.heading.includes("SmokeFan"),"The profile modal must render the selected user.");
+  assert.ok(loginLogoutProbe.profileState.bio.includes("Profil testni opis"),"The profile modal must render the profile description.");
   assert.equal(loginLogoutProbe.logoutState.homeActive,true,"Logout must return to the homepage.");
   assert.ok(loginLogoutProbe.logoutState.loginButtonText.includes("Prijava"),"Logout must restore the logged-out header.");
   assert.equal(loginLogoutProbe.logoutState.profileButtonCount,0,"Logout must remove the authenticated profile button.");
-  console.log("PASS isolated login/logout updates the account header and returns home without a real session");
+  console.log("PASS isolated login/profile modal/logout flow updates account state without real database writes");
   await page.evaluate(()=>window.showSection("login"));
   await page.waitForFunction(()=>!!document.querySelector("#login.section.active"),null,{timeout:5000});
   await page.locator("#loginEmail").fill("");
