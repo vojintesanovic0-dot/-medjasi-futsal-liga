@@ -425,6 +425,13 @@ try{
   });
   for(const [tab,label] of dashboardRoutes){
     await page.locator("#mobileMoreBtn").click();
+    await page.waitForFunction(()=>{
+      const drawer=document.querySelector("#mobileMoreDrawer");
+      const panel=drawer?.querySelector(".mobile-more-panel");
+      return !!drawer?.classList.contains("open") && !!panel &&
+        getComputedStyle(panel).visibility!=="hidden" &&
+        getComputedStyle(panel).transform==="matrix(1, 0, 0, 1, 0, 0)";
+    },null,{timeout:5000});
     await page.locator(".mobile-more-grid button").filter({hasText:label}).first().click();
     assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),tab,tab+" shortcut must call its matching dashboard tab.");
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
