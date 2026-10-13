@@ -14,7 +14,7 @@ declare
   attempt integer := 0;
 begin
   base_username := left(
-    regexp_replace(coalesce(new.raw_user_meta_data ->> 'username', ''), '[^A-Za-z0-9_.-]', '', 'g'),
+    regexp_replace(coalesce(new.raw_user_meta_data ->> 'username', ''), '[^[:alnum:]_.-]', '', 'g'),
     30
   );
 
@@ -58,7 +58,7 @@ begin
     alter table public.profiles
       add constraint profiles_username_format
       check (
-        username ~ '^[A-Za-z0-9_.-]{3,30}$'
+        username ~ '^[[:alnum:]_.-]{3,30}$'
         and lower(username) not in ('admin','moderator','medjasi','liga','support','korisnik','user','null','undefined')
       ) not valid;
   end if;
