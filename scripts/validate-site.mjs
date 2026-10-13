@@ -229,7 +229,7 @@ if (
   !app.includes("function supportedLeagueMedia(file)") ||
   !app.includes("const media=supportedLeagueMedia(file)") ||
   !app.includes("file.size>media.maxBytes") ||
-  !app.includes("async function publishNews()") ||
+  !app.includes("async function publishNews(") ||
   !app.includes("async function adminAddMedia()")
 ) {
   fail("News and gallery uploads must validate media types and sizes before storage");
@@ -274,7 +274,7 @@ if (
 const pushStart = app.indexOf("async function notifyPush(");
 const pushEnd = app.indexOf("function b64ToBytes", pushStart);
 const pushFunction = pushStart >= 0 && pushEnd > pushStart ? app.slice(pushStart, pushEnd) : "";
-const publishStart = app.indexOf("async function publishNews()");
+const publishStart = app.indexOf("async function publishNews(");
 const publishEnd = app.indexOf("async function deleteNews(id)", publishStart);
 const publishFunction = publishStart >= 0 && publishEnd > publishStart ? app.slice(publishStart, publishEnd) : "";
 if (
@@ -1142,7 +1142,7 @@ const adminGalleryUploadStart = app.indexOf("async function adminAddMedia()");
 const adminGalleryUploadEnd = app.indexOf("function ensureGalleryVideoUI()", adminGalleryUploadStart);
 const adminGalleryUploadFunction = adminGalleryUploadStart >= 0 && adminGalleryUploadEnd > adminGalleryUploadStart
   ? app.slice(adminGalleryUploadStart, adminGalleryUploadEnd) : "";
-const adminNewsPublishStart = app.indexOf("async function publishNews()");
+const adminNewsPublishStart = app.indexOf("async function publishNews(");
 const adminNewsPublishEnd = app.indexOf("async function deleteNews(", adminNewsPublishStart);
 const adminNewsPublishFunction = adminNewsPublishStart >= 0 && adminNewsPublishEnd > adminNewsPublishStart
   ? app.slice(adminNewsPublishStart, adminNewsPublishEnd) : "";
