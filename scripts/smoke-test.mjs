@@ -403,6 +403,20 @@ try{
   }
   console.log("PASS all 12 direct mobile More destinations route to their matching sections");
 
+  await page.setViewportSize({width:320,height:740});
+  await page.reload({waitUntil:"domcontentloaded",timeout:30000});
+  await page.locator("#mobileMoreBtn").waitFor({state:"visible",timeout:10000});
+  const narrowMobile=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth}));
+  assert.ok(narrowMobile.document<=narrowMobile.viewport+2&&narrowMobile.body<=narrowMobile.viewport+2,"Horizontal overflow on a narrow 320px phone: "+JSON.stringify(narrowMobile));
+  await page.locator("#mobileMoreBtn").click();
+  const narrowDrawerColumns=await page.locator(".mobile-more-grid").evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(" ").length);
+  assert.equal(narrowDrawerColumns,1,"The More drawer must switch to a single column on very narrow phones.");
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  await page.setViewportSize({width:390,height:844});
+  await page.reload({waitUntil:"domcontentloaded",timeout:30000});
+  await page.locator("#mobileMoreBtn").waitFor({state:"visible",timeout:10000});
+  console.log("PASS narrow 320px mobile layout and single-column More drawer");
 
   const dashboardRoutes=[["shop","Fan Shop"],["fanbase","Fan Base"],["mine","Moji tiketi"],["live","Live centar"],["board","Nagrade i poredak"],["collection","Kolekcija"],["club","Moja tribina"],["mvp","MVP"]];
   await page.evaluate(()=>{
