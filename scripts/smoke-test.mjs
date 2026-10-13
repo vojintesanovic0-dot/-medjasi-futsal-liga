@@ -380,10 +380,13 @@ try{
       const active=document.querySelector(".section.active");
       const visibleOverflow=[...(active?.querySelectorAll("*")||[])].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({el,rect})=>{
         if(rect.width<=0||rect.height<=0||rect.bottom<=0||rect.top>=innerHeight||el.closest(".fx-bg")||el.closest('[aria-hidden="true"]'))return false;
+        let hasHorizontalScrollBoundary=false;
         for(let node=el;node&&node!==active;node=node.parentElement){
           const style=getComputedStyle(node);
           if(style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
+          if((style.overflowX==="auto"||style.overflowX==="scroll")&&node.scrollWidth>node.clientWidth+2)hasHorizontalScrollBoundary=true;
         }
+        if(hasHorizontalScrollBoundary)return false;
         return rect.right>innerWidth+2||rect.left< -2;
       }).slice(0,5).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",left:Math.round(rect.left),right:Math.round(rect.right),width:Math.round(rect.width)}));
       return {section:active?.id,viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,sectionWidth:Math.round(active?.getBoundingClientRect().width||0),visibleOverflow};
