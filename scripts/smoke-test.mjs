@@ -397,6 +397,18 @@ try{
   assert.equal(mobileWidth.topMenuVisible,false,"The duplicate top hamburger must be hidden on phones.");
   assert.equal(await page.locator(".xt-theme-btn, #themeToggle, [data-theme-toggle]").count(),0,"The removed light/dark theme toggle must not return.");
   await page.waitForFunction(()=>window.__MEDJASI_APP_READY_STATE==="ready"||window.__MEDJASI_APP_READY_STATE==="failed",null,{timeout:25000});
+
+  await page.waitForFunction(()=>typeof window.medjasiGrowth?.buildICS==="function",null,{timeout:8000});
+  const calendarProbe=await page.evaluate(()=>{
+    const build=window.medjasiGrowth.buildICS;
+    return {
+      valid:build([{id:"match\\r\\nBEGIN:VEVENT",match_date:"2026-11-01T18:00:00.000Z"}]),
+      invalid:build([{id:"invalid",match_date:"not-a-valid-date"}])
+    };
+  });
+  assert.ok(calendarProbe.valid.includes("DTSTART:20261101T180000Z"),"Calendar export must encode valid match dates.");
+  assert.ok(!calendarProbe.valid.includes("match\\r\\nBEGIN:VEVENT"),"Calendar event IDs must not allow CR/LF injection.");
+  assert.ok(!calendarProbe.invalid.includes("DTSTART:"),"Invalid calendar dates must be skipped rather than throwing.");
   await page.setViewportSize({width:320,height:740});
   const compactWidth=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth}));
   assert.ok(compactWidth.document<=compactWidth.viewport+2&&compactWidth.body<=compactWidth.viewport+2,"Horizontal overflow on a compact 320px phone: "+JSON.stringify(compactWidth));
@@ -404,8 +416,11 @@ try{
   await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   const compactDrawer=await page.locator(".mobile-more-grid").evaluate(el=>({columns:getComputedStyle(el).gridTemplateColumns.split(" ").length,scrollHeight:el.scrollHeight,clientHeight:el.clientHeight}));
   assert.equal(compactDrawer.columns,1,"The More drawer must use one column on 320px phones.");
+  assert.equal(await page.locator("#mobileMoreBtn").getAttribute("aria-expanded"),"true","Opening More must set aria-expanded=true.");
   await page.keyboard.press("Escape");
   await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  assert.equal(await page.locator("#mobileMoreBtn").getAttribute("aria-expanded"),"false","Closing More must set aria-expanded=false.");
+  assert.equal(await page.evaluate(()=>document.activeElement?.id),"mobileMoreBtn","Closing More with Escape must restore focus to the More button.");
   // Recheck typical phone widths for page-level overflow from decorative background layers.
   for(const width of [360,390,430]){
     await page.setViewportSize({width,height:844});
