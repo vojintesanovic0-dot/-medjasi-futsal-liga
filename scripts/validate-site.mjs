@@ -343,7 +343,7 @@ if (
   !matchStatusFunction.includes('confirmed.status!==status') ||
   !matchStatusFunction.includes('const pushOk=await notifyLeaguePush("live",title,body,id)') ||
   !matchStatusFunction.includes('const pushOk=await notifyLeaguePush("match_finished",title,"Utakmica je završena.",id)') ||
-  !addCardFunction.includes('const {error}=await supabaseClient.from("cards").insert') ||
+  !addCardFunction.includes('const {error}=await sbClient().from("cards").insert') ||
   !addCardFunction.includes("await refreshLiveMatchSnapshot(String(matchId))") ||
   !addCardFunction.includes("const pushOk=await notifyLeaguePush(") ||
   addCardFunction.indexOf("const pushOk=await notifyLeaguePush(")<addCardFunction.indexOf("await refreshLiveMatchSnapshot(String(matchId))")
@@ -954,7 +954,7 @@ const pushDisableLocalClear = pushDisableFunction.indexOf('localStorage.removeIt
 const pushDisableCatch = pushDisableFunction.indexOf("catch(error)");
 if (
   !pushSubscribeFunction.includes("Notification.requestPermission()") ||
-  !pushSubscribeFunction.includes("await supabaseClient.from(\"push_subscriptions\").upsert") ||
+  !pushSubscribeFunction.includes("await sbClient().from(\"push_subscriptions\").upsert") ||
   !pushSubscribeFunction.includes("if(error)throw error") ||
   !pushSubscribeFunction.includes("catch(error)") ||
   !pushSubscribeFunction.includes("renderPushUI();") ||
@@ -1239,7 +1239,7 @@ if (
 }
 
 if (
-  !loadAllSource.includes('supabaseClient.rpc("get_league_snapshot")') ||
+  !loadAllSource.includes('sbClient().rpc("get_league_snapshot")') ||
   !loadAllSource.includes("AbortSignal.timeout(8000)") ||
   !loadAllSource.includes("isTransientDataServiceError") ||
   !loadAllSource.includes("loadAllFailureCount") ||
