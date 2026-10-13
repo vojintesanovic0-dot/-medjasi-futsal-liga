@@ -37,12 +37,7 @@
   display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;
 }
 .dashboard-hero-actions .btn-green,.dashboard-hero-actions .btn-ghost{font-size:12px!important;}
-.dashboard-hero-actions .btn::before{
-  content:"";display:block;flex:0 0 17px;width:17px;height:17px;
-  background-position:center;background-size:contain;background-repeat:no-repeat;
-}
-.dashboard-hero-actions .btn-green::before{background-image:var(--mfl-icon-ball);}
-.dashboard-hero-actions .btn-ghost::before{background-image:var(--mfl-icon-community);}
+/* Hero button icons are rendered by inline SVG in dashboard-layout-v1.js; avoid duplicate pseudo-element icons. */
 /* Main section headings whose icons were not covered by the first icon pass. */
 #community .section-title::before{background-image:var(--mfl-icon-community)!important;}
 #news .section-title::before{background-image:var(--mfl-icon-newspaper)!important;}
