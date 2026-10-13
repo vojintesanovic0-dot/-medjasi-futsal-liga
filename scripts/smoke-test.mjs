@@ -739,6 +739,24 @@ try{
   });
   console.log("PASS all 8 mobile dashboard shortcuts route to their matching tabs");
 
+  // Test the actual Fan Game tab controls, not only the dashboard shortcut callbacks.
+  await clickSection("game");
+  const gameTabCount=await page.locator("#gameRoot [data-act="+"tab"+"][data-id]").count();
+  if(gameTabCount){
+    const gameTabs=await page.locator("#gameRoot [data-act="+"tab"+"][data-id]").evaluateAll(buttons=>buttons.map(button=>({id:button.dataset.id,label:(button.innerText||"").trim()})));
+    for(const tab of gameTabs){
+      await page.locator('#gameRoot [data-act="tab"][data-id="'+tab.id+'"]').click();
+      assert.equal(await page.evaluate(()=>window.medjasiGame?.getActiveTab()),tab.id,"Fan Game tab "+tab.label+" must update the active tab state.");
+      assert.equal(await page.locator('#gameRoot [data-act="tab"][data-id="'+tab.id+'"]').getAttribute("class").then(value=>/\\bactive\\b/.test(value||"")),true,"Fan Game tab "+tab.label+" must show its active state.");
+      assert.ok((await page.locator("#gameRoot .fg-body").textContent()||"").trim().length>0,"Fan Game tab "+tab.label+" must render visible content.");
+    }
+    console.log("PASS actual Fan Game tab controls:",gameTabs.map(tab=>tab.id).join(", "));
+  }else{
+    const gameUnavailable=await page.locator("#gameRoot").innerText();
+    assert.ok(/privremeno nedostupan|nije aktivirana|servis podataka nije učitan/i.test(gameUnavailable),"Fan Game has no tab controls and must explain its unavailable/setup state: "+gameUnavailable.slice(0,300));
+    console.log("WARN Fan Game tab interaction skipped because the page exposes an explicit setup/unavailable state:",gameUnavailable.slice(0,160).replace(/\\s+/g," "));
+  }
+
   console.log("PASS mobile More drawer: open/close, Escape, backdrop, 12 section routes, 8 dashboard routes, and aria-expanded state");
 
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
