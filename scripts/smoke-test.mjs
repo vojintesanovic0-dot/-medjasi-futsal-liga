@@ -27,6 +27,40 @@ const missingAssets=[];
 const browserConsoleErrors=[];
 const failedRequests=[];
 const failedResponses=[];
+const failedSupabaseDetails=[];
+const supabaseRequestStartedAt=new WeakMap();
+const supabaseRequestTimeline=[];
+page.on("request",request=>{
+  const url=request.url();
+  if(!/\\.supabase\\.co\\//.test(url))return;
+  const ts=Date.now();
+  supabaseRequestStartedAt.set(request,ts);
+  supabaseRequestTimeline.push({event:"request",url,method:request.method(),resourceType:request.resourceType(),ts,pageUrl:page.url()});
+});
+page.on("requestfailed",request=>{
+  const url=request.url();
+  if(!/\\.supabase\\.co\\//.test(url))return;
+  const ts=Date.now();
+  failedSupabaseDetails.push({
+    url,
+    error:request.failure()?.errorText||"unknown",
+    method:request.method(),
+    pageUrl:page.url(),
+    resourceType:request.resourceType(),
+    startedAt:supabaseRequestStartedAt.get(request)||null,
+    elapsedMs:supabaseRequestStartedAt.has(request)?ts-supabaseRequestStartedAt.get(request):null,
+    ts
+  });
+  supabaseRequestTimeline.push({event:"requestfailed",url,error:request.failure()?.errorText||"unknown",ts,pageUrl:page.url()});
+});
+page.on("framenavigated",frame=>{
+  if(frame===page.mainFrame())supabaseRequestTimeline.push({event:"main-frame-navigation",ts:Date.now(),url:frame.url()});
+});
+page.on("response",response=>{
+  if(/\\.supabase\\.co\\//.test(response.url())){
+    supabaseRequestTimeline.push({event:"response",url:response.url(),status:response.status(),ts:Date.now(),pageUrl:page.url()});
+  }
+});
 let suppressLiveRest=false;
 let suppressedLiveRestCount=0;
 page.on("pageerror",error=>pageErrors.push(error.stack||error.message));
@@ -599,6 +633,8 @@ try{
     assert.ok(layout.document<=layout.viewport+2&&layout.body<=layout.viewport+2&&layout.visibleOverflow.length===0,"Mobile layout overflow in "+sectionId+": "+JSON.stringify(layout));
   }
   console.log("PASS mobile section audit: all 13 primary sections activate at 390px and have no visible horizontal overflow");
+  console.log("SUPABASE ABORTS:",JSON.stringify(failedSupabaseDetails,null,2));
+  console.log("SUPABASE REQUEST TIMELINE:",JSON.stringify(supabaseRequestTimeline,null,2));
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
   assert.equal(browserConsoleErrors.length,0,"Browser console errors:\n"+browserConsoleErrors.join("\n"));
