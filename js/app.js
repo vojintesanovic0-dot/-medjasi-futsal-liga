@@ -367,7 +367,7 @@ function teamLogo(team){
 
   return safeUrl(
     team?.logo_url,
-    "https://via.placeholder.com/100?text=%E2%9A%BD"
+    "./images/icon-192.png"
   );
 }
 
@@ -376,7 +376,7 @@ function playerPhoto(player){
 
   return safeUrl(
     player?.photo_url,
-    "https://via.placeholder.com/100?text=%F0%9F%91%A4"
+    "./images/icon-192.png"
   );
 }
 
@@ -11866,7 +11866,7 @@ window.addEventListener('load',()=>setTimeout(()=>{ensureNewsUI();ensureGalleryV
   const q=id=>document.getElementById(id);
   const toastV=(m,t)=>typeof window.toast==='function'?window.toast(m,t):alert(m);
   const escV=v=>typeof esc==='function'?esc(v??''):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  const fallback='https://via.placeholder.com/160?text=%F0%9F%91%A4';
+  const fallback='./images/icon-192.png';
   const avatar=p=>escV(p?.avatar_url||fallback);
   function fanCommunityIdentityHTML(p,id){
     const s=window.getFanPublicStyle?.(id)||{};
