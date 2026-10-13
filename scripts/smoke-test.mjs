@@ -30,35 +30,38 @@ const failedResponses=[];
 const failedSupabaseDetails=[];
 const supabaseRequestStartedAt=new WeakMap();
 const supabaseRequestTimeline=[];
+let currentStep="browser setup";
 page.on("request",request=>{
   const url=request.url();
   if(!/\.supabase\.co\//.test(url))return;
   const ts=Date.now();
   supabaseRequestStartedAt.set(request,ts);
-  supabaseRequestTimeline.push({event:"request",url,method:request.method(),resourceType:request.resourceType(),ts,pageUrl:page.url()});
+  supabaseRequestTimeline.push({event:"request",url,method:request.method(),resourceType:request.resourceType(),ts,pageUrl:page.url(),currentStep});
 });
 page.on("requestfailed",request=>{
   const url=request.url();
   if(!/\.supabase\.co\//.test(url))return;
   const ts=Date.now();
-  failedSupabaseDetails.push({
-    url,
-    error:request.failure()?.errorText||"unknown",
-    method:request.method(),
-    pageUrl:page.url(),
-    resourceType:request.resourceType(),
+  const detail={
+    event:"requestfailed",url,error:request.failure()?.errorText||"unknown",
+    method:request.method(),pageUrl:page.url(),resourceType:request.resourceType(),
     startedAt:supabaseRequestStartedAt.get(request)||null,
     elapsedMs:supabaseRequestStartedAt.has(request)?ts-supabaseRequestStartedAt.get(request):null,
-    ts
-  });
-  supabaseRequestTimeline.push({event:"requestfailed",url,error:request.failure()?.errorText||"unknown",ts,pageUrl:page.url()});
+    ts,currentStep
+  };
+  failedSupabaseDetails.push(detail);
+  supabaseRequestTimeline.push(detail);
 });
 page.on("framenavigated",frame=>{
-  if(frame===page.mainFrame())supabaseRequestTimeline.push({event:"main-frame-navigation",ts:Date.now(),url:frame.url()});
+  if(frame===page.mainFrame())supabaseRequestTimeline.push({event:"main-frame-navigation",ts:Date.now(),url:frame.url(),currentStep});
 });
 page.on("response",response=>{
-  if(/\.supabase\.co\//.test(response.url())){
-    supabaseRequestTimeline.push({event:"response",url:response.url(),status:response.status(),ts:Date.now(),pageUrl:page.url()});
+  if(!/\.supabase\.co\//.test(response.url()))return;
+  const status=response.status();
+  const event={event:"response",url:response.url(),method:response.request().method(),status,ts:Date.now(),pageUrl:page.url(),currentStep};
+  supabaseRequestTimeline.push(event);
+  if(response.url().includes("/rpc/")||status>=400){
+    void response.text().then(body=>{event.bodyPreview=body.slice(0,200);}).catch(()=>{event.bodyPreview="[response body unavailable]";});
   }
 });
 let suppressLiveRest=false;
@@ -104,6 +107,7 @@ async function clickSection(target){
   await page.waitForFunction(id=>!!document.querySelector("#"+id+".section.active"),target,{timeout:8000});
 }
 try{
+  currentStep="initial page navigation and live data bootstrap";
   await page.goto(base,{waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mainNav button").first().waitFor({timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
@@ -141,21 +145,37 @@ try{
     throw new Error("Aplikacija je prikazala grešku pri učitavanju: "+visibleWarning);
   }
 
-  async function countVisible(table){
-    return page.evaluate(async tableName=>{
-      const client=window.supabaseClient;
-      if(!client?.from)return {count:null,error:"Supabase klijent nije dostupan"};
-      const {count,error}=await client.from(tableName).select("*",{count:"exact",head:true});
-      return {count:count??null,error:error?.message||null};
-    },table);
+  // Run anonymous count probes from Node, not page.evaluate, so browser navigation
+  // cannot abort the verification requests.
+  const appSource=await readFile(resolve(root,"js/app.js"),"utf8");
+  const urlMatch=appSource.match(/const\s+SUPABASE_URL\s*=\s*["']([^"']+)["']/);
+  const keyMatch=appSource.match(/const\s+SUPABASE_KEY\s*=\s*["']([^"']+)["']/);
+  if(!urlMatch||!keyMatch)throw new Error("Ne mogu pročitati javnu Supabase konfiguraciju iz js/app.js.");
+  const SUPABASE_URL=urlMatch[1];
+  const SUPABASE_ANON_KEY=keyMatch[1];
+  async function anonCount(table){
+    const response=await fetch(SUPABASE_URL+"/rest/v1/"+table+"?select=*",{
+      method:"HEAD",
+      headers:{
+        apikey:SUPABASE_ANON_KEY,
+        Authorization:"Bearer "+SUPABASE_ANON_KEY,
+        Prefer:"count=exact"
+      }
+    });
+    if(!response.ok)throw new Error("Brojanje "+table+" nije uspjelo: HTTP "+response.status);
+    const range=response.headers.get("content-range")||"";
+    const total=Number(range.split("/")[1]);
+    if(!range.includes("/")||!Number.isFinite(total))throw new Error("Nema validnog content-range za "+table+": "+(range||"(prazno)"));
+    return total;
   }
 
+  currentStep="compare visible counts with anonymous database counts";
   const shown=await page.evaluate(()=>({
     teams:Number(document.getElementById("statTeams")?.textContent?.trim()||0),
     players:Number(document.getElementById("statPlayers")?.textContent?.trim()||0)
   }));
-  const expectedTeams=await countVisible("teams");
-  const expectedPlayers=await countVisible("players");
+  const expectedTeams=await anonCount("teams");
+  const expectedPlayers=await anonCount("players");
   if(expectedTeams.error||expectedPlayers.error){
     throw new Error("Ne mogu provjeriti broj redova u bazi: "+(expectedTeams.error||expectedPlayers.error));
   }
@@ -200,6 +220,7 @@ try{
   assert.equal(desktopLayout.visiblePhonePreviews,0,"The mobile phone mockup must not occupy the desktop layout: "+JSON.stringify(desktopLayout));
   assert.ok(desktopLayout.sidebarVisible&&desktopLayout.sidebarWidth>0,"The desktop navigation sidebar must be visible: "+JSON.stringify(desktopLayout));
   console.log("PASS desktop layout:",JSON.stringify(desktopLayout));
+  currentStep="tablet layout";
   await page.setViewportSize({width:1100,height:900});
   const tabletHeader=await page.evaluate(()=>{
     const button=document.querySelector("#mobileMenuBtn");
@@ -487,6 +508,7 @@ try{
   await page.waitForFunction(()=>!!document.querySelector("#login.section.active")&&document.querySelector("#registerPanel")?.hidden===false,null,{timeout:5000});
   await page.locator(".auth-return-btn").click();
   await page.waitForFunction(()=>!!document.querySelector("#home.section.active"),null,{timeout:5000});
+  currentStep="mobile layout and reload";
   await page.setViewportSize({width:390,height:844});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mobileMoreBtn").waitFor({state:"visible",timeout:10000});
@@ -642,6 +664,8 @@ try{
   assert.equal(failedResponses.length,0,"Failed external/API responses:\n"+failedResponses.join("\n"));
   console.log("PASS browser smoke: visible counts match anonymous Supabase counts; lifecycle/data states healthy; navigation, desktop/tablet/mobile layouts and auth checks pass; no JS/console errors, failed requests/responses, or missing local assets");
 }finally{
+  console.log("SUPABASE EVENTS COUNT:",supabaseRequestTimeline.length);
+  console.log("SUPABASE EVENTS:",JSON.stringify(supabaseRequestTimeline.slice(0,50),null,2));
   await browser.close();
   await new Promise(done=>server.close(done));
 }
