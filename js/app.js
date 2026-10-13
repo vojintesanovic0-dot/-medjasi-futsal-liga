@@ -6184,6 +6184,47 @@ function formatLiveClock(totalSeconds){
   return h>0?String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0"):String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");
 }
 function getLiveMinute(match){return Math.floor(getLiveElapsedSeconds(match)/60);}
+/* =========================================================
+   REGISTAR DODATAKA ZA MODAL UTAKMICE
+   Dodaci se registruju jednom i pokreću se iz openMatch().
+========================================================= */
+window.matchEnhancers = window.matchEnhancers || [];
+
+function registerMatchEnhancer(fn){
+  if(typeof fn==="function" && !window.matchEnhancers.includes(fn)){
+    window.matchEnhancers.push(fn);
+  }
+}
+
+function isViewingMatchModal(matchId){
+  const modal=document.getElementById("modal");
+  return !!modal?.classList.contains("active") &&
+    String(currentMatchId)===String(matchId);
+}
+
+let matchEnhancerTimer=0;
+
+function runMatchEnhancers(matchId){
+  clearTimeout(matchEnhancerTimer);
+  matchEnhancerTimer=setTimeout(async()=>{
+    const id=String(matchId);
+    if(!isViewingMatchModal(id))return;
+    try{
+      await loadStats();
+    }catch(error){
+      console.warn("Statistika utakmice nije učitana:",error);
+    }
+    for(const fn of window.matchEnhancers){
+      if(!isViewingMatchModal(id))return;
+      try{
+        await fn(id);
+      }catch(error){
+        console.warn("Dodatak utakmice nije uspio:",error);
+      }
+    }
+  },50);
+}
+
 function openMatch(id){
 
   currentMatchId = id;
@@ -6919,6 +6960,7 @@ function openMatch(id){
   `);
 
 
+  runMatchEnhancers(id);
   startLiveRefresh(id);
 }
 
@@ -10269,7 +10311,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   const baseRenderStats = window.renderStats;
   const baseOpenPlayer = window.openPlayer;
   const baseOpenTeam = window.openTeam;
-  const baseOpenMatch = window.openMatch;
+
 
   function n(v){ return Number(v || 0); }
   function esc2(v){
@@ -10461,9 +10503,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       </div>`;
     panel.appendChild(card);
   }
-  if(typeof baseOpenMatch === "function"){
-    window.openMatch=function(id){ baseOpenMatch(id); setTimeout(enhanceCurrentMatch,30); };
-  }
+  registerMatchEnhancer(()=>enhanceCurrentMatch());
 
   /* ---------------- ADVANCED LEAGUE STATS ---------------- */
   if(typeof baseRenderStats === "function"){
@@ -10527,8 +10567,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    Nadogradnja postojećeg Match Centera bez promjene Supabase šeme.
 ========================================================= */
 (function(){
-  const previousOpenMatch = window.openMatch;
-  if(typeof previousOpenMatch !== 'function') return;
+
 
   const safe = v => typeof esc2 === 'function' ? esc2(v) : String(v ?? '');
   const num = v => Number(v || 0);
@@ -10618,10 +10657,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     lineupPanel.appendChild(lp);
   }
 
-  window.openMatch=function(id){
-    previousOpenMatch(id);
-    setTimeout(enhance,50);
-  };
+  registerMatchEnhancer(()=>enhance());
 
   const style=document.createElement('style'); style.textContent=`
     .mc20-extra{margin-top:15px}.mc20-grid{margin-top:15px}.mc20-block{overflow:hidden}.mc20-block h3{margin-bottom:12px}.mc20-player-row{width:100%;display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:9px;padding:9px 0;border:0;border-bottom:1px solid var(--border);background:transparent;color:inherit;text-align:left;cursor:pointer}.mc20-player-row:last-child{border-bottom:0}.mc20-player-row img{width:38px;height:38px;border-radius:10px;object-fit:cover}.mc20-player-row span{min-width:0}.mc20-player-row span b,.mc20-player-row span small{display:block}.mc20-player-row small{color:var(--muted);font-size:10px;margin-top:2px}.mc20-player-row em{font-style:normal;font-size:11px;white-space:nowrap}.mc20-event{display:grid;grid-template-columns:38px 28px 1fr;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}.mc20-event:last-child{border-bottom:0}.mc20-event>strong{color:var(--green)}.mc20-event span{font-size:17px}.mc20-event small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.mc20-compare>div{display:grid;grid-template-columns:70px 1fr 70px;align-items:center;text-align:center;padding:10px;border-bottom:1px solid var(--border)}.mc20-compare>div:last-child{border-bottom:0}.mc20-compare b:first-child{text-align:right}.mc20-compare b:last-child{text-align:left}.mc20-compare span{color:var(--muted);font-size:11px}.mc20-lineup-summary{display:flex;gap:8px;align-items:baseline;padding:8px 10px;margin-bottom:7px;border-radius:10px;background:rgba(255,255,255,.025)}.mc20-lineup-summary b{font-size:18px}.mc20-lineup-summary span{color:var(--muted);font-size:10px}.mc20-assists{display:grid;gap:0}
@@ -11909,7 +11945,11 @@ function renderMvp(matchId){const ids=matchPlayers.filter(mp=>String(mp.match_id
 const oldRenderAdminMatches=window.renderAdminMatches;window.renderAdminMatches=function(){oldRenderAdminMatches?.();document.querySelectorAll('#adminMatches .admin-match').forEach((el,i)=>{const m=matches[i];if(m&&!el.querySelector('.v7-finish-btn')){const b=document.createElement('button');b.className='btn btn-blue btn-small v7-finish-btn';b.textContent='🏁 Statistika / završi';b.onclick=()=>openFinished(m.id);el.querySelector('.admin-controls')?.appendChild(b)}})};
 
 // Patch openMatch after its definition: add save buttons/rating table for live matches.
-const oldOpenMatch=window.openMatch;window.openMatch=async function(id){const r=oldOpenMatch?.(id);setTimeout(async()=>{try{await loadStats();addSaveButtonToLive(id);decorateCourtRatings(id);renderEnhancedLive(id)}catch(e){console.warn(e)}},120);return r};
+registerMatchEnhancer(id=>{
+  addSaveButtonToLive(id);
+  decorateCourtRatings(id);
+  renderEnhancedLive(id);
+});
 
 // News + media + push bootstrap
 setTimeout(async()=>{try{ensureNewsUI();ensureGalleryVideoUI();ensureSearch();ensurePushUI();ensureSeasonAdmin();await loadSeasons();renderGalleryV7()}catch(e){console.warn('V7 bootstrap:',e)}},800);
