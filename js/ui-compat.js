@@ -142,14 +142,7 @@
   }
 
   function polishNews(){
-    const news=$("news");
-    if(!news) return;
-
-    news
-      .querySelectorAll(
-        ".comment,.comment-form,.comments,.news-comments,#commentForm,#commentsList"
-      )
-      .forEach(node=>node.remove());
+    // Preserve the existing news comments UI and handlers; never remove feature nodes here.
   }
 
   function polishCommunity(){
