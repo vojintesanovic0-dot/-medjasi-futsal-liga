@@ -42,28 +42,39 @@
   var overlayOpen = false;
   function isOverlayOpen(){
     return document.body.classList.contains("mobile-more-open") ||
-      !!document.querySelector('[class*="modal"].show, [class*="modal"].open, .mobile-more-drawer.open');
+      !!document.querySelector("#modal.active, #login.active, #pwaInstallModal.show, #pwaInstallModal.open, .mobile-more-drawer.open");
   }
   function closeOverlays(){
+    var modal = document.getElementById("modal");
+    if (modal && modal.classList.contains("active")) {
+      if (typeof window.hideModal === "function") window.hideModal();
+      else modal.classList.remove("active");
+    }
+    var login = document.getElementById("login");
+    if (login && login.classList.contains("active") && typeof window.exitAuthScreen === "function") {
+      window.exitAuthScreen();
+    }
     if (document.body.classList.contains("mobile-more-open") && typeof window.closeMobileMore === "function") {
       window.closeMobileMore();
     }
-    document.querySelectorAll('[class*="modal"].show, [class*="modal"].open').forEach(function(el){
-      el.classList.remove("show","open");
-    });
+    var installModal = document.getElementById("pwaInstallModal");
+    if (installModal && (installModal.classList.contains("show") || installModal.classList.contains("open"))) {
+      var closeButton = document.getElementById("pwaModalClose");
+      if (closeButton) closeButton.click();
+      else installModal.classList.remove("show","open");
+    }
   }
   function syncOverlay(){
     var now = isOverlayOpen();
     if (now && !overlayOpen) {
       overlayOpen = true;
-      try { history.pushState({mflOverlay:true},"",location.href); } catch(e) {}
+      try { history.pushState({mflOverlay:true}, "", location.href); } catch(e) {}
     } else if (!now && overlayOpen) overlayOpen = false;
   }
   if (document.body && window.MutationObserver) {
     new MutationObserver(syncOverlay).observe(document.body,{attributes:true,subtree:true,attributeFilter:["class","aria-modal","hidden"]});
   }
-  window.addEventListener("popstate",function(event){
-    if (overlayOpen) { overlayOpen = false; closeOverlays(); return; }
-    if (event.state && event.state.mflOverlay) history.back();
+  window.addEventListener("popstate",function(){
+    if (overlayOpen) { overlayOpen = false; closeOverlays(); }
   });
 })();
