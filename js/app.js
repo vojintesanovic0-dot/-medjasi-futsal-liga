@@ -359,6 +359,22 @@ const SECTION_STATE_KEY = "medjasi_active_section_v1";
 let medjasiAuthInteraction = false;
 let medjasiSectionRestoreTimer = null;
 
+let medjasiUserInteracted = false;
+
+// A delayed startup/focus restore must not override a section the user has chosen.
+if(!window.__MEDJASI_SECTION_INTERACTION_GUARD__){
+  window.__MEDJASI_SECTION_INTERACTION_GUARD__ = true;
+  const markSectionInteraction = () => {
+    medjasiUserInteracted = true;
+    if(medjasiSectionRestoreTimer !== null){
+      clearTimeout(medjasiSectionRestoreTimer);
+      medjasiSectionRestoreTimer = null;
+    }
+  };
+  document.addEventListener("pointerdown", markSectionInteraction, {capture:true,passive:true});
+  document.addEventListener("keydown", markSectionInteraction, true);
+}
+
 function rememberActiveSection(id){
   try{
     if(id) sessionStorage.setItem(SECTION_STATE_KEY,String(id));
@@ -377,6 +393,7 @@ function getRememberedSection(){
 
 function restoreRememberedSection(){
   try{
+    if(medjasiUserInteracted) return false;
     const saved=getRememberedSection();
     if(!saved || saved==="login") return false;
     const section=document.getElementById(saved);
@@ -8248,7 +8265,11 @@ async function init(){
     musicSettingsStartupDeferred=true;
   }
 
-  restoreRememberedSection();
+  if(!window.__MEDJASI_USER_NAVIGATED_DURING_INIT){
+    restoreRememberedSection();
+  }else{
+    console.info("Medjasi startup: keeping the section selected during initialization.");
+  }
   setupTabReturnPersistence();
 
   try {
@@ -8375,7 +8396,28 @@ document.addEventListener(
    START
 ========================================================= */
 
-init();
+window.__MEDJASI_APP_READY_STATE="loading";
+window.__MEDJASI_USER_NAVIGATED_DURING_INIT=false;
+document.addEventListener("click",event=>{
+  if(window.__MEDJASI_APP_READY_STATE!=="loading"||!event.isTrusted)return;
+  const target=event.target instanceof Element
+    ?event.target.closest("a,button,[role='button'],[onclick]")
+    :null;
+  if(!target)return;
+  const inlineAction=target.getAttribute("onclick")||"";
+  if(
+    target.matches("#mobileMoreBtn,#mobileMoreDrawer button,.mobile-bottom a,.mobile-bottom button,#mainNav a,#mainNav button")||
+    /showSection|mobileMoreGo|mobileMoreDashboardGo|dashboardOpenGameTab/.test(inlineAction)
+  ){
+    window.__MEDJASI_USER_NAVIGATED_DURING_INIT=true;
+  }
+},true);
+window.__MEDJASI_APP_READY=init().then(()=>{
+  window.__MEDJASI_APP_READY_STATE="ready";
+},error=>{
+  window.__MEDJASI_APP_READY_STATE="failed";
+  console.error("Medjasi app initialization failed:",error);
+});
   /* =========================================
    GLOBALNA YOUTUBE MUZIKA
 ========================================= */
