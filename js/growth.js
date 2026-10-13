@@ -147,7 +147,7 @@ function info(){
   html+='<div class="card"><h3> Prijava ekipe</h3>';
   html+=u?'<div class="gx-form"><input id="gxTeam" placeholder="Naziv ekipe"><input id="gxCap" placeholder="Ime kapitena"><input id="gxPhone" placeholder="Broj telefona"><textarea id="gxNote" placeholder="Napomena"></textarea><button class="btn btn-green" data-gx="apply">Pošalji prijavu</button></div>':'<button class="btn btn-green" onclick="showSection(\'login\')">Prijavi se za prijavu ekipe</button>';
   html+='</div></div>';
-  if(seasons.length){html+='<div class="card"><h3>️ Sezone</h3>';seasons.forEach(s=>html+='<div class="gx-follow">'+E(s.name||s.title||"Sezona")+'</div>');html+='</div>';}
+  if(seasons.length){html+='<div class="card"><h3>📅 Sezone</h3>';seasons.forEach(s=>html+='<div class="gx-follow">'+E(s.name||s.title||"Sezona")+'</div>');html+='</div>';}
   r.innerHTML=html;
 }
 function safeSponsorUrl(value){
