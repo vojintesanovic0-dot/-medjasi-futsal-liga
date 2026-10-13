@@ -1,4 +1,4 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v188";
+const CACHE_NAME = "medjasi-futsal-pwa-v189";
 const CDN_CACHE = "medjasi-cdn-v1";
 
 const APP_SHELL = [
@@ -23,8 +23,8 @@ const APP_SHELL = [
   "./css/header-final.css?v=9",
   "./js/extras.js?v=20261013v3",
   "./offline.html",
-  "./css/medjasi-icons-v1.css?v=20261007v02",
-  "./css/medjasi-icons-v2.css?v=20261013fix1",
+  "./css/medjasi-icons-v1.css?v=20261013fix4",
+  "./css/medjasi-icons-v2.css?v=20261013fix2",
   "./css/medjasi-home-v2.css?v=1",
   "./css/medjasi-matches-v2.css?v=1",
   "./css/medjasi-league-data-v2.css?v=1",
@@ -32,12 +32,13 @@ const APP_SHELL = [
   "./css/medjasi-fan-profile-v2.css?v=1",
   "./css/medjasi-mobile-v2.css?v=20261013fix3",
   "./css/medjasi-admin-v2.css?v=1",
-  "./css/medjasi-sitewide-v3.css?v=1",
+  "./css/medjasi-sitewide-v3.css?v=2",
   "./css/medjasi-dashboard-reference-v1.css?v=3",
   "./css/medjasi-dashboard-refinements-v2.css?v=13",
   "./css/medjasi-stability-v1.css?v=4",
   "./css/auth-polish-v1.css?v=2",
   "./css/medjasi-header-fix-v1.css?v=4",
+  "./css/medjasi-app-mobile-v3.css?v=1",
   "./css/medjasi-premium-header-v1.css?v=7",
   "./js/dashboard-layout-v1.js?v=20261013v4",
   "./js/auth-ui.js?v=3",
