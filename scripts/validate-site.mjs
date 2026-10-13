@@ -1758,6 +1758,36 @@ if (
   pass("Dashboard auxiliary rail is desktop-hidden and mobile-responsive");
 }
 
+// Validate Supabase CLI migration filenames and timestamp uniqueness.
+const cliMigrationDir = "supabase/migrations";
+if (!existsSync(cliMigrationDir)) {
+  fail("Supabase CLI migration directory is missing");
+} else {
+  const cliMigrationFiles = readdirSync(cliMigrationDir)
+    .filter((name) => name.toLowerCase().endsWith(".sql"))
+    .sort();
+  const invalidCliMigrationFiles = cliMigrationFiles.filter(
+    (name) => !/^\d{14}_[a-z0-9_]+\.sql$/i.test(name)
+  );
+  if (invalidCliMigrationFiles.length) {
+    fail(`Supabase migrations must use YYYYMMDDHHMMSS_name.sql: ${invalidCliMigrationFiles.join(", ")}`);
+  } else {
+    pass(`All ${cliMigrationFiles.length} Supabase migration filenames use 14-digit timestamps`);
+  }
+
+  const cliTimestamps = cliMigrationFiles
+    .filter((name) => /^\d{14}_[a-z0-9_]+\.sql$/i.test(name))
+    .map((name) => name.slice(0, 14));
+  const duplicateCliTimestamps = [...new Set(
+    cliTimestamps.filter((timestamp, i) => cliTimestamps.indexOf(timestamp) !== i)
+  )];
+  if (duplicateCliTimestamps.length) {
+    fail(`Duplicate Supabase migration timestamps: ${duplicateCliTimestamps.join(", ")}`);
+  } else {
+    pass(`Supabase migration timestamps are unique across ${cliTimestamps.length} migrations`);
+  }
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
