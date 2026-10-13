@@ -268,3 +268,13 @@
     font-size: 9px !important;
   }
 }
+
+
+/* Single navigation model: no duplicate hamburger in the header at any viewport. */
+html body #mobileMenuBtn,
+html body button#mobileMenuBtn,
+html body .site-header #mobileMenuBtn {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
