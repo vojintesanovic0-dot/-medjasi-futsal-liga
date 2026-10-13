@@ -434,12 +434,11 @@ try{
       const rect=el.getBoundingClientRect();
       const grid=el.closest(".mobile-more-grid"),panel=el.closest(".mobile-more-panel");
       const gr=grid?.getBoundingClientRect(),pr=panel?.getBoundingClientRect();
-      const transform=panel?getComputedStyle(panel).transform:"";
+      const style=el?getComputedStyle(el):null;
       return !!gr&&!!pr&&rect.width>0&&rect.height>0&&
         rect.top>=Math.max(0,gr.top)-1&&rect.bottom<=Math.min(innerHeight,gr.bottom)+1&&
         pr.top>=-1&&pr.bottom<=innerHeight+2&&
-        (transform==="none"||/matrix\([^,]+,[^,]+,[^,]+,[^,]+,[^,]+,\s*0(?:\.0+)?\s*\)$/.test(transform))&&
-        getComputedStyle(el).visibility!=="hidden";
+        style?.display!=="none"&&style?.visibility!=="hidden"&&Number(style?.opacity)!==0;
     },routeHandle,{timeout:5000});
     await routeButton.evaluate(el=>el.click());
     await page.waitForFunction((id)=>document.querySelector("#"+id+".section")?.classList.contains("active"),sectionId,{timeout:7000});
