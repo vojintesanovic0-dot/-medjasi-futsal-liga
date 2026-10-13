@@ -1771,7 +1771,7 @@ for (const name of sqlFiles) {
 if (!failures.some((x) => x.startsWith("SQL migration is not documented"))) pass("All numbered SQL migrations are documented in README");
 
 const standingsRenderStart = app.indexOf("function renderTable()");
-const standingsRenderEnd = app.indexOf("/* =========================================================\\n   MATCHES", standingsRenderStart);
+const standingsRenderEnd = app.indexOf("/* =========================================================\n   MATCHES", standingsRenderStart);
 const standingsRender = standingsRenderStart >= 0 && standingsRenderEnd > standingsRenderStart
   ? app.slice(standingsRenderStart, standingsRenderEnd) : "";
 if (
