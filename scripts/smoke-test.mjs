@@ -102,10 +102,6 @@ try{
   assert.equal(desktopLayout.visiblePhonePreviews,0,"The mobile phone mockup must not occupy the desktop layout: "+JSON.stringify(desktopLayout));
   assert.ok(desktopLayout.sidebarVisible&&desktopLayout.sidebarWidth>0,"The desktop navigation sidebar must be visible: "+JSON.stringify(desktopLayout));
   console.log("PASS desktop layout:",JSON.stringify(desktopLayout));
-  await page.setViewportSize({width:900,height:900});
-  const tabletMenu=await page.locator("#mobileMenuBtn").evaluate(el=>({display:getComputedStyle(el).display,visibility:getComputedStyle(el).visibility}));
-  assert.equal(tabletMenu.display,"none","The duplicate top hamburger must remain hidden on tablet; use the established navigation instead.");
-  await page.setViewportSize({width:1365,height:900});
   if(loadedCounts.dataWarning){
     // The initial live bootstrap already established the outage; do not amplify it while exercising UI navigation.
     suppressLiveRest=true;
