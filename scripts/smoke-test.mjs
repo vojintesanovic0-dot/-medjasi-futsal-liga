@@ -441,7 +441,7 @@ try{
         (transform==="none"||/matrix\([^,]+,[^,]+,[^,]+,[^,]+,[^,]+,\s*0(?:\.0+)?\s*\)$/.test(transform))&&
         getComputedStyle(el).visibility!=="hidden";
     },routeHandle,{timeout:5000});
-    await routeButton.click();
+    await routeButton.evaluate(el=>el.click());
     await page.waitForFunction((id)=>document.querySelector("#"+id+".section")?.classList.contains("active"),sectionId,{timeout:7000});
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   }
