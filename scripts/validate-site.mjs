@@ -803,14 +803,19 @@ const missingTargets = [...new Set(navTargets)].filter((id) => !staticIds.has(id
 if (missingTargets.length) fail(`Navigation targets have no static/dynamic section: ${missingTargets.join(", ")}`);
 else pass("All literal HTML showSection targets resolve to static or dynamically mounted sections");
 
-const jsRefs = [...new Set(htmlRefs.filter((ref) => /\.js(?:[?#]|$)/i.test(ref)).map(pathFromRef))];
+const linkedJsRefs = htmlRefs.filter((ref) => /\.js(?:[?#]|$)/i.test(ref)).map(pathFromRef);
+const repositoryJsRefs = readdirSync("js").filter((name) => /\.js$/i.test(name)).map((name) => `js/${name}`);
+const repositoryScriptRefs = readdirSync("scripts").filter((name) => /\.(?:mjs|js)$/i.test(name)).map((name) => `scripts/${name}`);
+const jsRefs = [...new Set([...linkedJsRefs, ...repositoryJsRefs, ...repositoryScriptRefs])];
 for (const path of [...jsRefs, "service-worker.js"]) {
   const result = spawnSync(process.execPath, ["--check", path], { encoding: "utf8" });
   if (result.status !== 0) fail(`JavaScript syntax error in ${path}: ${(result.stderr || result.stdout).trim()}`);
 }
 if (!failures.some((x) => x.startsWith("JavaScript syntax error"))) pass(`JavaScript syntax checks passed for ${jsRefs.length + 1} files`);
 
-const cssPaths = [...new Set(htmlRefs.filter((ref) => /\.css(?:[?#]|$)/i.test(ref)).map(pathFromRef))];
+const linkedCssPaths = htmlRefs.filter((ref) => /\.css(?:[?#]|$)/i.test(ref)).map(pathFromRef);
+const repositoryCssPaths = readdirSync("css").filter((name) => /\.css$/i.test(name)).map((name) => `css/${name}`);
+const cssPaths = [...new Set([...linkedCssPaths, ...repositoryCssPaths])];
 for (const path of cssPaths) {
   const css = read(path);
   const braces = (css.match(/{/g) || []).length - (css.match(/}/g) || []).length;
