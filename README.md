@@ -64,7 +64,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 
 ## Korisnička imena — dodatne SQL skripte
 
-Ove skripte su ručni koraci za pregled i unapređenje pravila korisničkih imena; ne izvršavaju se automatski deployem. Napravi backup baze i pregledaj rezultate prije pokretanja:
+Ove skripte su ručni koraci za pregled i unapređenje pravila korisničkih imena; ne izvršavaju se automatski deployem. Registracija normalizuje nedozvoljenu interpunkciju prije provjere, a slova i brojevi uključuju i slova s dijakriticima. Napravi backup baze i pregledaj rezultate prije pokretanja:
 
 - `sql/30_public_username_no_email.sql` — samo pregled zapisa koji možda prikazuju email kao javno ime.
 - `sql/31_public_username_no_email_fix.sql` — opciona korekcija tek nakon pregleda izvještaja iz koraka 30.
