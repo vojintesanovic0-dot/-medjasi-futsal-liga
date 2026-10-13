@@ -337,3 +337,14 @@
 @media (prefers-reduced-motion: reduce) {
   main > .section.active { animation: none !important; }
 }
+
+
+/* Override later legacy header selectors on phone widths without removing their handlers. */
+@media (max-width: 780px) {
+  html body #mobileMenuBtn,
+  html body .site-header .header-inner .header-actions .mobile-menu-btn {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
