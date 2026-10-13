@@ -54,6 +54,7 @@ Deno.serve(async (req: Request) => {
       return Response.json({ error: "Invalid match_id" }, { status: 400, headers: corsHeaders });
     }
     const allowedPushTypes = new Set(["goal", "card", "live", "finish", "match_finished", "news"]);
+    const FAVORITE_FILTER_TYPES = new Set(["goal", "card", "live", "finish", "match_finished"]);
 
     // Only administrators and moderators may broadcast to every subscriber.
     // A valid JWT alone must never let a regular account send league-wide push.
@@ -86,6 +87,40 @@ Deno.serve(async (req: Request) => {
 
     if (subError) throw subError;
 
+    let recipients = subs || [];
+    if (FAVORITE_FILTER_TYPES.has(eventType) && safeMatchId) {
+      const { data: match, error: matchError } = await admin
+        .from("matches")
+        .select("home_team_id,away_team_id")
+        .eq("id", safeMatchId)
+        .maybeSingle();
+
+      if (!matchError && match) {
+        const teamIds = [match.home_team_id, match.away_team_id]
+          .filter((x) => x != null)
+          .map((x) => String(x));
+
+        if (teamIds.length) {
+          const [{ data: favs, error: favError }, { data: prefs, error: prefsError }] = await Promise.all([
+            admin.from("fan_favorites").select("user_id")
+              .eq("entity_type", "team").in("entity_id", teamIds),
+            admin.from("push_prefs").select("user_id").eq("followed_only", true)
+          ]);
+
+          // Preserve the existing broadcast behavior if either lookup fails.
+          if (!favError && !prefsError) {
+            const favUsers = new Set((favs || []).map((f) => String(f.user_id)));
+            const quietUsers = new Set((prefs || []).map((p) => String(p.user_id)));
+            recipients = recipients.filter(
+              (s) => !quietUsers.has(String(s.user_id)) || favUsers.has(String(s.user_id))
+            );
+          } else {
+            console.error("Favorite push filtering lookup failed", { favError, prefsError });
+          }
+        }
+      }
+    }
+
     const payload = JSON.stringify({
       title: String(title || "Međasi Futsal Liga").slice(0, 160),
       body: String(body || "").slice(0, 1000),
@@ -98,8 +133,8 @@ Deno.serve(async (req: Request) => {
     let removed = 0;
     let failed = 0;
 
-    for (let i = 0; i < (subs || []).length; i += BATCH_SIZE) {
-      const batch = (subs || []).slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+      const batch = recipients.slice(i, i + BATCH_SIZE);
 
       const results = await Promise.all(
         batch.map(async (sub) => {
