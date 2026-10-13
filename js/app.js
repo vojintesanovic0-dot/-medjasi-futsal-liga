@@ -6918,6 +6918,17 @@ function stopLiveRefreshForMatch(intervalId,clockId){
   if(window.__medjasiLiveClock===clockId)window.__medjasiLiveClock=null;
 }
 
+function liveSignature(matchId){
+  const id=String(matchId);
+  const m=matches.find(x=>String(x.id)===id)||{};
+  return JSON.stringify([
+    m.status,m.home_score,m.away_score,m.current_minute,m.live_started_at,
+    goals.filter(g=>String(g.match_id)===id).map(g=>[g.id,g.player_id,g.minute,g.assist_player_id]),
+    cards.filter(c=>String(c.match_id)===id).map(c=>[c.id,c.player_id,c.card_type]),
+    matchPlayers.filter(p=>String(p.match_id)===id).map(p=>[p.player_id,p.is_active])
+  ]);
+}
+
 function startLiveRefresh(matchId){
   clearInterval(liveRefreshInterval);
   clearInterval(window.__medjasiLiveClock);
@@ -6946,6 +6957,7 @@ function startLiveRefresh(matchId){
     if(liveRefreshInFlight)return;
     liveRefreshInFlight=true;
     try{
+      const before=liveSignature(matchId);
       const updated=await refreshLiveMatchSnapshot(matchId);
       if(!updated){
         stopLiveRefreshForMatch(intervalId,clockId);
@@ -6960,7 +6972,7 @@ function startLiveRefresh(matchId){
         return;
       }
 
-      if(isViewingLiveMatchModal(matchId)){
+      if(isViewingLiveMatchModal(matchId)&&liveSignature(matchId)!==before){
         const content=document.getElementById("modalContent");
         const selectedTab=content?.querySelector(".match-tab.active")?.dataset.tab||"overview";
         openMatch(matchId);
@@ -7006,6 +7018,7 @@ async function refreshLiveModalFromRealtime(matchId){
 
   liveRefreshInFlight=true;
   try{
+    const before=liveSignature(id);
     const updated=await refreshLiveMatchSnapshot(id);
     if(!updated){
       stopLiveRefreshForMatch(liveRefreshInterval,window.__medjasiLiveClock);
@@ -7020,10 +7033,12 @@ async function refreshLiveModalFromRealtime(matchId){
       return;
     }
 
-    const content=document.getElementById("modalContent");
-    const selectedTab=content?.querySelector(".match-tab.active")?.dataset.tab||"overview";
-    openMatch(id);
-    if(selectedTab!=="overview")switchMatchTab(selectedTab);
+    if(liveSignature(id)!==before){
+      const content=document.getElementById("modalContent");
+      const selectedTab=content?.querySelector(".match-tab.active")?.dataset.tab||"overview";
+      openMatch(id);
+      if(selectedTab!=="overview")switchMatchTab(selectedTab);
+    }
   }catch(error){
     console.warn("Osvježavanje prikazane utakmice nakon Realtime događaja nije uspjelo:",error);
   }finally{
