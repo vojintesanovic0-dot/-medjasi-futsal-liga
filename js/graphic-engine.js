@@ -31,7 +31,8 @@
     body: "",
     blur: false,
     grain: false,
-    duotone: false
+    duotone: false,
+    blurPlayer: false
   };
 
   function isAdmin(){
@@ -322,6 +323,8 @@
 
     if (sourceFile) {
       const img = await blobToImage(cutoutBlob || sourceFile);
+      ctx.save();
+      if (state.blurPlayer && "filter" in ctx) ctx.filter = "blur(18px)";
       if (cutoutBlob) {
         const big = ["mvp","scorer","winner","captain","legend","coach"].includes(template);
         fitImage(ctx, img, big ? 20 : 80, big ? 35 : 120, big ? 1040 : 920, big ? 990 : 900, true);
@@ -329,6 +332,9 @@
         fitImage(ctx, img, 80, 120, 920, 900, true);
       } else {
         fitImage(ctx, img, 0, 50, 1080, 980, false);
+      }
+      ctx.restore();
+      if (!cutoutBlob && !state.blur) {
         ctx.fillStyle = "rgba(0,0,0,.20)";
         ctx.fillRect(0, 50, 1080, 980);
       }
@@ -544,6 +550,7 @@
     state.caption = $("graphicCaption")?.value || "";
     state.body = $("graphicNewsBody")?.value || "";
     state.blur = !!$("graphicBlur")?.checked;
+    state.blurPlayer = !!$("graphicBlurPlayer")?.checked;
     state.grain = !!$("graphicGrain")?.checked;
     state.duotone = !!$("graphicDuotone")?.checked;
 
@@ -635,6 +642,7 @@
 
           <div class="graphic-engine-effects">
             <label><input type="checkbox" id="graphicBlur"> Zamućena pozadina</label>
+            <label><input type="checkbox" id="graphicBlurPlayer"> Zamućen igrač</label>
             <label><input type="checkbox" id="graphicDuotone"> Ton lige (zelena)</label>
             <label><input type="checkbox" id="graphicGrain"> Grain (zrnasta tekstura)</label>
           </div>
@@ -722,6 +730,7 @@
     $("graphicTeam")?.addEventListener("change", syncState);
     $("graphicMatch")?.addEventListener("change", syncState);
     $("graphicBlur")?.addEventListener("change", syncState);
+    $("graphicBlurPlayer")?.addEventListener("change", syncState);
     $("graphicDuotone")?.addEventListener("change", syncState);
     $("graphicGrain")?.addEventListener("change", syncState);
   }
