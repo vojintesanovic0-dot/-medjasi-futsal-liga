@@ -99,8 +99,9 @@
     const host=$("headerAccount");
     if(!host) return;
 
-    const user=window.currentUser;
-    const profile=window.currentProfile||{};
+    // Top-level let bindings in app.js are global lexical bindings, not window properties.
+    const user=typeof currentUser!=="undefined"?currentUser:window.currentUser;
+    const profile=(typeof currentProfile!=="undefined"?currentProfile:window.currentProfile)||{};
 
     if(!user){
       host.innerHTML=
