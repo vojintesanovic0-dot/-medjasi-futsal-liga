@@ -1,5 +1,5 @@
 -- =====================================================================
--- MEDJAŠI FUTSAL LIGA – "Pogodi" igra, poeni, prodavnica, MVP, ekipe, sponzori
+-- MEĐASI FUTSAL LIGA – "Pogodi" igra, poeni, prodavnica, MVP, ekipe, sponzori
 -- Poeni su ISKLJUČIVO virtuelni (bez uplate i bez isplate).
 --
 -- PRETPOSTAVKE O TVOJOJ ŠEMI (provjeri sa ispisom šeme prije pokretanja):
