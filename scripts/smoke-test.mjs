@@ -359,7 +359,16 @@ try{
     window.loadFanPublicStyles=async()=>{};
     client.rpc=function(name,...args){
       window.__loginSmoke.rpcCalls.push(name);
-      return saved.rpc.call(this,name,...args);
+      // Keep this auth smoke test isolated: the fake session token is deliberately
+      // not a real JWT, so forwarding RPCs to Supabase creates artificial 401s and
+      // fallback REST traffic unrelated to the site's real anonymous bootstrap.
+      if(name==="get_league_snapshot"){
+        return Promise.resolve({data:{
+          teams:[],players:[],matches:[],goals:[],cards:[],
+          comments:[],messages:[],gallery:[],match_players:[]
+        },error:null});
+      }
+      return Promise.resolve({data:null,error:null});
     };
     if(window.medjasiGame)window.medjasiGame.refresh=()=>{window.__loginSmoke.gameRefreshCalled=true;};
     else window.medjasiGame={refresh(){window.__loginSmoke.gameRefreshCalled=true;}};
