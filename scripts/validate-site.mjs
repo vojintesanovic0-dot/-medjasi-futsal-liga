@@ -1770,6 +1770,19 @@ for (const name of sqlFiles) {
 }
 if (!failures.some((x) => x.startsWith("SQL migration is not documented"))) pass("All numbered SQL migrations are documented in README");
 
+const standingsRenderStart = app.indexOf("function renderTable()");
+const standingsRenderEnd = app.indexOf("/* =========================================================\\n   MATCHES", standingsRenderStart);
+const standingsRender = standingsRenderStart >= 0 && standingsRenderEnd > standingsRenderStart
+  ? app.slice(standingsRenderStart, standingsRenderEnd) : "";
+if (
+  !standingsRender.includes("const prevMap=previousPositions();") ||
+  !standingsRender.includes("movementHTML(s.team.id,i+1,prevMap)")
+) {
+  fail("Standings movement indicators must define prevMap inside renderTable before rendering rows");
+} else {
+  pass("Standings movement map is scoped inside renderTable before row rendering");
+}
+
 if (failures.length) {
   console.error("\nSite validation failed:");
   for (const failure of failures) console.error(`- ${failure}`);
