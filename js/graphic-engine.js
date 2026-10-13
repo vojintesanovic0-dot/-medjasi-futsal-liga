@@ -205,6 +205,10 @@
       g.addColorStop(0,"#061018"); g.addColorStop(.5,"#0d2632"); g.addColorStop(1,"#020608");
     }else if(template==="scorer"){
       g.addColorStop(0,"#0d0715"); g.addColorStop(.55,"#29103b"); g.addColorStop(1,"#040205");
+    }else if(template==="matchresult"){
+      g.addColorStop(0,"#06170f"); g.addColorStop(.5,"#16482b"); g.addColorStop(1,"#020604");
+    }else if(template==="upcoming"){
+      g.addColorStop(0,"#07111c"); g.addColorStop(.5,"#12334a"); g.addColorStop(1,"#02060a");
     }else{
       g.addColorStop(0,"#07130d"); g.addColorStop(.55,"#0d2b1c"); g.addColorStop(1,"#020604");
     }
@@ -260,6 +264,8 @@
       mvp:      {kicker:"MVP LIGE", tag:"⭐ MVP"},
       scorer:   {kicker:"TOP STRIJELAC", tag:" GOAL"},
       matchday: {kicker:"MATCHDAY", tag:" MATCHDAY"},
+      matchresult:{kicker:"KONAČAN REZULTAT", tag:" REZULTAT"},
+      upcoming: {kicker:"NAJAVA UTAKMICE", tag:" NAJAVA"},
       winner:   {kicker:"WINNER", tag:" POBJEDNIK"},
       lineup:   {kicker:"STARTING FIVE", tag:" POSTAVA"},
       transfer: {kicker:"PLAYER ANNOUNCEMENT", tag:" NOVO"},
@@ -273,7 +279,7 @@
 
     /* Visual composition changes by template. */
     if(cutoutBlob){
-      const big=["mvp","scorer","winner","captain","legend"].includes(template);
+      const big=["mvp","scorer","winner","captain","legend","matchresult","upcoming"].includes(template);
       fitImage(ctx,img,big?20:80,big?35:120,big?1040:920,big?990:900,true);
     }else{
       fitImage(ctx,img,0,50,1080,980,false,state.photoZoom,state.photoFocusY);
@@ -292,7 +298,8 @@
     ctx.font="700 28px "+(fonts[state.fontFamily]||fonts.Arial);
     ctx.fillText(preset.kicker,60,1100);
 
-    let headline=state.graphicHeadline.trim() || name;
+    const defaultHeadlines={matchresult:"REZULTAT UTAKMICE",upcoming:"SLJEDEĆA UTAKMICA"};
+    let headline=state.graphicHeadline.trim() || defaultHeadlines[template] || name;
     let sub=teamName + (number ? "  " + number : "");
     if(template==="lineup") sub=teamName + (position ? " · "+position : "") + (number ? " · "+number : "");
     if(template==="transfer") sub="NOVI IGRAČ · "+teamName;
@@ -305,6 +312,8 @@
     if(template==="scorer") sub="STRIJELAC · "+teamName+"  ";
     if(template==="winner") sub="POBJEDNIK · "+teamName+"  ";
     if(template==="matchday") sub="DAN UTAKMICE · "+teamName+"  ";
+    if(template==="matchresult") sub="KONAČAN REZULTAT · "+teamName;
+    if(template==="upcoming") sub="SLJEDEĆA UTAKMICA · "+teamName;
     if(state.graphicSubtitle.trim()) sub=state.graphicSubtitle.trim();
 
     drawText(ctx,headline,60,1180,58,"800");
@@ -361,7 +370,7 @@
       const name=player?.name || "Međasi";
       const templateLabel={
         player:"Player Spotlight",mvp:"MVP Lige",scorer:"Top Strijelac",
-        matchday:"Matchday",winner:"Winner",lineup:"Starting Five",
+        matchday:"Matchday",matchresult:"Rezultat utakmice",upcoming:"Najava utakmice",winner:"Winner",lineup:"Starting Five",
         transfer:"Player Announcement",birthday:"Sretan rođendan",
         spotlight:"U fokusu",fan:"Fan Favorite",captain:"Kapiten",legend:"Legenda lige"
       }[state.template] || "Grafika lige";
@@ -644,6 +653,8 @@
               <option value="mvp">⭐ MVP Lige</option>
               <option value="scorer"> Top Strijelac</option>
               <option value="matchday"> Matchday</option>
+              <option value="matchresult"> Rezultat utakmice</option>
+              <option value="upcoming"> Najava utakmice</option>
               <option value="winner"> Winner</option>
               <option value="lineup"> Starting Five</option>
               <option value="transfer"> Player Announcement</option>
