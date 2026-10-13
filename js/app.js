@@ -5899,6 +5899,25 @@ function renderCourtPlayers(match,homePlayers,awayPlayers){
   return arrange(homePlayers,"home")+arrange(awayPlayers,"away");
 }
 
+function renderMiniPitch(match,hp,ap){
+  if(match.status!=="live"||!Array.isArray(hp)||!Array.isArray(ap)||hp.length<5||ap.length<5)return "";
+  return `
+    <div class="mini-pitch-wrap">
+      <div class="court court-mini">
+        <div class="court-line center-line"></div>
+        <div class="center-circle"></div>
+        <div class="court-line penalty-left"></div>
+        <div class="court-line penalty-right"></div>
+        <div class="goal-left"></div>
+        <div class="goal-right"></div>
+        ${renderCourtPlayers(match,hp,ap)}
+      </div>
+      <div class="actions" style="justify-content:center;margin-top:8px">
+        <button type="button" class="btn btn-small" onclick="switchMatchTab('lineup')">Vidi postave ›</button>
+      </div>
+    </div>`;
+}
+
 function benchHTML(
   matchId,
   teamId
@@ -6515,6 +6534,7 @@ function openMatch(id){
 
       </div>
 
+      ${renderMiniPitch(match,hp,ap)}
 
       <div
         class="timeline">
@@ -11666,7 +11686,64 @@ async function disableRealPush(){
     return false;
   }
 }
-function renderPushUI(){if(!$('v7PushStatus')||!$('v7PushButton'))return;const on=localStorage.getItem('medjasi_push_enabled')==='1';$('v7PushStatus').textContent=on?'🔔 Push obavještenja su uključena.':'Push obavještenja nisu uključena.';$('v7PushStatus').className='v7-push-status '+(on?'ok':'');$('v7PushButton').textContent=on?'🔕 Isključi push':'🔔 Uključi push';$('v7PushButton').onclick=on?disableRealPush:subscribeRealPush}
+
+async function loadFollowedOnlyPref(){
+  if(!currentUser)return false;
+  try{
+    const {data,error}=await sbClient().from("push_prefs")
+      .select("followed_only").eq("user_id",currentUser.id).maybeSingle();
+    if(error){console.warn("Učitavanje postavke favorita nije uspjelo:",error);return false;}
+    return !!data?.followed_only;
+  }catch(error){
+    console.warn("Učitavanje postavke favorita nije uspjelo:",error);
+    return false;
+  }
+}
+
+async function setFollowedOnlyPush(on){
+  if(!currentUser)return toastV("Prvo se prijavi.","error");
+  const {error}=await sbClient().from("push_prefs").upsert({
+    user_id:currentUser.id,
+    followed_only:!!on,
+    updated_at:new Date().toISOString()
+  },{onConflict:"user_id"});
+  if(error)return toastV(error.message,"error");
+  toastV(on
+    ? "Dobijaćeš obavještenja samo za svoje favorite ekipe."
+    : "Dobijaćeš obavještenja za cijelu ligu.");
+}
+
+async function ensureFavOnlyToggle(){
+  const btn=$("v7PushButton");
+  if(!btn||!currentUser)return;
+  let label=$("v7PushFavOnlyLabel");
+  if(!label){
+    label=document.createElement("label");
+    label.id="v7PushFavOnlyLabel";
+    label.className="push-fav-only";
+    label.style.cssText="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:14px;line-height:1.4";
+    label.innerHTML='<input type="checkbox" id="v7PushFavOnly" style="margin-top:3px"> <span>Samo obavještenja za moje favorite ekipe</span>';
+    btn.insertAdjacentElement("afterend",label);
+    const input=label.querySelector("input");
+    input.addEventListener("change",()=>setFollowedOnlyPush(input.checked));
+  }
+  const input=$("v7PushFavOnly");
+  if(input){
+    input.disabled=true;
+    input.checked=await loadFollowedOnlyPref();
+    input.disabled=false;
+  }
+}
+
+function renderPushUI(){
+  if(!$('v7PushStatus')||!$('v7PushButton'))return;
+  const on=localStorage.getItem('medjasi_push_enabled')==='1';
+  $('v7PushStatus').textContent=on?'🔔 Push obavještenja su uključena.':'Push obavještenja nisu uključena.';
+  $('v7PushStatus').className='v7-push-status '+(on?'ok':'');
+  $('v7PushButton').textContent=on?'🔕 Isključi push':'🔔 Uključi push';
+  $('v7PushButton').onclick=on?disableRealPush:subscribeRealPush;
+  void ensureFavOnlyToggle();
+}
 function ensureSeasonAdmin(){if(!$('adminContent')||!isAdm()||$('v7SeasonCard'))return;const c=document.createElement('div');c.id='v7SeasonCard';c.className='card';c.style.marginTop='20px';c.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SEZONE</span><h3>🏆 Upravljanje sezonama</h3><p class="muted">Ako postoji aktivna sezona, automatski se dodjeljuje novim utakmicama.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="actions"><input id="v7SeasonName" placeholder="npr. 2026/27" style="max-width:220px"><button class="btn btn-green" onclick="medjasiV7.addSeason()">＋ Nova sezona</button></div><div id="v7SeasonList" style="margin-top:12px"></div>`;$('adminContent').appendChild(c);renderSeasons()}
 function updateMflSeasonLabels(){
   const seasons=Array.isArray(V7?.seasons)?V7.seasons:[];
