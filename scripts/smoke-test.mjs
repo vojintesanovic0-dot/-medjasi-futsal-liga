@@ -348,12 +348,9 @@ try{
   await page.setViewportSize({width:900,height:900});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
   const tabletMenu=page.locator("#mobileMenuBtn");
-  await tabletMenu.waitFor({state:"visible",timeout:10000});
-  await tabletMenu.click();
-  await page.waitForFunction(()=>document.getElementById("mainNav")?.classList.contains("mobile-open"),null,{timeout:3000});
-  await tabletMenu.click();
-  await page.waitForFunction(()=>!document.getElementById("mainNav")?.classList.contains("mobile-open"),null,{timeout:3000});
-  console.log("PASS tablet header menu remains available and opens/closes correctly");
+  await tabletMenu.waitFor({state:"attached",timeout:10000});
+  assert.equal(await tabletMenu.evaluate(el=>getComputedStyle(el).display),"none","The duplicate top hamburger must remain hidden on tablet; use the established navigation instead.");
+  console.log("PASS duplicate top hamburger stays hidden on tablet");
 
   await page.setViewportSize({width:390,height:844});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
