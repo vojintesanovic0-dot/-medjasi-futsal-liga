@@ -38,5 +38,5 @@ jobs:
         run: npm install --no-save playwright
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Exercise navigation, auth, and responsive mobile sections in Chromium
+      - name: Exercise desktop/mobile navigation, auth, and responsive tables in Chromium
         run: node scripts/smoke-test.mjs
