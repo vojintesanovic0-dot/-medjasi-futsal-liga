@@ -613,13 +613,13 @@ try{
   },null,{timeout:15000});
   // Verify each publishing destination with isolated Supabase mocks (no real writes).
   await page.evaluate(()=>{
-    const save={supabaseClient:window.supabaseClient,sbClient:window.sbClient,currentUser:window.currentUser,currentProfile:window.currentProfile,toast:window.toast,loadV9Community:window.loadV9Community,loadAll:window.loadAll,loadNews:window.loadNews,showSection:window.showSection};
+    const save={supabaseClientDescriptor:Object.getOwnPropertyDescriptor(window,"supabaseClient"),sbClient:window.sbClient,currentUser:window.currentUser,currentProfile:window.currentProfile,toast:window.toast,loadV9Community:window.loadV9Community,loadAll:window.loadAll,loadNews:window.loadNews,showSection:window.showSection};
     window.__graphicPublishTest={save,uploads:0,records:[],toasts:[]};
     window.currentUser={id:"graphic-smoke-admin",email:"admin@example.test"};
     window.currentProfile={username:"Graphic Smoke Admin"};
     window.toast=message=>window.__graphicPublishTest.toasts.push(String(message));
     window.loadV9Community=()=>{};window.loadAll=()=>{};window.loadNews=()=>{};window.showSection=()=>{};
-    window.supabaseClient={storage:{from:()=>({upload:async()=>{window.__graphicPublishTest.uploads++;return {error:null};},getPublicUrl:()=>({data:{publicUrl:"https://example.test/graphic-smoke.png"}})})}};
+    Object.defineProperty(window,"supabaseClient",{configurable:true,writable:true,value:{storage:{from:()=>({upload:async()=>{window.__graphicPublishTest.uploads++;return {error:null};},getPublicUrl:()=>({data:{publicUrl:"https://example.test/graphic-smoke.png"}})})}}});
     window.sbClient=()=>({from:table=>({insert:async row=>{window.__graphicPublishTest.records.push({table,row});return {error:null};}})});
   });
   for(const [destination,table] of [["community","community_posts"],["chat","messages"],["news","news"]]){
@@ -642,7 +642,8 @@ try{
   assert.equal(publishCounts.records,3,"Each publish destination must create exactly one database record.");
   await page.evaluate(()=>{
     const t=window.__graphicPublishTest;if(!t)return;
-    for(const key of ["supabaseClient","sbClient","currentUser","currentProfile","toast","loadV9Community","loadAll","loadNews","showSection"]){
+    if(t.save.supabaseClientDescriptor)Object.defineProperty(window,"supabaseClient",t.save.supabaseClientDescriptor);else delete window.supabaseClient;
+    for(const key of ["sbClient","currentUser","currentProfile","toast","loadV9Community","loadAll","loadNews","showSection"]){
       if(t.save[key]===undefined)delete window[key];else window[key]=t.save[key];
     }
     delete window.__graphicPublishTest;
