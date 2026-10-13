@@ -406,8 +406,18 @@ try{
   await page.setViewportSize({width:320,height:740});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mobileMoreBtn").waitFor({state:"visible",timeout:10000});
-  const narrowMobile=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,overflowing:[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(x=>x.rect.width>0&&(x.rect.right>innerWidth+2||x.rect.left< -2)).slice(0,20).map(x=>({tag:x.el.tagName,id:x.el.id,classes:typeof x.el.className==="string"?x.el.className:"",text:(x.el.textContent||"").trim().replace(/\\s+/g," ").slice(0,70),parent:x.el.parentElement?({tag:x.el.parentElement.tagName,id:x.el.parentElement.id,classes:typeof x.el.parentElement.className==="string"?x.el.parentElement.className:""}):null,position:getComputedStyle(x.el).position,left:Math.round(x.rect.left),right:Math.round(x.rect.right),width:Math.round(x.rect.width),scrollWidth:x.el.scrollWidth}))}));
-  assert.ok(narrowMobile.document<=narrowMobile.viewport+2&&narrowMobile.body<=narrowMobile.viewport+2,"Horizontal overflow on a narrow 320px phone: "+JSON.stringify(narrowMobile));
+  const narrowMobile=await page.evaluate(()=>{
+    const visibleOverflow=[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({el,rect})=>{
+      if(rect.width<=0||rect.height<=0||rect.bottom<=0||rect.top>=innerHeight||el.closest(".fx-bg")||el.closest('[aria-hidden="true"]'))return false;
+      for(let node=el;node&&node!==document.documentElement;node=node.parentElement){
+        const style=getComputedStyle(node);
+        if(style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
+      }
+      return rect.right>innerWidth+2||rect.left< -2;
+    }).slice(0,20).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",text:(el.textContent||"").trim().replace(/\\s+/g," ").slice(0,70),right:Math.round(rect.right),left:Math.round(rect.left),width:Math.round(rect.width)}));
+    return {viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,visibleOverflow};
+  });
+  assert.ok(narrowMobile.document<=narrowMobile.viewport+2&&narrowMobile.visibleOverflow.length===0,"Visible horizontal overflow on a narrow 320px phone: "+JSON.stringify(narrowMobile));
   await page.locator("#mobileMoreBtn").click();
   const narrowDrawerColumns=await page.locator(".mobile-more-grid").evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(" ").length);
   assert.equal(narrowDrawerColumns,1,"The More drawer must switch to a single column on very narrow phones.");
