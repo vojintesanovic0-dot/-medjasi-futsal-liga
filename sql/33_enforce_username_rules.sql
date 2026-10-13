@@ -53,25 +53,16 @@ $function$;
 
 revoke all on function public.handle_new_auth_user_profile() from public, anon, authenticated;
 
-do $migration$
-begin
-  if not exists (
-    select 1 from pg_catalog.pg_constraint
-    where conrelid = 'public.profiles'::regclass
-      and conname = 'profiles_username_format'
-  ) then
-    alter table public.profiles
-      add constraint profiles_username_format
-      check (
-        username is not null
-        and username ~ '^[[:alnum:]_.-]{3,30}$'
-        and lower(username) <> all (array[
-          'admin','moderator','medjasi','liga','support','korisnik','user','null','undefined'
-        ])
-      ) not valid;
-  end if;
-end;
-$migration$;
+alter table public.profiles drop constraint if exists profiles_username_format;
+alter table public.profiles
+  add constraint profiles_username_format
+  check (
+    username is not null
+    and username ~ '^[[:alnum:]_.-]{3,30}$'
+    and lower(username) <> all (array[
+      'admin','moderator','medjasi','liga','support','korisnik','user','null','undefined'
+    ])
+  ) not valid;
 
 commit;
 
