@@ -8595,6 +8595,8 @@ function openMobileMore(){
   const moreBtn=document.getElementById("mobileMoreBtn");
   if(moreBtn)moreBtn.setAttribute("aria-expanded","true");
   drawer.classList.add("open");
+  const panel=drawer.querySelector(".mobile-more-panel");
+  if(panel) panel.scrollTop=0;
   drawer.setAttribute("aria-hidden","false");
   document.body.classList.add("mobile-more-open");
 }
