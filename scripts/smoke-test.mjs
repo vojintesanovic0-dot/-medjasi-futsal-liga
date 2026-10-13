@@ -176,13 +176,10 @@ try{
   }));
   const expectedTeams=await anonCount("teams");
   const expectedPlayers=await anonCount("players");
-  if(expectedTeams.error||expectedPlayers.error){
-    throw new Error("Ne mogu provjeriti broj redova u bazi: "+(expectedTeams.error||expectedPlayers.error));
-  }
-  assert.equal(shown.teams,expectedTeams.count,
-    "Ekipe u prikazu ("+shown.teams+") ne odgovaraju broju koji baza vraća anonimnom posjetiocu ("+expectedTeams.count+")");
-  assert.equal(shown.players,expectedPlayers.count,
-    "Igrači u prikazu ("+shown.players+") ne odgovaraju broju koji baza vraća anonimnom posjetiocu ("+expectedPlayers.count+")");
+  assert.equal(shown.teams,expectedTeams,
+    "Ekipe u prikazu ("+shown.teams+") ne odgovaraju broju koji baza vraća anonimnom posjetiocu ("+expectedTeams+")");
+  assert.equal(shown.players,expectedPlayers,
+    "Igrači u prikazu ("+shown.players+") ne odgovaraju broju koji baza vraća anonimnom posjetiocu ("+expectedPlayers+")");
 
   const minTeams=Number(process.env.SMOKE_MIN_TEAMS||0);
   const minPlayers=Number(process.env.SMOKE_MIN_PLAYERS||0);
