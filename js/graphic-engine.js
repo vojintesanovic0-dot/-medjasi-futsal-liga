@@ -432,7 +432,10 @@
       live:     {kicker:"UTAKMICA UŽIVO", tag:"LIVE"},
       scorers:  {kicker:"STRIJELCI UTAKMICE", tag:"GOLOVI"}
     };
-    const preset = presets[template] || presets.player;
+    const preset = {...(presets[template] || presets.player)};
+    if(template==="result" && match){
+      preset.tag=match.status==="live"?"UŽIVO":match.status==="finished"?"FINAL":"NAJAVA";
+    }
 
     ctx.fillStyle = "rgba(0,0,0,.60)";
     ctx.fillRect(0, 1020, 1080, 330);
