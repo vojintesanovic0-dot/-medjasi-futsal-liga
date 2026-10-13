@@ -8373,7 +8373,14 @@ document.addEventListener(
    START
 ========================================================= */
 
-init();
+window.__MEDJASI_APP_READY_STATE="loading";
+window.__MEDJASI_APP_READY=init().then(()=>{
+  window.__MEDJASI_APP_READY_STATE="ready";
+},error=>{
+  window.__MEDJASI_APP_READY_STATE="failed";
+  console.error("Medjasi app initialization failed:",error);
+  throw error;
+});
   /* =========================================
    GLOBALNA YOUTUBE MUZIKA
 ========================================= */
