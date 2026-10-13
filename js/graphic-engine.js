@@ -28,7 +28,11 @@
     caption: "",
     body: "",
     graphicHeadline: "",
-    accentColor: "#b7ff55"
+    accentColor: "#b7ff55",
+    photoZoom: 1,
+    photoFocusY: 0,
+    photoShade: 0.2,
+    fontFamily: "Arial"
   };
 
   function isAdmin(){
@@ -159,13 +163,21 @@
     }
   }
 
-  function fitImage(ctx, img, x, y, w, h, contain=true){
-    const ratio = contain
+  function fitImage(ctx, img, x, y, w, h, contain=true, zoom=1, focusY=0){
+    const baseRatio = contain
       ? Math.min(w / img.width, h / img.height)
       : Math.max(w / img.width, h / img.height);
+    const ratio = baseRatio * (contain ? 1 : Math.max(1, Math.min(1.8, Number(zoom)||1)));
     const dw = img.width * ratio;
     const dh = img.height * ratio;
-    ctx.drawImage(img, x + (w-dw)/2, y + (h-dh)/2, dw, dh);
+    const drawX = x + (w-dw)/2;
+    const maxShift = Math.max(0, dh-h);
+    const shiftY = contain ? 0 : Math.max(-maxShift/2, Math.min(maxShift/2, Number(focusY)||0));
+    const drawY = y + (h-dh)/2 + shiftY;
+    ctx.save();
+    ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+    ctx.drawImage(img, drawX, drawY, dw, dh);
+    ctx.restore();
   }
 
   async function blobToImage(blob){
@@ -207,7 +219,8 @@
   }
 
   function drawText(ctx, text, x, y, size, weight="700", align="left"){
-    ctx.font = weight + " " + size + "px Arial, sans-serif";
+    const fonts={Arial:"Arial, sans-serif",Impact:"Impact, Haettenschweiler, sans-serif",Georgia:"Georgia, serif"};
+    ctx.font = weight + " " + size + "px " + (fonts[state.fontFamily]||fonts.Arial);
     ctx.textAlign = align;
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#ffffff";
@@ -224,6 +237,9 @@
     const team = teamForPlayer(player);
     const canvas = document.createElement("canvas");
     canvas.width=1080; canvas.height=1350;
+    state.photoZoom=Math.max(1,Math.min(1.8,Number(state.photoZoom)||1));
+    state.photoFocusY=Math.max(-220,Math.min(220,Number(state.photoFocusY)||0));
+    state.photoShade=Math.max(0,Math.min(.6,Number(state.photoShade)||0));
     const ctx=canvas.getContext("2d");
     const template=state.template;
     const accentColor=/^#[0-9a-f]{6}$/i.test(state.accentColor) ? state.accentColor : "#b7ff55";
@@ -259,8 +275,8 @@
       const big=["mvp","scorer","winner","captain","legend"].includes(template);
       fitImage(ctx,img,big?20:80,big?35:120,big?1040:920,big?990:900,true);
     }else{
-      fitImage(ctx,img,0,50,1080,980,false);
-      ctx.fillStyle="rgba(0,0,0,.20)";
+      fitImage(ctx,img,0,50,1080,980,false,state.photoZoom,state.photoFocusY);
+      ctx.fillStyle="rgba(0,0,0,"+state.photoShade+")";
       ctx.fillRect(0,50,1080,980);
     }
 
@@ -271,7 +287,8 @@
     ctx.fillRect(0,1020,1080,330);
 
     ctx.fillStyle=accentColor;
-    ctx.font="700 28px Arial";
+    const fonts={Arial:"Arial, sans-serif",Impact:"Impact, Haettenschweiler, sans-serif",Georgia:"Georgia, serif"};
+    ctx.font="700 28px "+(fonts[state.fontFamily]||fonts.Arial);
     ctx.fillText(preset.kicker,60,1100);
 
     let headline=state.graphicHeadline.trim() || name;
@@ -465,6 +482,7 @@
     if(presets[clean]&&!window.confirm("Postavke s tim nazivom već postoje. Želiš li ih zamijeniti?"))return;
     presets[clean]={
       template:state.template,graphicHeadline:state.graphicHeadline,accentColor:state.accentColor,
+      photoZoom:state.photoZoom,photoFocusY:state.photoFocusY,photoShade:state.photoShade,fontFamily:state.fontFamily,
       destination:state.destination,caption:state.caption,title:state.title,body:state.body
     };
     try{
@@ -487,6 +505,10 @@
     if(preset.template&&$("graphicTemplate"))$("graphicTemplate").value=preset.template;
     if(preset.graphicHeadline!==undefined&&$("graphicHeadline"))$("graphicHeadline").value=preset.graphicHeadline;
     if(/^#[0-9a-f]{6}$/i.test(preset.accentColor||"")&&$("graphicAccentColor"))$("graphicAccentColor").value=preset.accentColor;
+    if(Number.isFinite(Number(preset.photoZoom))&&$("graphicPhotoZoom"))$("graphicPhotoZoom").value=preset.photoZoom;
+    if(Number.isFinite(Number(preset.photoFocusY))&&$("graphicPhotoFocusY"))$("graphicPhotoFocusY").value=preset.photoFocusY;
+    if(Number.isFinite(Number(preset.photoShade))&&$("graphicPhotoShade"))$("graphicPhotoShade").value=preset.photoShade;
+    if(["Arial","Impact","Georgia"].includes(preset.fontFamily)&&$("graphicFontFamily"))$("graphicFontFamily").value=preset.fontFamily;
     if(preset.destination&&$("graphicDestination"))$("graphicDestination").value=preset.destination;
     if(preset.caption!==undefined&&$("graphicCaption"))$("graphicCaption").value=preset.caption;
     if(preset.title!==undefined&&$("graphicNewsTitle"))$("graphicNewsTitle").value=preset.title;
@@ -519,6 +541,10 @@
     state.body=$("graphicNewsBody")?.value || "";
     state.graphicHeadline=$("graphicHeadline")?.value || "";
     state.accentColor=$("graphicAccentColor")?.value || "#b7ff55";
+    state.photoZoom=Number($("graphicPhotoZoom")?.value||1);
+    state.photoFocusY=Number($("graphicPhotoFocusY")?.value||0);
+    state.photoShade=Number($("graphicPhotoShade")?.value||.2);
+    state.fontFamily=$("graphicFontFamily")?.value||"Arial";
 
     const player=currentPlayer();
     const team=teamForPlayer(player);
@@ -581,6 +607,25 @@
             <div class="form-group graphic-color-field">
               <label for="graphicAccentColor">Akcentna boja</label>
               <div class="graphic-color-control"><input id="graphicAccentColor" type="color" value="#b7ff55"><span>Boja detalja i naglasaka</span></div>
+            </div>
+          </div>
+
+          <div class="graphic-engine-adjustments">
+            <div class="form-group">
+              <label for="graphicPhotoZoom">Uvećanje fotografije <span id="graphicPhotoZoomValue">1.0×</span></label>
+              <input id="graphicPhotoZoom" type="range" min="1" max="1.8" step="0.05" value="1">
+            </div>
+            <div class="form-group">
+              <label for="graphicPhotoFocusY">Položaj fotografije <span id="graphicPhotoFocusValue">0</span></label>
+              <input id="graphicPhotoFocusY" type="range" min="-220" max="220" step="10" value="0">
+            </div>
+            <div class="form-group">
+              <label for="graphicPhotoShade">Zatamnjenje fotografije <span id="graphicPhotoShadeValue">20%</span></label>
+              <input id="graphicPhotoShade" type="range" min="0" max="0.6" step="0.05" value="0.2">
+            </div>
+            <div class="form-group">
+              <label for="graphicFontFamily">Stil teksta</label>
+              <select id="graphicFontFamily"><option value="Arial">Moderan</option><option value="Impact">Sportski / snažan</option><option value="Georgia">Klasičan</option></select>
             </div>
           </div>
 
@@ -683,6 +728,12 @@
     $("graphicHeadline")?.addEventListener("input",markDesignDirty);
     $("graphicAccentColor")?.addEventListener("input",markDesignDirty);
     $("graphicTemplate")?.addEventListener("change",markDesignDirty);
+    ["graphicPhotoZoom","graphicPhotoFocusY","graphicPhotoShade","graphicFontFamily"].forEach(id=>$(id)?.addEventListener("input",()=>{
+      if($("graphicPhotoZoomValue"))$("graphicPhotoZoomValue").textContent=Number($("graphicPhotoZoom")?.value||1).toFixed(2)+"×";
+      if($("graphicPhotoFocusValue"))$("graphicPhotoFocusValue").textContent=$("graphicPhotoFocusY")?.value||"0";
+      if($("graphicPhotoShadeValue"))$("graphicPhotoShadeValue").textContent=Math.round(Number($("graphicPhotoShade")?.value||0)*100)+"%";
+      markDesignDirty();
+    }));
     $("graphicDestination")?.addEventListener("change",()=>{
       syncState();
       $("graphicNewsFields").hidden=$("graphicDestination").value!=="news";
