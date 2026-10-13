@@ -674,13 +674,14 @@ if (
 } else pass("Light/dark theme toggle remains removed; dark theme is the only site theme");
 
 if (
-  !html.includes('id="mobileMenuBtn" onclick="toggleMobileMenu()"') ||
-  !app.includes('nav?.classList.toggle("mobile-open",mobileMenuOpen)') ||
-  !app.includes('btn.setAttribute("aria-expanded",String(mobileMenuOpen))') ||
-  !app.includes('document.getElementById("mainNav")?.classList.remove("mobile-open","open")')
+  html.includes('id="mobileMenuBtn"') ||
+  html.includes('class="mobile-menu-btn"') ||
+  !app.includes("function openMobileMore()") ||
+  !app.includes("function closeMobileMore()") ||
+  !app.includes("function mobileMoreGo(id)")
 ) {
-  fail("Mobile header menu must open, close, and keep its expanded state synchronized");
-} else pass("Mobile header menu opens and closes with synchronized accessibility state");
+  fail("Top hamburger must remain removed while the bottom-bar More drawer stays functional");
+} else pass("Top hamburger is absent; bottom-bar More drawer remains available");
 
 if (
   !app.includes("function openMobileMore()") ||
