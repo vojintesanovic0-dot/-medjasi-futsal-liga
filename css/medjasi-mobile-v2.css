@@ -347,3 +347,21 @@
     pointer-events: none !important;
   }
 }
+
+
+/* Liga Info standings: keep the wide data table scrollable inside its card on phones. */
+@media (max-width: 780px) {
+  #info .gx-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+  }
+  #info .gx-table {
+    min-width: 520px;
+    max-width: none;
+    white-space: nowrap;
+  }
+}
