@@ -330,6 +330,10 @@ try{
   assert.equal(loginLogoutProbe.logoutState.homeActive,true,"Logout must return to the homepage.");
   assert.ok(loginLogoutProbe.logoutState.loginButtonText.includes("Prijava"),"Logout must restore the logged-out header.");
   assert.equal(loginLogoutProbe.logoutState.profileButtonCount,0,"Logout must remove the authenticated profile button.");
+  await page.evaluate(()=>window.showSection("admin"));
+  await page.waitForFunction(()=>!!document.querySelector("#home.section.active"),null,{timeout:5000});
+  assert.equal(await page.locator("#admin.section.active").count(),0,"A logged-out visitor must not enter the admin panel.");
+  console.log("PASS logged-out users are redirected away from the admin panel");
   console.log("PASS isolated login/logout updates the account header and returns home without a real session");
   await page.evaluate(()=>window.showSection("login"));
   await page.waitForFunction(()=>!!document.querySelector("#login.section.active"),null,{timeout:5000});
@@ -372,6 +376,29 @@ try{
   await page.locator(".mobile-more-grid button").filter({hasText:"Utakmice"}).first().click();
   await page.waitForFunction(()=>document.querySelector("#matches.section")?.classList.contains("active"),null,{timeout:7000});
   await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  const mobileSections=["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info","login"];
+  for(const sectionId of mobileSections){
+    await page.evaluate(id=>window.showSection(id),sectionId);
+    await page.waitForFunction(id=>document.querySelector("#"+id+".section")?.classList.contains("active"),sectionId,{timeout:7000});
+    const layout=await page.evaluate(()=>{
+      const active=document.querySelector(".section.active");
+      const visibleOverflow=[...(active?.querySelectorAll("*")||[])].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({el,rect})=>{
+        if(rect.width<=0||rect.height<=0||rect.bottom<=0||rect.top>=innerHeight||el.closest(".fx-bg")||el.closest('[aria-hidden="true"]'))return false;
+        let hasHorizontalScrollBoundary=false;
+        for(let node=el;node&&node!==active;node=node.parentElement){
+          const style=getComputedStyle(node);
+          if(style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
+          if((style.overflowX==="auto"||style.overflowX==="scroll")&&node.scrollWidth>node.clientWidth+2)hasHorizontalScrollBoundary=true;
+        }
+        if(hasHorizontalScrollBoundary)return false;
+        return rect.right>innerWidth+2||rect.left< -2;
+      }).slice(0,5).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",left:Math.round(rect.left),right:Math.round(rect.right),width:Math.round(rect.width)}));
+      return {section:active?.id,viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,sectionWidth:Math.round(active?.getBoundingClientRect().width||0),visibleOverflow};
+    });
+    assert.equal(layout.section,sectionId,"Mobile navigation failed to activate section "+sectionId);
+    assert.ok(layout.document<=layout.viewport+2&&layout.body<=layout.viewport+2&&layout.visibleOverflow.length===0,"Mobile layout overflow in "+sectionId+": "+JSON.stringify(layout));
+  }
+  console.log("PASS mobile section audit: all 13 primary sections activate at 390px and have no visible horizontal overflow");
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
   console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, auth validation and isolated signup username handling, login cancel, mobile drawer/width, and live bootstrap or explicit retry state; suppressed extra REST requests after outage:",suppressedLiveRestCount,"; no uncaught JS errors or missing local assets");
