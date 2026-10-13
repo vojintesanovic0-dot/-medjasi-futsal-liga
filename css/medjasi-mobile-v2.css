@@ -897,3 +897,90 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     overflow-y: auto !important;
   }
 }
+
+
+/* Compact-phone safeguards: preserve the existing app layout at 320px widths. */
+@media (max-width: 359px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  body {
+    --mobile-compact-gutter: 10px;
+  }
+
+  main {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    padding-left: var(--mobile-compact-gutter);
+    padding-right: var(--mobile-compact-gutter);
+    box-sizing: border-box;
+  }
+
+  main > .section.active,
+  main > .section.active > *,
+  main > .section.active .card,
+  main > .section.active .grid,
+  main > .section.active .grid-2,
+  main > .section.active .grid-3,
+  main > .section.active .table-wrap {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  main > .section.active .table-wrap {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  main > .section.active table {
+    width: 100%;
+  }
+
+  .mobile-bottom {
+    padding-left: max(4px, env(safe-area-inset-left));
+    padding-right: max(4px, env(safe-area-inset-right));
+    box-sizing: border-box;
+  }
+
+  .mobile-bottom button,
+  .mobile-bottom a {
+    min-width: 0;
+    padding-left: 2px;
+    padding-right: 2px;
+    font-size: 11px;
+  }
+
+  html body #mobileMoreDrawer.open .mobile-more-panel {
+    width: 100%;
+    max-width: 100%;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    box-sizing: border-box;
+  }
+
+  html body #mobileMoreDrawer.open .mobile-more-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  html body #mobileMoreDrawer.open .mobile-more-grid button {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  #modal .modal-box,
+  [role="dialog"] {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top));
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}
