@@ -18,6 +18,7 @@ const game = read("js/game.js");
 const dashboard = read("js/dashboard-layout-v1.js");
 const growth = read("js/growth.js");
 const css = read("css/medjasi-dashboard-refinements-v2.css");
+const headerFixCss = read("css/medjasi-header-fix-v1.css");
 
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((m) => m[1]);
 const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
@@ -674,14 +675,17 @@ if (
 } else pass("Light/dark theme toggle remains removed; dark theme is the only site theme");
 
 if (
-  html.includes('id="mobileMenuBtn"') ||
-  html.includes('class="mobile-menu-btn"') ||
+  !html.includes('id="mobileMenuBtn"') ||
+  !html.includes('class="mobile-menu-btn"') ||
+  !headerFixCss.includes("html body .site-header .header-inner .header-actions .mobile-menu-btn") ||
+  !headerFixCss.includes("html body #mobileMenuBtn") ||
+  !headerFixCss.includes("pointer-events: none !important;") ||
   !app.includes("function openMobileMore()") ||
   !app.includes("function closeMobileMore()") ||
   !app.includes("function mobileMoreGo(id)")
 ) {
-  fail("Top hamburger must remain removed while the bottom-bar More drawer stays functional");
-} else pass("Top hamburger is absent; bottom-bar More drawer remains available");
+  fail("Top hamburger must remain hidden and non-interactive while the bottom-bar More drawer stays functional");
+} else pass("Top hamburger is hidden at every viewport; bottom-bar More drawer remains available");
 
 if (
   !app.includes("function openMobileMore()") ||

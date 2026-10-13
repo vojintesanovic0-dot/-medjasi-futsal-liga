@@ -244,3 +244,49 @@
     pointer-events: none !important;
   }
 }
+
+
+/* One navigation model: keep the legacy button element for compatibility, but never show or activate it. */
+html body .site-header .header-inner .header-actions .mobile-menu-btn,
+html body .site-header #mobileMenuBtn,
+html body button#mobileMenuBtn {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Avoid horizontal overflow in the compact header: keep only the useful actions visible. */
+@media (max-width: 780px) {
+  .site-header .header-inner {
+    min-width: 0 !important;
+    overflow-x: clip !important;
+  }
+  .site-header .header-live {
+    display: none !important;
+  }
+  .site-header .logo {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 90px) !important;
+    overflow: hidden !important;
+  }
+  .site-header .logo > div:last-child {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+  .site-header .logo span,
+  .site-header .logo small {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .site-header .header-actions {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 70px !important;
+  }
+}
