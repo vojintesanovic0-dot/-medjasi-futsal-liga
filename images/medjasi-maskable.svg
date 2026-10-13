@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Međasi Futsal Liga — maskable ikona</title>
+  <rect width="512" height="512" rx="0" fill="#07130d"/>
+  <circle cx="256" cy="256" r="220" fill="#0d281b" stroke="#39f58b" stroke-width="12"/>
+  <circle cx="256" cy="256" r="174" fill="#f5fff8" stroke="#39f58b" stroke-width="8"/>
+  <polygon points="256,202 307,239 288,299 224,299 205,239" fill="#0b2116" stroke="#0b2116" stroke-width="4"/>
+  <g fill="#0b2116" stroke="#0b2116" stroke-width="4" stroke-linejoin="round">
+    <polygon points="256,126 292,153 278,190 234,190 220,153"/>
+    <polygon points="347,190 390,202 386,247 349,264 322,231"/>
+    <polygon points="329,326 351,366 320,396 280,380 286,341"/>
+    <polygon points="183,326 226,341 232,380 192,396 161,366"/>
+    <polygon points="165,190 190,231 163,264 126,247 122,202"/>
+  </g>
+  <g fill="none" stroke="#0b2116" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M256 126 L256 202 M292 153 L307 239 M278 190 L307 239 M234 190 L205 239 M220 153 L205 239"/>
+    <path d="M122 202 L205 239 M126 247 L205 239 M163 264 L224 299 M161 366 L224 299 M192 396 L224 299"/>
+    <path d="M390 202 L307 239 M386 247 L307 239 M349 264 L288 299 M351 366 L288 299 M320 396 L288 299"/>
+    <path d="M183 326 L224 299 M329 326 L288 299 M226 341 L224 299 M286 341 L288 299"/>
+  </g>
+  <path d="M196 425 Q256 448 316 425" fill="none" stroke="#39f58b" stroke-width="10" stroke-linecap="round"/>
+  <text x="256" y="474" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" letter-spacing="4" fill="#f5fff8">MFL</text>
+</svg>
