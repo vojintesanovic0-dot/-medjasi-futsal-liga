@@ -12,3 +12,7 @@ button,a,[role="button"],summary,label{touch-action:manipulation}
  .mobile-more-close{font-size:0!important;line-height:0!important;color:transparent!important}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* Zadržavamo funkcije, ali uklanjamo kontrole koje su korisnik izričito odbacio. */
+.site-header .dashboard-glow-toggle{display:none!important}
+.site-header .mobile-menu-btn{display:none!important}
