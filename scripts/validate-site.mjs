@@ -704,6 +704,17 @@ if (
   fail("Mobile More drawer must open, close, and route a selected item to its requested section");
 } else pass("Mobile More drawer items open the selected section and close the drawer");
 
+
+const dashboardShortcutRoutes = ["shop","fanbase","mine","live","board","collection","club","mvp"];
+const dashboardShortcutCalls = [...html.matchAll(/onclick=["']mobileMoreDashboardGo\('([a-z]+)'\)["']/g)].map((m)=>m[1]);
+if (
+  !app.includes("function mobileMoreDashboardGo(tab)") ||
+  !html.includes('id="mobileMoreBtn" aria-controls="mobileMoreDrawer" aria-expanded="false"') ||
+  dashboardShortcutRoutes.some((route)=>dashboardShortcutCalls.filter((value)=>value===route).length!==1)
+) {
+  fail("All eight mobile Fan Game shortcuts must use the guarded route handler and the More trigger must expose its controlled drawer");
+} else pass("All eight mobile Fan Game shortcuts use the guarded route handler and the More trigger declares its accessibility state");
+
 if (
   !html.includes('id="modal" onclick="closeModal(event)"') ||
   !html.includes('class="modal-box" onclick="event.stopPropagation()"') ||

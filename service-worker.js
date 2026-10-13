@@ -1,4 +1,4 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v186";
+const CACHE_NAME = "medjasi-futsal-pwa-v187";
 const CDN_CACHE = "medjasi-cdn-v1";
 
 const APP_SHELL = [
