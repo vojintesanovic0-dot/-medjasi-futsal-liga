@@ -67,10 +67,18 @@ try{
   await page.goto(base,{waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mainNav button").first().waitFor({timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
-  // Counter text starts at "0"; it is not a signal that async initialization finished.
-  // Wait for the explicit app lifecycle state before comparing any counts.
-  await page.waitForFunction(()=>window.__MEDJASI_APP_READY_STATE==="ready"||window.__MEDJASI_APP_READY_STATE==="failed",null,{timeout:30000});
+  // Counters can start at zero and app init can finish even when loadAll() fails.
+  // Wait for both lifecycle and explicit league-data states before comparing counts.
+  await page.waitForFunction(()=>
+    (window.__MEDJASI_APP_READY_STATE==="ready"||window.__MEDJASI_APP_READY_STATE==="failed") &&
+    (window.__MEDJASI_LEAGUE_DATA_STATE==="loaded"||window.__MEDJASI_LEAGUE_DATA_STATE==="failed"),
+    null,{timeout:30000}
+  );
   const appReadyState=await page.evaluate(()=>window.__MEDJASI_APP_READY_STATE||"missing");
+  const leagueDataState=await page.evaluate(()=>window.__MEDJASI_LEAGUE_DATA_STATE||"missing");
+  if(leagueDataState!=="loaded"){
+    throw new Error("Učitavanje podataka lige nije uspjelo (dataState="+leagueDataState+", init="+appReadyState+"). Provjeri console.error \"Medjasi data initialization\" i Supabase/RLS/RPC greške. Browser errors: "+browserConsoleErrors.join(" | "));
+  }
   if(appReadyState!=="ready"){
     throw new Error("Aplikacija nije završila inicijalizaciju (state="+appReadyState+"). Browser errors: "+browserConsoleErrors.join(" | "));
   }
