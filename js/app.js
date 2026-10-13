@@ -1522,15 +1522,15 @@ async function resetPassword(){
 ========================================================= */
 
 /* Username rules are shared by registration and profile editing. */
-const USERNAME_RE = /^[A-Za-z0-9_.-]{3,30}$/;
+const USERNAME_RE = /^[\p{L}\p{N}_.-]{3,30}$/u;
 const RESERVED_USERNAMES = new Set(["admin","moderator","medjasi","liga","support","korisnik","user","null","undefined"]);
 
 async function register(){
-  let username =
-    document
-      .getElementById("registerUsername")
-      ?.value
-      .trim();
+  const usernameInput = document.getElementById("registerUsername");
+  let username = String(usernameInput?.value || "")
+    .trim()
+    .replace(/[^\p{L}\p{N}_\-.]/gu,"");
+  if(usernameInput) usernameInput.value = username;
 
   const email =
     document
@@ -1558,7 +1558,7 @@ async function register(){
   }
 
   if(!username || !USERNAME_RE.test(username)){
-    message.textContent = "Korisničko ime mora imati 3–30 znakova: slova bez dijakritike (a–z), brojevi, _ . -";
+    message.textContent = "Korisničko ime mora imati 3–30 znakova: slova, brojevi, _ . -";
     return;
   }
 
@@ -2863,6 +2863,7 @@ function renderTable(){
     sortedTableRows();
   const prevMap=previousPositions();
 
+
   document.getElementById("tableBody").innerHTML =
     rows.length
       ? rows
@@ -2993,7 +2994,7 @@ function enhancedMatchHTML(m){
 
           ${
             live
-              ? `${m.current_minute || 0}'`
+              ? `${getLiveMinute(m)}'`
               : formatDate(m.match_date)
           }
 
@@ -5091,16 +5092,18 @@ async function changeMinute(id,minute){
   if(!match)return alert("Utakmica nije pronađena.");
 
   try{
+    const patch={current_minute:value};
+    if(match.status==="live")patch.live_started_at=new Date(Date.now()-value*60000).toISOString();
     const {data,error}=await sbClient().from("matches")
-      .update({current_minute:value})
+      .update(patch)
       .eq("id",id)
-      .select("id,current_minute")
+      .select("id,current_minute,live_started_at")
       .maybeSingle();
     if(error)throw error;
     if(!data)throw new Error("Baza nije potvrdila promjenu minute.");
 
     const local=matches.find(x=>String(x.id)===String(id));
-    if(local)local.current_minute=data.current_minute;
+    if(local){local.current_minute=data.current_minute;if("live_started_at" in data)local.live_started_at=data.live_started_at;}
 
     try{
       const refreshed=await loadAll();
@@ -5859,154 +5862,42 @@ function getBench(
    COURT
 ========================================================= */
 
-function courtPlayer(
-  player,
-  left,
-  top
-){
-
-  const goalkeeper =
-    player.position ===
-    "Golman";
-
-
-  return `
-
-    <div
-      class="
-        player-on-court
-        ${goalkeeper ? "goalkeeper" : ""}
-      "
-      style="
-        left:${left}%;
-        top:${top}%;
-      ">
-
-      <div class="player-circle">
-        ${player.jersey_number ?? "?"}
-      </div>
-
-      <div class="player-court-name">
-
-        ${esc(player.name)}
-
-        ${
-          player.is_captain
-            ? " ©️"
-            : ""
-        }
-
-      </div>
-
-      <div class="player-court-number">
-        ${esc(
-          player.position || ""
-        )}
-      </div>
-
-    </div>
-
-  `;
+function isGoalkeeper(p){
+  return String(p?.position||"").trim().toLowerCase().includes("golman");
 }
 
+function courtPlayer(player,left,top,side){
+  const goalkeeper=isGoalkeeper(player);
+  return `
+    <div class="player-on-court team-${side} ${goalkeeper?"goalkeeper":""}"
+         data-player-id="${esc(String(player.id))}"
+         style="left:${left}%;top:${top}%;">
+      <div class="player-circle">${esc(String(player.jersey_number ?? "?"))}</div>
+      <div class="player-court-name">${esc(player.name)}${player.is_captain?' <span class="captain-badge">C</span>':""}</div>
+      <div class="player-court-number">${esc(player.position||"")}</div>
+    </div>`;
+}
 
-function renderCourtPlayers(
-  match,
-  homePlayers,
-  awayPlayers
-){
-
-  function arrange(
-    list,
-    side
-  ){
-
-    const goalkeeper =
-      list.find(
-        p =>
-          p.position ===
-          "Golman"
-      );
-
-
-    const others =
-      list.filter(
-        p =>
-          p.id !==
-          goalkeeper?.id
-      );
-
-
-    const positions =
-      side === "home"
-
-        ? [
-            [9,50],
-            [28,24],
-            [28,76],
-            [43,37],
-            [43,63]
-          ]
-
-        : [
-            [91,50],
-            [72,24],
-            [72,76],
-            [57,37],
-            [57,63]
-          ];
-
-
-    let result = "";
-
-
-    if(goalkeeper){
-
-      result +=
-        courtPlayer(
-          goalkeeper,
-          positions[0][0],
-          positions[0][1]
-        );
+function renderCourtPlayers(match,homePlayers,awayPlayers){
+  const HOME=[[9,50],[28,24],[28,76],[43,37],[43,63]];
+  const AWAY=[[91,50],[72,24],[72,76],[57,37],[57,63]];
+  function arrange(list,side){
+    const slots=(side==="home"?HOME:AWAY).slice();
+    const gk=list.find(p=>isGoalkeeper(p));
+    const others=list.filter(p=>!gk||String(p.id)!==String(gk.id));
+    let html="";
+    if(gk){
+      const s=slots.shift();
+      html+=courtPlayer(gk,s[0],s[1],side);
     }
-
-
-    others
-      .slice(0,4)
-      .forEach(
-        (p,i) => {
-
-          const pos =
-            positions[i+1];
-
-
-          result +=
-            courtPlayer(
-              p,
-              pos[0],
-              pos[1]
-            );
-        }
-      );
-
-
-    return result;
+    others.slice(0,slots.length).forEach((p,i)=>{
+      const s=slots[i];
+      html+=courtPlayer(p,s[0],s[1],side);
+    });
+    return html;
   }
-
-
-  return `
-    ${arrange(
-      homePlayers,
-      "home"
-    )}
-
-    ${arrange(
-      awayPlayers,
-      "away"
-    )}
-  `;
+  return arrange(homePlayers,"home")+arrange(awayPlayers,"away");
 }
-
 
 function benchHTML(
   matchId,
@@ -7058,6 +6949,17 @@ function stopLiveRefreshForMatch(intervalId,clockId){
   if(window.__medjasiLiveClock===clockId)window.__medjasiLiveClock=null;
 }
 
+function liveSignature(matchId){
+  const id=String(matchId);
+  const m=matches.find(x=>String(x.id)===id)||{};
+  return JSON.stringify([
+    m.status,m.home_score,m.away_score,m.current_minute,m.live_started_at,
+    goals.filter(g=>String(g.match_id)===id).map(g=>[g.id,g.player_id,g.minute,g.assist_player_id]),
+    cards.filter(c=>String(c.match_id)===id).map(c=>[c.id,c.player_id,c.card_type]),
+    matchPlayers.filter(p=>String(p.match_id)===id).map(p=>[p.player_id,p.is_active])
+  ]);
+}
+
 function startLiveRefresh(matchId){
   clearInterval(liveRefreshInterval);
   clearInterval(window.__medjasiLiveClock);
@@ -7086,6 +6988,7 @@ function startLiveRefresh(matchId){
     if(liveRefreshInFlight)return;
     liveRefreshInFlight=true;
     try{
+      const before=liveSignature(matchId);
       const updated=await refreshLiveMatchSnapshot(matchId);
       if(!updated){
         stopLiveRefreshForMatch(intervalId,clockId);
@@ -7100,7 +7003,7 @@ function startLiveRefresh(matchId){
         return;
       }
 
-      if(isViewingLiveMatchModal(matchId)){
+      if(isViewingLiveMatchModal(matchId)&&liveSignature(matchId)!==before){
         const content=document.getElementById("modalContent");
         const selectedTab=content?.querySelector(".match-tab.active")?.dataset.tab||"overview";
         openMatch(matchId);
@@ -7146,6 +7049,7 @@ async function refreshLiveModalFromRealtime(matchId){
 
   liveRefreshInFlight=true;
   try{
+    const before=liveSignature(id);
     const updated=await refreshLiveMatchSnapshot(id);
     if(!updated){
       stopLiveRefreshForMatch(liveRefreshInterval,window.__medjasiLiveClock);
@@ -7160,10 +7064,12 @@ async function refreshLiveModalFromRealtime(matchId){
       return;
     }
 
-    const content=document.getElementById("modalContent");
-    const selectedTab=content?.querySelector(".match-tab.active")?.dataset.tab||"overview";
-    openMatch(id);
-    if(selectedTab!=="overview")switchMatchTab(selectedTab);
+    if(liveSignature(id)!==before){
+      const content=document.getElementById("modalContent");
+      const selectedTab=content?.querySelector(".match-tab.active")?.dataset.tab||"overview";
+      openMatch(id);
+      if(selectedTab!=="overview")switchMatchTab(selectedTab);
+    }
   }catch(error){
     console.warn("Osvježavanje prikazane utakmice nakon Realtime događaja nije uspjelo:",error);
   }finally{
@@ -11244,6 +11150,7 @@ async function publishNews(sfx=""){
   const file=q("File")?.files?.[0];
 
   if(!title||!body)return toastV("Unesi naslov i sadržaj vijesti.","error");
+  if(published&&!confirm("Vijest će odmah biti javna i poslaće se push obavještenje svim korisnicima. Nastaviti?"))return;
 
   try{
     let media_url=null,media_type=null;
@@ -11266,10 +11173,13 @@ async function publishNews(sfx=""){
       media_type,
       published
     });
-    if(error)throw error;
+    if(error){
+      if(media_url)await removeLeagueMediaObject(media_url,"news").catch(()=>{});
+      throw error;
+    }
 
     let pushSent=true;
-    if(published)pushSent=await notifyPush("news",`📰 ${title}`,lead||"Nova vijest na sajtu.");
+    if(published)pushSent=await notifyPush("news",`📰 ${title}`,lead||"Nova vijest na sajtu.",null);
     ["Title","Lead","Body","Kicker"].forEach(k=>{if(q(k))q(k).value="";});
     if(q("File"))q("File").value="";
     if(sfx==="Q")hideModal();
@@ -11331,9 +11241,15 @@ async function deleteNews(id){
 }
 async function setNewsPublished(id,published){
   if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');
+  const before=V7.news.find(n=>String(n.id)===String(id));
   const {error}=await sbClient().from('news').update({published,updated_at:new Date().toISOString()}).eq('id',id);
   if(error)return toastV(error.message,'error');
   await loadNews();
+  if(published&&before&&before.published!==true){
+    const pushOk=await notifyPush("news",`📰 ${before.title}`,before.lead||"Nova vijest na sajtu.",null);
+    toastV(pushOk?'Vijest je objavljena i push je poslan.':'Vijest je objavljena, ali push nije poslan.',pushOk?'success':'error');
+    return;
+  }
   toastV(published?'Vijest je objavljena.':'Vijest je sklonjena iz javnosti.');
 }
 
@@ -11559,7 +11475,17 @@ async function addGoalWithAssist(matchId){
   else openFinished(matchId);
 }
 
-function decorateCourtRatings(matchId){document.querySelectorAll('.player-on-court').forEach(el=>{const nameEl=el.querySelector('.player-court-name');if(!nameEl)return;const text=nameEl.textContent.trim();const p=players.find(x=>text.includes(String(x.name||'')));if(!p)return;const old=el.querySelector('.v7-player-rating-bubble');if(old)old.remove();const bubble=document.createElement('span');bubble.className='v7-player-rating-bubble';bubble.textContent=matchRating(matchId,p.id).toFixed(1);el.querySelector('.player-circle')?.parentElement?.classList.add('v7-player-circle-wrap');el.appendChild(bubble)})}
+function decorateCourtRatings(matchId){
+  document.querySelectorAll("#modalContent .player-on-court[data-player-id]").forEach(el=>{
+    el.querySelector(".v7-player-rating-bubble")?.remove();
+    const p=players.find(x=>String(x.id)===String(el.dataset.playerId));
+    if(!p)return;
+    const bubble=document.createElement("span");
+    bubble.className="v7-player-rating-bubble";
+    bubble.textContent=matchRating(matchId,p.id).toFixed(1);
+    el.appendChild(bubble);
+  });
+}
 function addSaveButtonToLive(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const regs=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&mp.is_active).map(mp=>playerV(mp.player_id)).filter(p=>p&&p.position&&String(p.position).toLowerCase().includes('golman'));if(!regs.length)return;const host=$('modalContent');if(!host)return;const old=host.querySelector('.v7-live-actions');if(old)old.remove();const el=document.createElement('div');el.className='v7-live-actions';el.innerHTML=regs.map(p=>`<button class="btn btn-blue btn-small" onclick="medjasiV7.addSave('${matchId}','${p.id}')">🧤 Odbrana · ${escV(p.name)}</button>`).join('')+`<button class="btn btn-green btn-small" onclick="medjasiV7.openGoal('${matchId}')">⚽ Gol + asistencija</button><button class="btn btn-yellow btn-small" onclick="openCardControl('${matchId}')">🟨 Karton</button><button class="btn btn-small" onclick="openSubstitutionControl('${matchId}')">🔄 Izmjena</button>`;host.querySelector('.live-scoreboard')?.after(el)}
 
 async function finishMatchWithStats(id){openFinished(id)}
@@ -11582,7 +11508,7 @@ async function notifyPush(type,title,body,matchId=null){
         type,
         title:String(title||"").slice(0,160),
         body:String(body||"").slice(0,1000),
-        match_id:matchId||currentMatchId||null
+        match_id:type==="news"?null:(matchId??currentMatchId??null)
       })
     });
     if(!response.ok){

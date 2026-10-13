@@ -276,7 +276,7 @@
     syncState();
 
     const template = state.template;
-    const isMatchTpl = template === "result" || template === "preview";
+    const isMatchTpl = ["result","preview","live","scorers"].includes(template);
     const isCoachTpl = template === "coach";
 
     if (!sourceFile && !isMatchTpl && !isCoachTpl) {
@@ -362,13 +362,35 @@
       const scoreText = match.status === "scheduled"
         ? "VS"
         : (Number(match.home_score || 0) + " : " + Number(match.away_score || 0));
-      const statusText = match.status === "live" ? "UŽIVO"
+      const liveMinute = (() => {
+        if(match.live_started_at){
+          const s=Date.parse(match.live_started_at);
+          if(Number.isFinite(s))return Math.max(0,Math.floor((Date.now()-s)/60000));
+        }
+        return Number(match.current_minute||0);
+      })();
+      const statusText = match.status === "live" ? "UŽIVO · " + liveMinute + "'"
         : match.status === "finished" ? "ZAVRŠENO" : "NAJAVA";
 
       fitText(ctx, homeName.toUpperCase(), 270, 600, 72, 36, 400);
       fitText(ctx, awayName.toUpperCase(), 810, 600, 72, 36, 400);
       fitText(ctx, scoreText, 540, 800, 200, 90, 300);
       drawText(ctx, statusText, 540, 880, 34, "800", "center");
+      if(template==="scorers"){
+        const goalsOfMatch=(window.goals||[])
+          .filter(g=>String(g.match_id)===String(match.id))
+          .sort((x,y)=>(Number(x.minute)||0)-(Number(y.minute)||0));
+        const rows=goalsOfMatch.map(goal=>{
+          const p=(window.players||[]).find(x=>String(x.id)===String(goal.player_id));
+          return {name:(p?.name||"Igrač")+"  "+(Number(goal.minute)||0)+"'",team:p?.team_id};
+        });
+        const homeRows=rows.filter(row=>String(row.team)===String(match.home_team_id));
+        const awayRows=rows.filter(row=>String(row.team)!==String(match.home_team_id));
+        drawText(ctx,"STRIJELCI",540,230,30,"800","center");
+        if(!rows.length)drawText(ctx,"Bez golova",540,300,34,"600","center");
+        homeRows.slice(0,6).forEach((row,i)=>drawText(ctx,row.name,500,290+i*46,32,"700","right"));
+        awayRows.slice(0,6).forEach((row,i)=>drawText(ctx,row.name,580,290+i*46,32,"700","left"));
+      }
       headline = homeName + " – " + awayName;
       sub = formatMatchDate(match.match_date) || "Međasi Futsal Liga";
     } else if (isCoachTpl) {
@@ -406,7 +428,9 @@
       legend:   {kicker:"LEGENDA LIGE", tag:" LEGENDA"},
       coach:    {kicker:"TRENER EKIPE", tag:"TRENER"},
       result:   {kicker:"REZULTAT UTAKMICE", tag:"FINAL"},
-      preview:  {kicker:"NAJAVA UTAKMICE", tag:"UTAKMICA"}
+      preview:  {kicker:"NAJAVA UTAKMICE", tag:"UTAKMICA"},
+      live:     {kicker:"UTAKMICA UŽIVO", tag:"LIVE"},
+      scorers:  {kicker:"STRIJELCI UTAKMICE", tag:"GOLOVI"}
     };
     const preset = presets[template] || presets.player;
 
@@ -422,7 +446,7 @@
     drawText(ctx, sub, 60, 1230, 30, "600");
     if (position) drawText(ctx, position.toUpperCase(), 1020, 1100, 24, "700", "right");
     if (number) drawText(ctx, number, 1020, 1175, 38, "800", "right");
-    drawText(ctx, preset.tag, 1020, 1295, 22, "700", "right");
+    drawText(ctx, String(preset.tag||"").trim(), 1020, 1295, 22, "700", "right");
     drawText(ctx, "MEĐASI FUTSAL LIGA", 60, 1295, 22, "700");
 
     if (state.grain) {
@@ -480,7 +504,7 @@
         matchday:"Matchday",winner:"Winner",lineup:"Starting Five",
         transfer:"Player Announcement",birthday:"Sretan rođendan",
         spotlight:"U fokusu",fan:"Fan Favorite",captain:"Kapiten",legend:"Legenda lige",
-        coach:"Trener",result:"Rezultat utakmice",preview:"Najava utakmice"
+        coach:"Trener",result:"Rezultat utakmice",preview:"Najava utakmice",live:"Utakmica uživo",scorers:"Strijelci utakmice"
       }[state.template] || "Grafika lige";
 
       const caption=state.caption.trim() || (" "+templateLabel+" · "+name+" · "+(team?.name||"Međasi Futsal Liga"));
@@ -522,6 +546,8 @@
           published:true
         });
         if(error) throw error;
+        const pushOk=await window.medjasiV7?.notifyPush?.("news","📰 "+title,caption.slice(0,200),null);
+        if(!pushOk)console.warn("Grafika je objavljena kao vijest, ali push nije potvrđen.");
         window.loadNews?.();
       }
 
@@ -625,8 +651,10 @@
               <option value="captain">© Kapiten</option>
               <option value="legend"> Legenda lige</option>
               <option value="coach">Trener</option>
-              <option value="result">Rezultat utakmice</option>
-              <option value="preview">Najava utakmice</option>
+              <option value="result">🏁 Rezultat utakmice</option>
+              <option value="preview">📅 Najava utakmice</option>
+              <option value="live">🔴 Utakmica uživo</option>
+              <option value="scorers">⚽ Strijelci utakmice</option>
             </select>
           </div>
 
