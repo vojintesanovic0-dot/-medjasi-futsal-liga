@@ -347,14 +347,23 @@ try{
   await page.waitForFunction(()=>!!document.querySelector("#home.section.active"),null,{timeout:5000});
   await page.setViewportSize({width:390,height:844});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
-  await page.locator("#mobileMenuBtn").waitFor({timeout:10000});
+  await page.locator("#mobileMoreBtn").waitFor({state:"visible",timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
-  const mobileWidth=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth}));
+  const mobileWidth=await page.evaluate(()=>({
+    viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,
+    topMenuVisible:!!document.querySelector("#mobileMenuBtn")&&getComputedStyle(document.querySelector("#mobileMenuBtn")).display!=="none"
+  }));
   assert.ok(mobileWidth.document<=mobileWidth.viewport+2&&mobileWidth.body<=mobileWidth.viewport+2,"Horizontal overflow on mobile: "+JSON.stringify(mobileWidth));
-  await page.locator("#mobileMenuBtn").click();
-  await page.waitForFunction(()=>document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
-  await clickSection("matches");
-  await page.waitForFunction(()=>!document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
+  assert.equal(mobileWidth.topMenuVisible,false,"The duplicate top hamburger must be hidden on phones.");
+  await page.locator("#mobileMoreBtn").click();
+  await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  await page.locator("#mobileMoreBtn").click();
+  await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  await page.locator(".mobile-more-grid button").filter({hasText:"Utakmice"}).first().click();
+  await page.waitForFunction(()=>document.querySelector("#matches.section")?.classList.contains("active"),null,{timeout:7000});
+  await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
   console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, auth validation and isolated signup username handling, login cancel, mobile drawer/width, and live bootstrap or explicit retry state; suppressed extra REST requests after outage:",suppressedLiveRestCount,"; no uncaught JS errors or missing local assets");
