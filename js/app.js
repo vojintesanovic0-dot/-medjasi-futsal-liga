@@ -6210,7 +6210,7 @@ function runMatchEnhancers(matchId){
     const id=String(matchId);
     if(!isViewingMatchModal(id))return;
     try{
-      await loadStats();
+      if(typeof window.loadMatchEnhancerStats==="function") await window.loadMatchEnhancerStats();
     }catch(error){
       console.warn("Statistika utakmice nije učitana:",error);
     }
@@ -11319,6 +11319,7 @@ async function loadStats(){
   V7.stats=data||[];
   return V7.stats;
 }
+window.loadMatchEnhancerStats=loadStats;
 async function addSave(matchId,pid){
   if(!canManageMatch())return;
   const existing=V7.stats.find(x=>String(x.match_id)===String(matchId)&&String(x.player_id)===String(pid));
