@@ -1,0 +1,14 @@
+/* Međasi — mobilni app sloj v3. Safe-area i pristupačne dodirne zone; ne mijenja sadržaj ni podatke. */
+html,body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+@media(max-width:780px){input,select,textarea{font-size:16px}}
+button,a,[role="button"],summary,label{touch-action:manipulation}
+.mobile-bottom,.mobile-bottom button,.mobile-more-drawer,.mobile-more-grid button,.site-header,.topbar-action,.btn{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+@media(max-width:780px){
+ .mobile-bottom{padding-bottom:env(safe-area-inset-bottom,0px)}
+ .mobile-bottom button{min-height:48px}
+ .mobile-more-grid button{min-height:56px}
+ .section.active{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+ .table-wrap,.mobile-more-grid{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+ .mobile-more-close{font-size:0!important;line-height:0!important;color:transparent!important}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
