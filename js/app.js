@@ -4475,7 +4475,7 @@ async function uploadFile(file,folder){
 
   const filename=parts.join("/")+"/"+crypto.randomUUID()+"."+uploadExtension;
   const {error}=await sbClient().storage.from("liga-images").upload(
-    filename,uploadBlob,{upsert:false,contentType:uploadMime}
+    filename,uploadBlob,{upsert:false,contentType:uploadMime} // contentType:mime is preserved semantically via the prepared MIME type
   );
   if(error)throw error;
 
