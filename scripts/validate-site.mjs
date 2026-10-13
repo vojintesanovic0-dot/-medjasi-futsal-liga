@@ -796,9 +796,20 @@ const htmlRefs = [...html.matchAll(/(?:src|href)=["'](\.\/[^"']+)["']/gi)]
 const stylesheetTags = [...html.matchAll(/<link\b[^>]+href=["'][^"']+\.css(?:\?[^"']*)?["'][^>]*>/gi)];
 const finalLayoutIndex = stylesheetTags.findIndex((m) => m[0].includes("medjasi-dashboard-refinements-v2.css"));
 const finalHeaderIndex = stylesheetTags.findIndex((m) => m[0].includes("medjasi-header-fix-v1.css"));
+const finalOverrideIndex = stylesheetTags.findIndex((m) => m[0].includes("css/header.css"));
 const lastStylesheetIndex = stylesheetTags.length - 1;
 if (finalLayoutIndex < 0) {
   fail("The dashboard/sidebar layout stylesheet must be present");
+} else if (finalOverrideIndex >= 0) {
+  if (
+    finalOverrideIndex !== lastStylesheetIndex ||
+    finalLayoutIndex >= finalOverrideIndex ||
+    (finalHeaderIndex >= 0 && finalHeaderIndex >= finalOverrideIndex)
+  ) {
+    fail("The final header override must load last, after dashboard/sidebar refinements and legacy header fixes");
+  } else {
+    pass("Final header override loads after dashboard/sidebar refinements and legacy header fixes");
+  }
 } else if (finalHeaderIndex >= 0) {
   if (finalHeaderIndex !== lastStylesheetIndex || finalLayoutIndex >= finalHeaderIndex) {
     fail("The header fix must load last, after dashboard/sidebar layout refinements");
