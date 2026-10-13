@@ -4900,6 +4900,11 @@ function renderAdminMatches(){
                 </select>
 
 
+                <select class="btn btn-small" aria-label="Format utakmice" onchange="changeMatchFormat(\'${m.id}\',this.value)">
+                  <option value="60min" ${m.match_format==="2x20"?"":"selected"}>60 minuta</option>
+                  <option value="2x20" ${m.match_format==="2x20"?"selected":""}>2 × 20 minuta</option>
+                </select>
+
                 <input
                   type="number"
                   min="0"
@@ -5074,6 +5079,35 @@ async function changeMatchStatus(id,status){
     const pushOk=await notifyLeaguePush("match_finished",title,"Utakmica je završena.",id);
     if(!pushOk)toast("Utakmica je završena, ali push nije potvrđen.","error");
   }
+}
+
+async function changeMatchFormat(id,format){
+  if(!canManageMatch())return;
+  if(!["60min","2x20"].includes(format))return alert("Format utakmice nije ispravan.");
+  const {data,error}=await sbClient().from("matches").update({match_format:format}).eq("id",id).select("id,match_format").maybeSingle();
+  if(error)return alert("Format nije sačuvan: "+error.message);
+  const local=matches.find(x=>String(x.id)===String(id));
+  if(local)local.match_format=data?.match_format||format;
+  if(isViewingLiveMatchModal(id))openMatch(id);
+  if(typeof renderMatches==="function")renderMatches();
+}
+async function togglePause(id){
+  if(!canManageMatch())return;
+  const match=getMatch(id);
+  if(!match||match.status!=="live")return;
+  let patch;
+  if(match.paused_at){
+    const pausedAt=Date.parse(match.paused_at);
+    const extra=Number.isFinite(pausedAt)?Math.max(0,Math.floor((Date.now()-pausedAt)/1000)):0;
+    patch={paused_at:null,paused_seconds:Math.max(0,Number(match.paused_seconds||0))+extra};
+  }else patch={paused_at:new Date().toISOString()};
+  const {data,error}=await sbClient().from("matches").update(patch).eq("id",id).select("id,paused_at,paused_seconds,match_format,live_started_at,current_minute").maybeSingle();
+  if(error)return alert("Promjena pauze nije sačuvana: "+error.message);
+  if(!data)return alert("Baza nije potvrdila promjenu pauze.");
+  const local=matches.find(x=>String(x.id)===String(id));
+  if(local)Object.assign(local,data);
+  if(isViewingLiveMatchModal(id))openMatch(id);
+  if(typeof renderMatches==="function")renderMatches();
 }
 
 async function changeMinute(id,minute){
