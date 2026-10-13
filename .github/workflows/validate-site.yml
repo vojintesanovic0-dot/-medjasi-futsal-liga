@@ -30,6 +30,8 @@ jobs:
         run: deno check --no-lock supabase/functions/fan-admin-action/index.ts supabase/functions/send-push/index.ts
       - name: Validate HTML assets, navigation, CSS, cache versions and JavaScript syntax
         run: node scripts/validate-site.mjs
+      - name: Validate browser smoke-test syntax
+        run: node --check scripts/smoke-test.mjs
       - name: Install browser smoke-test dependency
         run: npm install --no-save playwright
       - name: Install Chromium
