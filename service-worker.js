@@ -1,4 +1,4 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v190";
+const CACHE_NAME = "medjasi-futsal-pwa-v191";
 const CDN_CACHE = "medjasi-cdn-v1";
 
 const APP_SHELL = [
@@ -49,7 +49,8 @@ const APP_SHELL = [
   "./js/medjasi-v13-ui.js?v=20261007v01",
   "./images/icon-192.png",
   "./js/app-shell-v3.js?v=1",
-  "./images/icon-512.png"
+  "./images/icon-512.png",
+  "./images/medjasi-maskable.svg"
 ];
 
 // Instalacija
