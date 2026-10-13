@@ -530,22 +530,19 @@ try{
     },null,{timeout:5000});
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     const shortcutHandle=await shortcut.elementHandle();
-    // Scroll the drawer's actual scroll container to the shortcut before clicking.
-    // The panel has a fixed heading; the grid itself is the independently scrollable region.
-    await shortcut.evaluate(el=>{
-      const grid=el.closest(".mobile-more-grid");
-      if(!grid)return;
-      const gridRect=grid.getBoundingClientRect(),rect=el.getBoundingClientRect();
-      grid.scrollTo({top:grid.scrollTop+rect.top-gridRect.top-(grid.clientHeight-rect.height)/2,behavior:"instant"});
-    });
+    // Let Playwright scroll the independently scrollable drawer grid, then
+    // verify the drawer is still open and the shortcut is inside the actual viewport.
+    await shortcut.scrollIntoViewIfNeeded();
     await page.waitForFunction(el=>{
-      if(!el)return false;
+      if(!el||!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"))return false;
       const rect=el.getBoundingClientRect();
       const grid=el.closest(".mobile-more-grid");
       const gridRect=grid?.getBoundingClientRect();
+      const style=getComputedStyle(el);
       return rect.width>0&&rect.height>0&&gridRect&&
         rect.top>=Math.max(0,gridRect.top)-1&&rect.bottom<=Math.min(innerHeight,gridRect.bottom)+1&&
-        getComputedStyle(el).visibility!=="hidden";
+        rect.top>=-1&&rect.bottom<=innerHeight+1&&
+        style.display!=="none"&&style.visibility!=="hidden"&&Number(style.opacity)!==0;
     },shortcutHandle,{timeout:5000});
     const hitTarget=await shortcut.evaluate(el=>{
       const rect=el.getBoundingClientRect();
