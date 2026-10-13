@@ -606,11 +606,19 @@ try{
   assert.equal(await page.locator("#graphicPublishBtn").isDisabled(),true,"Background removal must invalidate the old generated graphic before publishing.");
   assert.equal(await page.locator("#graphicExportPngBtn").isDisabled(),true,"Background removal must disable stale PNG export.");
   assert.equal(await page.locator("#graphicExportJpegBtn").isDisabled(),true,"Background removal must disable stale JPG export.");
-  await page.locator("#graphicGenerateBtn").evaluate(el=>el.click());
-  await page.waitForFunction(()=>{
-    const preview=document.getElementById("graphicResultPreview");
-    return !!preview&&!preview.hidden&&preview.complete&&preview.naturalWidth===1080&&preview.naturalHeight===1350;
-  },null,{timeout:15000});
+  for(const [template,fields] of [
+    ["matchresult",{graphicMatchHome:"MEĐASI",graphicMatchOpponent:"FK TEST",graphicMatchScore:"4 : 2",graphicMatchDate:"13.10.2026",graphicMatchVenue:"Dvorana"}],
+    ["upcoming",{graphicMatchHome:"MEĐASI",graphicMatchOpponent:"FK TEST",graphicMatchScore:"",graphicMatchDate:"20.10.2026",graphicMatchVenue:"Dvorana"}]
+  ]){
+    await page.locator("#graphicTemplate").evaluate((el,value)=>{el.value=value;el.dispatchEvent(new Event("change",{bubbles:true}));},template);
+    for(const [id,value] of Object.entries(fields)) await page.locator("#"+id).evaluate((el,next)=>{el.value=next;el.dispatchEvent(new Event("input",{bubbles:true}));},value);
+    await page.locator("#graphicGenerateBtn").evaluate(el=>el.click());
+    await page.waitForFunction(()=>{
+      const preview=document.getElementById("graphicResultPreview");
+      return !!preview&&!preview.hidden&&preview.complete&&preview.naturalWidth===1080&&preview.naturalHeight===1350;
+    },null,{timeout:15000});
+  }
+  console.log("PASS Graphic Engine match templates: match result and upcoming match both generate 1080x1350 graphics with supplied match details.");
   // Verify each publishing destination with isolated Supabase mocks (no real writes).
   await page.evaluate(()=>{
     const save={supabaseClientDescriptor:Object.getOwnPropertyDescriptor(window,"supabaseClient"),sbClient:window.sbClient,currentUser:window.currentUser,currentProfile:window.currentProfile,toast:window.toast,loadV9Community:window.loadV9Community,loadAll:window.loadAll,loadNews:window.loadNews,showSection:window.showSection};
@@ -648,6 +656,12 @@ try{
     }
     delete window.__graphicPublishTest;
   });
+  await page.locator("#graphicFile").setInputFiles({name:"graphic-smoke-replacement.png",mimeType:"image/png",buffer:fixturePng});
+  assert.equal(await page.locator("#graphicResultPreview").isHidden(),true,"Replacing the source image must hide the previous generated result.");
+  assert.equal(await page.locator("#graphicPublishBtn").isDisabled(),true,"Replacing the source image must disable publishing of stale output.");
+  assert.equal(await page.locator("#graphicExportPngBtn").isDisabled(),true,"Replacing the source image must disable stale PNG export.");
+  assert.equal(await page.locator("#graphicExportJpegBtn").isDisabled(),true,"Replacing the source image must disable stale JPG export.");
+  console.log("PASS Graphic Engine source replacement: stale result is hidden and publish/exports are disabled until regeneration.");
   console.log("PASS Graphic Engine publishing: Community, Chat and News create mocked upload/database records without touching production data.");
   console.log("PASS Graphic Engine: generated 1080x1350 canvas, valid PNG/JPG downloads, and background-removal invalidates stale output until regenerated");
   await page.evaluate(()=>{
