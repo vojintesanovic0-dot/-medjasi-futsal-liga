@@ -18,6 +18,10 @@ const game = read("js/game.js");
 const dashboard = read("js/dashboard-layout-v1.js");
 const growth = read("js/growth.js");
 const css = read("css/medjasi-dashboard-refinements-v2.css");
+const sitewideCss = read("css/medjasi-sitewide-v3.css");
+const iconsV1Css = read("css/medjasi-icons-v1.css");
+const iconsV2Css = read("css/medjasi-icons-v2.css");
+const mobileAppCss = read("css/medjasi-app-mobile-v3.css");
 
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((m) => m[1]);
 const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
@@ -836,6 +840,20 @@ for (const path of cssPaths) {
   }
 }
 if (!failures.some((x) => x.startsWith("Unbalanced CSS") || x.startsWith("Missing CSS import"))) pass(`CSS structure/import checks passed for ${cssPaths.length} stylesheets`);
+
+if (
+  sitewideCss.includes('#table .section-title::after{content:"Tabela"') ||
+  /#table \.section-title,[\s\S]{0,240}font-size:0!important/.test(sitewideCss) ||
+  iconsV1Css.includes(".v10-main-cta::after{content:") ||
+  iconsV1Css.includes(".v10-ghost-cta::after{content:") ||
+  iconsV1Css.includes(".v10-main-cta{font-size:0!important}") ||
+  iconsV1Css.includes(".v10-ghost-cta{font-size:0!important}") ||
+  iconsV2Css.includes(".dashboard-hero-actions .btn-green::after") ||
+  !mobileAppCss.includes(".site-header .mobile-menu-btn{display:none!important}") ||
+  !mobileAppCss.includes(".site-header .dashboard-glow-toggle{display:none!important}")
+) {
+  fail("Mobile headings and home CTA labels must use real HTML text, avoid duplicate generated labels, and keep unwanted top controls hidden");
+} else pass("Mobile headings/CTA labels remain real text; duplicate generated labels and unwanted header controls stay removed");
 
 const frontendFiles = ["index.html", ...jsRefs];
 for (const path of frontendFiles) {
