@@ -753,3 +753,23 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     pointer-events: auto !important;
   }
 }
+
+
+/* The open drawer is a focused navigation layer: prevent background content from
+   becoming a click target or bleeding through if legacy stacking contexts overlap. */
+@media (max-width: 1024px) {
+  body.mobile-more-open > main,
+  body.mobile-more-open > footer {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer {
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-panel,
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-panel * {
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+}
