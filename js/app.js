@@ -11443,6 +11443,54 @@ function decorateCourtRatings(matchId){
     el.appendChild(bubble);
   });
 }
+function addSaveButtonToLive(matchId){const m=matches.find(x=>String(x.id)===String(matchId));if(!m)return;const regs=matchPlayers.filter(mp=>String(mp.match_id)===String(matchId)&&mp.is_active).map(mp=>playerV(mp.player_id)).filter(p=>p&&p.position&&String(p.position).toLowerCase().includes('golman'));if(!regs.length)return;const host=$('modalContent');if(!host)return;const old=host.querySelector('.v7-live-actions');if(old)old.remove();const el=document.createElement('div');el.className='v7-live-actions';el.innerHTML=regs.map(p=>`<button class="btn btn-blue btn-small" onclick="medjasiV7.addSave('${matchId}','${p.id}')">🧤 Odbrana · ${escV(p.name)}</button>`).join('')+`<button class="btn btn-green btn-small" onclick="medjasiV7.openGoal('${matchId}')">⚽ Gol + asistencija</button><button class="btn btn-yellow btn-small" onclick="openCardControl('${matchId}')">🟨 Karton</button><button class="btn btn-small" onclick="openSubstitutionControl('${matchId}')">🔄 Izmjena</button>`;host.querySelector('.live-scoreboard')?.after(el)}
+
+async function finishMatchWithStats(id){openFinished(id)}
+function openSeasonStats(){const by={};(V7.stats||[]).forEach(s=>{const p=playerV(s.player_id);if(!p)return;(by[p.id]??={p,g:0,a:0,o:0,r:0,n:0}).g+=+s.goals||0;by[p.id].a+=+s.assists||0;by[p.id].o+=+s.saves||0;by[p.id].r+=+s.rating||0;by[p.id].n++});const rows=Object.values(by).sort((a,b)=>(b.g-b.a*0.1)-(a.g-a.a*0.1));showModal(`<div class="modal-title"><h2>📊 Statistika sezone</h2></div><div class="table-wrap"><table class="v7-stat-table"><thead><tr><th>Igrač</th><th>Golovi</th><th>Asist.</th><th>Odbrane</th><th>Prosj. ocjena</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${escV(x.p.name)}</td><td>${x.g}</td><td>${x.a}</td><td>${x.o}</td><td>${(x.r/Math.max(1,x.n)).toFixed(1)}</td></tr>`).join('')}</tbody></table></div>`)}
+
+async function notifyPush(type,title,body,matchId=null){
+  try{
+    if(!currentUser||!supabaseClient?.auth?.getSession||!V7.pushEndpoint)return false;
+    const sessionResult=await sbClient().auth.getSession();
+    const token=sessionResult?.data?.session?.access_token;
+    if(sessionResult?.error||!token)return false;
+
+    const response=await fetch(V7.pushEndpoint,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":`Bearer ${token}`
+      },
+      body:JSON.stringify({
+        type,
+        title:String(title||"").slice(0,160),
+        body:String(body||"").slice(0,1000),
+        match_id:matchId||currentMatchId||null
+      })
+    });
+    if(!response.ok){
+      console.warn("Push notify: servis je vratio HTTP",response.status);
+      return false;
+    }
+    const delivery=await response.json().catch(()=>null);
+    if(!delivery?.ok){
+      console.warn("Push notify: servis nije potvrdio slanje.");
+      return false;
+    }
+    const sent=Number(delivery.sent)||0;
+    if(sent<1){
+      console.warn("Push notify: nema aktivnih pretplata kojima je obavještenje poslano.");
+      return false;
+    }
+    if(Number(delivery.failed)>0){
+      console.warn("Push notify: djelimično slanje.",{sent,failed:Number(delivery.failed)||0});
+    }
+    return true;
+  }catch(error){
+    console.warn("Push notify:",error);
+    return false;
+  }
+}
 function b64ToBytes(s){const pad='='.repeat((4-s.length%4)%4),raw=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
 async function subscribeRealPush(){
   if(!currentUser)return toastV("Prvo se prijavi.","error"),false;
