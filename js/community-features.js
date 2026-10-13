@@ -7,7 +7,7 @@ const escX=v=>typeof window.esc==="function"?window.esc(v??""):String(v??"").rep
 const uid=()=>window.currentUser?.id||null;
 const admin=()=>typeof window.isAdmin==="function"&&window.isAdmin();
 const toastX=(m,t)=>typeof window.toast==="function"?window.toast(m,t):alert(m);
-const client=()=>window.supabaseClient;
+const client=()=>window.sbClient();
 
 async function reportTarget(kind,id){
   if(!uid())return toastX("Prijavi se da prijaviš sadržaj.","error"),false;
@@ -314,7 +314,7 @@ const q=id=>document.getElementById(id);
 const uid=()=>window.currentUser?.id||null;
 const admin=()=>typeof window.isAdmin==="function"&&window.isAdmin();
 const toastX=(message,type)=>typeof window.toast==="function"?window.toast(message,type):alert(message);
-const client=()=>window.supabaseClient;
+const client=()=>window.sbClient();
 const escX=value=>typeof window.esc==="function"?window.esc(value??""):String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char]));
 // These helpers lived inside the first IIFE in the old file; define the
 // dependencies locally so the gallery and comment moderation layer can run.
