@@ -23,7 +23,7 @@ jobs:
         with:
           deno-version: "v2.x"
       - name: Type-check Supabase Edge Functions
-        run: deno check --no-lock supabase/functions/fan-admin-action/index.ts supabase/functions/send-push/index.ts
+        run: deno check --no-lock supabase/functions/fan-admin-action/index.ts supabase/functions/send-push/index.ts supabase/functions/delete-account/index.ts
       - name: Validate HTML assets, navigation, CSS, cache versions and JavaScript syntax
         run: node scripts/validate-site.mjs
       - name: Install browser smoke-test dependency
