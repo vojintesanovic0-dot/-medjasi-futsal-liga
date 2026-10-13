@@ -654,6 +654,24 @@ if (
   fail("Match extras buttons must resolve to calendar export or result sharing");
 } else pass("Match extras buttons resolve to calendar export or result sharing");
 
+const growthSource = read("js/growth.js");
+if (
+  !growthSource.includes("if(!Number.isFinite(s.getTime()))return;") ||
+  !growthSource.includes("URL.revokeObjectURL(url)") ||
+  !growthSource.includes("replace(/[\\\\r\\\\n\\\\\\\\,;]/g")
+) {
+  fail("Calendar export must skip invalid dates, sanitize ICS text, and release its temporary object URL");
+} else pass("Calendar export skips invalid dates, sanitizes ICS text, and releases its temporary object URL");
+
+if (
+  !app.includes("__medjasiOverlayDismissBound") ||
+  !app.includes('if(event.key!=="Escape")return;') ||
+  !app.includes('if(modal?.classList.contains("active"))') ||
+  !app.includes('if(nav.contains(event.target)||button?.contains(event.target))return;')
+) {
+  fail("Escape and outside clicks must dismiss active overlays without swallowing inside clicks");
+} else pass("Escape and outside clicks dismiss overlays without swallowing inside clicks");
+
 if (
   !extrasClickAuditSource.includes('e.target.closest("[data-xt-tab]")') ||
   !extrasClickAuditSource.includes("st.tab=b.dataset.xtTab") ||
