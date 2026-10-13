@@ -4415,7 +4415,7 @@ async function uploadFile(file,folder){
   if(!file)return null;
   if(!supabaseClient?.storage)throw new Error("Skladište datoteka trenutno nije dostupno.");
 
-  const mime=String(file.type||"").toLowerCase();
+  const originalMime=String(file.type||"").toLowerCase();
   const extensions={
     "image/jpeg":"jpg",
     "image/png":"png",
@@ -4426,25 +4426,36 @@ async function uploadFile(file,folder){
     "video/webm":"webm",
     "video/ogg":"ogv"
   };
-  const extension=extensions[mime];
-  if(!extension)throw new Error("Format datoteke nije podržan. Koristi JPG, PNG, WebP, GIF, AVIF ili podržani video format.");
+  if(!extensions[originalMime])throw new Error("Format datoteke nije podržan. Koristi JPG, PNG, WebP, GIF, AVIF ili podržani video format.");
 
   const parts=String(folder||"").replace(/\\/g,"/").split("/");
   if(!parts.length||parts.some(part=>!part||!/^[a-z0-9_-]+$/i.test(part))){
     throw new Error("Odredište datoteke nije ispravno.");
   }
 
-  const isVideo=mime.startsWith("video/");
   const root=parts[0].toLowerCase();
+  const isVideo=originalMime.startsWith("video/");
   if(isVideo&&!["gallery","news"].includes(root)){
     throw new Error("Video se može dodati samo u galeriju ili vijesti.");
   }
 
-  const maxBytes=isVideo?50*1024*1024:15*1024*1024;
-  if(!Number.isFinite(file.size)||file.size<=0||file.size>maxBytes){
-    throw new Error(isVideo?"Video mora imati najviše 50 MB.":"Slika mora imati najviše 15 MB.");
+  // Slike: priprema (smanjenje, WebP, uklanjanje EXIF-a). Videi se šalju kako jesu.
+  let uploadBlob=file;
+  let mime=originalMime;
+  let extension=extensions[originalMime];
+  if(!isVideo){
+    if(!window.MedjasiImage)throw new Error("Obrada slika nije učitana. Osvježi stranicu.");
+    const prepared=await window.MedjasiImage.prepareImage(file,root);
+    uploadBlob=prepared.blob;
+    mime=prepared.mime;
+    extension=prepared.ext;
   }
-  if(!await hasExpectedMediaSignature(file,mime)){
+
+  const maxBytes=isVideo?50*1024*1024:(mime==="image/gif"?15*1024*1024:2*1024*1024);
+  if(!Number.isFinite(uploadBlob.size)||uploadBlob.size<=0||uploadBlob.size>maxBytes){
+    throw new Error(isVideo?"Video mora imati najviše 50 MB.":"Slika je prevelika ni nakon pripreme. Probaj manju sliku.");
+  }
+  if(!await hasExpectedMediaSignature(uploadBlob,mime)){
     throw new Error("Sadržaj datoteke ne odgovara prijavljenom formatu. Izaberi stvarnu sliku ili podržani video.");
   }
 
@@ -4454,7 +4465,7 @@ async function uploadFile(file,folder){
 
   const filename=parts.join("/")+"/"+crypto.randomUUID()+"."+extension;
   const {error}=await sbClient().storage.from("liga-images").upload(
-    filename,file,{upsert:false,contentType:mime}
+    filename,uploadBlob,{upsert:false,contentType:mime}
   );
   if(error)throw error;
 
