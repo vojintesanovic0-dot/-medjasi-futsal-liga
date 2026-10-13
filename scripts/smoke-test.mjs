@@ -429,8 +429,8 @@ try{
       const drawer=document.querySelector("#mobileMoreDrawer");
       const panel=drawer?.querySelector(".mobile-more-panel");
       return !!drawer?.classList.contains("open") && !!panel &&
-        getComputedStyle(panel).visibility!=="hidden" &&
-        getComputedStyle(panel).transform==="matrix(1, 0, 0, 1, 0, 0)";
+        getComputedStyle(panel).display!=="none" &&
+        getComputedStyle(panel).visibility!=="hidden";
     },null,{timeout:5000});
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     await shortcut.scrollIntoViewIfNeeded();
