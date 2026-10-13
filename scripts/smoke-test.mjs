@@ -406,6 +406,21 @@ try{
   assert.equal(compactDrawer.columns,1,"The More drawer must use one column on 320px phones.");
   await page.keyboard.press("Escape");
   await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  // Recheck typical phone widths for page-level overflow from decorative background layers.
+  for(const width of [360,390,430]){
+    await page.setViewportSize({width,height:844});
+    const responsiveProbe=await page.evaluate(()=>({
+      viewport:innerWidth,
+      document:document.documentElement.scrollWidth,
+      body:document.body.scrollWidth,
+      hamburgerDisplay:getComputedStyle(document.querySelector("#mobileMenuBtn")).display,
+      moreVisible:!!document.querySelector("#mobileMoreBtn")&&getComputedStyle(document.querySelector("#mobileMoreBtn")).display!=="none"
+    }));
+    assert.ok(responsiveProbe.document<=width+2&&responsiveProbe.body<=width+2,"Horizontal overflow at "+width+"px: "+JSON.stringify(responsiveProbe));
+    assert.equal(responsiveProbe.hamburgerDisplay,"none","Duplicate top hamburger must remain hidden at "+width+"px.");
+    assert.equal(responsiveProbe.moreVisible,true,"The More navigation must remain visible at "+width+"px.");
+    console.log("PASS "+width+"px mobile layout: no page overflow, hamburger hidden, More navigation visible");
+  }
   await page.setViewportSize({width:390,height:844});
   await page.locator("#mobileMoreBtn").click();
   await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
