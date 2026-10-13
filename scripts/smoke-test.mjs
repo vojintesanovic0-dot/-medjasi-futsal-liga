@@ -450,7 +450,7 @@ try{
       const grid=el.closest(".mobile-more-grid");
       if(!grid)return;
       const gridRect=grid.getBoundingClientRect(),rect=el.getBoundingClientRect();
-      grid.scrollTop+=rect.top-gridRect.top-(grid.clientHeight-rect.height)/2;
+      grid.scrollTo({top:grid.scrollTop+rect.top-gridRect.top-(grid.clientHeight-rect.height)/2,behavior:"instant"});
     });
     await page.waitForFunction(el=>{
       if(!el)return false;
