@@ -548,8 +548,15 @@
     if(preset.title!==undefined&&$("graphicNewsTitle"))$("graphicNewsTitle").value=preset.title;
     if(preset.body!==undefined&&$("graphicNewsBody"))$("graphicNewsBody").value=preset.body;
     markDesignDirty();
+    updateMatchFieldsVisibility();
     if($("graphicNewsFields"))$("graphicNewsFields").hidden=state.destination!=="news";
     toast("Postavke „"+key+"“ su učitane. Ponovo generiši grafiku da primijeniš promjene.");
+  }
+
+  function updateMatchFieldsVisibility(){
+    const template=$("graphicTemplate")?.value||"player";
+    const fields=$("graphicMatchFields");
+    if(fields) fields.hidden=template!=="matchresult" && template!=="upcoming";
   }
 
   function markDesignDirty(){
@@ -693,7 +700,7 @@
             </select>
           </div>
 
-          <div class="graphic-engine-match-fields">
+          <div id="graphicMatchFields" class="graphic-engine-match-fields" hidden>
             <div class="form-group"><label for="graphicMatchHome">Domaća ekipa</label><input id="graphicMatchHome" maxlength="30" value="MEĐASI" placeholder="MEĐASI"></div>
             <div class="form-group"><label for="graphicMatchOpponent">Protivnik</label><input id="graphicMatchOpponent" maxlength="30" placeholder="Naziv protivnika"></div>
             <div class="form-group"><label for="graphicMatchScore">Rezultat</label><input id="graphicMatchScore" maxlength="12" placeholder="4 : 2"></div>
@@ -784,7 +791,7 @@
     $("graphicSubtitle")?.addEventListener("input",markDesignDirty);
     ["graphicMatchHome","graphicMatchOpponent","graphicMatchScore","graphicMatchDate","graphicMatchVenue"].forEach(id=>$(id)?.addEventListener("input",markDesignDirty));
     $("graphicAccentColor")?.addEventListener("input",markDesignDirty);
-    $("graphicTemplate")?.addEventListener("change",markDesignDirty);
+    $("graphicTemplate")?.addEventListener("change",()=>{markDesignDirty();updateMatchFieldsVisibility();});
     ["graphicPhotoZoom","graphicPhotoFocusY","graphicPhotoShade","graphicFontFamily"].forEach(id=>$(id)?.addEventListener("input",()=>{
       if($("graphicPhotoZoomValue"))$("graphicPhotoZoomValue").textContent=Number($("graphicPhotoZoom")?.value||1).toFixed(2)+"×";
       if($("graphicPhotoFocusValue"))$("graphicPhotoFocusValue").textContent=$("graphicPhotoFocusY")?.value||"0";
@@ -799,6 +806,7 @@
     $("graphicNewsTitle")?.addEventListener("input",syncState);
     $("graphicNewsBody")?.addEventListener("input",syncState);
     $("graphicNewsFields").hidden=true;
+    updateMatchFieldsVisibility();
   }
 
   function init(){
