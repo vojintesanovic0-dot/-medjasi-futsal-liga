@@ -67,6 +67,21 @@ if (
 ) {
   fail("Logout failures must reset the auth interaction flag and report network errors");
 } else pass("Logout resets auth interaction state on success and failure");
+const myProfileCardStart = app.indexOf("async function renderMyProfile()");
+const myProfileCardEnd = app.indexOf("window.openV9Story=function", myProfileCardStart);
+const myProfileCard = myProfileCardStart >= 0 && myProfileCardEnd > myProfileCardStart ? app.slice(myProfileCardStart, myProfileCardEnd) : "";
+const ownProfileStart = app.indexOf("window.openV9Profile=async function(id)");
+const ownProfileEnd = app.indexOf("window.openV9EditProfile=function", ownProfileStart);
+const ownProfile = ownProfileStart >= 0 && ownProfileEnd > ownProfileStart ? app.slice(ownProfileStart, ownProfileEnd) : "";
+if (
+  !myProfileCard.includes('onclick="window.logout()" aria-label="Odjavi se sa naloga"') ||
+  !ownProfile.includes('onclick="window.logout()" aria-label="Odjavi se sa naloga"') ||
+  !html.includes("./js/app.js?v=20261013v60") ||
+  !sw.includes("./js/app.js?v=20261013v60")
+) {
+  fail("Logout action must be available in both profile views and the updated app script must be cache-busted");
+} else pass("Profile card and own-profile modal both expose logout with refreshed app cache");
+
 
 const leagueStatusStart = app.indexOf("function updateLeagueDataStatus(hasErrors)");
 const leagueStatusEnd = app.indexOf("async function retryLeagueDataLoad()", leagueStatusStart);
