@@ -1,0 +1,84 @@
+/* Međasi — desktop ispravke (v1)
+   Sva pravila su unutar @media (min-width:781px), pa mobilni prikaz ostaje isti.
+   Učitava se prije medjasi-header-fix-v1.css (header-fix ostaje posljednji stilski fajl). */
+
+@media (min-width:781px){
+
+  /* 1) Dugme "Otkaži" pretrage je samo za mobilni prikaz. */
+  .mfl-search-cancel{
+    display:none!important;
+  }
+
+  /* 2) Naslov "Pogodi" dobija ikonicu lopte. */
+  #game .section-title::before{
+    background-image:var(--mfl-icon-ball)!important;
+    background-size:contain!important;
+    background-repeat:no-repeat!important;
+    background-position:center!important;
+  }
+
+  /* 3) Tabovi na Pogodi se prelamaju u više redova. */
+  #game .fg-tabs{
+    flex-wrap:wrap!important;
+    overflow:visible!important;
+  }
+
+  /* 4) Statistika profila na desktopu. */
+  .v9-profile-stats{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:10px!important;
+    margin:12px 0!important;
+  }
+  .v9-profile-stat{
+    text-align:center!important;
+    padding:10px!important;
+    border-radius:14px!important;
+    background:rgba(255,255,255,.05)!important;
+    border:1px solid rgba(255,255,255,.08)!important;
+  }
+  .v9-profile-stat b{
+    display:block!important;
+    font-size:20px!important;
+    line-height:1.1!important;
+    color:#f4fff8!important;
+  }
+  .v9-profile-stat span{
+    display:block!important;
+    margin-top:3px!important;
+    font-size:12px!important;
+    color:#8fa4b5!important;
+  }
+
+  /* 5) Avatar na Community kartici: kružni i normalne veličine. */
+  #community .v9-profile-avatar{
+    width:96px!important;
+    height:96px!important;
+    border-radius:50%!important;
+    object-fit:cover!important;
+    display:block!important;
+    margin:0 auto 10px!important;
+  }
+  #community .v9-profile-top{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    text-align:center!important;
+    gap:6px!important;
+    padding:18px 16px!important;
+  }
+
+  /* 6) Široka desktop početna prikazuje kolonu Aktuelnosti. */
+  main:has(> #home.active) .dashboard-right-rail{
+    display:block!important;
+  }
+}
+
+@media (min-width:781px) and (max-width:1199px){
+  main:has(> #home.active) .dashboard-right-rail{
+    display:none!important;
+  }
+  main:has(> #home.active){
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+}
