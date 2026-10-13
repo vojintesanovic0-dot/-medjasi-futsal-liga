@@ -310,7 +310,7 @@ window.dashboardOpenGameTab=function(tab){
         button.innerHTML=icons[className]||'<span aria-hidden="true">'+icon+'</span>';
         actions.insertBefore(button,mobile||null);
       };
-      addAction("dashboard-glow-toggle","Smanji svjetlosne efekte","Smanji svjetlosne efekte","☾","toggleDashboardGlow()");
+      // Kontrola svjetlosnih efekata je uklonjena iz zaglavlja na zahtjev korisnika.
     }
 
     home.className="section active dashboard-home";
