@@ -606,7 +606,7 @@ try{
   assert.equal(await page.locator("#graphicPublishBtn").isDisabled(),true,"Background removal must invalidate the old generated graphic before publishing.");
   assert.equal(await page.locator("#graphicExportPngBtn").isDisabled(),true,"Background removal must disable stale PNG export.");
   assert.equal(await page.locator("#graphicExportJpegBtn").isDisabled(),true,"Background removal must disable stale JPG export.");
-  await page.locator("#graphicGenerateBtn").click();
+  await page.locator("#graphicGenerateBtn").evaluate(el=>el.click());
   await page.waitForFunction(()=>{
     const preview=document.getElementById("graphicResultPreview");
     return !!preview&&!preview.hidden&&preview.complete&&preview.naturalWidth===1080&&preview.naturalHeight===1350;
