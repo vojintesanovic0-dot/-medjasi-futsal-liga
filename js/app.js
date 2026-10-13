@@ -5136,19 +5136,13 @@ async function changeMinute(id,minute){
     const {data,error}=await sbClient().from("matches")
       .update(patch)
       .eq("id",id)
-      .select("id,current_minute,live_started_at,paused_at,paused_seconds,match_format")
+      .select("id,current_minute,live_started_at")
       .maybeSingle();
     if(error)throw error;
     if(!data)throw new Error("Baza nije potvrdila promjenu minute.");
 
     const local=matches.find(x=>String(x.id)===String(id));
-    if(local){
-      local.current_minute=data.current_minute;
-      if("live_started_at" in data)local.live_started_at=data.live_started_at;
-      if("paused_at" in data)local.paused_at=data.paused_at;
-      if("paused_seconds" in data)local.paused_seconds=data.paused_seconds;
-      if("match_format" in data)local.match_format=data.match_format;
-    }
+    if(local){local.current_minute=data.current_minute;if("live_started_at" in data)local.live_started_at=data.live_started_at;}
 
     try{
       const refreshed=await loadAll();
