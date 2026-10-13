@@ -1,4 +1,4 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v202";
+const CACHE_NAME = "medjasi-futsal-pwa-v203";
 const CDN_CACHE = "medjasi-cdn-v1";
 
 const APP_SHELL = [
@@ -111,13 +111,18 @@ self.addEventListener("fetch", event => {
     event.respondWith(
       fetch(request, { cache: "no-store" })
         .then(response => {
-          // Never replace the offline homepage with an HTTP error document.
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put("./index.html", copy);
-            });
+          // Treat HTTP error pages like failed network requests. Never cache or
+          // show a 4xx/5xx document as the app shell when an offline shell exists.
+          if (!response || !response.ok) {
+            return caches.match("./index.html").then(cached =>
+              cached || caches.match("./offline.html").then(offline => offline || response)
+            );
           }
+
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put("./index.html", copy);
+          });
           return response;
         })
         .catch(() => {
