@@ -444,16 +444,17 @@ try{
     },null,{timeout:5000});
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     const shortcutHandle=await shortcut.elementHandle();
-    await shortcut.evaluate(el=>{
-      const list=el.closest(".mobile-more-grid");
-      if(!list)return;
-      const listRect=list.getBoundingClientRect(),rect=el.getBoundingClientRect();
-      list.scrollTop+=rect.top-listRect.top-(list.clientHeight-rect.height)/2;
-    });
+    // Scroll the drawer's actual scroll container to the shortcut before clicking.
+    // The panel has a fixed heading; the grid itself is the independently scrollable region.
+    await shortcut.scrollIntoViewIfNeeded();
     await page.waitForFunction(el=>{
       if(!el)return false;
       const rect=el.getBoundingClientRect();
-      return rect.width>0&&rect.height>0&&rect.top>=0&&rect.bottom<=innerHeight&&getComputedStyle(el).visibility!=="hidden";
+      const grid=el.closest(".mobile-more-grid");
+      const gridRect=grid?.getBoundingClientRect();
+      return rect.width>0&&rect.height>0&&gridRect&&
+        rect.top>=Math.max(0,gridRect.top)-1&&rect.bottom<=Math.min(innerHeight,gridRect.bottom)+1&&
+        getComputedStyle(el).visibility!=="hidden";
     },shortcutHandle,{timeout:5000});
     await shortcut.click();
     assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),tab,tab+" shortcut must call its matching dashboard tab.");
