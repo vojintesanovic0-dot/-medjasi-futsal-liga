@@ -254,3 +254,12 @@
   .site-header .header-actions{flex:1 1 0!important;width:0!important;min-width:0!important;max-width:100%!important}
   .site-header .v7-search-wrap{flex:1 1 0!important;width:auto!important;min-width:0!important;max-width:none!important}
 }
+
+/* Avoid a duplicate header hamburger on tablet/desktop; the sidebar and bottom bar remain the navigation surfaces. */
+html body #mobileMenuBtn,
+html body button#mobileMenuBtn,
+html body .site-header .header-inner .header-actions .mobile-menu-btn {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
