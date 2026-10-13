@@ -385,7 +385,7 @@ try{
   assert.equal(loginLogoutProbe.logoutState.homeActive,true,"Logout must return to the homepage.");
   assert.ok(loginLogoutProbe.logoutState.loginButtonText.includes("Prijava"),"Logout must restore the logged-out header.");
   assert.equal(loginLogoutProbe.logoutState.profileButtonCount,0,"Logout must remove the authenticated profile button.");
-  console.log("PASS isolated login/profile modal/logout flow updates account state without real database writes");
+  console.log("PASS isolated login/profile modal/logout flow without a real session or database writes");
   await page.evaluate(()=>window.showSection("login"));
   await page.waitForFunction(()=>!!document.querySelector("#login.section.active"),null,{timeout:5000});
   await page.locator("#loginEmail").fill("");
