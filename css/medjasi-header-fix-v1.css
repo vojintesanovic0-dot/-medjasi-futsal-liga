@@ -241,3 +241,15 @@
     display: none !important;
   }
 }
+
+
+/* Enforce the mobile navigation choice even if legacy header rules use !important. */
+@media (max-width: 1024px) {
+  html body #mobileMenuBtn,
+  html body button#mobileMenuBtn,
+  html body .site-header #mobileMenuBtn {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
