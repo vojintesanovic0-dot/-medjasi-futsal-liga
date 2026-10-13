@@ -8350,6 +8350,11 @@ document.addEventListener(
   event => {
 
     if(event.key==="Escape"){
+      const mobileDrawer=document.getElementById("mobileMoreDrawer");
+      if(mobileDrawer?.classList.contains("open")){
+        closeMobileMore();
+        return;
+      }
       const wasOpen=document.getElementById("modal")?.classList.contains("active");
       if(wasOpen){
         hideModal();
