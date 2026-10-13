@@ -455,6 +455,46 @@ try{
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   }
   console.log("PASS mobile More drawer routes: all 12 destinations open the requested section and close the drawer");
+
+  const dashboardRoutes=[["shop","Fan Shop"],["fanbase","Fan Base"],["mine","Moji tiketi"],["live","Live centar"],["board","Nagrade i poredak"],["collection","Kolekcija"],["club","Moja tribina"],["mvp","MVP"]];
+  await page.evaluate(()=>{
+    if(typeof window.dashboardOpenGameTab!=="function")throw new Error("Dashboard tab router is unavailable.");
+    window.__mobileMoreDashboardOriginal=window.dashboardOpenGameTab;
+    window.__mobileMoreDashboardProbe=null;
+    window.dashboardOpenGameTab=(tab)=>{window.__mobileMoreDashboardProbe=tab;};
+  });
+  for(const [tab,label] of dashboardRoutes){
+    await page.locator("#mobileMoreBtn").click();
+    await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+    await page.waitForTimeout(100);
+    const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
+    const shortcutHandle=await shortcut.elementHandle();
+    assert.ok(shortcutHandle,"Missing mobile dashboard shortcut: "+label);
+    await shortcutHandle.evaluate(el=>{
+      const grid=el.closest(".mobile-more-grid");
+      if(!grid)return;
+      const gridRect=grid.getBoundingClientRect(),rect=el.getBoundingClientRect();
+      grid.scrollTo({top:grid.scrollTop+rect.top-gridRect.top-(grid.clientHeight-rect.height)/2,behavior:"instant"});
+    });
+    await page.waitForTimeout(80);
+    const hit=await shortcutHandle.evaluate(el=>{
+      const rect=el.getBoundingClientRect();
+      const x=rect.left+rect.width/2,y=rect.top+rect.height/2;
+      const top=document.elementFromPoint(x,y);
+      return {x,y,tappable:!!top&&(top===el||el.contains(top)),open:!!document.querySelector("#mobileMoreDrawer")?.classList.contains("open")};
+    });
+    assert.ok(hit.tappable&&hit.open,"Mobile dashboard shortcut not tappable: "+label+" "+JSON.stringify(hit));
+    await page.mouse.click(hit.x,hit.y);
+    assert.equal(await page.evaluate(()=>window.__mobileMoreDashboardProbe),tab,label+" must route to its matching dashboard tab.");
+    await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+    await page.waitForTimeout(100);
+  }
+  await page.evaluate(()=>{
+    if(window.__mobileMoreDashboardOriginal)window.dashboardOpenGameTab=window.__mobileMoreDashboardOriginal;
+    delete window.__mobileMoreDashboardOriginal;
+    delete window.__mobileMoreDashboardProbe;
+  });
+  console.log("PASS all 8 mobile dashboard shortcuts route correctly and close More");
   const mobileSections=["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info","login"];
   for(const sectionId of mobileSections){
     await page.evaluate(id=>window.showSection(id),sectionId);
