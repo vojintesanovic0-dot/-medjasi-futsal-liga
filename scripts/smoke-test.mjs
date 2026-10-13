@@ -524,6 +524,19 @@ try{
         }
         return rect.right>innerWidth+2||rect.left< -2;
       }).slice(0,12).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",right:Math.round(rect.right),left:Math.round(rect.left),width:Math.round(rect.width)}));
+      const allHorizontalCandidates=[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({el,rect})=>{
+        if(rect.width<=0||rect.height<=0||!(rect.right>innerWidth+2||rect.left< -2))return false;
+        for(let node=el;node&&node!==document.documentElement;node=node.parentElement){
+          const style=getComputedStyle(node);
+          if(style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
+        }
+        return true;
+      }).slice(0,15).map(({el,rect})=>({
+        tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",
+        left:Math.round(rect.left),right:Math.round(rect.right),width:Math.round(rect.width),
+        top:Math.round(rect.top),bottom:Math.round(rect.bottom),
+        position:getComputedStyle(el).position,ariaHidden:el.getAttribute("aria-hidden")
+      }));
       const hamburger=document.querySelector("#mobileMenuBtn");
       const more=document.querySelector("#mobileMoreBtn");
       return {
@@ -531,6 +544,7 @@ try{
         document:document.documentElement.scrollWidth,
         body:document.body.scrollWidth,
         visibleOverflow,
+        allHorizontalCandidates,
         hamburgerDisplay: hamburger ? getComputedStyle(hamburger).display : "missing",
         moreVisible: !!more && getComputedStyle(more).display!=="none" && getComputedStyle(more).visibility!=="hidden"
       };
