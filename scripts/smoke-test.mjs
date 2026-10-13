@@ -556,6 +556,8 @@ try{
         getComputedStyle(panel).display!=="none"&&
         getComputedStyle(panel).visibility!=="hidden";
     },null,{timeout:5000});
+    // Allow the fixed panel/layout to settle after reopening before measuring its scroll viewport.
+    await page.waitForTimeout(120);
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     const shortcutHandle=await shortcut.elementHandle();
     // Scroll the drawer's own list explicitly; Playwright cannot always infer this
