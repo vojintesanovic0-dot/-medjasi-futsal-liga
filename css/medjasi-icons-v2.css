@@ -83,7 +83,6 @@
 @media(max-width:600px){
   .site-header .topbar-action::before{width:17px;height:17px;}
   .dashboard-hero-actions .btn{gap:7px!important;}
-  .dashboard-hero-actions .btn-green::after,.dashboard-hero-actions .btn-ghost::after{font-size:11px;}
   #game .fg-tabs button[data-act="tab"][data-id]{gap:5px!important;}
 }
 
