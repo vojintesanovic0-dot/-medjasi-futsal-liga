@@ -50,6 +50,7 @@ async function navButton(target){
   }),target);
   assert.notEqual(index,-1,"Missing navigation button for "+target);
   const button=page.locator("#mainNav button").nth(index);
+  await button.scrollIntoViewIfNeeded();
   const geometry=await button.evaluate(el=>{
     const r=el.getBoundingClientRect(),nav=document.querySelector("#mainNav"),n=nav?.getBoundingClientRect(),sidebar=document.querySelector(".app-sidebar"),sb=sidebar?.getBoundingClientRect();
     return {button:{x:r.x,y:r.y,width:r.width,height:r.height},nav:n?{x:n.x,y:n.y,width:n.width,height:n.height}:null,sidebar:sb?{x:sb.x,y:sb.y,width:sb.width,height:sb.height}:null,viewport:{width:innerWidth,height:innerHeight},display:getComputedStyle(el).display,visibility:getComputedStyle(el).visibility};
