@@ -408,7 +408,20 @@ try{
   ];
   for(const [sectionId,label] of mobileRoutes){
     await page.locator("#mobileMoreBtn").click();
-    await page.locator(".mobile-more-grid button").filter({hasText:label}).first().click();
+    await page.waitForFunction(()=>{
+      const drawer=document.querySelector("#mobileMoreDrawer"),panel=drawer?.querySelector(".mobile-more-panel");
+      if(!drawer?.classList.contains("open")||!panel)return false;
+      const rect=panel.getBoundingClientRect(),style=getComputedStyle(panel);
+      return style.display!=="none"&&style.visibility!=="hidden"&&rect.height>0&&rect.top>=-1&&rect.bottom<=innerHeight+2;
+    },null,{timeout:7000});
+    const routeButton=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
+    await routeButton.evaluate(el=>{
+      const grid=el.closest(".mobile-more-grid");
+      if(!grid)return;
+      const gr=grid.getBoundingClientRect(),r=el.getBoundingClientRect();
+      grid.scrollTo({top:grid.scrollTop+r.top-gr.top-(grid.clientHeight-r.height)/2,behavior:"instant"});
+    });
+    await routeButton.click();
     await page.waitForFunction((id)=>document.querySelector("#"+id+".section")?.classList.contains("active"),sectionId,{timeout:7000});
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   }
