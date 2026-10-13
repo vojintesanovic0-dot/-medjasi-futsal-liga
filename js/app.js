@@ -1247,7 +1247,7 @@ async function ensureProfile(user){
 
   let username =
     user.user_metadata?.username ||
-    user.email?.split("@")[0] ||
+    
     "Korisnik";
 
 
@@ -3958,7 +3958,7 @@ async function addComment(){
 
   const username=currentProfile?.username ||
     currentUser.user_metadata?.username ||
-    currentUser.email?.split("@")[0] ||
+    
     "Korisnik";
 
   let image_url=null;
@@ -4182,7 +4182,7 @@ async function sendChat(){
     let image_url=null;
     if(file) image_url=await uploadFile(file,`chat/${currentUser.id}`);
 
-    const username=currentProfile?.username || currentUser.user_metadata?.username || currentUser.email?.split("@")[0] || "Korisnik";
+    const username=currentProfile?.username || currentUser.user_metadata?.username ||  "Korisnik";
 
     const {error}=await sbClient().from("messages").insert({
       user_id:currentUser.id,
@@ -10824,7 +10824,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       const username=window.currentProfile?.username ||
         window.currentUser.user_metadata?.username ||
-        window.currentUser.email?.split("@")[0] || "Korisnik";
+         "Korisnik";
 
       const {error}=await sbClient().from("messages").insert({
         user_id:window.currentUser.id,
@@ -11164,7 +11164,7 @@ function renderNews(){
   grid.innerHTML=publicNews.slice(1).map(n=>`<article class="v7-news-card card"><div class="v7-news-media">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div class="v7-news-body"><div class="v7-news-kicker">${escV(n.kicker||'VIJEST')}</div><div class="v7-news-title">${escV(n.title)}</div><div class="v7-news-lead">${escV(n.lead||'')}</div><div class="v7-news-meta"><span>${formatV(n.created_at)}</span><span>${escV(n.author_name||'Liga')}</span></div><div class="v7-news-actions"><button class="btn btn-green btn-small" onclick="medjasiV7.openNews('${n.id}')">Otvori</button><button class="btn btn-small" onclick="medjasiV7.shareNews('${n.id}')">↗ Chat</button></div></div></article>`).join('');
 }
 function openNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n)return;showModal(`<div class="modal-title"><span class="hero-kicker">${escV(n.kicker||'VIJEST')}</span><h2>${escV(n.title)}</h2><p class="muted">${formatV(n.created_at)} · ${escV(n.author_name||'Međasi Futsal Liga')}</p></div><div class="v7-news-media" style="border-radius:16px">${mediaHtml(n.media_url||n.image_url,n.media_type,n.title)}</div><div style="white-space:pre-wrap;line-height:1.75;margin-top:18px">${escV(n.body||n.lead||'')}</div><div class="actions" style="margin-top:18px"><button class="btn btn-green" onclick="medjasiV7.shareNews('${n.id}')">💬 Podijeli u chat</button></div>`)}
-async function shareNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n||!currentUser){showSection('login');toastV('Prijavi se da bi podijelio vijest.','error');return}const text=`📰 ${n.title}\n${n.lead||''}`.trim();const {error}=await sbClient().from('messages').insert({user_id:currentUser.id,username:currentProfile?.username||currentUser.email?.split('@')[0]||'Korisnik',content:text,image_url:n.media_type==='image'?(n.media_url||n.image_url):null});if(error){toastV(error.message,'error');return}hideModal();showSection('chat');await loadAll();toastV('Vijest je podijeljena u chat.');}
+async function shareNews(id){const n=V7.news.find(x=>String(x.id)===String(id));if(!n||!currentUser){showSection('login');toastV('Prijavi se da bi podijelio vijest.','error');return}const text=`📰 ${n.title}\n${n.lead||''}`.trim();const {error}=await sbClient().from('messages').insert({user_id:currentUser.id,username:currentProfile?.username||'Korisnik',content:text,image_url:n.media_type==='image'?(n.media_url||n.image_url):null});if(error){toastV(error.message,'error');return}hideModal();showSection('chat');await loadAll();toastV('Vijest je podijeljena u chat.');}
 function supportedLeagueMedia(file){
   if(!file)return null;
   const type=String(file.type||"").toLowerCase();
@@ -11204,7 +11204,7 @@ async function publishNews(){
       body:body.slice(0,10000),
       kicker:kicker.slice(0,50),
       author_id:currentUser.id,
-      author_name:currentProfile?.username||currentUser.email?.split("@")[0]||"Admin",
+      author_name:currentProfile?.username||"Admin",
       media_url,
       media_type,
       published
