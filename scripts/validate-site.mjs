@@ -24,6 +24,17 @@ const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
 if (duplicates.length) fail(`Duplicate HTML IDs: ${duplicates.join(", ")}`);
 else pass(`No duplicate IDs across ${ids.length} HTML IDs`);
 
+if (
+  !app.includes("let medjasiUserInteracted = false") ||
+  !app.includes("if(medjasiUserInteracted) return false;") ||
+  !app.includes('document.addEventListener("pointerdown", markSectionInteraction') ||
+  !app.includes("window.__MEDJASI_USER_NAVIGATED_DURING_INIT") ||
+  !app.includes("if(!window.__MEDJASI_USER_NAVIGATED_DURING_INIT)") ||
+  !app.includes('window.__MEDJASI_APP_READY_STATE="loading"')
+) {
+  fail("Slow startup must not override a section selected by the user while data is loading");
+} else pass("Startup restoration respects user navigation and exposes a guarded app-ready state");
+
 const authStart = html.indexOf('<section class="section auth-section" id="login">');
 const authEnd = html.indexOf("<!-- ================= LEAGUE INFO ================= -->", authStart);
 const authMarkup = authStart >= 0 && authEnd > authStart ? html.slice(authStart, authEnd) : "";

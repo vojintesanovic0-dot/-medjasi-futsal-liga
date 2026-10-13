@@ -396,6 +396,7 @@ try{
   assert.ok(mobileWidth.document<=mobileWidth.viewport+2&&mobileWidth.body<=mobileWidth.viewport+2&&mobileWidth.visibleOverflow.length===0,"Horizontal overflow on mobile: "+JSON.stringify(mobileWidth));
   assert.equal(mobileWidth.topMenuVisible,false,"The duplicate top hamburger must be hidden on phones.");
   assert.equal(await page.locator(".xt-theme-btn, #themeToggle, [data-theme-toggle]").count(),0,"The removed light/dark theme toggle must not return.");
+  await page.waitForFunction(()=>window.__MEDJASI_APP_READY_STATE==="ready"||window.__MEDJASI_APP_READY_STATE==="failed",null,{timeout:25000});
   await page.setViewportSize({width:320,height:740});
   const compactWidth=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth}));
   assert.ok(compactWidth.document<=compactWidth.viewport+2&&compactWidth.body<=compactWidth.viewport+2,"Horizontal overflow on a compact 320px phone: "+JSON.stringify(compactWidth));
