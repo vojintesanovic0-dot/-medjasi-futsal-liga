@@ -347,8 +347,13 @@ try{
   await page.waitForFunction(()=>!!document.querySelector("#home.section.active"),null,{timeout:5000});
   await page.setViewportSize({width:900,height:900});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
-  await page.locator("#mobileMenuBtn").waitFor({state:"visible",timeout:10000});
-  console.log("PASS tablet header menu remains visible");
+  const tabletMenu=page.locator("#mobileMenuBtn");
+  await tabletMenu.waitFor({state:"visible",timeout:10000});
+  await tabletMenu.click();
+  await page.waitForFunction(()=>document.getElementById("mainNav")?.classList.contains("mobile-open"),null,{timeout:3000});
+  await tabletMenu.click();
+  await page.waitForFunction(()=>!document.getElementById("mainNav")?.classList.contains("mobile-open"),null,{timeout:3000});
+  console.log("PASS tablet header menu remains available and opens/closes correctly");
 
   await page.setViewportSize({width:390,height:844});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
