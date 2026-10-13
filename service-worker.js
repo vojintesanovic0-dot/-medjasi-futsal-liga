@@ -8,7 +8,7 @@ const APP_SHELL = [
   "./manifest.json",
   "./css/app.css?v=20261013fix2",
   "./js/medjasi-avatars.js?v=1",
-  "./js/app.js?v=20261065",
+  "./js/app.js?v=20261066",
   "./js/password-recovery.js?v=1",
   "./js/effects.js?v=1",
   "./css/production.css?v=20261007v23",
@@ -50,7 +50,7 @@ const APP_SHELL = [
   "./css/medjasi-design-v11.css?v=20261007v02",
   "./css/medjasi-design-v13.css?v=20261007v02",
   "./js/admin-organizer.js?v=16",
-  "./js/graphic-engine.js?v=5",
+  "./js/graphic-engine.js?v=6",
   "./js/medjasi-v13-ui.js?v=20261007v01",
   "./images/icon-192.png",
   "./images/icon-512.png"

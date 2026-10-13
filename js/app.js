@@ -4900,6 +4900,11 @@ function renderAdminMatches(){
                 </select>
 
 
+                <select class="btn btn-small" aria-label="Format utakmice" onchange="changeMatchFormat(\'${m.id}\',this.value)">
+                  <option value="60min" ${m.match_format==="2x20"?"":"selected"}>60 minuta</option>
+                  <option value="2x20" ${m.match_format==="2x20"?"selected":""}>2 × 20 minuta</option>
+                </select>
+
                 <input
                   type="number"
                   min="0"
@@ -4951,6 +4956,7 @@ function renderAdminMatches(){
                 ${
                   m.status === "live"
                     ? `
+                      <button class="btn btn-small" onclick="togglePause(\'${m.id}\')">${m.paused_at?"▶ Nastavi":"⏸ Pauza"}</button>
                       <button
                         class="btn btn-small"
                         onclick="
@@ -5076,6 +5082,35 @@ async function changeMatchStatus(id,status){
   }
 }
 
+async function changeMatchFormat(id,format){
+  if(!canManageMatch())return;
+  if(!["60min","2x20"].includes(format))return alert("Format utakmice nije ispravan.");
+  const {data,error}=await sbClient().from("matches").update({match_format:format}).eq("id",id).select("id,match_format").maybeSingle();
+  if(error)return alert("Format nije sačuvan: "+error.message);
+  const local=matches.find(x=>String(x.id)===String(id));
+  if(local)local.match_format=data?.match_format||format;
+  if(isViewingLiveMatchModal(id))openMatch(id);
+  if(typeof renderMatches==="function")renderMatches();
+}
+async function togglePause(id){
+  if(!canManageMatch())return;
+  const match=getMatch(id);
+  if(!match||match.status!=="live")return;
+  let patch;
+  if(match.paused_at){
+    const pausedAt=Date.parse(match.paused_at);
+    const extra=Number.isFinite(pausedAt)?Math.max(0,Math.floor((Date.now()-pausedAt)/1000)):0;
+    patch={paused_at:null,paused_seconds:Math.max(0,Number(match.paused_seconds||0))+extra};
+  }else patch={paused_at:new Date().toISOString()};
+  const {data,error}=await sbClient().from("matches").update(patch).eq("id",id).select("id,paused_at,paused_seconds,match_format,live_started_at,current_minute").maybeSingle();
+  if(error)return alert("Promjena pauze nije sačuvana: "+error.message);
+  if(!data)return alert("Baza nije potvrdila promjenu pauze.");
+  const local=matches.find(x=>String(x.id)===String(id));
+  if(local)Object.assign(local,data);
+  if(isViewingLiveMatchModal(id))openMatch(id);
+  if(typeof renderMatches==="function")renderMatches();
+}
+
 async function changeMinute(id,minute){
   if(!canManageMatch())return;
   if(String(minute??"").trim()===""){
@@ -5093,7 +5128,11 @@ async function changeMinute(id,minute){
 
   try{
     const patch={current_minute:value};
-    if(match.status==="live")patch.live_started_at=new Date(Date.now()-value*60000).toISOString();
+    if(match.status==="live"){
+      const pausedSeconds=Math.max(0,Number(match.paused_seconds||0));
+      const end=match.paused_at?Date.parse(match.paused_at):Date.now();
+      patch.live_started_at=new Date((Number.isFinite(end)?end:Date.now())-(value*60+pausedSeconds)*1000).toISOString();
+    }
     const {data,error}=await sbClient().from("matches")
       .update(patch)
       .eq("id",id)
@@ -6133,6 +6172,8 @@ function getMatchEvents(id){
    MATCH TABS
 ========================================================= */
 
+function showMatchLineup(){switchMatchTab("lineup");}
+
 function switchMatchTab(
   name
 ){
@@ -6172,16 +6213,28 @@ function switchMatchTab(
 
 function getLiveElapsedSeconds(match){
   if(!match || match.status !== "live") return 0;
-  if(match.live_started_at){
-    const start=Date.parse(match.live_started_at);
-    if(Number.isFinite(start)) return Math.max(0,Math.floor((Date.now()-start)/1000));
-  }
-  return Math.max(0,Number(match.current_minute||0)*60);
+  const fallback=Math.max(0,Number(match.current_minute||0)*60);
+  if(!match.live_started_at)return fallback;
+  const start=Date.parse(match.live_started_at);
+  if(!Number.isFinite(start))return fallback;
+  const end=match.paused_at?Date.parse(match.paused_at):Date.now();
+  if(!Number.isFinite(end))return fallback;
+  return Math.max(0,Math.floor((end-start)/1000)-Math.max(0,Number(match.paused_seconds||0)));
 }
 function formatLiveClock(totalSeconds){
   const s=Math.max(0,Math.floor(Number(totalSeconds)||0));
   const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
   return h>0?String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0"):String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");
+}
+function getLiveClockInfo(match){
+  const elapsed=getLiveElapsedSeconds(match);
+  const paused=!!match?.paused_at;
+  if(match?.match_format==="2x20"){
+    const half=elapsed<1200?1:2;
+    const inHalf=Math.min(1200,Math.max(0,half===1?elapsed:elapsed-1200));
+    return {text:formatLiveClock(inHalf),label:half+". POLUVRIJEME",paused};
+  }
+  return {text:formatLiveClock(elapsed),label:"60 MINUTA",paused};
 }
 function getLiveMinute(match){return Math.floor(getLiveElapsedSeconds(match)/60);}
 /* =========================================================
@@ -6403,7 +6456,7 @@ function openMatch(id){
               match.status ===
               "live"
 
-                ? formatLiveClock(getLiveElapsedSeconds(match))
+                ? (()=>{const c=getLiveClockInfo(match);return c.text+" · "+c.label+(c.paused?" · PAUZA":"")})()
 
                 : formatDate(
                     match.match_date
@@ -6538,6 +6591,7 @@ function openMatch(id){
             ${aGoals}
 
           </div>
+          <button class="btn btn-small" style="margin-top:10px" onclick="showMatchLineup()">Vidi postave ›</button>
 
         </div>
 
@@ -7015,7 +7069,7 @@ function liveSignature(matchId){
   const id=String(matchId);
   const m=matches.find(x=>String(x.id)===id)||{};
   return JSON.stringify([
-    m.status,m.home_score,m.away_score,m.current_minute,m.live_started_at,
+    m.status,m.home_score,m.away_score,m.current_minute,m.live_started_at,m.match_format,m.paused_at,m.paused_seconds,
     goals.filter(g=>String(g.match_id)===id).map(g=>[g.id,g.player_id,g.minute,g.assist_player_id]),
     cards.filter(c=>String(c.match_id)===id).map(c=>[c.id,c.player_id,c.card_type]),
     matchPlayers.filter(p=>String(p.match_id)===id).map(p=>[p.player_id,p.is_active])
@@ -7041,7 +7095,7 @@ function startLiveRefresh(matchId){
     // Only update the clock when the modal still shows this exact match.
     if(!isViewingLiveMatchModal(matchId))return;
     const el=document.querySelector(".live-time");
-    if(el)el.textContent=formatLiveClock(getLiveElapsedSeconds(current));
+    if(el){const clock=getLiveClockInfo(current);el.textContent=clock.text+" · "+clock.label+(clock.paused?" · PAUZA":"");}
   },1000);
   window.__medjasiLiveClock=clockId;
 
@@ -10492,11 +10546,6 @@ document.addEventListener("DOMContentLoaded",()=>{
     const mvpBox=document.createElement("div"); mvpBox.className="v2-match-mvp"; mvpBox.innerHTML=renderMatchMVP(m.id); panel.prepend(mvpBox);
     const card=document.createElement("div"); card.className="card v2-match-extra"; card.innerHTML=`
       <h3>📊 Detaljna statistika</h3>
-      <div class="v2-match-stat-table">
-        <div><b>${hg.length}</b><span>Golovi</span><b>${ag.length}</b></div>
-        <div><b>${ha}</b><span>Asistencije</span><b>${aa}</b></div>
-        <div><b>${hc.length}</b><span>Kartoni</span><b>${ac.length}</b></div>
-      </div>
       <div class="v2-match-players">
         <div><strong>${esc2(home?.name||"Domaćin")}</strong>${hg.length?hg.map(g=>`<span>⚽ ${esc2(player(g.player_id)?.name||"Igrač")} ${n(g.minute)}'</span>`).join(""):"<small class='muted'>Bez golova</small>"}</div>
         <div><strong>${esc2(away?.name||"Gost")}</strong>${ag.length?ag.map(g=>`<span>⚽ ${esc2(player(g.player_id)?.name||"Igrač")} ${n(g.minute)}'</span>`).join(""):"<small class='muted'>Bez golova</small>"}</div>

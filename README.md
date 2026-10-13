@@ -70,3 +70,4 @@ Ove skripte su ručni koraci za pregled i unapređenje pravila korisničkih imen
 - `sql/31_public_username_no_email_fix.sql` — opciona korekcija tek nakon pregleda izvještaja iz koraka 30.
 - `sql/32_username_rules.sql` — kompatibilno postavljanje osnovnih pravila i ograničenja korisničkog imena.
 - `sql/33_enforce_username_rules.sql` — strožija validacija formata i rezervisanih imena; pokrenuti nakon pregleda postojećih zapisa.
+- `sql/34_live_match_clock_pause.sql` — dodaje format utakmice (60 minuta ili 2 × 20 minuta) i podršku za pauzu/nastavak sata uživo.
