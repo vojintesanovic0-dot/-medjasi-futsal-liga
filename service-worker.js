@@ -1,4 +1,4 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v179";
+const CACHE_NAME = "medjasi-futsal-pwa-v180";
 const CDN_CACHE = "medjasi-cdn-v1";
 
 const APP_SHELL = [
@@ -106,24 +106,30 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Navigacija: prvo pokušaj najnoviju verziju sa servera
+  // Navigation: only cache a successful document response. A server error
+  // page must never replace the last known-good application shell.
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request, { cache: "no-store" })
         .then(response => {
-          const copy = response.clone();
+          if (!response || !response.ok) {
+            return caches.match("./index.html").then(cached =>
+              cached || caches.match("./offline.html").then(offline => offline || response)
+            );
+          }
 
+          const copy = response.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put("./index.html", copy);
           });
-
           return response;
         })
         .catch(() => {
-          return caches.match("./index.html").then(r=>r||caches.match("./offline.html"));
+          return caches.match("./index.html").then(cached =>
+            cached || caches.match("./offline.html")
+          );
         })
     );
-
     return;
   }
 
