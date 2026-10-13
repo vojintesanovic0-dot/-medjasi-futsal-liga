@@ -351,7 +351,7 @@ try{
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
   const mobileWidth=await page.evaluate(()=>({
     viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,
-    topMenuVisible:!!document.querySelector("#mobileMenuBtn")&&getComputedStyle(document.querySelector("#mobileMenuBtn")).display!=="none"
+    topMenuVisible:!!document.querySelector("#mobileMenuBtn")&&(getComputedStyle(document.querySelector("#mobileMenuBtn")).display!=="none"&&getComputedStyle(document.querySelector("#mobileMenuBtn")).visibility!=="hidden"&&getComputedStyle(document.querySelector("#mobileMenuBtn")).pointerEvents!=="none")
   }));
   assert.ok(mobileWidth.document<=mobileWidth.viewport+2&&mobileWidth.body<=mobileWidth.viewport+2,"Horizontal overflow on mobile: "+JSON.stringify(mobileWidth));
   assert.equal(mobileWidth.topMenuVisible,false,"The duplicate top hamburger must be hidden on phones.");
