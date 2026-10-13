@@ -1526,12 +1526,11 @@ const USERNAME_RE = /^[\p{L}\p{N}_.-]{3,30}$/u;
 const RESERVED_USERNAMES = new Set(["admin","moderator","medjasi","liga","support","korisnik","user","null","undefined"]);
 
 async function register(){
-  let username =
-    document
-      .getElementById("registerUsername")
-      ?.value
-      .trim()
-      .replace(/[^\p{L}\p{N}_\-.]/gu,"");
+  const usernameInput = document.getElementById("registerUsername");
+  let username = String(usernameInput?.value || "")
+    .trim()
+    .replace(/[^\p{L}\p{N}_\-.]/gu,"");
+  if(usernameInput) usernameInput.value = username;
 
   const email =
     document
