@@ -322,14 +322,12 @@
     min-height: 66px !important;
   }
 }
-@media (display-mode: standalone) {
-  @media (max-width: 780px) {
-    .mobile-bottom {
-      bottom: max(8px, env(safe-area-inset-bottom)) !important;
-    }
-    main {
-      padding-bottom: calc(106px + env(safe-area-inset-bottom)) !important;
-    }
+@media (display-mode: standalone) and (max-width: 780px) {
+  .mobile-bottom {
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  }
+  main {
+    padding-bottom: calc(106px + env(safe-area-inset-bottom)) !important;
   }
 }
 @keyframes medjasi-screen-enter {
