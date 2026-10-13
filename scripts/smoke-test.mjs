@@ -567,7 +567,7 @@ try{
   assert.equal(await page.locator("#graphicGenerateBtn").isDisabled(),false,"Selecting a valid image must enable generation.");
   assert.equal(await page.locator("#graphicExportPngBtn").isDisabled(),true,"PNG export must be disabled before generation.");
   assert.equal(await page.locator("#graphicExportJpegBtn").isDisabled(),true,"JPG export must be disabled before generation.");
-  await page.locator("#graphicGenerateBtn").click({force:true});
+  await page.locator("#graphicGenerateBtn").evaluate(el=>el.click());
   await page.waitForFunction(()=>{
     const preview=document.getElementById("graphicResultPreview");
     return !!preview&&!preview.hidden&&preview.complete&&preview.naturalWidth===1080&&preview.naturalHeight===1350;
@@ -575,7 +575,7 @@ try{
   assert.equal(await page.locator("#graphicExportPngBtn").isDisabled(),false,"PNG export must be enabled after successful generation.");
   assert.equal(await page.locator("#graphicExportJpegBtn").isDisabled(),false,"JPG export must be enabled after successful generation.");
   const pngDownloadPromise=page.waitForEvent("download");
-  await page.locator("#graphicExportPngBtn").click({force:true});
+  await page.locator("#graphicExportPngBtn").evaluate(el=>el.click());
   const pngDownload=await pngDownloadPromise;
   const pngPath=await pngDownload.path();
   assert.ok(pngPath,"PNG export must produce a downloadable file.");
@@ -583,7 +583,7 @@ try{
   assert.equal(pngBytes.subarray(0,8).toString("hex"),"89504e470d0a1a0a","PNG export must have a valid PNG signature.");
   assert.ok(pngBytes.length>1000,"PNG export must contain rendered graphic content.");
   const jpgDownloadPromise=page.waitForEvent("download");
-  await page.locator("#graphicExportJpegBtn").click({force:true});
+  await page.locator("#graphicExportJpegBtn").evaluate(el=>el.click());
   const jpgDownload=await jpgDownloadPromise;
   const jpgPath=await jpgDownload.path();
   assert.ok(jpgPath,"JPG export must produce a downloadable file.");
@@ -597,7 +597,7 @@ try{
     headers:{"access-control-allow-origin":"*"},
     body:'export async function removeBackground(file){return new Blob([await file.arrayBuffer()],{type:"image/png"});}'
   }));
-  await page.locator("#graphicRemoveBgBtn").click({force:true});
+  await page.locator("#graphicRemoveBgBtn").evaluate(el=>el.click());
   await page.waitForFunction(()=>{
     const source=document.getElementById("graphicSourceName");
     const result=document.getElementById("graphicResultPreview");
