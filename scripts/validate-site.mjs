@@ -1096,7 +1096,7 @@ if (
   !matchStatusFunction2.includes("const pushOk=await notifyLeaguePush(") ||
   !matchMinuteFunction2.includes("Number.isInteger(value)") ||
   !matchMinuteFunction2.includes("value>60") ||
-  !matchMinuteFunction2.includes(".select(\"id,current_minute\")") ||
+  !matchMinuteFunction2.includes(".select(\"id,current_minute,live_started_at\")") ||
   !matchMinuteFunction2.includes("catch(error)")
 ) {
   fail("Match status/minute edits must validate inputs, confirm persisted values, and broadcast only the confirmed match state");
