@@ -47,7 +47,7 @@ Deno.serve(async (req: Request) => {
     const action = typeof body.action === "string" ? body.action.trim() : "";
     let data, error;
     if(action==="generate_markets" || action==="settle_match"){
-      const matchId = String(body.match_id ?? "").trim();
+      const matchId = (typeof body.match_id === "string" || typeof body.match_id === "number") ? String(body.match_id).trim() : "";
       if (!matchId || matchId.length > 100) {
         return Response.json({ error: "Invalid match_id" }, { status: 400, headers: corsHeaders });
       }
