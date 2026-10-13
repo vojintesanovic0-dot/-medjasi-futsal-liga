@@ -57,4 +57,4 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 - `supabase/functions/fan-admin-action/index.ts`: administratorski RPC pozivi koriste JWT stvarnog administratora kako bi provjere `auth.uid()` ostale ispravne.
 - Vidljivi naziv lige je normalizovan na `Međasi` bez promjene tehničkih identifikatora i ruta.
 
-- Mobilna navigacija koristi donju traku i meni „Više”; `Escape` zatvara meni. Ažurirane su verzije `app.js?v=20261012v54`, `extras.js/css?v=20261013v2`, `medjasi-header-fix-v1.css?v=2` i PWA cache `medjasi-futsal-pwa-v178`.
+- Mobilna navigacija koristi donju traku i meni „Više”; `Escape` zatvara meni, a na ekranima širine 320 px se provjerava horizontalni overflow i prikaz menija u jednoj koloni. Prekidač svijetle/tamne teme nije dio korisničkog interfejsa. Verzije glavnih resursa su `app.js?v=20261012v54`, `extras.js/css?v=20261013v2`, `medjasi-header-fix-v1.css?v=2`, `medjasi-mobile-v2.css?v=20261013app2` i PWA cache `medjasi-futsal-pwa-v179`. Service Worker pri HTTP 4xx/5xx grešci koristi keširanu početnu stranicu ili offline stranicu, umjesto da neispravan odgovor sačuva kao app shell.
