@@ -347,7 +347,7 @@ try{
   await page.waitForFunction(()=>!!document.querySelector("#home.section.active"),null,{timeout:5000});
   await page.setViewportSize({width:390,height:844});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
-  await page.locator("#mobileMenuBtn").waitFor({timeout:10000});
+  await page.locator("#mobileMenuBtn").waitFor({state:"attached",timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
   const mobileWidth=await page.evaluate(()=>({
     viewport:innerWidth,
