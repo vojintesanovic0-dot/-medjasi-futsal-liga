@@ -27,8 +27,12 @@ jobs:
           TAG="backup/pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.base.sha }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$TAG" -m "Backup main prije PR #${{ github.event.pull_request.number }}" "${{ github.event.pull_request.base.sha }}" || true
-          git push origin "$TAG" || echo "Tag već postoji"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Backup tag već postoji: $TAG"
+          else
+            git tag -a "$TAG" -m "Backup main prije PR #${{ github.event.pull_request.number }}" "${{ github.event.pull_request.base.sha }}"
+            git push origin "$TAG"
+          fi
       - name: Upload backup artifact
         uses: actions/upload-artifact@v4
         with:
@@ -53,8 +57,12 @@ jobs:
           TAG="backup/pre-main-${{ github.run_number }}-${{ github.event.before }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$TAG" -m "Stanje main prije push-a" "${{ github.event.before }}" || true
-          git push origin "$TAG" || echo "Tag već postoji"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Backup tag već postoji: $TAG"
+          else
+            git tag -a "$TAG" -m "Stanje main prije push-a" "${{ github.event.before }}"
+            git push origin "$TAG"
+          fi
       - name: Upload backup artifact
         uses: actions/upload-artifact@v4
         with:
