@@ -376,6 +376,7 @@ window.dashboardOpenGameTab=function(tab){
       footer.innerHTML='<div class="dashboard-footer-season"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span>SEZONA 2026/27</span></div><div class="dashboard-footer-brand">MEĐASI FUTSAL LIGA &nbsp; • &nbsp; STRAST &nbsp; • &nbsp; ZAJEDNICA &nbsp; • &nbsp; FUTSAL</div><div class="dashboard-footer-stats"><span><b id="footerTeams">0</b> ekipa</span><span><b id="footerPlayers">0</b> igrača</span><span><b id="footerMatches">0</b> utakmica</span></div>';
       document.body.appendChild(footer);
     }
+    if(typeof window.updateMflSeasonLabels==="function")window.updateMflSeasonLabels();
   }
 
   function bindResponsiveNavigation(){
