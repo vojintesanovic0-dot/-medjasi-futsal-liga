@@ -1,4 +1,4 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v208";
+const CACHE_NAME = "medjasi-futsal-pwa-v209";
 const CDN_CACHE = "medjasi-cdn-v1";
 
 const APP_SHELL = [
@@ -24,12 +24,12 @@ const APP_SHELL = [
   "./css/graphic-engine.css?v=2",
   "./css/extras.css?v=20261013v2",
   "./css/header-final.css?v=9",
-  "./js/extras.js?v=20261013v3",
+  "./js/extras.js?v=20261013v4",
   "./offline.html",
   "./css/medjasi-icons-v1.css?v=20261013fix4",
   "./css/medjasi-icons-v2.css?v=20261013fix2",
   "./css/medjasi-home-v2.css?v=1",
-  "./css/medjasi-matches-v2.css?v=2",
+  "./css/medjasi-matches-v2.css?v=3",
   "./css/medjasi-league-data-v2.css?v=1",
   "./css/medjasi-community-media-v2.css?v=1",
   "./css/medjasi-fan-profile-v2.css?v=1",
