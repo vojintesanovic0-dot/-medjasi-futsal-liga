@@ -1,3 +1,6 @@
+/* Kompatibilnost: sprječava ReferenceError u pozivima admin alata za albume. */
+window.injectAdminAlbumTools = window.injectAdminAlbumTools || function(){};
+
 /* Medjasi Community + Fan utility layer
    Functional-only enhancement. Does not replace the existing visual system.
 */
