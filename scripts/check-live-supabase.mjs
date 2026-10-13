@@ -37,7 +37,18 @@ if (!url || !key) {
     ["comments", "/rest/v1/comments?select=id%2Ccreated_at&order=created_at.desc%2Cid.desc&limit=300"],
     ["messages", "/rest/v1/messages?select=id%2Ccreated_at&order=created_at.desc%2Cid.desc&limit=300"],
     ["gallery", "/rest/v1/gallery?select=id%2Ccreated_at&order=created_at.desc%2Cid.desc&limit=200"],
-    ["match_players", "/rest/v1/match_players?select=match_id%2Cplayer_id&order=match_id.asc%2Cplayer_id.asc&limit=1000"]
+    ["match_players", "/rest/v1/match_players?select=match_id%2Cplayer_id&order=match_id.asc%2Cplayer_id.asc&limit=1000"],
+    // Probe additional public modules so a healthy league snapshot cannot hide a
+    // broken News, Community, Playlist, Fan Shop, markets, or settings endpoint.
+    ["news", "/rest/v1/news?select=id%2Cpublished%2Ccreated_at&order=created_at.desc%2Cid.desc&limit=100"],
+    ["community_posts", "/rest/v1/community_posts?select=id%2Ccreated_at&order=created_at.desc%2Cid.desc&limit=100"],
+    ["community_comments", "/rest/v1/community_comments?select=id%2Ccreated_at&order=created_at.desc%2Cid.desc&limit=200"],
+    ["community_stories", "/rest/v1/community_stories?select=id%2Ccreated_at%2Cexpires_at&order=created_at.desc%2Cid.desc&limit=100"],
+    ["music_tracks", "/rest/v1/music_tracks?select=id%2Csort_order%2Cis_active&order=sort_order.asc%2Cid.asc&limit=100"],
+    ["fan_shop_items", "/rest/v1/fan_shop_items?select=id%2Ckind%2Cprice%2Cactive&order=price.asc%2Cid.asc&limit=100"],
+    ["fan_markets", "/rest/v1/fan_markets?select=id%2Cmatch_id%2Cstatus%2Ccreated_at&order=created_at.desc%2Cid.desc&limit=500"],
+    ["seasons", "/rest/v1/seasons?select=id%2Cis_active&order=is_active.desc%2Cid.asc&limit=20"],
+    ["site_settings", "/rest/v1/site_settings?select=id%2Cyoutube_music_enabled&limit=1"]
   ];
 
   for (const [name, path] of tableProbes) {
