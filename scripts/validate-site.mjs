@@ -30,6 +30,17 @@ if (duplicates.length) fail(`Duplicate HTML IDs: ${duplicates.join(", ")}`);
 else pass(`No duplicate IDs across ${ids.length} HTML IDs`);
 
 if (
+  !app.includes("let medjasiUserInteracted = false") ||
+  !app.includes("if(medjasiUserInteracted) return false;") ||
+  !app.includes('document.addEventListener("pointerdown", markSectionInteraction') ||
+  !app.includes("clearTimeout(medjasiSectionRestoreTimer)")
+) {
+  fail("Delayed remembered-section restore must stop after user interaction and cancel pending restores");
+} else {
+  pass("Remembered-section restore cannot override a user-selected section during async startup");
+}
+
+if (
   !pushConfigMigration.includes("do $$") ||
   !/end;\s*\$\$;/i.test(pushConfigMigration) ||
   !pushConfigMigration.includes("alter table public.push_config enable row level security") ||
