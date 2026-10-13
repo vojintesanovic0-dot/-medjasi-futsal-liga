@@ -433,6 +433,7 @@ try{
       const rect=panel.getBoundingClientRect(),style=getComputedStyle(panel);
       return style.display!=="none"&&style.visibility!=="hidden"&&rect.height>0&&rect.top>=-1&&rect.bottom<=innerHeight+2;
     },null,{timeout:7000});
+    await page.waitForTimeout(120);
     const routeButton=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     await routeButton.evaluate(el=>{
       const grid=el.closest(".mobile-more-grid");
@@ -455,6 +456,7 @@ try{
     await routeButton.evaluate(el=>el.click());
     await page.waitForFunction((id)=>document.querySelector("#"+id+".section")?.classList.contains("active"),sectionId,{timeout:7000});
     await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+    await page.waitForTimeout(120);
     const sectionLayout=await page.evaluate(()=>{
       const visibleOverflow=[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({el,rect})=>{
         if(rect.width<=0||rect.height<=0||rect.bottom<=0||rect.top>=innerHeight||el.closest(".fx-bg")||el.closest('[aria-hidden="true"]'))return false;
