@@ -8251,7 +8251,12 @@ async function init(){
     musicSettingsStartupDeferred=true;
   }
 
-  restoreRememberedSection();
+  // A slow auth/data bootstrap must not override navigation the user already made.
+  if(!window.__MEDJASI_USER_NAVIGATED_DURING_INIT){
+    restoreRememberedSection();
+  }else{
+    console.info("Medjasi startup: keeping the section selected during initialization.");
+  }
   setupTabReturnPersistence();
 
   try {
@@ -8374,6 +8379,21 @@ document.addEventListener(
 ========================================================= */
 
 window.__MEDJASI_APP_READY_STATE="loading";
+window.__MEDJASI_USER_NAVIGATED_DURING_INIT=false;
+document.addEventListener("click",event=>{
+  if(window.__MEDJASI_APP_READY_STATE!=="loading"||!event.isTrusted)return;
+  const target=event.target instanceof Element
+    ?event.target.closest("a,button,[role='button'],[onclick]")
+    :null;
+  if(!target)return;
+  const inlineAction=target.getAttribute("onclick")||"";
+  if(
+    target.matches("#mobileMoreBtn,#mobileMoreDrawer button,.mobile-bottom a,.mobile-bottom button,#mainNav a,#mainNav button")||
+    /showSection|mobileMoreGo|mobileMoreDashboardGo|dashboardOpenGameTab/.test(inlineAction)
+  ){
+    window.__MEDJASI_USER_NAVIGATED_DURING_INIT=true;
+  }
+}
 window.__MEDJASI_APP_READY=init().then(()=>{
   window.__MEDJASI_APP_READY_STATE="ready";
 },error=>{
