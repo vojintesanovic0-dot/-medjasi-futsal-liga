@@ -1522,7 +1522,7 @@ async function resetPassword(){
 ========================================================= */
 
 /* Username rules are shared by registration and profile editing. */
-const USERNAME_RE = /^[A-Za-z0-9_.-]{3,30}$/;
+const USERNAME_RE = /^[\p{L}\p{N}_.-]{3,30}$/u;
 const RESERVED_USERNAMES = new Set(["admin","moderator","medjasi","liga","support","korisnik","user","null","undefined"]);
 
 async function register(){
@@ -1530,7 +1530,8 @@ async function register(){
     document
       .getElementById("registerUsername")
       ?.value
-      .trim();
+      .trim()
+      .replace(/[^\p{L}\p{N}_\-.]/gu,"");
 
   const email =
     document
@@ -1558,7 +1559,7 @@ async function register(){
   }
 
   if(!username || !USERNAME_RE.test(username)){
-    message.textContent = "Korisničko ime mora imati 3–30 znakova: slova bez dijakritike (a–z), brojevi, _ . -";
+    message.textContent = "Korisničko ime mora imati 3–30 znakova: slova, brojevi, _ . -";
     return;
   }
 
