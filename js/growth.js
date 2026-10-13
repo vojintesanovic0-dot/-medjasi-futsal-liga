@@ -129,9 +129,9 @@ async function load(){
 function info(){
   const r=$("gxInfoRoot"); if(!r)return;
   const st=standings(),u=user();
-  let html=(!sb()?'<div class="card gx-unavailable"><h3>Podaci su privremeno nedostupni</h3><p>Tabela i kalendar će se prikazati iz dostupnih podataka; prijava i čuvanje promjena zahtijevaju vezu sa servisom.</p></div>':'')+'<div class="gx-grid"><div class="card"><h3> Tabela</h3><table class="gx-table"><thead><tr><th>#</th><th>Ekipa</th><th>U</th><th>Gol</th><th>Bod</th></tr></thead><tbody>';
+  let html=(!sb()?'<div class="card gx-unavailable"><h3>Podaci su privremeno nedostupni</h3><p>Tabela i kalendar će se prikazati iz dostupnih podataka; prijava i čuvanje promjena zahtijevaju vezu sa servisom.</p></div>':'')+'<div class="gx-grid"><div class="card"><h3> Tabela</h3><div class="gx-table-wrap"><table class="gx-table"><thead><tr><th>#</th><th>Ekipa</th><th>U</th><th>Gol</th><th>Bod</th></tr></thead><tbody>';
   st.forEach((x,i)=>{html+="<tr><td>"+(i+1)+"</td><td>"+E(x.name)+"</td><td>"+x.played+"</td><td>"+x.gf+":"+x.ga+"</td><td><b>"+x.pts+"</b></td></tr>";});
-  html+='</tbody></table></div><div class="card"><h3> Kalendar</h3><button class="btn btn-green" data-gx="ics-all">Dodaj utakmice u kalendar</button></div></div>';
+  html+='</tbody></table></div></div><div class="card"><h3> Kalendar</h3><button class="btn btn-green" data-gx="ics-all">Dodaj utakmice u kalendar</button></div></div>';
   html+='<div class="card"><h3> Prati ekipe</h3>';
   html+=u?TM().map(t=>'<div class="gx-follow"><span>'+E(t.name)+'</span><button class="gx-switch '+(follows.has(String(t.id))?"on":"")+'" data-gx="follow" data-id="'+E(t.id)+'"></button></div>').join(""):'<button class="btn btn-green" onclick="showSection(\'login\')">Prijavi se</button>';
   html+='</div><div class="gx-grid"><div class="card"><h3> Pravila lige</h3><ol class="gx-rules"><li>Trajanje utakmice određeno je pravilnikom lige.</li><li>Pobjeda 3 boda, neriješeno 1.</li><li>Poredak: bodovi, gol-razlika, golovi.</li></ol></div>';
