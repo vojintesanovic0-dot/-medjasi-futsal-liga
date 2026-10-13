@@ -740,7 +740,8 @@ try{
   console.log("PASS all 8 mobile dashboard shortcuts route to their matching tabs");
 
   // Test the actual Fan Game tab controls, not only the dashboard shortcut callbacks.
-  await clickSection("game");
+  await page.evaluate(()=>window.showSection("game"));
+  await page.waitForFunction(()=>!!document.querySelector("#game.section.active"),null,{timeout:8000});
   const gameTabCount=await page.locator("#gameRoot [data-act="+"tab"+"][data-id]").count();
   if(gameTabCount){
     const gameTabs=await page.locator("#gameRoot [data-act="+"tab"+"][data-id]").evaluateAll(buttons=>buttons.map(button=>({id:button.dataset.id,label:(button.innerText||"").trim()})));
