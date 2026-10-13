@@ -721,3 +721,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     flex-shrink: 0 !important;
   }
 }
+
+
+/* The open drawer owns all mobile taps; background tables must not intercept them. */
+@media (max-width: 1024px) {
+  body.mobile-more-open > main,
+  body.mobile-more-open > footer {
+    pointer-events: none !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer {
+    pointer-events: auto !important;
+    z-index: 2147483647 !important;
+  }
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-panel,
+  body.mobile-more-open > .mobile-more-drawer .mobile-more-backdrop {
+    pointer-events: auto !important;
+  }
+}
