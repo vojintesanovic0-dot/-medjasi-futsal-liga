@@ -426,3 +426,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     pointer-events: auto !important;
   }
 }
+
+
+/* Give the More drawer a real scroll viewport so every shortcut stays reachable. */
+@media (max-width: 780px) {
+  .mobile-more-drawer.open .mobile-more-panel {
+    height: min(88dvh, 760px) !important;
+    max-height: calc(100dvh - 36px) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
