@@ -830,7 +830,7 @@ for (const path of cssPaths) {
 }
 if (!failures.some((x) => x.startsWith("Unbalanced CSS") || x.startsWith("Missing CSS import"))) pass(`CSS structure/import checks passed for ${cssPaths.length} stylesheets`);
 
-const frontendFiles = ["index.html", ...jsRefs];
+const frontendFiles = ["index.html", ...linkedJsRefs, ...repositoryJsRefs, "service-worker.js"];
 for (const path of frontendFiles) {
   const source = read(path);
   if (/SUPABASE_SERVICE_ROLE_KEY|service_role/i.test(source)) fail(`Possible privileged Supabase key reference in frontend file: ${path}`);
