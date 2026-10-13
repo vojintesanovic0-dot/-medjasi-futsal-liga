@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   backup-before-merge:
@@ -22,6 +22,13 @@ jobs:
       - name: Create backup archive
         run: |
           git archive --format=tar.gz --output="backup-pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.base.sha }}.tar.gz" HEAD
+      - name: Create immutable backup tag
+        run: |
+          TAG="backup/pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.base.sha }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Backup main prije PR #${{ github.event.pull_request.number }}" "${{ github.event.pull_request.base.sha }}" || true
+          git push origin "$TAG" || echo "Tag već postoji"
       - name: Upload backup artifact
         uses: actions/upload-artifact@v4
         with:
@@ -41,6 +48,13 @@ jobs:
       - name: Create backup archive
         run: |
           git archive --format=tar.gz --output="backup-pre-main-${{ github.run_number }}-${{ github.event.before }}.tar.gz" HEAD
+      - name: Create immutable backup tag
+        run: |
+          TAG="backup/pre-main-${{ github.run_number }}-${{ github.event.before }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Stanje main prije push-a" "${{ github.event.before }}" || true
+          git push origin "$TAG" || echo "Tag već postoji"
       - name: Upload backup artifact
         uses: actions/upload-artifact@v4
         with:
