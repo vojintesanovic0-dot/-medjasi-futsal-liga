@@ -236,7 +236,7 @@
 
 /* Mobile navigation uses the bottom bar + the full-screen More drawer.
    Hide the duplicate header hamburger while keeping its JS compatibility hook. */
-@media (max-width: 1024px) {
+@media (max-width: 780px) {
   html body .site-header .header-inner .header-actions .mobile-menu-btn {
     display: none !important;
   }
