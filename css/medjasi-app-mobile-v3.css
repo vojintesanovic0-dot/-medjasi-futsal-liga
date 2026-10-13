@@ -213,3 +213,133 @@ button,a,[role="button"],summary,label{touch-action:manipulation}
   #modal .v9-profile-full .v9-avatar-big{margin:-30px auto 10px!important}
   #modal .modal-box{max-height:88vh!important;overflow-y:auto!important}
 }
+
+
+/* ---------- v3.5: novi izgled prozora profila (mobilno) ---------- */
+@media (max-width:780px){
+
+  /* Kutija modala: bez razmaka, zaobljena, zatvaranje lebdi preko naslovne slike. */
+  #modal .modal-box:has(.v9-profile-full){
+    position:relative!important;
+    padding:0!important;
+    overflow:hidden!important;
+    border-radius:24px 24px 0 0!important;
+    background:#07121a!important;
+    max-height:90vh!important;
+    overflow-y:auto!important;
+  }
+  #modal .modal-box:has(.v9-profile-full) > button.close{
+    position:absolute!important;
+    top:12px!important;
+    right:12px!important;
+    z-index:4!important;
+    width:38px!important;
+    height:38px!important;
+    border-radius:50%!important;
+    background:rgba(5,13,22,.7)!important;
+    border:1px solid rgba(255,255,255,.14)!important;
+    backdrop-filter:blur(6px);
+  }
+
+  /* Naslovna slika (cover) i avatar koji se preklapa preko nje. */
+  #modal .v9-profile-full{
+    position:relative!important;
+  }
+  #modal .v9-profile-cover{
+    height:132px!important;
+    background:
+      radial-gradient(circle at 18% 20%,rgba(57,245,139,.45),transparent 42%),
+      radial-gradient(circle at 85% 80%,rgba(0,150,255,.35),transparent 45%),
+      linear-gradient(135deg,#0c2a1f,#07121a)!important;
+  }
+  #modal .v9-profile-full-inner{
+    padding:0 18px 28px!important;
+    text-align:center!important;
+    overflow:visible!important;
+  }
+  #modal .v9-profile-full .v9-avatar-big{
+    width:104px!important;
+    height:104px!important;
+    margin:-52px auto 10px!important;
+    border:4px solid #07121a!important;
+    box-shadow:0 0 0 2px rgba(57,245,139,.5),0 12px 30px rgba(0,0,0,.45)!important;
+    border-radius:50%!important;
+  }
+
+  /* Ime, bedž, opis. */
+  #modal .v9-profile-full h2{
+    font-size:22px!important;
+    line-height:1.2!important;
+    margin:0 0 4px!important;
+    display:flex!important;
+    flex-wrap:wrap!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:8px!important;
+  }
+  #modal .v9-profile-full .muted{
+    font-size:14px!important;
+    line-height:1.45!important;
+    max-width:300px!important;
+    margin:0 auto!important;
+  }
+
+  /* Dva glavna dugmeta u jednom redu, jednake širine. */
+  #modal .v9-profile-actions{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+    margin:16px 0 0!important;
+  }
+  #modal .v9-profile-actions .btn{
+    min-height:44px!important;
+    width:100%!important;
+    border-radius:14px!important;
+    font-size:14px!important;
+  }
+
+  /* Statistika u karticama ispod dugmadi. */
+  #modal .v9-profile-stats{
+    margin:14px 0 0!important;
+  }
+
+  /* Objave kao mreža fotografija (3 u redu), bez duge liste. */
+  #modal .v9-feed{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:4px!important;
+    margin-top:16px!important;
+    text-align:left!important;
+  }
+  #modal .v9-feed > div{
+    aspect-ratio:1/1!important;
+    min-width:0!important;
+    overflow:hidden!important;
+    border-radius:10px!important;
+    margin:0!important;
+  }
+  #modal .v9-feed .v9-post-image{
+    width:100%!important;
+    height:100%!important;
+    object-fit:cover!important;
+    border-radius:10px!important;
+    margin:0!important;
+    display:block!important;
+    cursor:pointer;
+  }
+  /* Podpis se ne prikazuje u mreži (vidi se u uvećanom prikazu). */
+  #modal .v9-feed .v9-post-caption{
+    display:none!important;
+  }
+  #modal .v9-feed > .v9-empty,
+  #modal .v9-feed > div.v9-empty{
+    grid-column:1 / -1!important;
+    padding:22px 0!important;
+    color:#8fa4b5!important;
+    text-align:center!important;
+  }
+
+  /* Cover i sadržaj ostaju u pravilnim slojevima na mobilnom. */
+  #modal .v9-profile-cover{position:relative!important;z-index:0!important}
+  #modal .v9-profile-full-inner{position:relative!important;z-index:1!important}
+}
