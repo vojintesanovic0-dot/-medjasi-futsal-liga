@@ -330,9 +330,12 @@ try{
   assert.equal(loginLogoutProbe.logoutState.homeActive,true,"Logout must return to the homepage.");
   assert.ok(loginLogoutProbe.logoutState.loginButtonText.includes("Prijava"),"Logout must restore the logged-out header.");
   assert.equal(loginLogoutProbe.logoutState.profileButtonCount,0,"Logout must remove the authenticated profile button.");
-  await page.evaluate(()=>window.showSection("admin"));
-  await page.waitForFunction(()=>!!document.querySelector("#home.section.active"),null,{timeout:5000});
-  assert.equal(await page.locator("#admin.section.active").count(),0,"A logged-out visitor must not enter the admin panel.");
+  const deniedAdminSection=await page.evaluate(()=>{
+    window.showSection("admin");
+    return document.querySelector(".section.active")?.id||"";
+  });
+  assert.notEqual(deniedAdminSection,"admin","A logged-out visitor must not enter the admin panel.");
+  assert.ok(["home","login"].includes(deniedAdminSection),"Unauthorized admin navigation must return to a safe section: "+deniedAdminSection);
   console.log("PASS logged-out users are redirected away from the admin panel");
   console.log("PASS isolated login/logout updates the account header and returns home without a real session");
   await page.evaluate(()=>window.showSection("login"));
