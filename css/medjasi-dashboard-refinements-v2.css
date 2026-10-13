@@ -830,3 +830,9 @@ main:has(> .section.active:not(#home)) .section.active:not(#home){grid-column:1!
   .sidebar-scroll{min-height:0!important;overflow-y:auto!important}
   .sidebar-fan-panel,.sidebar-season-panel{display:none!important}
 }
+
+
+/* User-requested cleanup: remove the redundant theme toggle and top hamburger.
+   Mobile navigation remains available through the dedicated bottom "Više" drawer. */
+.site-header .dashboard-glow-toggle{display:none!important}
+@media (max-width:1024px){.site-header .mobile-menu-btn{display:none!important}}
