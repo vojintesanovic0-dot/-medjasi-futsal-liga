@@ -436,10 +436,10 @@ try{
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     const shortcutHandle=await shortcut.elementHandle();
     await shortcut.evaluate(el=>{
-      const panel=el.closest(".mobile-more-panel");
-      if(!panel)return;
-      const panelRect=panel.getBoundingClientRect(),rect=el.getBoundingClientRect();
-      panel.scrollTop+=rect.top-panelRect.top-(panel.clientHeight-rect.height)/2;
+      const list=el.closest(".mobile-more-grid");
+      if(!list)return;
+      const listRect=list.getBoundingClientRect(),rect=el.getBoundingClientRect();
+      list.scrollTop+=rect.top-listRect.top-(list.clientHeight-rect.height)/2;
     });
     await page.waitForFunction(el=>{
       if(!el)return false;
