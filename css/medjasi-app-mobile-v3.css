@@ -170,7 +170,7 @@ button,a,[role="button"],summary,label{touch-action:manipulation}
 /* ---------- v3.3: prazan prostor iznad headera i pretraga na mobilnom ---------- */
 @media (max-width:1279px){
   body{padding-top:0!important}
-  body .site-header{top:env(safe-area-inset-top,0px)!important}
+  body .site-header{top:0!important}
   body #v7Search:focus{
     left:10px!important;right:auto!important;
     top:calc(env(safe-area-inset-top,0px) + 12px)!important;
