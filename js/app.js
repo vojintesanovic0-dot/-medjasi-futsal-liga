@@ -11140,6 +11140,7 @@ async function loadNews(){
   return true;
 }
 function renderNews(){
+  ensureNewsQuickAdd();
   const publicNews=V7.news.filter(n=>n.published===true);
   ensureNewsUI();const count=$('newsCount');if(count)count.textContent=`${publicNews.length} ${publicNews.length===1?'vijest':'vijesti'}`;
   const feature=$('newsFeature'),grid=$('newsGrid');if(!grid)return;
@@ -11162,14 +11163,43 @@ function supportedLeagueMedia(file){
   return null;
 }
 
-async function publishNews(){
+function openQuickNews(){
   if(!isAdm())return toastV("Nemaš admin ovlaštenje.","error");
-  const title=$("v7NewsTitle")?.value.trim()||"";
-  const lead=$("v7NewsLead")?.value.trim()||"";
-  const body=$("v7NewsBody")?.value.trim()||"";
-  const kicker=$("v7NewsKicker")?.value.trim()||"VIJEST";
-  const published=$("v7NewsPublished")?.value==="true";
-  const file=$("v7NewsFile")?.files?.[0];
+  showModal(`<div class="modal-title"><span class="hero-kicker">SADRŽAJ LIGE</span><h2>📰 Nova vijest</h2></div>
+    <div class="v7-admin-news-form">
+      <div class="form-group"><label>Naslov</label><input id="v7NewsTitleQ" maxlength="150" placeholder="Naslov vijesti"></div>
+      <div class="form-group"><label>Oznaka</label><input id="v7NewsKickerQ" maxlength="50" placeholder="npr. LIGA, NAJAVA, REZULTAT"></div>
+      <div class="form-group wide"><label>Kratki uvod</label><textarea id="v7NewsLeadQ" maxlength="400" style="min-height:80px" placeholder="Kratak uvod koji se vidi na kartici"></textarea></div>
+      <div class="form-group wide"><label>Sadržaj vijesti</label><textarea id="v7NewsBodyQ" maxlength="10000" placeholder="Tekst vijesti..."></textarea></div>
+      <div class="form-group"><label>Slika ili video</label><input id="v7NewsFileQ" type="file" accept="image/*,video/mp4,video/webm,video/ogg"></div>
+      <div class="form-group"><label>Objavi</label><select id="v7NewsPublishedQ"><option value="true">Odmah javno</option><option value="false">Sačuvaj kao skicu</option></select></div>
+    </div>
+    <div class="actions" style="margin-top:12px"><button class="btn btn-green" onclick="medjasiV7.publishNews('Q')">📰 Objavi vijest</button></div>`);
+}
+function ensureNewsQuickAdd(){
+  const hero=document.querySelector('#news .gallery-hero');
+  if(!hero)return;
+  const existing=$('newsQuickAdd');
+  if(!isAdm()){existing?.remove();return;}
+  if(existing)return;
+  const b=document.createElement('button');
+  b.id='newsQuickAdd';b.type='button';b.className='btn btn-green btn-small';
+  b.textContent='+ Nova vijest';
+  b.addEventListener('click',openQuickNews);
+  const count=$('newsCount');
+  if(count&&count.parentElement===hero)count.insertAdjacentElement('afterend',b);
+  else hero.appendChild(b);
+}
+
+async function publishNews(sfx=""){
+  if(!isAdm())return toastV("Nemaš admin ovlaštenje.","error");
+  const q=k=>$("v7News"+k+sfx);
+  const title=q("Title")?.value.trim()||"";
+  const lead=q("Lead")?.value.trim()||"";
+  const body=q("Body")?.value.trim()||"";
+  const kicker=q("Kicker")?.value.trim()||"VIJEST";
+  const published=q("Published")?.value==="true";
+  const file=q("File")?.files?.[0];
 
   if(!title||!body)return toastV("Unesi naslov i sadržaj vijesti.","error");
 
@@ -11198,8 +11228,9 @@ async function publishNews(){
 
     let pushSent=true;
     if(published)pushSent=await notifyPush("news",`📰 ${title}`,lead||"Nova vijest na sajtu.");
-    ["v7NewsTitle","v7NewsLead","v7NewsBody","v7NewsKicker"].forEach(id=>{if($(id))$(id).value="";});
-    if($("v7NewsFile"))$("v7NewsFile").value="";
+    ["Title","Lead","Body","Kicker"].forEach(k=>{if(q(k))q(k).value="";});
+    if(q("File"))q("File").value="";
+    if(sfx==="Q")hideModal();
     await loadNews();
     if(!published){
       toastV("Skica vijesti je sačuvana.");
