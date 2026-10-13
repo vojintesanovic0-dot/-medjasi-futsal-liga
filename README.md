@@ -47,6 +47,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 28. `sql/27_handle_profile_username_collisions.sql` – pri registraciji pokušava siguran rezervni naziv ako je željeno korisničko ime zauzeto; mijenja samo trigger funkciju i ne dira postojeće profile.
 29. `sql/28_harden_push_config.sql` – uključuje RLS na tabeli `push_config` i uklanja pristup browser ulogama kako VAPID privatni ključ ne bi bio dostupan klijentu; koristi je samo pouzdani server-side service role.
 - `scripts/check-live-supabase.mjs` i `.github/workflows/live-supabase-health.yml`: zasebna, samo-čitačka provjera produkcijskog snapshot API-ja i javnih REST ruta za vijesti, Community objave/komentare/storyje, playlistu, Fan Shop, fan tržišta, sezone i postavke sajta. Provjera prijavljuje greške endpointa, ali prazan sadržaj tretira kao stanje podataka koje treba urediti, a ne kao dokaz da je API nedostupan.
+- `sql/29_fix_public_news_read_policy.sql` – razdvaja javno čitanje objavljenih vijesti od administratorskog pristupa nacrtima; anonimna uloga više ne mora izvršavati `is_admin()` kroz RLS politiku.
 - Status poruka za nedostupni Data API ima razmake između naslova, objašnjenja i dugmeta, pa je čitljiva i u pristupačnom tekstualnom prikazu.
 - Registracija normalizuje korisnička imena i provjerava zauzetost bez blokiranja prijave kada je Data API privremeno nedostupan; server-side trigger ostaje konačna zaštita od duplikata.
 
@@ -57,6 +58,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 - `service-worker.js`: nova verzija cache-a, offline stranica i keširanje jsDelivr Supabase biblioteke.
 - `supabase/functions/fan-admin-action/index.ts`: administratorski RPC pozivi koriste JWT stvarnog administratora kako bi provjere `auth.uid()` ostale ispravne.
 - `supabase/functions/send-push/index.ts`: push naslov koristi pravilan naziv lige, tip obavijesti dolazi iz provjerene vrijednosti, a `match_id` ima ograničenu dužinu. Nakon odobrenja promjena potrebno je deployati Edge funkciju da izmjene važe u produkciji.
+- Javna News politika razdvaja uloge `anon` i `authenticated`: posjetioci čitaju samo objavljene vijesti, dok administrator zadržava pristup nacrtima bez vraćanja javnog `EXECUTE` pristupa funkciji `is_admin()`.
 - Vidljivi naziv lige je normalizovan na `Međasi` bez promjene tehničkih identifikatora i ruta.
 
 - Trenutna grana osvježava `index.html` i Service Worker ključeve pri relevantnim izmjenama; trenutno su `app.js?v=20261013v59`, `growth.js?v=20261012v02`, `css/medjasi-mobile-v2.css?v=20261014v21` i PWA cache `medjasi-futsal-pwa-v208`. Odgođeno vraćanje zapamćene sekcije sada odustaje nakon prve korisničke interakcije, tako da inicijalizacija ne može pregaziti novu navigaciju. Service Worker navigacija tretira HTTP 4xx/5xx kao neuspjeh i vraća keširani app shell ili offline stranicu umjesto da grešku servera zapamti kao početnu stranicu.
