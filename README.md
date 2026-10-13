@@ -16,7 +16,15 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 - **Supabase Auth:** uključi `Leaked Password Protection` u Dashboardu pod **Authentication → Password Security**; to je projektna postavka koja se ne mijenja kroz SQL skripte.
 
 
-## SQL redoslijed pokretanja
+## Jedinstveni sistem migracija — prelazni period
+
+- Nove promjene baze idu isključivo kroz `supabase/migrations/YYYYMMDDHHMMSS_naziv.sql`.
+- Ne pokretati stare fajlove iz `sql/` naslijepo na produkciji: oni su istorijski upgrade koraci i neke operacije nisu bezbjedne za ponavljanje.
+- Produkcijski baseline još nije napravljen i potvrđen. **Ne pokretati `supabase db push` niti arhivirati/uklanjati istorijske SQL fajlove dok se ne napravi i provjeri backup i dok se ne uskladi baseline sa stvarnom šemom.**
+- Nakon potvrđenog baseline-a, `sql/` fajlovi će se premjestiti u `sql/archive/` uz mapiranje na migracije koje su stvarno prisutne u produkciji. Do tada ostaju na mjestu radi revizije.
+- `scripts/validate-site.mjs` provjerava da CLI migracije imaju 14-cifrenu vremensku oznaku i da nema duplih oznaka.
+
+## Istorijski SQL redoslijed (samo za reviziju, ne pokretati naslijepo)
 1. `sql/00_core_schema_REFERENCE.sql` – opcionalna referenca; dodaje RLS samo tabelama koje nemaju nijednu politiku.
 2. `sql/01_fan_game.sql`
 3. `sql/02_security_hardening.sql`
