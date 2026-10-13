@@ -15,3 +15,20 @@
 .graphic-news-fields[hidden]{display:none}
 .graphic-engine-card select,.graphic-engine-card input,.graphic-engine-card textarea{width:100%}
 @media(max-width:850px){.graphic-engine-grid{grid-template-columns:1fr}.graphic-engine-preview{grid-template-columns:1fr}.graphic-preview-label{grid-column:1}.graphic-result-frame{grid-column:1}}
+
+.graphic-engine-effects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin: 10px 0 16px;
+}
+.graphic-engine-effects label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.graphic-engine-effects input[type="checkbox"] {
+  width: auto;
+  accent-color: #b7ff55;
+}
