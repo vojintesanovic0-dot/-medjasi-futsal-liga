@@ -1,4 +1,4 @@
-const CACHE_NAME = "medjasi-futsal-pwa-v210";
+const CACHE_NAME = "medjasi-futsal-pwa-v211";
 const CDN_CACHE = "medjasi-cdn-v1";
 
 const APP_SHELL = [
@@ -61,7 +61,19 @@ const APP_SHELL = [
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
+      .then(async cache => {
+        // One missing optional asset must not abort installation of the whole PWA.
+        const results = await Promise.allSettled(
+          APP_SHELL.map(asset => cache.add(asset))
+        );
+        const failures = results
+          .map((result, index) => ({result, asset: APP_SHELL[index]}))
+          .filter(item => item.result.status === "rejected")
+          .map(item => item.asset);
+        if (failures.length) {
+          console.warn("PWA cache skipped unavailable assets:", failures);
+        }
+      })
       .then(() => self.skipWaiting())
   );
 });
