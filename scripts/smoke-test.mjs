@@ -453,18 +453,10 @@ try{
         getComputedStyle(panel).display!=="none"&&
         getComputedStyle(panel).visibility!=="hidden";
     },null,{timeout:5000});
-    // Wait for the drawer's transition to finish and its panel to settle inside the viewport.
-    await page.waitForFunction(()=>{
-      const drawer=document.querySelector("#mobileMoreDrawer");
-      const panel=drawer?.querySelector(".mobile-more-panel");
-      if(!drawer?.classList.contains("open")||!panel)return false;
-      const rect=panel.getBoundingClientRect(),style=getComputedStyle(panel);
-      return style.display!=="none"&&style.visibility!=="hidden"&&
-        rect.height>0&&rect.top>=-1&&rect.bottom<=innerHeight+2;
-    },null,{timeout:7000});
     const shortcut=page.locator(".mobile-more-grid button").filter({hasText:label}).first();
     const shortcutHandle=await shortcut.elementHandle();
-    // Scroll the independently scrollable shortcut grid to the selected button.
+    // Scroll the drawer's actual scroll container to the shortcut before clicking.
+    // The panel has a fixed heading; the grid itself is the independently scrollable region.
     await shortcut.evaluate(el=>{
       const grid=el.closest(".mobile-more-grid");
       if(!grid)return;
