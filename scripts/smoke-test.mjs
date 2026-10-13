@@ -463,6 +463,12 @@ try{
       const gridRect=grid.getBoundingClientRect(),rect=el.getBoundingClientRect();
       grid.scrollTo({top:grid.scrollTop+rect.top-gridRect.top-(grid.clientHeight-rect.height)/2,behavior:"instant"});
     });
+    const scrollDebug=await shortcut.evaluate(el=>{
+      const grid=el.closest(".mobile-more-grid"),panel=el.closest(".mobile-more-panel");
+      const r=el.getBoundingClientRect(),g=grid?.getBoundingClientRect(),p=panel?.getBoundingClientRect();
+      return {label:(el.textContent||"").trim(),gridScrollTop:grid?.scrollTop,gridScrollHeight:grid?.scrollHeight,gridClientHeight:grid?.clientHeight,gridRect:g?{top:Math.round(g.top),bottom:Math.round(g.bottom)}:null,buttonRect:{top:Math.round(r.top),bottom:Math.round(r.bottom)},panelRect:p?{top:Math.round(p.top),bottom:Math.round(p.bottom)}:null,gridOverflow:getComputedStyle(grid).overflowY,panelDisplay:getComputedStyle(panel).display,panelTransform:getComputedStyle(panel).transform};
+    });
+    console.log("MOBILE DRAWER SCROLL DEBUG "+JSON.stringify(scrollDebug));
     await page.waitForFunction(el=>{
       if(!el)return false;
       const rect=el.getBoundingClientRect();
