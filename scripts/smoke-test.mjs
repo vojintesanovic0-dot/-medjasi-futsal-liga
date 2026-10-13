@@ -468,6 +468,40 @@ try{
   await page.locator("#mobileMoreBtn").waitFor({state:"visible",timeout:10000});
   console.log("PASS narrow 320px mobile layout and single-column More drawer");
 
+  // Recheck all requested common phone widths, not only the narrowest layout.
+  for (const width of [360,390,430]) {
+    await page.setViewportSize({width,height:844});
+    await page.reload({waitUntil:"domcontentloaded",timeout:30000});
+    await page.locator("#mobileMoreBtn").waitFor({state:"visible",timeout:10000});
+    await page.locator("#mobileMenuBtn").waitFor({state:"attached",timeout:10000});
+    const viewportProbe=await page.evaluate(()=>{
+      const visibleOverflow=[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({el,rect})=>{
+        if(rect.width<=0||rect.height<=0||rect.bottom<=0||rect.top>=innerHeight||el.closest(".fx-bg")||el.closest('[aria-hidden="true"]'))return false;
+        for(let node=el;node&&node!==document.documentElement;node=node.parentElement){
+          const style=getComputedStyle(node);
+          if(style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
+        }
+        return rect.right>innerWidth+2||rect.left< -2;
+      }).slice(0,12).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",right:Math.round(rect.right),left:Math.round(rect.left),width:Math.round(rect.width)}));
+      const hamburger=document.querySelector("#mobileMenuBtn");
+      const more=document.querySelector("#mobileMoreBtn");
+      return {
+        viewport:innerWidth,
+        document:document.documentElement.scrollWidth,
+        body:document.body.scrollWidth,
+        visibleOverflow,
+        hamburgerDisplay: hamburger ? getComputedStyle(hamburger).display : "missing",
+        moreVisible: !!more && getComputedStyle(more).display!=="none" && getComputedStyle(more).visibility!=="hidden"
+      };
+    });
+    assert.ok(viewportProbe.document<=width+2&&viewportProbe.body<=width+2&&viewportProbe.visibleOverflow.length===0,"Visible horizontal overflow at "+width+"px: "+JSON.stringify(viewportProbe));
+    assert.equal(viewportProbe.hamburgerDisplay,"none","Duplicate header hamburger must stay hidden at "+width+"px.");
+    assert.equal(viewportProbe.moreVisible,true,"The bottom More navigation must remain available at "+width+"px.");
+    console.log("PASS "+width+"px mobile layout: no horizontal overflow, duplicate hamburger hidden, More navigation available");
+  }
+  await page.setViewportSize({width:390,height:844});
+  await page.reload({waitUntil:"domcontentloaded",timeout:30000});
+
   const dashboardRoutes=[["shop","Fan Shop"],["fanbase","Fan Base"],["mine","Moji tiketi"],["live","Live centar"],["board","Nagrade i poredak"],["collection","Kolekcija"],["club","Moja tribina"],["mvp","MVP"]];
   await page.evaluate(()=>{
     window.__mobileMoreDashboardProbe=null;
