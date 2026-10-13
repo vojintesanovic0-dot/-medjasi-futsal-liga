@@ -763,6 +763,19 @@ const cacheName = sw.match(/const CACHE_NAME\s*=\s*["']([^"']+)["']/)?.[1];
 if (!cacheName || !/\bv\d+$/.test(cacheName)) fail("CACHE_NAME is missing or not versioned");
 else pass(`Service-worker cache is versioned: ${cacheName}`);
 
+const navigationHandlerStart = sw.indexOf('if (request.mode === "navigate")');
+const navigationHandlerEnd = sw.indexOf("// JS/CSS:", navigationHandlerStart);
+const navigationHandler = navigationHandlerStart >= 0 && navigationHandlerEnd > navigationHandlerStart
+  ? sw.slice(navigationHandlerStart, navigationHandlerEnd)
+  : "";
+if (
+  !navigationHandler.includes("!response || !response.ok") ||
+  !navigationHandler.includes('caches.match("./index.html")') ||
+  !navigationHandler.includes('caches.match("./offline.html")')
+) {
+  fail("Navigation requests must fall back to the cached app shell/offline page on HTTP errors without caching failed responses");
+} else pass("Service Worker navigation falls back safely on HTTP errors and network failures");
+
 const navTargets = [...html.matchAll(/showSection\(["']([^"']+)["']\)/g)].map((m) => m[1]);
 const staticIds = new Set(ids);
 const dynamicSections = new Set();
