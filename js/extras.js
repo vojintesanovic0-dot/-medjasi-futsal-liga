@@ -12,52 +12,8 @@ const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>
 const G=name=>{try{return (0,eval)(name)}catch{return undefined}};
 const list=name=>{const v=G(name);return Array.isArray(v)?v:[]};
 
-/* ======================= TEMA ======================= */
-const THEME_KEY="medjasi_theme";
-function applyTheme(t){
-  document.documentElement.setAttribute("data-theme",t);
-  const m=$("metaThemeColor");if(m)m.setAttribute("content",t==="light"?"#eef3f8":"#07111f");
-  const b=$("xtThemeBtn");if(b){b.textContent=t==="light"?"🌙":"☀️";b.setAttribute("aria-label",t==="light"?"Tamna tema":"Svijetla tema");b.title=b.getAttribute("aria-label")}
-}
-function initTheme(){
-  let t="dark";try{t=localStorage.getItem(THEME_KEY)||"dark"}catch{}
-  applyTheme(t);
-  const host=document.querySelector(".header-actions");
-  if(host&&!$("xtThemeBtn")){
-    const b=document.createElement("button");
-    b.id="xtThemeBtn";b.type="button";b.className="xt-theme-btn";
-    b.onclick=()=>{const n=document.documentElement.getAttribute("data-theme")==="light"?"dark":"light";try{localStorage.setItem(THEME_KEY,n)}catch{}applyTheme(n)};
-    host.prepend(b);applyTheme(t);
-  }
-}
+/* Theme switching is intentionally disabled; the league keeps its dark theme. */
 
-/* ======================= LIMIT SLANJA (klijent) ======================= */
-const LIMITS={messages:{gap:2500,max:8},comments:{gap:4000,max:5}};
-const sent={messages:[],comments:[]};
-const lastText={messages:new Map(),comments:new Map()};
-function checkLimit(table,row){
-  const L=LIMITS[table];if(!L)return null;
-  const now=Date.now();
-  sent[table]=sent[table].filter(t=>now-t<60000);
-  const arr=sent[table];
-  if(arr.length&&now-arr[arr.length-1]<L.gap)return "Prebrzo šalješ. Pričekaj nekoliko sekundi.";
-  if(arr.length>=L.max)return "Previše poruka u kratkom roku. Pokušaj za minut.";
-  const r=Array.isArray(row)?row[0]:row;
-  const txt=String(r?.content||"").trim().toLowerCase();
-  if(txt){
-    const prev=lastText[table].get(txt);
-    if(prev&&now-prev<60000)return "Ista poruka je već poslana. Pričekaj prije ponovnog slanja.";
-    lastText[table].set(txt,now);
-    if(lastText[table].size>50){for(const [k,v] of lastText[table])if(now-v>60000)lastText[table].delete(k)}
-  }
-  arr.push(now);return null;
-}
-function failedBuilder(message){
-  const res={data:null,error:{message,code:"RATE_LIMIT"}};
-  const b={select(){return b},single(){return b},maybeSingle(){return b},
-    then:(ok,no)=>Promise.resolve(res).then(ok,no),catch:no=>Promise.resolve(res).catch(no)};
-  return b;
-}
 function installRateLimit(){
   const c=window.supabaseClient;if(!c||c.__xtRL)return;
   const orig=c.from.bind(c);
@@ -252,7 +208,7 @@ function hook(){
   const mc=$("modalContent");
   if(mc&&!mc.__xtObs){mc.__xtObs=new MutationObserver(injectMatchActions);mc.__xtObs.observe(mc,{childList:true})}
 }
-function init(){initTheme();installRateLimit();hook();afterRender()}
+function init(){installRateLimit();hook();afterRender()}
 window.medjasiExtras={downloadICS,shareResult,buildICS,computeTop,computeFair,checkLimit,state:st};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })();
