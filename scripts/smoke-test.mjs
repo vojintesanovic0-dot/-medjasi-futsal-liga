@@ -397,6 +397,24 @@ try{
   assert.equal(mobileWidth.topMenuVisible,false,"The duplicate top hamburger must be hidden on phones.");
   assert.equal(await page.locator(".xt-theme-btn, #themeToggle, [data-theme-toggle]").count(),0,"The removed light/dark theme toggle must not return.");
   await page.waitForFunction(()=>window.__MEDJASI_APP_READY_STATE==="ready"||window.__MEDJASI_APP_READY_STATE==="failed",null,{timeout:25000});
+  await page.waitForFunction(()=>typeof window.medjasiGrowth?.buildICS==="function",null,{timeout:10000});
+  const calendarProbe=await page.evaluate(()=>{
+    try{
+      const calendar=window.medjasiGrowth.buildICS([{id:"invalid-date",match_date:"not-a-real-date"}]);
+      return {ok:true,calendar};
+    }catch(error){
+      return {ok:false,error:String(error?.message||error)};
+    }
+  });
+  assert.equal(calendarProbe.ok,true,"Invalid match dates must not crash calendar export: "+JSON.stringify(calendarProbe));
+  assert.ok(calendarProbe.calendar.includes("BEGIN:VCALENDAR")&&!calendarProbe.calendar.includes("BEGIN:VEVENT"),"Invalid match dates should be skipped without creating malformed events.");
+  console.log("PASS calendar export skips invalid match dates without throwing");
+
+  await page.evaluate(()=>document.getElementById("modal")?.classList.add("active"));
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(()=>!document.getElementById("modal")?.classList.contains("active"),null,{timeout:5000});
+  console.log("PASS Escape dismisses an active modal");
+
   await page.setViewportSize({width:320,height:740});
   const compactWidth=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth}));
   assert.ok(compactWidth.document<=compactWidth.viewport+2&&compactWidth.body<=compactWidth.viewport+2,"Horizontal overflow on a compact 320px phone: "+JSON.stringify(compactWidth));
