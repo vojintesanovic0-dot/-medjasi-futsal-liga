@@ -222,11 +222,34 @@
     }finally{moving=false;}
   }
 
+  /* Jedinstvene admin kartice: uklanjaju se samo stvarni duplikati u DOM-u. */
+  const SINGLETON_CARDS = [
+    { name: "galerija", selectors: ["#adminGalleryList", "#galleryImageFile"] },
+    { name: "playlist", selectors: ["#adminMusicPlaylist", "#musicAdminStatus"] },
+    { name: "push", selectors: ["#v7PushCard"] }
+  ];
+
+  function enforceSingletonCards(host) {
+    if (!host) return;
+    SINGLETON_CARDS.forEach(spec => {
+      let keep = null;
+      spec.selectors.forEach(sel => {
+        host.querySelectorAll(sel).forEach(el => {
+          const card = el.closest(".card:not(#adminOrganizer):not(.admin-organizer-group)") || el;
+          if (!keep) { keep = card; return; }
+          if (card === keep || card.contains(keep) || keep.contains(card)) return;
+          card.remove();
+        });
+      });
+    });
+  }
+
   function render(){
     const host=root(); if(!host||!isAdmin()) return;
     const organizer=buildShell(host);
     moveCards(host,organizer);
     dedupeUniqueContentCards(host,organizer);
+    enforceSingletonCards(host);
     organizer.querySelectorAll(".admin-organizer-group").forEach(section=>{
       const isActive=section.dataset.adminOrganizerGroupContainer===active;
       section.hidden=!isActive;
