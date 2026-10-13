@@ -421,6 +421,18 @@ try{
     assert.equal(responsiveProbe.moreVisible,true,"The More navigation must remain visible at "+width+"px.");
     console.log("PASS "+width+"px mobile layout: no page overflow, hamburger hidden, More navigation visible");
   }
+  await page.setViewportSize({width:900,height:900});
+  const tabletProbe=await page.evaluate(()=>{
+    const hamburger=document.querySelector("#mobileMenuBtn");
+    const navAvailable=[...document.querySelectorAll("#mainNav, #sidebar, .sidebar, .mobile-bottom, #mobileMoreBtn")].some(el=>{
+      const style=getComputedStyle(el),rect=el.getBoundingClientRect();
+      return style.display!=="none"&&style.visibility!=="hidden"&&rect.width>0&&rect.height>0;
+    });
+    return {viewport:innerWidth,hamburgerDisplay:hamburger?getComputedStyle(hamburger).display:"missing",navAvailable};
+  });
+  assert.equal(tabletProbe.hamburgerDisplay,"none","Duplicate top hamburger must remain hidden on tablet.");
+  assert.equal(tabletProbe.navAvailable,true,"At least one established navigation surface must remain available on tablet.");
+  console.log("PASS tablet navigation: duplicate header hamburger hidden and established navigation remains available");
   await page.setViewportSize({width:390,height:844});
   await page.locator("#mobileMoreBtn").click();
   await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
