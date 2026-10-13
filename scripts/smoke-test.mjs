@@ -648,6 +648,13 @@ try{
   await page.setViewportSize({width:390,height:844});
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
 
+  // Do not race the real app bootstrap: its delayed remembered-section restore can
+  // otherwise close the drawer while this test is checking shortcut hit targets.
+  await page.waitForFunction(()=>window.__MEDJASI_APP_READY_STATE==="ready"||window.__MEDJASI_APP_READY_STATE==="failed",null,{timeout:25000});
+  const appReadyState=await page.evaluate(()=>window.__MEDJASI_APP_READY_STATE);
+  assert.equal(appReadyState,"ready","Application initialization must settle before testing interactive mobile routes.");
+  console.log("PASS app initialization settled before mobile drawer interaction tests");
+
   const dashboardRoutes=[["shop","Fan Shop"],["fanbase","Fan Base"],["mine","Moji tiketi"],["live","Live centar"],["board","Nagrade i poredak"],["collection","Kolekcija"],["club","Moja tribina"],["mvp","MVP"]];
   await page.evaluate(()=>{
     window.__mobileMoreCloseTrace=[];
