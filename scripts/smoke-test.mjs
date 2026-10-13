@@ -625,7 +625,8 @@ try{
   for(const [destination,table] of [["community","community_posts"],["chat","messages"],["news","news"]]){
     await page.locator("#graphicDestination").selectOption(destination);
     await page.locator("#graphicPublishBtn").evaluate(el=>el.click());
-    await page.waitForFunction(expected=>window.__graphicPublishTest?.records?.length===expected,window.__graphicPublishTest ? (await page.evaluate(()=>window.__graphicPublishTest.records.length))+1 : 1,{timeout:5000});
+    const expectedCount=(await page.evaluate(()=>window.__graphicPublishTest.records.length))+1;
+    await page.waitForFunction(expected=>window.__graphicPublishTest?.records?.length===expected,expectedCount,{timeout:5000});
     const record=await page.evaluate(()=>window.__graphicPublishTest.records.at(-1));
     assert.equal(record.table,table,"Graphic publish destination "+destination+" must insert into "+table+".");
     assert.ok(record.row.image_url||record.row.media_url,"Published graphic must include the uploaded image URL.");
