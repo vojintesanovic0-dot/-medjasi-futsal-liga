@@ -347,3 +347,228 @@
     pointer-events: none !important;
   }
 }
+
+/* Installed-PWA polish: app-like screens, solid surfaces, safe-area navigation. */
+@media (max-width: 780px) {
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
+  }
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .site-header .header-actions .mobile-menu-btn,
+  #mobileMenuBtn {
+    display: none !important;
+  }
+  .site-header {
+    padding-top: env(safe-area-inset-top);
+  }
+  .site-header .header-inner {
+    min-height: 60px !important;
+  }
+  main {
+    padding-bottom: calc(102px + env(safe-area-inset-bottom)) !important;
+  }
+  main > .section.active {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere;
+    animation: medjasi-screen-enter .18s ease-out both;
+  }
+  .section.active .card,
+  .section.active .panel,
+  .section.active .stat-card,
+  .section.active .table-wrap,
+  .section.active .filters {
+    min-width: 0;
+    border-color: rgba(125, 190, 157, .2) !important;
+  }
+  .section.active .card,
+  .section.active .panel,
+  .section.active .stat-card {
+    background: #0b1714 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
+  }
+  .section.active input,
+  .section.active select,
+  .section.active textarea {
+    min-width: 0;
+    max-width: 100%;
+    color: #f0fff6 !important;
+    background: #07110e !important;
+    border-color: rgba(125, 190, 157, .28) !important;
+  }
+  .section.active button,
+  .mobile-bottom button,
+  .mobile-more-grid button {
+    touch-action: manipulation;
+  }
+  .mobile-bottom {
+    bottom: max(6px, env(safe-area-inset-bottom)) !important;
+    background: #07100df5 !important;
+    border-color: rgba(75, 220, 137, .25) !important;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  .mobile-bottom button {
+    min-width: 0 !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-bottom button.active {
+    color: #f0fff7 !important;
+    background: rgba(57, 245, 139, .13) !important;
+    box-shadow: inset 0 0 0 1px rgba(57, 245, 139, .18);
+  }
+  .mobile-more-drawer.open {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483000 !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+    background: rgba(0, 0, 0, .68) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .mobile-more-drawer.open .mobile-more-panel {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: min(88dvh, 760px) !important;
+    max-height: calc(100dvh - env(safe-area-inset-top) - 12px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 16px 12px max(12px, env(safe-area-inset-bottom)) !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(57, 245, 139, .22) !important;
+    border-radius: 22px 22px 0 0 !important;
+    background: #06110e !important;
+    box-shadow: 0 -18px 60px rgba(0, 0, 0, .55) !important;
+    transform: none !important;
+  }
+  .mobile-more-drawer.open .mobile-more-head {
+    flex: 0 0 auto !important;
+    position: relative;
+    background: #06110e !important;
+  }
+  .mobile-more-drawer.open .mobile-more-close {
+    flex: 0 0 42px;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 13px !important;
+    background: #10231b !important;
+    border: 1px solid rgba(57, 245, 139, .25) !important;
+  }
+  .mobile-more-drawer.open .mobile-more-grid {
+    display: grid !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-content: start !important;
+    gap: 9px !important;
+    margin-top: 12px;
+    padding: 2px 2px max(16px, env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .mobile-more-grid button {
+    min-width: 0 !important;
+    min-height: 78px !important;
+    padding: 11px 9px !important;
+    border: 1px solid rgba(125, 190, 157, .17) !important;
+    border-radius: 15px !important;
+    color: #e8f7ee !important;
+    background: #0b1b15 !important;
+    text-align: left;
+  }
+  .mobile-more-grid button b {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+  .mobile-more-grid button small {
+    display: block;
+    margin-top: 4px;
+    color: #91aa9b !important;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  .modal,
+  .modal-overlay,
+  [role="dialog"] {
+    background: rgba(0, 0, 0, .76) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .modal-box,
+  [role="dialog"] > * {
+    color: #effbf4;
+    background: #081510 !important;
+    border-color: rgba(125, 190, 157, .24) !important;
+    box-shadow: 0 20px 70px rgba(0, 0, 0, .55) !important;
+  }
+  .section.active .table-wrap {
+    overflow-x: auto !important;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .section.active table {
+    max-width: none;
+  }
+  :focus-visible {
+    outline: 2px solid #39f58b !important;
+    outline-offset: 2px;
+  }
+}
+@media (max-width: 360px) {
+  .mobile-more-drawer.open .mobile-more-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .mobile-more-grid button {
+    min-height: 66px !important;
+  }
+}
+@media (display-mode: standalone) and (max-width: 780px) {
+  .mobile-bottom {
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  }
+  main {
+    padding-bottom: calc(106px + env(safe-area-inset-bottom)) !important;
+  }
+}
+@keyframes medjasi-screen-enter {
+  from { opacity: .82; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  main > .section.active { animation: none !important; }
+}
+
+
+/* Override later legacy header selectors on phone widths without removing their handlers. */
+@media (max-width: 780px) {
+  html body #mobileMenuBtn,
+  html body .site-header .header-inner .header-actions .mobile-menu-btn {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
