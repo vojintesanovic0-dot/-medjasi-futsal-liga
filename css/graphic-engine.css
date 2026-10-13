@@ -47,3 +47,10 @@
 .graphic-engine-adjustments input[type="range"]{width:100%;min-height:28px;padding:0;accent-color:#b7ff55;cursor:pointer}
 .graphic-engine-adjustments select{width:100%}
 @media(max-width:640px){.graphic-engine-adjustments{grid-template-columns:1fr;padding:11px}}
+
+
+/* Match graphic inputs — scoped to the existing Graphic Engine card */
+.graphic-engine-match-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px;margin:14px 0;border:1px solid rgba(183,255,85,.16);border-radius:14px;background:rgba(183,255,85,.035)}
+.graphic-engine-match-fields .form-group{min-width:0;margin:0}
+.graphic-engine-match-fields .graphic-engine-help{grid-column:1/-1}
+@media(max-width:640px){.graphic-engine-match-fields{grid-template-columns:1fr;padding:11px}}
