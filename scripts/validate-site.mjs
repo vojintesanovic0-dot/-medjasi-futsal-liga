@@ -14,6 +14,7 @@ const pathFromRef = (ref) => {
 const html = read("index.html");
 const sw = read("service-worker.js");
 const app = read("js/app.js");
+const headerCss = read("css/medjasi-header-fix-v1.css");
 const game = read("js/game.js");
 const dashboard = read("js/dashboard-layout-v1.js");
 const growth = read("js/growth.js");
@@ -665,12 +666,14 @@ if (
 
 if (
   !html.includes('id="mobileMenuBtn" onclick="toggleMobileMenu()"') ||
+  !headerCss.includes('html body #mobileMenuBtn') ||
+  !headerCss.includes('display: none !important') ||
   !app.includes('nav?.classList.toggle("mobile-open",mobileMenuOpen)') ||
   !app.includes('btn.setAttribute("aria-expanded",String(mobileMenuOpen))') ||
   !app.includes('document.getElementById("mainNav")?.classList.remove("mobile-open","open")')
 ) {
-  fail("Mobile header menu must open, close, and keep its expanded state synchronized");
-} else pass("Mobile header menu opens and closes with synchronized accessibility state");
+  fail("Duplicate header hamburger must stay hidden while legacy navigation handlers remain intact");
+} else pass("Duplicate header hamburger is hidden and legacy handlers remain available for compatibility");
 
 if (
   !app.includes("function openMobileMore()") ||
