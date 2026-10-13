@@ -21,6 +21,7 @@ const growth = read("js/growth.js");
 const css = read("css/medjasi-dashboard-refinements-v2.css");
 const extras = read("js/extras.js");
 const extrasCss = read("css/extras.css");
+const mobileCss = read("css/medjasi-mobile-v2.css");
 
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((m) => m[1]);
 const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
@@ -38,6 +39,18 @@ if (
   fail("The removed light/dark theme switcher must not be rendered or reintroduced by the extras layer");
 } else {
   pass("The light/dark theme switcher remains removed; the site keeps its single dark theme");
+}
+
+if (
+  !growth.includes('class="gx-table-wrap"') ||
+  !growth.includes("</table></div></div><div class=\"card\"><h3> Kalendar") ||
+  !mobileCss.includes("#gxInfoRoot .gx-table-wrap") ||
+  !mobileCss.includes("overflow-x: auto !important") ||
+  !mobileCss.includes("#gxInfoRoot .gx-table")
+) {
+  fail("Liga Info standings must use a bounded horizontal scroll container on mobile");
+} else {
+  pass("Liga Info standings table stays inside a deliberate mobile horizontal-scroll container");
 }
 
 const authStart = html.indexOf('<section class="section auth-section" id="login">');
