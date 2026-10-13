@@ -2963,7 +2963,7 @@ function enhancedMatchHTML(m){
 
           ${
             live
-              ? `${m.current_minute || 0}'`
+              ? `${getLiveMinute(m)}'`
               : formatDate(m.match_date)
           }
 
