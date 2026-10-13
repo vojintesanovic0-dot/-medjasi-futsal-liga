@@ -29,6 +29,11 @@
     body: "",
     graphicHeadline: "",
     graphicSubtitle: "",
+    matchHome: "MEĐASI",
+    matchOpponent: "",
+    matchScore: "",
+    matchDate: "",
+    matchVenue: "",
     accentColor: "#b7ff55",
     photoZoom: 1,
     photoFocusY: 0,
@@ -316,8 +321,19 @@
     if(template==="upcoming") sub="SLJEDEĆA UTAKMICA · "+teamName;
     if(state.graphicSubtitle.trim()) sub=state.graphicSubtitle.trim();
 
-    drawText(ctx,headline,60,1180,58,"800");
-    drawText(ctx,sub,60,1230,30,"600");
+    if(template==="matchresult" || template==="upcoming"){
+      const home=(state.matchHome.trim()||"MEĐASI").slice(0,20);
+      const opponent=(state.matchOpponent.trim()||"PROTIVNIK").slice(0,20);
+      const center=template==="matchresult" ? (state.matchScore.trim()||"— : —").slice(0,12) : "VS";
+      drawText(ctx,home,60,1180,36,"800","left");
+      drawText(ctx,center,540,1180,48,"800","center");
+      drawText(ctx,opponent,1020,1180,36,"800","right");
+      const matchMeta=[state.matchDate.trim(),state.matchVenue.trim()].filter(Boolean).join(" · ");
+      drawText(ctx,(matchMeta||sub).slice(0,62),60,1235,25,"600");
+    }else{
+      drawText(ctx,headline,60,1180,58,"800");
+      drawText(ctx,sub,60,1230,30,"600");
+    }
 
     if(position) drawText(ctx,position.toUpperCase(),1020,1100,24,"700","right");
     if(number) drawText(ctx,number,1020,1175,38,"800","right");
@@ -492,7 +508,8 @@
     if(!clean){toast("Unesi naziv postavki.","error");return;}
     if(presets[clean]&&!window.confirm("Postavke s tim nazivom već postoje. Želiš li ih zamijeniti?"))return;
     presets[clean]={
-      template:state.template,graphicHeadline:state.graphicHeadline,graphicSubtitle:state.graphicSubtitle,accentColor:state.accentColor,
+      template:state.template,graphicHeadline:state.graphicHeadline,graphicSubtitle:state.graphicSubtitle,
+      matchHome:state.matchHome,matchOpponent:state.matchOpponent,matchScore:state.matchScore,matchDate:state.matchDate,matchVenue:state.matchVenue,accentColor:state.accentColor,
       photoZoom:state.photoZoom,photoFocusY:state.photoFocusY,photoShade:state.photoShade,fontFamily:state.fontFamily,
       destination:state.destination,caption:state.caption,title:state.title,body:state.body
     };
@@ -516,6 +533,11 @@
     if(preset.template&&$("graphicTemplate"))$("graphicTemplate").value=preset.template;
     if(preset.graphicHeadline!==undefined&&$("graphicHeadline"))$("graphicHeadline").value=preset.graphicHeadline;
     if(preset.graphicSubtitle!==undefined&&$("graphicSubtitle"))$("graphicSubtitle").value=preset.graphicSubtitle;
+    if(preset.matchHome!==undefined&&$("graphicMatchHome"))$("graphicMatchHome").value=preset.matchHome;
+    if(preset.matchOpponent!==undefined&&$("graphicMatchOpponent"))$("graphicMatchOpponent").value=preset.matchOpponent;
+    if(preset.matchScore!==undefined&&$("graphicMatchScore"))$("graphicMatchScore").value=preset.matchScore;
+    if(preset.matchDate!==undefined&&$("graphicMatchDate"))$("graphicMatchDate").value=preset.matchDate;
+    if(preset.matchVenue!==undefined&&$("graphicMatchVenue"))$("graphicMatchVenue").value=preset.matchVenue;
     if(/^#[0-9a-f]{6}$/i.test(preset.accentColor||"")&&$("graphicAccentColor"))$("graphicAccentColor").value=preset.accentColor;
     if(Number.isFinite(Number(preset.photoZoom))&&$("graphicPhotoZoom"))$("graphicPhotoZoom").value=preset.photoZoom;
     if(Number.isFinite(Number(preset.photoFocusY))&&$("graphicPhotoFocusY"))$("graphicPhotoFocusY").value=preset.photoFocusY;
@@ -553,6 +575,11 @@
     state.body=$("graphicNewsBody")?.value || "";
     state.graphicHeadline=$("graphicHeadline")?.value || "";
     state.graphicSubtitle=$("graphicSubtitle")?.value || "";
+    state.matchHome=$("graphicMatchHome")?.value || "MEĐASI";
+    state.matchOpponent=$("graphicMatchOpponent")?.value || "";
+    state.matchScore=$("graphicMatchScore")?.value || "";
+    state.matchDate=$("graphicMatchDate")?.value || "";
+    state.matchVenue=$("graphicMatchVenue")?.value || "";
     state.accentColor=$("graphicAccentColor")?.value || "#b7ff55";
     state.photoZoom=Number($("graphicPhotoZoom")?.value||1);
     state.photoFocusY=Number($("graphicPhotoFocusY")?.value||0);
@@ -666,6 +693,15 @@
             </select>
           </div>
 
+          <div class="graphic-engine-match-fields">
+            <div class="form-group"><label for="graphicMatchHome">Domaća ekipa</label><input id="graphicMatchHome" maxlength="30" value="MEĐASI" placeholder="MEĐASI"></div>
+            <div class="form-group"><label for="graphicMatchOpponent">Protivnik</label><input id="graphicMatchOpponent" maxlength="30" placeholder="Naziv protivnika"></div>
+            <div class="form-group"><label for="graphicMatchScore">Rezultat</label><input id="graphicMatchScore" maxlength="12" placeholder="4 : 2"></div>
+            <div class="form-group"><label for="graphicMatchDate">Datum / vrijeme</label><input id="graphicMatchDate" maxlength="50" placeholder="13.10.2026. · 20:00"></div>
+            <div class="form-group"><label for="graphicMatchVenue">Dvorana / lokacija</label><input id="graphicMatchVenue" maxlength="50" placeholder="Sportska dvorana"></div>
+            <p class="graphic-engine-help muted">Ova polja koriste se za „Rezultat utakmice“ i „Najava utakmice“.</p>
+          </div>
+
           <div class="form-group">
             <label>Objavi u</label>
             <select id="graphicDestination">
@@ -746,6 +782,7 @@
     $("graphicLoadPresetBtn")?.addEventListener("click",loadPreset);
     $("graphicHeadline")?.addEventListener("input",markDesignDirty);
     $("graphicSubtitle")?.addEventListener("input",markDesignDirty);
+    ["graphicMatchHome","graphicMatchOpponent","graphicMatchScore","graphicMatchDate","graphicMatchVenue"].forEach(id=>$(id)?.addEventListener("input",markDesignDirty));
     $("graphicAccentColor")?.addEventListener("input",markDesignDirty);
     $("graphicTemplate")?.addEventListener("change",markDesignDirty);
     ["graphicPhotoZoom","graphicPhotoFocusY","graphicPhotoShade","graphicFontFamily"].forEach(id=>$(id)?.addEventListener("input",()=>{
