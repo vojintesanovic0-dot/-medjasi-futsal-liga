@@ -57,6 +57,6 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 - `supabase/functions/fan-admin-action/index.ts`: administratorski RPC pozivi koriste JWT stvarnog administratora kako bi provjere `auth.uid()` ostale ispravne.
 - Vidljivi naziv lige je normalizovan na `Međasi` bez promjene tehničkih identifikatora i ruta.
 
-- Nakon izmjena registracije ažurirani su `index.html` i Service Worker cache ključevi (`app.js?v=20261012v52`, PWA cache medjasi-futsal-pwa-v179), kako bi korisnici dobili novi JavaScript umjesto stare keširane verzije.
+- Nakon popravke mobilne navigacije i uklanjanja prekidača svijetle/tamne teme ažurirani su `index.html` i Service Worker: `app.js?v=20261012v54`, `extras.js/css?v=20261013v2`, PWA cache `medjasi-futsal-pwa-v181`.
 
-- Mobile PWA app-shell polish: mobile stylesheet and final header override use `?v=20261013app`; Service Worker cache `medjasi-futsal-pwa-v178`.
+- Mobile PWA app-shell polish: `medjasi-mobile-v2.css?v=20261013app2`; final header override `medjasi-header-fix-v1.css?v=20261013app`. Mobilni meni „Više” zatvara se i tipkom Escape.
