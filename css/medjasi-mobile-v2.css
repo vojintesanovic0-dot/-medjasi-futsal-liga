@@ -784,3 +784,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     animation: none !important;
   }
 }
+
+
+/* Prevent legacy translateY transitions from leaving the drawer off-screen during fast taps. */
+@media (max-width: 1024px) {
+  html body #mobileMoreDrawer .mobile-more-panel {
+    transition: opacity .18s ease !important;
+  }
+  html body #mobileMoreDrawer.open .mobile-more-panel {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
