@@ -1788,6 +1788,19 @@ if (
   pass("Graphic editor invalidates stale generated output after background removal/source changes and requires regeneration before export or publish");
 }
 
+const newsShareStart = read("js/app.js").indexOf("function newsSharePayload(n)");
+const newsShareEnd = read("js/app.js").indexOf("function shareNewsExternal(", newsShareStart);
+const newsShareFunction = newsShareStart >= 0 && newsShareEnd > newsShareStart
+  ? read("js/app.js").slice(newsShareStart, newsShareEnd) : "";
+if (
+  !newsShareFunction.includes("new URL(window.location.pathname,window.location.origin)") ||
+  newsShareFunction.includes("new URL(window.location.href)")
+) {
+  fail("News share links must use a clean same-site path and must not carry unrelated query parameters or fragments");
+} else {
+  pass("News share links omit unrelated query parameters and fragments");
+}
+
 // Keep numbered SQL upgrade scripts unique and documented in README.
 const readme = read("README.md");
 const sqlFiles = readdirSync("sql").filter((name) => /^\d{2}_.+\.sql$/i.test(name)).sort();
