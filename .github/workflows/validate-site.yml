@@ -2,7 +2,9 @@ name: Validate site
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - "fix/mobile-functionality-theme-cleanup-20261013"
   pull_request:
 
 permissions:
