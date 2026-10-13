@@ -903,6 +903,22 @@ if (
 }
 
 if (
+  !fanAdminEdgeSource.includes("Request body must be a JSON object") ||
+  !fanAdminEdgeSource.includes("Invalid JSON body") ||
+  !fanAdminEdgeSource.includes("matchId.length > 100") ||
+  !fanAdminEdgeSource.includes("Invalid user_id") ||
+  !fanAdminEdgeSource.includes("Number.isInteger(amount)") ||
+  !fanAdminEdgeSource.includes("Math.abs(amount) > 1000") ||
+  !fanAdminEdgeSource.includes("reason.length > 200") ||
+  !fanAdminEdgeSource.includes("Invalid market_id") ||
+  !fanAdminEdgeSource.includes("!Number.isFinite(odds) || odds < 1.01 || odds > 100")
+) {
+  fail("Fan admin Edge Function must reject malformed JSON, invalid IDs, and out-of-range numeric inputs before RPC calls");
+} else {
+  pass("Fan admin Edge Function validates request shape, IDs, grant bounds, reason length, and odds before RPC calls");
+}
+
+if (
   !repricingFixSource.includes("when p.status = ''live'' then") ||
   !repricingFixSource.includes("when mt.status = ''live'' then") ||
   !repricingFixSource.includes("private.fan_reprice_match(text)")
