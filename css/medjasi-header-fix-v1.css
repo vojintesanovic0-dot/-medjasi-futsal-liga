@@ -244,3 +244,13 @@
     pointer-events: none !important;
   }
 }
+
+
+/* Keep the phone header inside the viewport even when auth controls change width. */
+@media(max-width:1024px){
+  .site-header{overflow-x:clip!important}
+  .site-header .header-inner{min-width:0!important;max-width:100vw!important;overflow-x:clip!important}
+  .site-header .dashboard-mobile-brand{flex:0 1 auto!important;min-width:0!important;max-width:116px!important;overflow:hidden!important}
+  .site-header .header-actions{flex:1 1 0!important;width:0!important;min-width:0!important;max-width:100%!important}
+  .site-header .v7-search-wrap{flex:1 1 0!important;width:auto!important;min-width:0!important;max-width:none!important}
+}
