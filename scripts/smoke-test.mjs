@@ -349,12 +349,14 @@ try{
   await page.reload({waitUntil:"domcontentloaded",timeout:30000});
   await page.locator("#mobileMenuBtn").waitFor({timeout:10000});
   await page.locator("#game.section").waitFor({state:"attached",timeout:15000});
-  const mobileWidth=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth}));
+  const mobileWidth=await page.evaluate(()=>({
+    viewport:innerWidth,
+    document:document.documentElement.scrollWidth,
+    body:document.body.scrollWidth,
+    topMenuVisible:!!document.querySelector("#mobileMenuBtn")&&getComputedStyle(document.querySelector("#mobileMenuBtn")).display!=="none"
+  }));
   assert.ok(mobileWidth.document<=mobileWidth.viewport+2&&mobileWidth.body<=mobileWidth.viewport+2,"Horizontal overflow on mobile: "+JSON.stringify(mobileWidth));
-  await page.locator("#mobileMenuBtn").click();
-  await page.waitForFunction(()=>document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
-  await clickSection("matches");
-  await page.waitForFunction(()=>!document.querySelector("#mainNav")?.classList.contains("mobile-open"),null,{timeout:5000});
+  assert.equal(mobileWidth.topMenuVisible,false,"The duplicate top hamburger must be hidden on mobile; bottom navigation and More drawer are the mobile navigation.");
 
   // Exercise the complete More drawer without touching real user data.
   await page.locator("#mobileMoreBtn").click();
@@ -387,7 +389,7 @@ try{
 
   assert.equal(missingAssets.length,0,"Missing local assets:\n"+missingAssets.join("\n"));
   assert.equal(pageErrors.length,0,"Uncaught browser JavaScript errors:\n"+pageErrors.join("\n"));
-  console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, auth validation and isolated signup username handling, login cancel, mobile drawer/width, and live bootstrap or explicit retry state; suppressed extra REST requests after outage:",suppressedLiveRestCount,"; no uncaught JS errors or missing local assets");
+  console.log("PASS browser smoke: navigation, desktop sidebar/no phone mockup/no overflow, auth validation and isolated signup username handling, login cancel, mobile navigation drawer/width, and live bootstrap or explicit retry state; suppressed extra REST requests after outage:",suppressedLiveRestCount,"; no uncaught JS errors or missing local assets");
 }finally{
   await browser.close();
   await new Promise(done=>server.close(done));
