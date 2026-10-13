@@ -755,7 +755,7 @@ try{
   }else{
     const gameUnavailable=await page.locator("#gameRoot").innerText();
     assert.ok(/privremeno nedostupan|nije aktivirana|servis podataka nije učitan/i.test(gameUnavailable),"Fan Game has no tab controls and must explain its unavailable/setup state: "+gameUnavailable.slice(0,300));
-    console.log("WARN Fan Game tab interaction skipped because the page exposes an explicit setup/unavailable state:",gameUnavailable.slice(0,160).replace(/\\s+/g," "));
+    console.log("WARN Fan Game tab interaction skipped because the page exposes an explicit setup/unavailable state:",JSON.stringify({message:gameUnavailable.slice(0,220),gameErrors:browserConsoleErrors.filter(message=>/Pogodi|fan_|Fan Game/i.test(message)).slice(-8),supabaseFailures:failedResponses.filter(message=>/supabase|fan_|rpc/i.test(message)).slice(-8)}));
   }
 
   console.log("PASS mobile More drawer: open/close, Escape, backdrop, 12 section routes, 8 dashboard routes, and aria-expanded state");
