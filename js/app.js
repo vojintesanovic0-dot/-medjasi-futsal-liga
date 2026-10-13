@@ -2862,6 +2862,7 @@ function renderTable(){
 
   const rows =
     sortedTableRows();
+  const prevMap=previousPositions();
 
 
   document.getElementById("tableBody").innerHTML =
