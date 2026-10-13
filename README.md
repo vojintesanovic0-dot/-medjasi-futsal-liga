@@ -46,7 +46,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 27. `sql/26_create_profile_for_auth_users.sql` – automatski pravi običan profil nakon registracije, uključujući naloge koji čekaju potvrdu e-maila, i popunjava samo profile koji nedostaju; nikada ne kopira administratorsku ulogu iz korisničkih metapodataka.
 28. `sql/27_handle_profile_username_collisions.sql` – pri registraciji pokušava siguran rezervni naziv ako je željeno korisničko ime zauzeto; mijenja samo trigger funkciju i ne dira postojeće profile.
 29. `sql/28_harden_push_config.sql` – uključuje RLS na tabeli `push_config` i uklanja pristup browser ulogama kako VAPID privatni ključ ne bi bio dostupan klijentu; koristi je samo pouzdani server-side service role.
-- `scripts/check-live-supabase.mjs` i `.github/workflows/live-supabase-health.yml`: zasebna provjera produkcijskog snapshot API-ja; ne miješa dostupnost Supabase-a s UI regresijskim testovima.
+- `scripts/check-live-supabase.mjs` i `.github/workflows/live-supabase-health.yml`: zasebna, samo-čitačka provjera produkcijskog snapshot API-ja i javnih REST ruta za vijesti, Community objave/komentare/storyje, playlistu, Fan Shop, fan tržišta, sezone i postavke sajta. Provjera prijavljuje greške endpointa, ali prazan sadržaj tretira kao stanje podataka koje treba urediti, a ne kao dokaz da je API nedostupan.
 - Status poruka za nedostupni Data API ima razmake između naslova, objašnjenja i dugmeta, pa je čitljiva i u pristupačnom tekstualnom prikazu.
 - Registracija normalizuje korisnička imena i provjerava zauzetost bez blokiranja prijave kada je Data API privremeno nedostupan; server-side trigger ostaje konačna zaštita od duplikata.
 
