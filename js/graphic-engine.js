@@ -342,7 +342,7 @@
       const caption=state.caption.trim() || (" "+templateLabel+" · "+name+" · "+(team?.name||"Međasi Futsal Liga"));
 
       if(state.destination==="community"){
-        const {error}=await window.supabaseClient.from("community_posts").insert({
+        const {error}=await window.sbClient().from("community_posts").insert({
           user_id:window.currentUser.id,
           image_url,
           caption
@@ -353,7 +353,7 @@
 
       if(state.destination==="chat"){
         const username=window.currentProfile?.username || window.currentUser.email?.split("@")[0] || "Admin";
-        const {error}=await window.supabaseClient.from("messages").insert({
+        const {error}=await window.sbClient().from("messages").insert({
           user_id:window.currentUser.id,
           username,
           content:caption,
@@ -366,7 +366,7 @@
       if(state.destination==="news"){
         const title=state.title.trim() || caption.slice(0,150);
         const body=state.body.trim() || caption;
-        const {error}=await window.supabaseClient.from("news").insert({
+        const {error}=await window.sbClient().from("news").insert({
           title,
           lead:caption.slice(0,400),
           body,
