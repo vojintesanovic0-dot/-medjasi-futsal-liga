@@ -359,6 +359,10 @@ try{
   const mobileWidth=await page.evaluate(()=>{
     const visibleOverflow=[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({el,rect})=>{
       if(rect.width<=0||rect.height<=0||rect.bottom<=0||rect.top>=innerHeight||el.closest(".fx-bg")||el.closest('[aria-hidden="true"]'))return false;
+      for(let parent=el.parentElement;parent&&parent!==document.documentElement;parent=parent.parentElement){
+        const overflowStyle=getComputedStyle(parent);
+        if((overflowStyle.overflowX==="auto"||overflowStyle.overflowX==="scroll")&&parent.clientWidth>0&&parent.scrollWidth>parent.clientWidth+2)return false;
+      }
       for(let node=el;node&&node!==document.documentElement;node=node.parentElement){
         const style=getComputedStyle(node);
         if(style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
@@ -465,6 +469,10 @@ try{
   const narrowMobile=await page.evaluate(()=>{
     const visibleOverflow=[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect()})).filter(({el,rect})=>{
       if(rect.width<=0||rect.height<=0||rect.bottom<=0||rect.top>=innerHeight||el.closest(".fx-bg")||el.closest('[aria-hidden="true"]'))return false;
+      for(let parent=el.parentElement;parent&&parent!==document.documentElement;parent=parent.parentElement){
+        const overflowStyle=getComputedStyle(parent);
+        if((overflowStyle.overflowX==="auto"||overflowStyle.overflowX==="scroll")&&parent.clientWidth>0&&parent.scrollWidth>parent.clientWidth+2)return false;
+      }
       for(let node=el;node&&node!==document.documentElement;node=node.parentElement){
         const style=getComputedStyle(node);
         if(style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
