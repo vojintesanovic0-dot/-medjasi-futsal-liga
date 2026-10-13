@@ -663,6 +663,16 @@ if (
   fail("Modal, mobile drawer, and install dialog backgrounds must stay opaque above the home screen");
 } else pass("Modal and drawer overlays sufficiently obscure the underlying home screen");
 
+// Prevent the removed light/dark theme control from being reintroduced by the extras layer.
+const extrasJs = read("js/extras.js");
+const extrasCss = read("css/extras.css");
+if (
+  /xtThemeBtn|function\\s+initTheme|function\\s+applyTheme|Svijetla tema|Tamna tema/.test(extrasJs) ||
+  /\\.xt-theme-btn|data-theme\\s*=\\s*["']light/.test(extrasCss)
+) {
+  fail("The removed light/dark theme toggle must not be injected or styled by the extras layer");
+} else pass("Light/dark theme toggle remains removed; dark theme is the only site theme");
+
 if (
   !html.includes('id="mobileMenuBtn" onclick="toggleMobileMenu()"') ||
   !app.includes('nav?.classList.toggle("mobile-open",mobileMenuOpen)') ||
