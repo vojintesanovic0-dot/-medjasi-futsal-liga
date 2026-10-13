@@ -8393,7 +8393,7 @@ document.addEventListener("click",event=>{
   ){
     window.__MEDJASI_USER_NAVIGATED_DURING_INIT=true;
   }
-}
+},true);
 window.__MEDJASI_APP_READY=init().then(()=>{
   window.__MEDJASI_APP_READY_STATE="ready";
 },error=>{
