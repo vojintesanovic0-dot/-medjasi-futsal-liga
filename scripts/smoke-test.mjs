@@ -446,7 +446,12 @@ try{
     const shortcutHandle=await shortcut.elementHandle();
     // Scroll the drawer's actual scroll container to the shortcut before clicking.
     // The panel has a fixed heading; the grid itself is the independently scrollable region.
-    await shortcut.scrollIntoViewIfNeeded();
+    await shortcut.evaluate(el=>{
+      const grid=el.closest(".mobile-more-grid");
+      if(!grid)return;
+      const gridRect=grid.getBoundingClientRect(),rect=el.getBoundingClientRect();
+      grid.scrollTop+=rect.top-gridRect.top-(grid.clientHeight-rect.height)/2;
+    });
     await page.waitForFunction(el=>{
       if(!el)return false;
       const rect=el.getBoundingClientRect();
