@@ -549,6 +549,19 @@ try{
     window.showSection("admin");
   });
   await page.locator("#graphicEngineCard").waitFor({state:"attached",timeout:8000});
+  // The admin route is intentionally protected/hidden in this logged-out smoke-test
+  // session. Reveal only the graphic card and its layout ancestors so canvas/export
+  // behavior can be tested without pretending the real admin UI is visible.
+  await page.locator("#graphicEngineCard").evaluate(card=>{
+    for(let node=card;node&&node!==document.body;node=node.parentElement){
+      node.hidden=false;
+      node.removeAttribute("aria-hidden");
+      const style=getComputedStyle(node);
+      if(style.display==="none")node.style.setProperty("display","block","important");
+      if(style.visibility==="hidden")node.style.setProperty("visibility","visible","important");
+      if(Number(style.opacity)===0)node.style.setProperty("opacity","1","important");
+    }
+  });
   const fixturePng=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=","base64");
   await page.locator("#graphicFile").setInputFiles({name:"graphic-smoke.png",mimeType:"image/png",buffer:fixturePng});
   assert.equal(await page.locator("#graphicGenerateBtn").isDisabled(),false,"Selecting a valid image must enable generation.");
