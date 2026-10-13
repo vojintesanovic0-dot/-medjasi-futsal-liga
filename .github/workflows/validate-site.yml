@@ -38,5 +38,5 @@ jobs:
         run: npm install --no-save playwright
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Exercise inner-scroll mobile shortcuts and responsive sections in Chromium
+      - name: Exercise and diagnose mobile drawer scrolling in Chromium
         run: node scripts/smoke-test.mjs
