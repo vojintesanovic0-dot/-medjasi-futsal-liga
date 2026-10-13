@@ -52,10 +52,11 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, objedinjeni league snapshot RPC, timeout/backoff pri greškama baze, lokalna kopija posljednjih uspješno učitanih podataka, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja i auth callback bez await deadlocka.
-- `js/extras.js` + `css/extras.css`: statistika+ (strijelci, asistenti, fair play), .ics kalendar, dijeljenje rezultata kao slika, opciona tema i admin audit UI.
-- `js/growth.js`: deduplicirano učitavanje „Liga info“ podataka, timeouti i eksponencijalni backoff pri greškama API-ja; čuva prethodne rezultate i sprečava da zakašnjeli odgovor prethodnog korisnika promijeni trenutno stanje.
+- `js/extras.js` + `css/extras.css`: statistika+ (strijelci, asistenti, fair play), dijeljenje rezultata kao slika i admin audit UI. Prekidač svijetle/tamne teme uklonjen je iz korisničkog interfejsa; postojeća tamna tema ostaje.
+- `js/growth.js`: deduplicirano učitavanje „Liga info“ podataka, timeouti i eksponencijalni backoff pri greškama API-ja; čuva prethodne rezultate, ujednačava sortiranje tabele i prikaza „Liga info“, te sigurnije izvozi .ics kalendar i odbacuje neispravne datume.
 - `service-worker.js`: nova verzija cache-a, offline stranica i keširanje jsDelivr Supabase biblioteke.
 - `supabase/functions/fan-admin-action/index.ts`: administratorski RPC pozivi koriste JWT stvarnog administratora kako bi provjere `auth.uid()` ostale ispravne.
+- `supabase/functions/send-push/index.ts`: push naslov koristi pravilan naziv lige, tip obavijesti dolazi iz provjerene vrijednosti, a `match_id` ima ograničenu dužinu. Nakon odobrenja promjena potrebno je deployati Edge funkciju da izmjene važe u produkciji.
 - Vidljivi naziv lige je normalizovan na `Međasi` bez promjene tehničkih identifikatora i ruta.
 
-- Nakon izmjena registracije ažurirani su `index.html` i Service Worker cache ključevi (`app.js?v=20261012v52`, PWA cache v158), kako bi korisnici dobili novi JavaScript umjesto stare keširane verzije.
+- Trenutna grana osvježava `index.html` i Service Worker ključeve pri relevantnim izmjenama; trenutno su `app.js?v=20261013v57`, `growth.js?v=20261012v02` i PWA cache `medjasi-futsal-pwa-v187`.
