@@ -404,8 +404,11 @@ try{
   await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
   const compactDrawer=await page.locator(".mobile-more-grid").evaluate(el=>({columns:getComputedStyle(el).gridTemplateColumns.split(" ").length,scrollHeight:el.scrollHeight,clientHeight:el.clientHeight}));
   assert.equal(compactDrawer.columns,1,"The More drawer must use one column on 320px phones.");
+  assert.equal(await page.locator("#mobileMoreBtn").getAttribute("aria-expanded"),"true","Opening More must set aria-expanded=true.");
   await page.keyboard.press("Escape");
   await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  assert.equal(await page.locator("#mobileMoreBtn").getAttribute("aria-expanded"),"false","Closing More must set aria-expanded=false.");
+  assert.equal(await page.evaluate(()=>document.activeElement?.id),"mobileMoreBtn","Closing More with Escape must restore focus to the More button.");
   await page.setViewportSize({width:390,height:844});
   await page.locator("#mobileMoreBtn").click();
   await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});

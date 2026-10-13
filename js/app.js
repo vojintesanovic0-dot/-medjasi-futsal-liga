@@ -8629,6 +8629,35 @@ function renderMusicAdmin(){const box=document.getElementById("adminMusicPlaylis
    MODERATOR + COMMENT IMAGES + MOBILE V2
 ========================================================= */
 
+/* Close transient navigation layers predictably without interfering with clicks inside them. */
+if(!window.__medjasiOverlayDismissBound){
+  window.__medjasiOverlayDismissBound=true;
+  document.addEventListener("keydown",event=>{
+    if(event.key!=="Escape")return;
+    const modal=document.getElementById("modal");
+    if(modal?.classList.contains("active")){
+      hideModal();
+      return;
+    }
+    const more=document.getElementById("mobileMoreDrawer");
+    if(more?.classList.contains("open")){
+      closeMobileMore();
+      return;
+    }
+    const nav=document.getElementById("mainNav");
+    if(mobileMenuOpen||nav?.classList.contains("mobile-open")){
+      if(typeof toggleMobileMenu==="function")toggleMobileMenu();
+    }
+  });
+  document.addEventListener("click",event=>{
+    const nav=document.getElementById("mainNav");
+    const button=document.getElementById("mobileMenuBtn");
+    if(!nav?.classList.contains("mobile-open"))return;
+    if(nav.contains(event.target)||button?.contains(event.target))return;
+    if(typeof toggleMobileMenu==="function")toggleMobileMenu();
+  });
+}
+
 function toggleMobileMenu(){
   mobileMenuOpen=!mobileMenuOpen;
   if(mobileMenuOpen && typeof closeMobileMore==="function") closeMobileMore();
@@ -8655,7 +8684,13 @@ function openMobileMore(){
     topBtn.setAttribute("aria-expanded","false");
     topBtn.setAttribute("aria-label","Otvori meni");
   }
+  const moreBtn=document.getElementById("mobileMoreBtn");
+  if(moreBtn)moreBtn.setAttribute("aria-expanded","true");
   drawer.classList.add("open");
+  const panel=drawer.querySelector(".mobile-more-panel");
+  if(panel)panel.scrollTop=0;
+  const grid=drawer.querySelector(".mobile-more-grid");
+  if(grid)grid.scrollTop=0;
   drawer.setAttribute("aria-hidden","false");
   document.body.classList.add("mobile-more-open");
 }
@@ -8663,9 +8698,15 @@ function openMobileMore(){
 function closeMobileMore(){
   const drawer=document.getElementById("mobileMoreDrawer");
   if(!drawer) return;
+  const wasOpen=drawer.classList.contains("open");
   drawer.classList.remove("open");
   drawer.setAttribute("aria-hidden","true");
   document.body.classList.remove("mobile-more-open");
+  const moreBtn=document.getElementById("mobileMoreBtn");
+  if(moreBtn){
+    moreBtn.setAttribute("aria-expanded","false");
+    if(wasOpen && typeof moreBtn.focus==="function")moreBtn.focus({preventScroll:true});
+  }
 }
 
 function toggleMobileMore(){

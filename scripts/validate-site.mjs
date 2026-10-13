@@ -705,6 +705,17 @@ if (
 } else pass("Mobile More drawer items open the selected section and close the drawer");
 
 if (
+  !app.includes("if(!window.__medjasiOverlayDismissBound)") ||
+  !app.includes('if(event.key!=="Escape")return;') ||
+  !app.includes('moreBtn.setAttribute("aria-expanded","true")') ||
+  !app.includes('moreBtn.setAttribute("aria-expanded","false")') ||
+  !app.includes("moreBtn.focus({preventScroll:true})") ||
+  !app.includes("if(nav.contains(event.target)||button?.contains(event.target))return;")
+) {
+  fail("Transient overlays and mobile navigation must support Escape/outside-click dismissal and restore the More button focus");
+} else pass("Transient overlays close predictably and mobile More navigation restores accessible focus/state");
+
+if (
   !html.includes('id="modal" onclick="closeModal(event)"') ||
   !html.includes('class="modal-box" onclick="event.stopPropagation()"') ||
   !app.includes('function closeModal(event)') ||
