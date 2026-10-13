@@ -119,7 +119,7 @@
     const name=escapeHtml(
       profile.username ||
       user.user_metadata?.username ||
-      user.email?.split("@")[0] ||
+      
       "Korisnik"
     );
 
