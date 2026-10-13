@@ -395,6 +395,15 @@ try{
   await page.locator(".mobile-more-grid button").filter({hasText:"Utakmice"}).first().click();
   await page.waitForFunction(()=>document.querySelector("#matches.section")?.classList.contains("active"),null,{timeout:7000});
   await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  const drawerRoutes=["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info"];
+  for(const sectionId of drawerRoutes){
+    await page.locator("#mobileMoreBtn").click();
+    await page.waitForFunction(()=>document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+    await page.locator("#mobileMoreDrawer .mobile-more-grid button[onclick=\"mobileMoreGo('"+sectionId+"')\"]").click();
+    await page.waitForFunction(id=>document.querySelector("#"+id+".section")?.classList.contains("active"),sectionId,{timeout:7000});
+    await page.waitForFunction(()=>!document.querySelector("#mobileMoreDrawer")?.classList.contains("open"),null,{timeout:5000});
+  }
+  console.log("PASS mobile More drawer routes: all 12 destinations open the requested section and close the drawer");
   const mobileSections=["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info","login"];
   for(const sectionId of mobileSections){
     await page.evaluate(id=>window.showSection(id),sectionId);
