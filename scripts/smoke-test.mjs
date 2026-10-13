@@ -366,7 +366,12 @@ try{
       return rect.right>innerWidth+2||rect.left< -2;
     }).slice(0,12).map(({el,rect})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",right:Math.round(rect.right),left:Math.round(rect.left),width:Math.round(rect.width)}));
     const menu=document.querySelector("#mobileMenuBtn"),style=menu?getComputedStyle(menu):null;
-    return {viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,topMenuVisible:!!menu&&style.display!=="none"&&style.visibility!=="hidden"&&style.pointerEvents!=="none",visibleOverflow};
+    const bodyOverflowCandidates=[...document.querySelectorAll("body *")].map(el=>({el,rect:el.getBoundingClientRect(),style:getComputedStyle(el)})).filter(({el,rect,style})=>{
+      if(rect.width<=0||rect.height<=0||style.display==="none"||style.visibility==="hidden"||Number(style.opacity)===0)return false;
+      return rect.right>innerWidth+2||rect.left< -2;
+    }).slice(0,20).map(({el,rect,style})=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",left:Math.round(rect.left),right:Math.round(rect.right),top:Math.round(rect.top),bottom:Math.round(rect.bottom),position:style.position,overflowX:style.overflowX,ariaHidden:el.getAttribute("aria-hidden"),parent:el.parentElement?.id||el.parentElement?.className||el.parentElement?.tagName}));
+    const bodyChildren=[...document.body.children].map(el=>({tag:el.tagName,id:el.id,classes:typeof el.className==="string"?el.className:"",scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,rectRight:Math.round(el.getBoundingClientRect().right),position:getComputedStyle(el).position,overflowX:getComputedStyle(el).overflowX}));
+    return {viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,topMenuVisible:!!menu&&style.display!=="none"&&style.visibility!=="hidden"&&style.pointerEvents!=="none",visibleOverflow,bodyOverflowCandidates,bodyChildren};
   });
   assert.ok(mobileWidth.document<=mobileWidth.viewport+2&&mobileWidth.body<=mobileWidth.viewport+2&&mobileWidth.visibleOverflow.length===0,"Horizontal overflow on mobile: "+JSON.stringify(mobileWidth));
   assert.equal(mobileWidth.topMenuVisible,false,"The duplicate top hamburger must be hidden on phones.");
