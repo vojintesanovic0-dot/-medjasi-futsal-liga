@@ -122,6 +122,18 @@ try{
     throw new Error("Aplikacija nije završila inicijalizaciju (state="+appReadyState+"). Browser errors: "+browserConsoleErrors.join(" | "));
   }
 
+  async function inspectDataWarning(){
+    const visible=await page.evaluate(()=>{
+      const status=document.getElementById("mflDataStatus");
+      return !!status&&!status.hidden;
+    });
+    if(!visible)return null;
+    const message=await page.evaluate(()=>document.getElementById("mflDataStatusMessage")?.textContent||"");
+    assert.ok(/Podaci lige|Osvježavanje podataka/i.test(message),"A visible data warning must explain the loading problem.");
+    assert.ok(await page.locator("#mflDataStatus button").count()>0,"A visible data warning must provide a retry action.");
+    return message;
+  }
+
   const visibleWarning=await inspectDataWarning();
   if(visibleWarning){
     throw new Error("Aplikacija je prikazala grešku pri učitavanju: "+visibleWarning);
