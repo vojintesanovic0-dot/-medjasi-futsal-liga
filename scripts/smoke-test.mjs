@@ -113,6 +113,17 @@ try{
     assert.ok(loadedCounts.teams>=3&&loadedCounts.players>=12,"Live league data should load before the site is considered healthy.");
   }
   for(const id of ["home","matches","table","teams","players","stats","gallery","community","chat","news","game","info"])await clickSection(id);
+  await page.waitForFunction(()=>!!document.querySelector("#gxInfoRoot .gx-table-wrap"),null,{timeout:8000});
+  const desktopInfoLayout=await page.evaluate(()=>({
+    viewport:innerWidth,
+    document:document.documentElement.scrollWidth,
+    body:document.body.scrollWidth,
+    tableViewport:document.querySelector("#gxInfoRoot .gx-table-wrap")?.clientWidth||0,
+    tableContent:document.querySelector("#gxInfoRoot .gx-table-wrap")?.scrollWidth||0
+  }));
+  assert.ok(desktopInfoLayout.document<=desktopInfoLayout.viewport+2&&desktopInfoLayout.body<=desktopInfoLayout.viewport+2,"Desktop Liga Info table must not widen the page: "+JSON.stringify(desktopInfoLayout));
+  assert.ok(desktopInfoLayout.tableViewport>0&&desktopInfoLayout.tableViewport<=desktopInfoLayout.viewport+2,"Desktop Liga Info table needs a bounded visible scroll viewport: "+JSON.stringify(desktopInfoLayout));
+  console.log("PASS desktop Liga Info standings table is bounded within the page");
   await page.locator("#headerAccount button").filter({hasText:"Prijava"}).first().click();
   await page.waitForFunction(()=>!!document.querySelector("#login.section.active"),null,{timeout:5000});
   assert.equal(await page.locator("#loginForm").count(),1,"Login form must be a real HTML form.");
