@@ -496,7 +496,7 @@
       }
 
       if(state.destination==="chat"){
-        const username=window.currentProfile?.username || window.currentUser.email?.split("@")[0] || "Admin";
+        const username=window.currentProfile?.username ||  "Admin";
         const {error}=await window.sbClient().from("messages").insert({
           user_id:window.currentUser.id,
           username,
@@ -516,7 +516,7 @@
           body,
           kicker:templateLabel.toUpperCase(),
           author_id:window.currentUser.id,
-          author_name:window.currentProfile?.username || window.currentUser.email?.split("@")[0] || "Admin",
+          author_name:window.currentProfile?.username ||  "Admin",
           media_url:image_url,
           media_type:"image",
           published:true
