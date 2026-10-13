@@ -196,23 +196,45 @@ function injectMatchActions(){
 }
 
 /* ======================= ADMIN LOG ======================= */
+const AUDIT_PAGE=50;
+const AUDIT_TABLES=["matches","goals","cards","match_players","teams","players","news","gallery"];
+let auditRows=[],auditFilter="",auditDone=false;
 function renderAudit(){
   const sec=$("admin");if(!sec)return;
   const admin=typeof window.isAdmin==="function"&&window.isAdmin();let card=$("xtAudit");
   if(!admin){card?.remove();return}if(card)return;
   card=document.createElement("div");card.id="xtAudit";card.className="card xt-card";
-  card.innerHTML='<h3>Admin log izmjena</h3><p class="muted xt-note">Posljednjih 50 izmjena (utakmice, golovi, kartoni, ekipe, igrači, vijesti, galerija).</p><button type="button" class="btn btn-small" id="xtAuditLoad">Učitaj log</button><div id="xtAuditBody"></div>';
-  sec.appendChild(card);$("xtAuditLoad").onclick=loadAudit;
+  card.innerHTML='<h3>Admin log izmjena</h3><p class="muted xt-note">Pregled izmjena po tabeli, sa starim i novim vrijednostima.</p><button type="button" class="btn btn-small" id="xtAuditLoad">Učitaj log</button><div id="xtAuditBody"></div>';
+  sec.appendChild(card);$("xtAuditLoad").onclick=()=>loadAudit(false);
 }
-async function loadAudit(){
+function auditChange(value){auditFilter=value;auditRows=[];auditDone=false;loadAudit(false)}
+async function loadAudit(more=false){
   const body=$("xtAuditBody");if(!body)return;
-  body.innerHTML='<p class="muted">Učitavanje…</p>';
-  const {data,error}=await window.sbClient().from("admin_audit_log").select("*").order("created_at",{ascending:false}).limit(50);
-  if(error){body.innerHTML='<p class="muted">Log nije dostupan ('+esc(error.message)+'). Pokreni sql/05_rate_limit_and_audit.sql.</p>';return}
-  const diff=r=>{if(r.op!=="UPDATE"||!r.old_data||!r.new_data)return "";return Object.keys(r.new_data).filter(k=>JSON.stringify(r.new_data[k])!==JSON.stringify(r.old_data[k])&&k!=="updated_at").slice(0,6).join(", ")};
-  body.innerHTML='<div class="table-wrap"><table class="xt-table"><thead><tr><th>Vrijeme</th><th>Tabela</th><th>Akcija</th><th>ID</th><th>Promjena</th><th>Admin</th></tr></thead><tbody>'+
-    ((data||[]).map(r=>'<tr><td>'+esc(new Date(r.created_at).toLocaleString("bs-BA"))+'</td><td>'+esc(r.table_name)+'</td><td>'+esc(r.op)+'</td><td>'+esc(r.row_id||"")+'</td><td>'+esc(diff(r))+'</td><td>'+esc(String(r.actor||"").slice(0,8))+'</td></tr>').join("")||'<tr><td colspan="6">Log je prazan.</td></tr>')+
-    '</tbody></table></div>';
+  if(!more)body.innerHTML='<p class="muted">Učitavanje…</p>';
+  const from=more?auditRows.length:0;
+  let q=window.sbClient().from("admin_audit_log").select("*").order("created_at",{ascending:false}).range(from,from+AUDIT_PAGE-1);
+  if(auditFilter)q=q.eq("table_name",auditFilter);
+  const {data,error}=await q;
+  if(error){body.innerHTML='<p class="muted">Log nije dostupan ('+esc(error.message)+').</p>';return}
+  auditRows=more?auditRows.concat(data||[]):(data||[]);
+  auditDone=(data||[]).length<AUDIT_PAGE;
+  const ids=[...new Set(auditRows.map(r=>r.actor).filter(Boolean))],names={};
+  if(ids.length){
+    const {data:profs,error:profileError}=await window.sbClient().from("profiles").select("id,username").in("id",ids);
+    if(!profileError)(profs||[]).forEach(p=>{names[p.id]=p.username});
+  }
+  renderAuditRows(names);
+}
+function fmtAuditVal(v){if(v==null)return "—";if(typeof v==="object")return JSON.stringify(v).slice(0,40);return String(v).slice(0,40)}
+function auditChangeText(r){
+  if(r.op!=="UPDATE"||!r.old_data||!r.new_data)return "";
+  return Object.keys(r.new_data).filter(k=>k!=="updated_at"&&JSON.stringify(r.new_data[k])!==JSON.stringify(r.old_data[k])).slice(0,4).map(k=>k+": "+fmtAuditVal(r.old_data[k])+" → "+fmtAuditVal(r.new_data[k])).join("; ");
+}
+function renderAuditRows(names){
+  const body=$("xtAuditBody");if(!body)return;
+  const tableOptions=AUDIT_TABLES.map(t=>'<option value="'+esc(t)+'"'+(t===auditFilter?' selected':'')+'>'+esc(t)+'</option>').join("");
+  const rows=auditRows.map(r=>'<tr><td>'+esc(new Date(r.created_at).toLocaleString("bs-BA"))+'</td><td>'+esc(r.table_name)+'</td><td>'+esc(r.op)+'</td><td>'+esc(r.row_id||"")+'</td><td>'+esc(auditChangeText(r))+'</td><td>'+esc(names[r.actor]||String(r.actor||"").slice(0,8))+'</td></tr>').join("");
+  body.innerHTML='<div class="xt-audit-tools"><select aria-label="Filtriraj tabelu" onchange="auditChange(this.value)"><option value="">Sve tabele</option>'+tableOptions+'</select></div><div class="table-wrap"><table class="xt-table"><thead><tr><th>Vrijeme</th><th>Tabela</th><th>Akcija</th><th>ID</th><th>Promjena</th><th>Admin</th></tr></thead><tbody>'+(rows||'<tr><td colspan="6">Nema zapisa.</td></tr>')+'</tbody></table></div>'+(auditDone?'':'<button type="button" class="btn btn-small" onclick="loadAudit(true)">Učitaj još</button>');
 }
 
 /* ======================= POVEZIVANJE ======================= */
