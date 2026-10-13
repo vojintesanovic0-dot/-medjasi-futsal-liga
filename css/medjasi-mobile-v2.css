@@ -463,3 +463,148 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
   }
 }
+
+
+/* Installed-PWA screen treatment: detail views should read as a screen, not a layer. */
+@media (max-width: 780px) {
+  main > .section.active {
+    box-sizing: border-box !important;
+    min-height: calc(100dvh - var(--dash-header, 64px) - 84px - env(safe-area-inset-bottom)) !important;
+    padding-top: 14px !important;
+    padding-bottom: max(104px, calc(92px + env(safe-area-inset-bottom))) !important;
+    animation: mfl-section-enter .16s ease-out both;
+  }
+  main > .section.active > .section-title,
+  main > .section.active > h1:first-child,
+  main > .section.active > h2:first-child {
+    margin: 0 0 15px !important;
+    padding: 0 2px 12px !important;
+    border-bottom: 1px solid rgba(105, 164, 140, .18) !important;
+    line-height: 1.2 !important;
+    letter-spacing: -.025em !important;
+    overflow-wrap: anywhere !important;
+  }
+  main > .section.active .card {
+    background: #08171b !important;
+    border: 1px solid rgba(132, 174, 158, .17) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .2) !important;
+  }
+  main > .section.active .card h2,
+  main > .section.active .card h3 {
+    line-height: 1.3 !important;
+    overflow-wrap: anywhere !important;
+  }
+  main > .section.active .grid,
+  main > .section.active .grid-2,
+  main > .section.active .grid-3 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  main > .section.active .table-wrap {
+    border: 1px solid rgba(132, 174, 158, .18) !important;
+    border-radius: 13px !important;
+    background: #061115 !important;
+  }
+  main > .section.active table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+  main > .section.active th {
+    background: #10241f !important;
+    color: #bff5d5 !important;
+    font-weight: 800 !important;
+  }
+  main > .section.active td {
+    color: #e5f2eb !important;
+    border-color: rgba(132, 174, 158, .12) !important;
+  }
+  .mobile-bottom {
+    bottom: max(5px, env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Player details become a focused full-screen detail screen on phones. */
+  #modal:has(.player-card) {
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    padding: 0 !important;
+    background: rgba(0, 3, 5, .96) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  #modal:has(.player-card) .modal-box {
+    display: block !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    padding: max(58px, calc(18px + env(safe-area-inset-top))) 14px max(24px, env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #061115 !important;
+    box-shadow: none !important;
+  }
+  #modal:has(.player-card) #modalContent {
+    width: 100% !important;
+    max-width: 680px !important;
+    margin-inline: auto !important;
+  }
+  #modal:has(.player-card) .player-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    margin: 0 0 16px !important;
+    padding: 15px !important;
+    border: 1px solid rgba(57, 245, 139, .24) !important;
+    border-radius: 17px !important;
+    background: linear-gradient(145deg, #0d2820, #08171b) !important;
+  }
+  #modal:has(.player-card) .player-photo {
+    flex: 0 0 84px !important;
+    width: 84px !important;
+    height: 84px !important;
+    border-radius: 15px !important;
+    object-fit: cover !important;
+    border: 1px solid rgba(57, 245, 139, .3) !important;
+  }
+  #modal:has(.player-card) .player-card h2 {
+    margin: 0 0 5px !important;
+    color: #f0fff7 !important;
+    font-size: clamp(20px, 6vw, 27px) !important;
+    line-height: 1.1 !important;
+    overflow-wrap: anywhere !important;
+  }
+  #modal:has(.player-card) .grid.grid-3,
+  #modal:has(.player-card) .grid.grid-2 {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+    margin-top: 12px !important;
+  }
+  #modal:has(.player-card) .card {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 14px !important;
+    border-radius: 14px !important;
+    background: #0a1b20 !important;
+  }
+  #modal:has(.player-card) .rank-row {
+    min-width: 0 !important;
+    gap: 9px !important;
+    padding: 10px 0 !important;
+    border-bottom: 1px solid rgba(132, 174, 158, .12) !important;
+  }
+  #modal:has(.player-card) .rank-row:last-child { border-bottom: 0 !important; }
+  #modal:has(.player-card) .rank-row strong,
+  #modal:has(.player-card) .rank-row small { overflow-wrap: anywhere !important; }
+}
+@media (max-width: 360px) {
+  #modal:has(.player-card) .player-card { align-items: flex-start !important; gap: 10px !important; padding: 12px !important; }
+  #modal:has(.player-card) .player-photo { flex-basis: 68px !important; width: 68px !important; height: 68px !important; }
+}
