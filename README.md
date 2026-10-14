@@ -63,6 +63,10 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 - Mobilna navigacija koristi donju traku i meni „Više”; `Escape` zatvara meni. Chromium provjera pokriva širine 320, 360, 390 i 430 px te tablet širinu 1100 px, a Service Worker pri HTTP 4xx/5xx grešci koristi keširanu početnu stranicu ili `offline.html` umjesto da sačuva neispravan odgovor. Verzije glavnih resursa prema `index.html` i `service-worker.js` su `app.js?v=20261070`, `extras.js?v=20261013v4`, `extras.css?v=20261013v2`, `growth.js?v=20261013v03`, `graphic-engine.js?v=11`, `medjasi-mobile-v2.css?v=20261013fix3`, `medjasi-header-fix-v1.css?v=4` i PWA cache `medjasi-futsal-pwa-v220`. `service-worker.js` u `APP_SHELL` koristi iste verzionisane URL-ove kao `index.html` za lokalne resurse.
 
 
+## Graphic Engine — provjere efekata
+
+`node scripts/smoke-test.mjs` dodatno provjerava da promjena opcija „Zamućen igrač” i „Zamućena pozadina” osvježi postojeći pregled grafike. AI uklanjanje pozadine u testu je stubovano; stvarna obrada modelom i objavljivanje kroz prijavljenu uredničku sesiju i dalje zahtijevaju provjeru uživo.
+
 ## Korisnička imena — dodatne SQL skripte
 
 Ove skripte su ručni koraci za pregled i unapređenje pravila korisničkih imena; ne izvršavaju se automatski deployem. Registracija normalizuje nedozvoljenu interpunkciju prije provjere, a slova i brojevi uključuju i slova s dijakriticima. Napravi backup baze i pregledaj rezultate prije pokretanja:
