@@ -79,6 +79,45 @@ try{
     console.log("LIVE DATA LOAD DIAGNOSTIC:",JSON.stringify({snapshot,browserConsoleErrors,failedRequests,failedResponses}));
     throw error;
   }
+  // Exercise the Graphic Engine's new photo-free templates in Chromium without publishing anything.
+  await page.evaluate(()=>{
+    window.__smokeOriginalIsAdmin=window.isAdmin;
+    window.isAdmin=()=>true;
+    if(!document.getElementById("adminContent")){
+      const host=document.createElement("div");
+      host.id="adminContent";
+      host.hidden=true;
+      document.body.appendChild(host);
+      window.__smokeGraphicAdminHost=true;
+    }
+    window.initGraphicEngine?.();
+  });
+  await page.locator("#graphicEngineCard").waitFor({state:"attached",timeout:10000});
+  for(const [template,title,body] of [
+    ["breaking","TEST: Vanredna vijest","Provjera generisanja bez fotografije u Chromiumu."],
+    ["notice","TEST: Važno obavještenje","Drugi red teksta provjerava prelamanje sadržaja."]
+  ]){
+    await page.locator("#graphicTemplate").selectOption(template);
+    await page.locator("#graphicNewsTitle").fill(title);
+    await page.locator("#graphicNewsBody").fill(body);
+    const generateButton=page.locator("#graphicGenerateBtn");
+    assert.equal(await generateButton.isDisabled(),false,template+" must be generatable without a photo.");
+    await generateButton.click();
+    await page.waitForFunction(()=>{const image=document.getElementById("graphicResultPreview");return !!image&&!image.hidden&&image.naturalWidth===1080&&image.naturalHeight===1350;},null,{timeout:10000});
+    const generated=await page.locator("#graphicResultPreview").evaluate(img=>({width:img.naturalWidth,height:img.naturalHeight,src:img.src}));
+    assert.equal(generated.width,1080,template+" output width");
+    assert.equal(generated.height,1350,template+" output height");
+    assert.ok(generated.src.startsWith("blob:"),template+" must render a generated PNG preview.");
+    console.log("PASS Graphic Engine "+template+" photo-free generation:",JSON.stringify({width:generated.width,height:generated.height}));
+  }
+  await page.evaluate(()=>{
+    document.getElementById("graphicEngineCard")?.remove();
+    if(window.__smokeGraphicAdminHost)document.getElementById("adminContent")?.remove();
+    if(window.__smokeOriginalIsAdmin===undefined)delete window.isAdmin;
+    else window.isAdmin=window.__smokeOriginalIsAdmin;
+    delete window.__smokeOriginalIsAdmin;
+    delete window.__smokeGraphicAdminHost;
+  });
   const loadedCounts=await page.evaluate(()=>({teams:Number(document.getElementById("statTeams")?.textContent?.trim()||0),players:Number(document.getElementById("statPlayers")?.textContent?.trim()||0),matches:Number(document.getElementById("statMatches")?.textContent?.trim()||0),dataWarning:!!document.getElementById("mflDataStatus")&&!document.getElementById("mflDataStatus").hidden}));
   console.log("Live league data loaded:",JSON.stringify(loadedCounts));
   const desktopLayout=await page.evaluate(()=>{
