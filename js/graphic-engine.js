@@ -501,7 +501,7 @@
       const smallSource = await downscaleForProcessing(sourceFile, 1200);
       const bgSource = await blobToImage(smallSource);
       const bgRect = fitRect(bgSource, -60, -60, 1200, 1470, false);
-      drawSoftImage(ctx, bgSource, bgRect, 36);
+      drawSoftImage(ctx, bgSource, bgRect, 76);
       ctx.fillStyle = "rgba(2,6,4,.45)";
       ctx.fillRect(0, 0, 1080, 1350);
     }
