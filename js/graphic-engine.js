@@ -706,6 +706,10 @@
     syncState();
     const textOnly = state.mode === "text";
     const hasText = !!(state.caption.trim() || state.title.trim() || state.body.trim());
+    if(textOnly && state.destination === "community"){
+      toast("Community trenutno zahtijeva fotografiju. Za objavu bez grafike izaberi Chat ili Vijesti.","error");
+      return;
+    }
     if(textOnly && !hasText){
       toast("Unesi tekst objave prije objavljivanja.","error");
       return;
@@ -938,6 +942,7 @@
             <label><input type="checkbox" id="graphicDuotone"> Ton lige (zelena)</label>
             <label><input type="checkbox" id="graphicGrain"> Grain (zrnasta tekstura)</label>
           </div>
+          </div>
 
           <div class="form-group">
             <label>Objavi u</label>
@@ -964,7 +969,6 @@
             </div>
           </div>
 
-          </div>
           <div class="graphic-engine-actions">
             <button id="graphicGenerateBtn" type="button" class="btn btn-green" disabled> Generiši grafiku</button>
             <button id="graphicPublishBtn" type="button" class="btn btn-blue" disabled> Objavi</button>
