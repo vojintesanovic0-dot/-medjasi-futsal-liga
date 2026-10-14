@@ -145,19 +145,24 @@
         output: {format:"image/png"}
       };
 
+      let processedBlob;
       try{
-        cutoutBlob = await removeBgFn(input, {...config, device:preferredDevice});
+        processedBlob = await removeBgFn(input, {...config, device:preferredDevice});
       }catch(procError){
         if(preferredDevice === "cpu") throw procError;
         console.warn("Graphic Engine: GPU nije uspio, pokušavam CPU.", procError);
         // CPU fallback mora isključiti proxyToWorker, jer WASM/CPU proxy nije podržan.
-        cutoutBlob = await removeBgFn(input, {...config, device:"cpu", proxyToWorker:false});
+        processedBlob = await removeBgFn(input, {...config, device:"cpu", proxyToWorker:false});
       }
 
-      if(!(cutoutBlob instanceof Blob) || cutoutBlob.size === 0){
+      if(!(processedBlob instanceof Blob) || processedBlob.size === 0){
         throw new Error("AI obrada nije vratila ispravnu PNG sliku.");
       }
 
+      // Validiraj dekodiranje prije nego proglasimo obradu uspješnom.
+      // Neispravan Blob bi inače pukao tek kasnije pri generisanju pregleda.
+      await blobToImage(processedBlob);
+      cutoutBlob = processedBlob;
       const previewUrl = URL.createObjectURL(cutoutBlob);
       const img = $("graphicSourcePreview");
       revoke(sourceObjectUrl);
@@ -174,6 +179,8 @@
 
       toast("Pozadina je uklonjena. Originalna fotografija ostaje sačuvana.");
     }catch(error){
+      // Nikad ne ostavljaj neispravan rezultat koji bi srušio naredni pregled grafike.
+      cutoutBlob = null;
       console.error("Graphic Engine remove background:", error);
       const detail = error?.message ? " (" + error.message.slice(0,160) + ")" : "";
       toast("Uklanjanje pozadine nije uspjelo" + detail + ". Fotografija ostaje netaknuta.","error");
