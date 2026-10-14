@@ -338,7 +338,7 @@
   }
 
   function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines, size, weight="600"){
-    const words=String(text||"").replace(/\\s+/g," ").trim().split(" ").filter(Boolean);
+    const words=String(text||"").replace(/\s+/g," ").trim().split(" ").filter(Boolean);
     const lines=[];
     ctx.font=weight+" "+size+"px "+FONT_BODY;
     const pushLongWord = word => {
