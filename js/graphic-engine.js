@@ -219,6 +219,33 @@
     ctx.fillText(text, x, y);
   }
 
+  function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines, size, weight="600"){
+    const words=String(text||"").replace(/\s+/g," ").trim().split(" ").filter(Boolean);
+    const lines=[];
+    let line="";
+    ctx.font=weight+" "+size+"px Arial, sans-serif";
+    for(const word of words){
+      const candidate=line?line+" "+word:word;
+      if(line&&ctx.measureText(candidate).width>maxWidth){
+        lines.push(line);
+        line=word;
+      }else{
+        line=candidate;
+      }
+    }
+    if(line)lines.push(line);
+    const visible=lines.slice(0,maxLines);
+    if(lines.length>maxLines&&visible.length){
+      let last=visible[visible.length-1];
+      while(last&&ctx.measureText(last+"…").width>maxWidth)last=last.slice(0,-1);
+      visible[visible.length-1]=last.trimEnd()+"…";
+    }
+    ctx.fillStyle="#ffffff";
+    ctx.textAlign="left";
+    ctx.textBaseline="alphabetic";
+    visible.forEach((lineText,index)=>ctx.fillText(lineText,x,y+index*lineHeight));
+  }
+
   function teamById(id) {
     return (window.teams || []).find(t => String(t.id) === String(id)) || null;
   }
@@ -437,7 +464,7 @@
       matchday: {kicker:"MATCHDAY", tag:" MATCHDAY"},
       winner:   {kicker:"WINNER", tag:" POBJEDNIK"},
       lineup:   {kicker:"STARTING FIVE", tag:" POSTAVA"},
-      transfer: {kicker:"PLAYER ANNOUNCEMENT", tag:" NOVO"},
+      transfer: {kicker:"NOVI IGRAČ", tag:"POTVRĐENO"},
       birthday: {kicker:"SRETAN ROĐENDAN", tag:" BIRTHDAY"},
       spotlight:{kicker:"U FOKUSU", tag:" FOCUS"},
       fan:      {kicker:"IGRAČ TRIBINE", tag:" FAN FAVORITE"},
@@ -463,7 +490,11 @@
     ctx.fillText(preset.kicker, 60, 1100);
 
     fitText(ctx, headline, 60, 1180, 58, 30, 960, "800", "left");
-    drawText(ctx, sub, 60, 1230, 30, "600");
+    if(isTextTpl){
+      drawWrappedText(ctx,sub,60,1228,900,28,2,24,"600");
+    }else{
+      drawText(ctx, sub, 60, 1230, 30, "600");
+    }
     if (position) drawText(ctx, position.toUpperCase(), 1020, 1100, 24, "700", "right");
     if (number) drawText(ctx, number, 1020, 1175, 38, "800", "right");
     drawText(ctx, String(preset.tag||"").trim(), 1020, 1295, 22, "700", "right");
@@ -522,7 +553,7 @@
       const templateLabel={
         player:"Player Spotlight",mvp:"MVP Lige",scorer:"Top Strijelac",
         matchday:"Matchday",winner:"Winner",lineup:"Starting Five",
-        transfer:"Player Announcement",birthday:"Sretan rođendan",
+        transfer:"Novi igrač",birthday:"Sretan rođendan",
         spotlight:"U fokusu",fan:"Fan Favorite",captain:"Kapiten",legend:"Legenda lige",
         coach:"Trener",result:"Rezultat utakmice",preview:"Najava utakmice",live:"Utakmica uživo",scorers:"Strijelci utakmice",
         signing:"Pojačanje",playerOfMatch:"Igrač utakmice",breaking:"Breaking news",notice:"Važno obavještenje"
