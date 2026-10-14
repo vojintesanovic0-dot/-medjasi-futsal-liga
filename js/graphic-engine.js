@@ -131,12 +131,17 @@
         throw new Error("AI alat za uklanjanje pozadine nije dostupan.");
       }
 
-      cutoutBlob = await removeBackground(sourceFile, {
+      const removeOptions = {
         model: "isnet_quint8",
-        device: "gpu",
         proxyToWorker: false,
         output: {format:"image/png"}
-      });
+      };
+      try{
+        cutoutBlob = await removeBackground(sourceFile, {...removeOptions, device:"gpu"});
+      }catch(gpuError){
+        console.warn("Graphic Engine: GPU nije dostupan, koristim CPU.", gpuError);
+        cutoutBlob = await removeBackground(sourceFile, {...removeOptions, device:"cpu"});
+      }
 
       const previewUrl = URL.createObjectURL(cutoutBlob);
       const img = $("graphicSourcePreview");
@@ -149,7 +154,7 @@
       }
 
       if($("graphicSourceName")){
-        $("graphicSourceName").textContent = " Fotografija bez pozadine";
+        $("graphicSourceName").textContent = "Fotografija bez pozadine";
       }
 
       toast("Pozadina je uklonjena. Originalna fotografija ostaje sačuvana.");
@@ -159,7 +164,7 @@
     }finally{
       if(btn){
         btn.disabled = false;
-        btn.textContent = " Ukloni pozadinu";
+        btn.textContent = "Ukloni pozadinu";
       }
     }
   }
