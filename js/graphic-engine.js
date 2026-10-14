@@ -39,6 +39,10 @@
     return typeof window.isAdmin === "function" && window.isAdmin();
   }
 
+  function canUseGraphicEngine(){
+    return isAdmin() || (typeof window.isContentEditor === "function" && window.isContentEditor());
+  }
+
   function toast(message, type="info"){
     if(typeof window.toast === "function") return window.toast(message, type);
     alert(message);
@@ -185,7 +189,11 @@
 
   function drawBackground(ctx, template){
     const g = ctx.createLinearGradient(0,0,1080,1350);
-    if(template==="mvp"){
+    if(template==="breaking"){
+      g.addColorStop(0,"#5a0710"); g.addColorStop(.55,"#25060a"); g.addColorStop(1,"#050203");
+    }else if(template==="notice"){
+      g.addColorStop(0,"#3b2b06"); g.addColorStop(.55,"#211a08"); g.addColorStop(1,"#050403");
+    }else if(template==="mvp"||template==="playerOfMatch"||template==="signing"){
       g.addColorStop(0,"#07150f"); g.addColorStop(.55,"#102e1c"); g.addColorStop(1,"#020604");
     }else if(template==="winner"){
       g.addColorStop(0,"#171208"); g.addColorStop(.55,"#3b2a08"); g.addColorStop(1,"#050403");
@@ -213,6 +221,33 @@
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#ffffff";
     ctx.fillText(text, x, y);
+  }
+
+  function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines, size, weight="600"){
+    const words=String(text||"").replace(/\s+/g," ").trim().split(" ").filter(Boolean);
+    const lines=[];
+    let line="";
+    ctx.font=weight+" "+size+"px Arial, sans-serif";
+    for(const word of words){
+      const candidate=line?line+" "+word:word;
+      if(line&&ctx.measureText(candidate).width>maxWidth){
+        lines.push(line);
+        line=word;
+      }else{
+        line=candidate;
+      }
+    }
+    if(line)lines.push(line);
+    const visible=lines.slice(0,maxLines);
+    if(lines.length>maxLines&&visible.length){
+      let last=visible[visible.length-1];
+      while(last&&ctx.measureText(last+"…").width>maxWidth)last=last.slice(0,-1);
+      visible[visible.length-1]=last.trimEnd()+"…";
+    }
+    ctx.fillStyle="#ffffff";
+    ctx.textAlign="left";
+    ctx.textBaseline="alphabetic";
+    visible.forEach((lineText,index)=>ctx.fillText(lineText,x,y+index*lineHeight));
   }
 
   function teamById(id) {
@@ -278,13 +313,14 @@
     const template = state.template;
     const isMatchTpl = ["result","preview","live","scorers"].includes(template);
     const isCoachTpl = template === "coach";
+    const isTextTpl = ["breaking","notice"].includes(template);
 
-    if (!sourceFile && !isMatchTpl && !isCoachTpl) {
+    if (!sourceFile && !isMatchTpl && !isCoachTpl && !isTextTpl) {
       toast("Izaberi fotografiju ili igrača.", "error");
       return;
     }
 
-    const player = (isCoachTpl || isMatchTpl) ? null : currentPlayer();
+    const player = (isCoachTpl || isMatchTpl || isTextTpl) ? null : currentPlayer();
     const team = isCoachTpl
       ? (teamById(state.teamId) || teamForPlayer(currentPlayer()))
       : teamForPlayer(player);
@@ -393,6 +429,12 @@
       }
       headline = homeName + " – " + awayName;
       sub = formatMatchDate(match.match_date) || "Međasi Futsal Liga";
+    } else if (isTextTpl) {
+      headline = state.title || (template === "breaking" ? "VANREDNA VIJEST" : "VAŽNO OBAVJEŠTENJE");
+      sub = state.body || "Međasi Futsal Liga";
+      fitText(ctx, template === "breaking" ? "BREAKING NEWS" : "OBAVJEŠTENJE", 540, 360, 92, 42, 980, "900", "center");
+      ctx.fillStyle = template === "breaking" ? "#ff334f" : "#b7ff55";
+      ctx.fillRect(60, 420, 960, 10);
     } else if (isCoachTpl) {
       if (!sourceFile) fitText(ctx, teamName.toUpperCase(), 540, 640, 120, 50, 960);
       headline = team.coach;
@@ -402,6 +444,8 @@
       sub = teamName + (number ? "  " + number : "");
       if (template === "lineup") sub = teamName + (position ? " · " + position : "") + (number ? " · " + number : "");
       if (template === "transfer") sub = "NOVI IGRAČ · " + teamName;
+      if (template === "signing") sub = "POJAČANJE · " + teamName;
+      if (template === "playerOfMatch") sub = "IGRAČ UTAKMICE · " + teamName;
       if (template === "birthday") sub = "ŽELIMO TI SVE NAJBOLJE · " + teamName;
       if (template === "fan") sub = "MILJENIK NAVIJAČA · " + teamName;
       if (template === "captain") sub = "KAPITEN · " + teamName;
@@ -415,12 +459,16 @@
 
     const presets = {
       player:   {kicker:"PLAYER SPOTLIGHT", tag:" IGRAČ"},
+      signing:  {kicker:"NOVO POJAČANJE", tag:"POTVRĐENO"},
+      playerOfMatch:{kicker:"IGRAČ UTAKMICE", tag:"MOTM"},
+      breaking: {kicker:"BREAKING NEWS", tag:"VANREDNO"},
+      notice:   {kicker:"VAŽNO OBAVJEŠTENJE", tag:"INFO"},
       mvp:      {kicker:"MVP LIGE", tag:"⭐ MVP"},
       scorer:   {kicker:"TOP STRIJELAC", tag:" GOAL"},
       matchday: {kicker:"MATCHDAY", tag:" MATCHDAY"},
       winner:   {kicker:"WINNER", tag:" POBJEDNIK"},
       lineup:   {kicker:"STARTING FIVE", tag:" POSTAVA"},
-      transfer: {kicker:"PLAYER ANNOUNCEMENT", tag:" NOVO"},
+      transfer: {kicker:"NOVI IGRAČ", tag:"POTVRĐENO"},
       birthday: {kicker:"SRETAN ROĐENDAN", tag:" BIRTHDAY"},
       spotlight:{kicker:"U FOKUSU", tag:" FOCUS"},
       fan:      {kicker:"IGRAČ TRIBINE", tag:" FAN FAVORITE"},
@@ -446,7 +494,11 @@
     ctx.fillText(preset.kicker, 60, 1100);
 
     fitText(ctx, headline, 60, 1180, 58, 30, 960, "800", "left");
-    drawText(ctx, sub, 60, 1230, 30, "600");
+    if(isTextTpl){
+      drawWrappedText(ctx,sub,60,1228,900,28,2,24,"600");
+    }else{
+      drawText(ctx, sub, 60, 1230, 30, "600");
+    }
     if (position) drawText(ctx, position.toUpperCase(), 1020, 1100, 24, "700", "right");
     if (number) drawText(ctx, number, 1020, 1175, 38, "800", "right");
     drawText(ctx, String(preset.tag||"").trim(), 1020, 1295, 22, "700", "right");
@@ -505,9 +557,10 @@
       const templateLabel={
         player:"Player Spotlight",mvp:"MVP Lige",scorer:"Top Strijelac",
         matchday:"Matchday",winner:"Winner",lineup:"Starting Five",
-        transfer:"Player Announcement",birthday:"Sretan rođendan",
+        transfer:"Novi igrač",birthday:"Sretan rođendan",
         spotlight:"U fokusu",fan:"Fan Favorite",captain:"Kapiten",legend:"Legenda lige",
-        coach:"Trener",result:"Rezultat utakmice",preview:"Najava utakmice",live:"Utakmica uživo",scorers:"Strijelci utakmice"
+        coach:"Trener",result:"Rezultat utakmice",preview:"Najava utakmice",live:"Utakmica uživo",scorers:"Strijelci utakmice",
+        signing:"Pojačanje",playerOfMatch:"Igrač utakmice",breaking:"Breaking news",notice:"Važno obavještenje"
       }[state.template] || "Grafika lige";
 
       const caption=state.caption.trim() || (" "+templateLabel+" · "+name+" · "+(team?.name||"Međasi Futsal Liga"));
@@ -604,7 +657,12 @@
   }
 
   function inject(){
-    const admin=document.getElementById("adminContent");
+    const editorOnly=!isAdmin() && typeof window.isContentEditor==="function" && window.isContentEditor();
+    let admin=document.getElementById("adminContent");
+    if(editorOnly){
+      try{ window.medjasiV7?.ensureNewsUI?.(); }catch(error){ console.warn("Graphic Engine: nije moguće pripremiti uredničku sekciju.",error); }
+      admin=document.getElementById("news");
+    }
     if(!admin || document.getElementById("graphicEngineCard")) return;
     const card=document.createElement("div");
     card.id="graphicEngineCard";
@@ -616,7 +674,7 @@
           <h3> Napravi grafiku iz jedne fotografije</h3>
           <p class="muted">Original ostaje netaknut. Napravi PNG bez pozadine i objavi ga direktno u Community, Chat ili Vijesti.</p>
         </div>
-        <span class="admin-pill">SAMO ADMIN</span>
+        <span class="admin-pill">${editorOnly ? "ADMIN + UREDNICA" : "SAMO ADMIN"}</span>
       </div>
 
       <div class="graphic-engine-grid">
@@ -642,12 +700,16 @@
             <label>Vrsta grafike</label>
             <select id="graphicTemplate">
               <option value="player"> Player Spotlight</option>
+              <option value="signing">💚 Pojačanje</option>
+              <option value="transfer">🆕 Novi igrač</option>
+              <option value="playerOfMatch">🏆 Igrač utakmice</option>
+              <option value="breaking">🚨 Breaking news</option>
+              <option value="notice">📢 Važno obavještenje</option>
               <option value="mvp">⭐ MVP Lige</option>
               <option value="scorer"> Top Strijelac</option>
               <option value="matchday"> Matchday</option>
               <option value="winner"> Winner</option>
               <option value="lineup"> Starting Five</option>
-              <option value="transfer"> Player Announcement</option>
               <option value="birthday"> Sretan rođendan</option>
               <option value="spotlight"> U fokusu</option>
               <option value="fan"> Fan Favorite</option>
@@ -747,15 +809,26 @@
     $("graphicRemoveBgBtn")?.addEventListener("click",removeBackground);
     $("graphicGenerateBtn")?.addEventListener("click",async()=>{syncState();try{await generate()}catch(e){console.error(e);toast(e.message||"Greška pri generisanju.","error")}});
     $("graphicPublishBtn")?.addEventListener("click",async()=>{syncState();await publish()});
-    $("graphicTemplate")?.addEventListener("change",syncState);
+    const updateTextFieldsVisibility=()=>{
+      const template=$("graphicTemplate")?.value||"player";
+      const textTemplate=["breaking","notice"].includes(template);
+      const photoOptional=["breaking","notice","result","preview","live","scorers","coach"].includes(template);
+      $("graphicNewsFields").hidden=$("graphicDestination")?.value!=="news"&&!textTemplate;
+      const generateBtn=$("graphicGenerateBtn");
+      if(generateBtn)generateBtn.disabled=!sourceFile&&!photoOptional;
+    };
+    $("graphicTemplate")?.addEventListener("change",()=>{
+      syncState();
+      updateTextFieldsVisibility();
+    });
     $("graphicDestination")?.addEventListener("change",()=>{
       syncState();
-      $("graphicNewsFields").hidden=$("graphicDestination").value!=="news";
+      updateTextFieldsVisibility();
     });
     $("graphicCaption")?.addEventListener("input",syncState);
     $("graphicNewsTitle")?.addEventListener("input",syncState);
     $("graphicNewsBody")?.addEventListener("input",syncState);
-    $("graphicNewsFields").hidden=true;
+    updateTextFieldsVisibility();
     $("graphicTeam")?.addEventListener("focus", renderTeamOptions);
     $("graphicMatch")?.addEventListener("focus", renderMatchOptions);
     $("graphicTeam")?.addEventListener("change", syncState);
@@ -767,7 +840,7 @@
   }
 
   function init(){
-    if(!isAdmin()) return;
+    if(!canUseGraphicEngine()) return;
     inject();
     renderPlayers();
     renderTeamOptions();

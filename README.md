@@ -54,12 +54,13 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 ## Novo u ovoj verziji
 - `js/app.js`: paginirano čitanje velikih tabela, objedinjeni league snapshot RPC, timeout/backoff pri greškama baze, lokalna kopija posljednjih uspješno učitanih podataka, ograničeno učitavanje chata/komentara/galerije, debounce realtime osvježavanja i auth callback bez await deadlocka.
 - `js/extras.js` + `css/extras.css`: statistika+ (strijelci, asistenti, fair play), .ics kalendar, dijeljenje rezultata kao slika i admin audit UI; prekidač svijetle/tamne teme je uklonjen, a tamni izgled ostaje aktivan.
+- `js/graphic-engine.js`: nove vrste grafika Pojačanje, Novi igrač, Igrač utakmice, Breaking news i Važno obavještenje; tekstualne grafike mogu se generisati bez fotografije; urednici sadržaja imaju pristup Graphic Engineu bez pristupa ostatku administratorskog panela.
 - `js/growth.js`: deduplicirano učitavanje „Liga info“ podataka, timeouti i eksponencijalni backoff pri greškama API-ja; čuva prethodne rezultate i sprečava da zakašnjeli odgovor prethodnog korisnika promijeni trenutno stanje.
 - `service-worker.js`: nova verzija cache-a, offline stranica i keširanje jsDelivr Supabase biblioteke.
 - `supabase/functions/fan-admin-action/index.ts`: administratorski RPC pozivi koriste JWT stvarnog administratora kako bi provjere `auth.uid()` ostale ispravne.
 - Vidljivi naziv lige je normalizovan na `Međasi` bez promjene tehničkih identifikatora i ruta.
 
-- Mobilna navigacija koristi donju traku i meni „Više”; `Escape` zatvara meni. Chromium provjera pokriva širine 320, 360, 390 i 430 px te tablet širinu 1100 px, a Service Worker pri HTTP 4xx/5xx grešci koristi keširanu početnu stranicu ili `offline.html` umjesto da sačuva neispravan odgovor. Verzije glavnih resursa su `app.js?v=20261066`, `extras.js/css?v=20261013v2`, `growth.js?v=20261013v02`, `medjasi-mobile-v2.css?v=20261013fix3`, `medjasi-header-fix-v1.css?v=4` i PWA cache `medjasi-futsal-pwa-v209`.
+- Mobilna navigacija koristi donju traku i meni „Više”; `Escape` zatvara meni. Chromium provjera pokriva širine 320, 360, 390 i 430 px te tablet širinu 1100 px, a Service Worker pri HTTP 4xx/5xx grešci koristi keširanu početnu stranicu ili `offline.html` umjesto da sačuva neispravan odgovor. Verzije glavnih resursa prema `index.html` i `service-worker.js` su `app.js?v=20261070`, `extras.js?v=20261013v4`, `extras.css?v=20261013v2`, `growth.js?v=20261013v03`, `graphic-engine.js?v=8`, `medjasi-mobile-v2.css?v=20261013fix3`, `medjasi-header-fix-v1.css?v=4` i PWA cache `medjasi-futsal-pwa-v217`. `service-worker.js` u `APP_SHELL` koristi iste verzionisane URL-ove kao `index.html` za lokalne resurse.
 
 
 ## Korisnička imena — dodatne SQL skripte
@@ -71,3 +72,8 @@ Ove skripte su ručni koraci za pregled i unapređenje pravila korisničkih imen
 - `sql/32_username_rules.sql` — kompatibilno postavljanje osnovnih pravila i ograničenja korisničkog imena.
 - `sql/33_enforce_username_rules.sql` — strožija validacija formata i rezervisanih imena; pokrenuti nakon pregleda postojećih zapisa.
 - `sql/34_live_match_clock_pause.sql` — dodaje format utakmice (60 minuta ili 2 × 20 minuta) i podršku za pauzu/nastavak sata uživo.
+
+## Graphic Engine
+- Podržani su predlošci za pojačanje, novog igrača, igrača utakmice, breaking vijest i važno obavještenje.
+- Urednički nalog može koristiti Graphic Engine iz sekcije Vijesti bez pristupa cijelom administratorskom panelu.
+- `scripts/smoke-test.mjs` provjerava generisanje grafika bez fotografije i ograničeni pristup urednika.
