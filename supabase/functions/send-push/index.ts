@@ -56,9 +56,10 @@ Deno.serve(async (req: Request) => {
     const allowedPushTypes = new Set(["goal", "card", "live", "finish", "match_finished", "news"]);
     const FAVORITE_FILTER_TYPES = new Set(["goal", "card", "live", "finish", "match_finished"]);
 
-    // Only administrators and moderators may broadcast to every subscriber.
+    // Admins and moderators may broadcast. Editors may broadcast news only.
     // A valid JWT alone must never let a regular account send league-wide push.
-    if (role !== "admin" && role !== "moderator") {
+    const editorMayBroadcast = role === "editor" && eventType === "news";
+    if (role !== "admin" && role !== "moderator" && !editorMayBroadcast) {
       return Response.json({ error: "Forbidden" }, { status: 403, headers: corsHeaders });
     }
 
@@ -81,13 +82,21 @@ Deno.serve(async (req: Request) => {
 
     webpush.setVapidDetails(cfg.subject, cfg.vapid_public_key, cfg.vapid_private_key);
 
-    const { data: subs, error: subError } = await admin
-      .from("push_subscriptions")
-      .select("id,user_id,endpoint,p256dh,auth");
+    // Supabase returns at most 1000 rows per query; fetch every page.
+    const subs: any[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data: page, error: pageError } = await admin
+        .from("push_subscriptions")
+        .select("id,user_id,endpoint,p256dh,auth")
+        .order("id", { ascending: true })
+        .range(from, from + 999);
 
-    if (subError) throw subError;
+      if (pageError) throw pageError;
+      subs.push(...(page || []));
+      if (!page || page.length < 1000) break;
+    }
 
-    let recipients = subs || [];
+    let recipients = subs;
     if (FAVORITE_FILTER_TYPES.has(eventType) && safeMatchId) {
       const { data: match, error: matchError } = await admin
         .from("matches")
