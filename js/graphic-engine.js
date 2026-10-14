@@ -380,16 +380,25 @@
   }
 
   function fitText(ctx, text, x, y, maxSize, minSize, maxWidth, weight="800", align="center") {
+    let value = String(text ?? "").replace(/\\s+/g, " ").trim();
+    if (!value) return;
     let size = maxSize;
-    ctx.font = weight + " " + size + "px " + FONT_DISPLAY;
-    while (size > minSize && ctx.measureText(String(text || "")).width > maxWidth) {
-      size -= 2;
-      ctx.font = weight + " " + size + "px " + FONT_DISPLAY;
+    const setFont = () => { ctx.font = weight + " " + size + "px " + FONT_DISPLAY; };
+    setFont();
+    while (size > minSize && ctx.measureText(value).width > maxWidth) {
+      size = Math.max(minSize, size - 2);
+      setFont();
+    }
+    if (ctx.measureText(value).width > maxWidth) {
+      while (value.length > 1 && ctx.measureText(value + "…").width > maxWidth) {
+        value = value.slice(0, -1).trimEnd();
+      }
+      if (value.length < String(text ?? "").trim().length) value += "…";
     }
     ctx.textAlign = align;
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#ffffff";
-    ctx.fillText(String(text || ""), x, y);
+    ctx.fillText(value, x, y, maxWidth);
   }
 
   function renderTeamOptions() {
@@ -622,14 +631,15 @@
     ctx.font = "700 28px " + FONT_BODY;
     ctx.fillText(preset.kicker, 60, 1100);
 
-    fitText(ctx, headline, 60, 1180, 58, 30, 960, "800", "left");
+    const headlineWidth = (number || position) ? 760 : 960;
+    fitText(ctx, headline, 60, 1180, 58, 28, headlineWidth, "800", "left");
     if(isTextTpl){
       drawWrappedText(ctx,sub,60,1228,900,28,2,24,"600");
     }else{
-      drawText(ctx, sub, 60, 1230, 30, "600");
+      fitText(ctx, sub, 60, 1230, 30, 18, 940, "600", "left");
     }
-    if (position) drawText(ctx, position.toUpperCase(), 1020, 1100, 24, "700", "right");
-    if (number) drawText(ctx, number, 1020, 1175, 38, "800", "right");
+    if (position) fitText(ctx, position.toUpperCase(), 1020, 1100, 24, 16, 260, "700", "right");
+    if (number) fitText(ctx, number, 1020, 1175, 38, 24, 250, "800", "right");
     drawText(ctx, String(preset.tag||"").trim(), 1020, 1295, 22, "700", "right");
     drawText(ctx, "MEĐASI FUTSAL LIGA", 60, 1295, 22, "700");
 
