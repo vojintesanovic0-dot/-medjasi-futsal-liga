@@ -1095,7 +1095,8 @@ if (
   !matchStatusFunction2.includes('Number(confirmed.home_score||0)+":"+Number(confirmed.away_score||0)') ||
   !matchStatusFunction2.includes("const pushOk=await notifyLeaguePush(") ||
   !matchMinuteFunction2.includes("Number.isInteger(value)") ||
-  !matchMinuteFunction2.includes("value>60") ||
+  !matchMinuteFunction2.includes("const maxMinute=match.match_format===\"2x20\"?40:60;") ||
+  !matchMinuteFunction2.includes("value>maxMinute") ||
   !matchMinuteFunction2.includes(".select(\"id,current_minute,live_started_at\")") ||
   !matchMinuteFunction2.includes("catch(error)")
 ) {
