@@ -11948,11 +11948,11 @@ function ensurePushUI(){if(!$('adminContent')||!isAdm()||$('v7PushCard'))return;
 // Gallery: image + video compatibility layer. Existing image_url rows continue to work.
 function renderGalleryV7(){const grid=$('galleryGrid'),count=$('galleryCount');if(!grid)return;const arr=gallery||[];if(count)count.textContent=`${arr.length} ${arr.length===1?'medij':'medija'}`;if(!arr.length){grid.innerHTML='<div class="empty gallery-empty">📸 Galerija je trenutno prazna.</div>';return}grid.innerHTML=arr.map(x=>{const url=x.media_url||x.image_url,type=x.media_type||'image';return `<article class="gallery-item"><button class="gallery-photo" type="button" onclick="${type==='video'?`medjasiV7.openMedia('${escJs(url)}','video','${escJs(x.title||'Video')}')`:`openImagePreview('${escJs(url)}','${escJs(x.title||'Galerija')}')`}">${type==='video'?`<video muted playsinline preload="metadata" src="${escV(url)}"></video>`:`<img src="${escV(url)}" alt="${escV(x.title||'Fotografija')}" loading="lazy">`}<span class="gallery-overlay">${type==='video'?'▶️ Pusti video':'🔍 Pregledaj'}</span></button><div class="gallery-caption"><strong>${escV(x.title||'Medij lige')}</strong>${x.description?`<p>${escV(x.description)}</p>`:''}<small class="muted">${formatV(x.created_at)}</small></div></article>`}).join('')}
 function openMedia(url,type,title){showModal(`<div class="modal-title"><h2>${escV(title)}</h2></div>${type==='video'?`<video controls autoplay playsinline style="display:block;width:100%;max-height:75vh;border-radius:14px;background:#000" src="${escV(url)}"></video>`:`<img src="${escV(url)}" style="display:block;max-width:100%;max-height:75vh;margin:auto;border-radius:14px">`}`)}
-async function adminAddMedia(){
-  if(!isAdm())return;
-  const file=$("galleryImageFile")?.files?.[0];
-  const title=$("galleryTitle")?.value.trim()||"";
-  const description=$("galleryDescription")?.value.trim()||"";
+async function adminAddMedia(suffix=""){
+  if(!isContentEditor())return toastV("Nemaš urednička ovlaštenja.","error");
+  const file=$("galleryImageFile"+suffix)?.files?.[0];
+  const title=$("galleryTitle"+suffix)?.value.trim()||"";
+  const description=$("galleryDescription"+suffix)?.value.trim()||"";
   if(!file)return toastV("Izaberi sliku ili video.","error");
 
   const media=supportedLeagueMedia(file);
@@ -11970,9 +11970,9 @@ async function adminAddMedia(){
       created_by:currentUser.id
     }).select("id").single();
     if(error)throw error;
-    $("galleryImageFile").value="";
-    $("galleryTitle").value="";
-    $("galleryDescription").value="";
+    $("galleryImageFile"+suffix).value="";
+    $("galleryTitle"+suffix).value="";
+    $("galleryDescription"+suffix).value="";
     await loadAll();
     toastV("Medij je objavljen.");
     return insertedMedia?.id||null;
@@ -12021,8 +12021,13 @@ V7.ensureNewsUI=ensureNewsUI;V7.loadNews=loadNews;V7.notifyPush=notifyPush;windo
 window.openGoalControl=function(id){return openGoal(id)};
 window.adminAddGalleryImage=adminAddMedia;
 window.renderAdminNews=renderAdminNews;
-window.renderAdminGallery=function(){const box=$('adminGalleryList');if(!box||!isAdm())return;box.innerHTML=`<div class="admin-gallery-title">Objavljeni mediji (${(gallery||[]).length})</div><div class="admin-gallery-items">${(gallery||[]).map(x=>{const url=x.media_url||x.image_url;return `<div class="admin-gallery-item"><div class="v7-news-row-media">${url?mediaHtml(url,x.media_type||'image',x.title):''}</div><div><strong>${escV(x.title||'Bez naslova')}</strong><small class="muted">${formatV(x.created_at)}</small></div><button class="btn btn-red btn-small" onclick="adminDeleteGalleryImage('${x.id}')">🗑️</button></div>`}).join('')||'<div class="muted">Još nema medija.</div>'}</div>`};
-
+window.renderAdminGallery=function(){
+  const boxes=[$('adminGalleryList'),$('editorGalleryList')].filter(Boolean);
+  if(!boxes.length)return;
+  if(!isContentEditor()){boxes.forEach(box=>box.innerHTML='');return;}
+  const html=`<div class="admin-gallery-title">Objavljeni mediji (${(gallery||[]).length})</div><div class="admin-gallery-items">${(gallery||[]).map(x=>{const url=x.media_url||x.image_url;return `<div class="admin-gallery-item"><div class="v7-news-row-media">${url?mediaHtml(url,x.media_type||'image',x.title):''}</div><div><strong>${escV(x.title||'Bez naslova')}</strong><small class="muted">${formatV(x.created_at)}</small></div><button class="btn btn-red btn-small" onclick="adminDeleteGalleryImage('${x.id}')">Obriši</button></div>`}).join('')||'<div class="muted">Još nema medija.</div>'}</div>`;
+  boxes.forEach(box=>box.innerHTML=html);
+};
 
 // Add finish button to admin match cards without replacing the existing manager.
 const oldMakeSubstitution=window.makeSubstitution;window.makeSubstitution=async function(matchId,side){if(typeof oldMakeSubstitution!=="function")return;return await oldMakeSubstitution.apply(this,[matchId,side]);};
