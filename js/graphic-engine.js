@@ -749,7 +749,9 @@
         signing:"Pojačanje",playerOfMatch:"Igrač utakmice",breaking:"Breaking news",notice:"Važno obavještenje"
       }[state.template] || "Grafika lige";
 
-      const caption=state.caption.trim() || (textOnly ? "" : (" "+templateLabel+" · "+name+" · "+(team?.name||"Međasi Futsal Liga")));
+      const caption=state.caption.trim() || (textOnly
+        ? [state.title.trim(),state.body.trim()].filter(Boolean).join("\n\n")
+        : (" "+templateLabel+" · "+name+" · "+(team?.name||"Međasi Futsal Liga")));
 
       if(state.destination==="community"){
         const {error}=await window.sbClient().from("community_posts").insert({
@@ -804,7 +806,7 @@
       console.error("Graphic Engine publish:",error);
       toast(error?.message || "Greška pri objavi grafike.","error");
     }finally{
-      if(btn){btn.disabled=false;btn.textContent=" Objavi grafiku";}
+      if(btn){btn.disabled=false;btn.textContent=state.mode==="text"?"Objavi bez grafike":" Objavi grafiku";}
     }
   }
 
