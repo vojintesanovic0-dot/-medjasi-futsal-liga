@@ -551,6 +551,7 @@ function showSection(id){
   if(id === "news"){
     document.getElementById("news")?.classList.add("active");
     setTimeout(()=>window.loadNews?.(),30);
+    initGraphicEngine?.();
   }
   if(id === "game"){
     setTimeout(()=>window.medjasiGame?.refresh?.(),60);
