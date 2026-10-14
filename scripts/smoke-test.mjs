@@ -143,12 +143,12 @@ try{
   const blurBackgroundToggle=page.locator("#graphicBlur");
   let previousPreview=await page.locator("#graphicResultPreview").getAttribute("src");
   await blurPlayerToggle.check();
-  await page.waitForFunction(previous=>{const image=document.getElementById("graphicResultPreview");return !!image&&image.src!==previous&&image.naturalWidth===1080;},previousPreview,{timeout:10000});
+  await page.waitForFunction(previous=>{const image=document.getElementById("graphicResultPreview");const status=document.getElementById("graphicStatus");return !!image&&image.getAttribute("src")!==previous&&image.complete&&image.naturalWidth===1080&&status?.textContent==="Grafika je spremna za objavu.";},previousPreview,{timeout:10000});
   const playerBlurPreview=await page.locator("#graphicResultPreview").getAttribute("src");
   assert.notEqual(playerBlurPreview,previousPreview,"Player blur should regenerate the existing graphic preview.");
   previousPreview=playerBlurPreview;
   await blurBackgroundToggle.check();
-  await page.waitForFunction(previous=>{const image=document.getElementById("graphicResultPreview");return !!image&&image.src!==previous&&image.naturalWidth===1080;},previousPreview,{timeout:10000});
+  await page.waitForFunction(previous=>{const image=document.getElementById("graphicResultPreview");const status=document.getElementById("graphicStatus");return !!image&&image.getAttribute("src")!==previous&&image.complete&&image.naturalWidth===1080&&status?.textContent==="Grafika je spremna za objavu.";},previousPreview,{timeout:10000});
   const blurEffectCheck=await page.evaluate(()=>({
     playerBlur:document.getElementById("graphicBlurPlayer")?.checked,
     backgroundBlur:document.getElementById("graphicBlur")?.checked,
