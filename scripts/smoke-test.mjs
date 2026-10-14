@@ -118,7 +118,7 @@ try{
   const mobileCdp=await page.context().newCDPSession(page);
   await mobileCdp.send("Emulation.setUserAgentOverride",{userAgent:"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"});
   await page.route("https://esm.sh/@imgly/background-removal@1.7.0",async route=>{
-    await route.fulfill({status:200,contentType:"application/javascript",body:`export async function removeBackground(input, config){window.__smokeRemoveBgConfig=config;window.__smokeRemoveBgCalls=(window.__smokeRemoveBgCalls||0)+1;return new Blob([await input.arrayBuffer()],{type:"image/png"});}`});
+    await route.fulfill({status:200,contentType:"application/javascript",body:`export async function removeBackground(input, config){window.__smokeRemoveBgConfig=config;window.__smokeRemoveBgCalls=(window.__smokeRemoveBgCalls||0)+1;if(window.__smokeMalformedBg)return new Blob(["not a real PNG"],{type:"image/png"});return new Blob([await input.arrayBuffer()],{type:"image/png"});}`});
   });
   await page.locator("#graphicFile").setInputFiles({
     name:"mobile-background-test.png",
@@ -134,6 +134,30 @@ try{
   assert.equal(mobileRemoveCheck.deviceConfig,"cpu","Mobile background-removal must use the CPU processing path.");
   assert.equal(mobileRemoveCheck.previewVisible,true,"Mobile background-removal must show the processed preview.");
   console.log("PASS mobile background-removal flow with stubbed AI model:",JSON.stringify(mobileRemoveCheck));
+
+  // Regression: reject a non-empty but corrupt image before it can break the next preview.
+  await page.evaluate(()=>{window.__smokeMalformedBg=true;});
+  await page.locator("#graphicFile").setInputFiles({
+    name:"mobile-background-corrupt-test.png",
+    mimeType:"image/png",
+    buffer:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jWQAAAABJRU5ErkJggg==","base64")
+  });
+  await mobileRemoveButton.click();
+  await page.waitForFunction(()=>/Uklanjanje pozadine nije uspjelo/.test(document.getElementById("graphicStatus")?.textContent||""),null,{timeout:10000});
+  const corruptCutoutCheck=await page.evaluate(()=>({
+    status:document.getElementById("graphicStatus")?.textContent||"",
+    sourcePreviewVisible:!document.getElementById("graphicSourcePreview")?.hidden,
+    removeButtonEnabled:!document.getElementById("graphicRemoveBgBtn")?.disabled
+  }));
+  assert.match(corruptCutoutCheck.status,/nije uspjelo/,"A corrupt AI image must be rejected with a visible error.");
+  assert.equal(corruptCutoutCheck.sourcePreviewVisible,true,"Original photo preview must remain available after a corrupt AI result.");
+  assert.equal(corruptCutoutCheck.removeButtonEnabled,true,"Background-removal control must recover after invalid output.");
+  console.log("PASS corrupt background-removal output is rejected safely:",JSON.stringify(corruptCutoutCheck));
+
+  // Retry with valid output and verify the full generation/preview chain recovers.
+  await page.evaluate(()=>{window.__smokeMalformedBg=false;});
+  await mobileRemoveButton.click();
+  await page.waitForFunction(()=>window.__smokeRemoveBgCalls===3&&/Pozadina je uklonjena/.test(document.getElementById("graphicStatus")?.textContent||""),null,{timeout:10000});
 
   // Regression: a successful cutout must also be usable to generate and view the final graphic.
   const pageErrorsBeforeCutoutPreview=pageErrors.length;
