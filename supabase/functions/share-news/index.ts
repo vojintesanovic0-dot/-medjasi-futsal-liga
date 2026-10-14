@@ -61,9 +61,9 @@ Deno.serve(async (req: Request) => {
 
   const title = String(news.title || "Vijest");
   const description = String(news.lead || news.body || "Pročitajte najnovije vijesti Međasi Futsal Lige.").replace(/\s+/g, " ").slice(0, 300);
-  const image = news.media_type === "image" && /^https:\/\//i.test(String(news.media_url || ""))
-    ? String(news.media_url)
-    : FALLBACK_IMAGE;
+  const mediaUrl = String(news.media_url || "");
+  const isImage = news.media_type === "image" || /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(mediaUrl);
+  const image = isImage && /^https:\/\//i.test(mediaUrl) ? mediaUrl : FALLBACK_IMAGE;
   const canonical = SITE_URL + "?news=" + encodeURIComponent(id);
   const shareUrl = url.origin + url.pathname + "?id=" + encodeURIComponent(id);
   const bot = /facebookexternalhit|facebot|twitterbot|whatsapp|viber|telegrambot|linkedinbot|slackbot|discordbot|googlebot|bingbot|crawler|spider/i.test(req.headers.get("user-agent") || "");
@@ -89,11 +89,12 @@ Deno.serve(async (req: Request) => {
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(description)}">
 <meta name="twitter:image" content="${esc(image)}">
-<style>body{font:16px system-ui,sans-serif;background:#0a120d;color:#f4fff7;padding:2rem;max-width:720px;margin:auto}a{color:#7be495}img{max-width:100%;border-radius:12px}</style>
+<style>body{font:16px system-ui,sans-serif;background:#0a120d;color:#f4fff7;padding:2rem;max-width:720px;margin:auto}a{color:#7be495}img{display:block;max-width:100%;height:auto;border-radius:12px;margin:1rem 0}</style>
 </head>
 <body>
 <h1>${esc(title)}</h1>
 <p>${esc(description)}</p>
+<img src="${esc(image)}" alt="${esc(title)}">
 <a href="${esc(canonical)}">Otvori vijest na Međasi Futsal Ligi</a>
 ${bot ? "" : "<script>setTimeout(function(){window.location.replace(" + JSON.stringify(canonical) + ");},250);</script>"}
 </body>
