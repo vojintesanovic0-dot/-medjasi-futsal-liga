@@ -1646,7 +1646,7 @@ async function register(){
       password,
       options:{
         data:{username},
-        emailRedirectTo:window.location.origin+window.location.pathname
+        emailRedirectTo:window.location.origin+window.location.pathname.replace(/[^/]*$/,"")+"potvrda.html"
       }
     });
   }catch(signupError){
@@ -1722,7 +1722,7 @@ async function resendConfirmation(){
     const {error}=await sbClient().auth.resend({
       type:"signup",
       email,
-      options:{emailRedirectTo:window.location.origin+window.location.pathname}
+      options:{emailRedirectTo:window.location.origin+window.location.pathname.replace(/[^/]*$/,"")+"potvrda.html"}
     });
     if(error){
       if(message)message.textContent=error.message||"Slanje potvrde nije uspjelo. Pokušaj ponovo.";
