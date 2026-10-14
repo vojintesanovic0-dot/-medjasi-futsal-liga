@@ -988,16 +988,6 @@
     renderTeamOptions();
     renderMatchOptions();
 
-    // Na telefonu AI uklanjanje pozadine ne pokrećemo zbog rizika od pada.
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      const removeBtn = $("graphicRemoveBgBtn");
-      if (removeBtn) {
-        removeBtn.disabled = true;
-        removeBtn.textContent = "Ukloni pozadinu (samo na računaru)";
-        removeBtn.title = "Na telefonu uklanjanje pozadine nije dostupno. Ubaci PNG sliku bez pozadine.";
-        removeBtn.setAttribute("aria-label", "Ukloni pozadinu nije dostupno na telefonu");
-      }
-    }
   }
 
   window.initGraphicEngine=init;
