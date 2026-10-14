@@ -790,7 +790,7 @@
           author_id:window.currentUser.id,
           author_name:window.currentProfile?.username ||  "Admin",
           media_url:image_url,
-          media_type:textOnly ? "text" : "image",
+          media_type:textOnly ? null : "image",
           published:true
         });
         if(error) throw error;
