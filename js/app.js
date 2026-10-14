@@ -8976,6 +8976,23 @@ updateAuthUI=function(...args){
       adminBtn?.remove();
     }
 
+    let graphicsBtn=nav.querySelector(".nav-graphics-btn");
+    if(!isAdmin() && isContentEditor()){
+      if(!graphicsBtn){
+        graphicsBtn=document.createElement("button");
+        graphicsBtn.type="button";
+        graphicsBtn.className="nav-graphics-btn";
+        graphicsBtn.innerHTML="<span>🎨</span><span>Grafike</span>";
+        graphicsBtn.addEventListener("click",()=>{
+          window.showSection("news");
+          window.setTimeout(()=>document.getElementById("graphicEngineCard")?.scrollIntoView({behavior:"smooth",block:"start"}),180);
+        });
+        nav.appendChild(graphicsBtn);
+      }
+    }else{
+      graphicsBtn?.remove();
+    }
+
     let authGroup=nav.querySelector(".nav-auth-group");
     if(!authGroup){
       authGroup=document.createElement("div");
