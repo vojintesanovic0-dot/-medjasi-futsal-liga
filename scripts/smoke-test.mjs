@@ -114,6 +114,27 @@ try{
     assert.ok(generated.src.startsWith("blob:"),template+" must render a generated PNG preview.");
     console.log("PASS Graphic Engine "+template+" photo-free generation:",JSON.stringify({width:generated.width,height:generated.height}));
   }
+  // Exercise mobile background-removal flow with a stubbed model module (no external AI download).
+  const mobileCdp=await page.context().newCDPSession(page);
+  await mobileCdp.send("Emulation.setUserAgentOverride",{userAgent:"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"});
+  await page.route("https://esm.sh/@imgly/background-removal@1.7.0",async route=>{
+    await route.fulfill({status:200,contentType:"application/javascript",body:`export async function removeBackground(input, config){window.__smokeRemoveBgConfig=config;window.__smokeRemoveBgCalls=(window.__smokeRemoveBgCalls||0)+1;return new Blob([await input.arrayBuffer()],{type:"image/png"});}`});
+  });
+  await page.locator("#graphicFile").setInputFiles({
+    name:"mobile-background-test.png",
+    mimeType:"image/png",
+    buffer:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jWQAAAABJRU5ErkJggg==","base64")
+  });
+  const mobileRemoveButton=page.locator("#graphicRemoveBgBtn");
+  assert.equal(await mobileRemoveButton.isDisabled(),false,"Background removal must remain enabled on mobile.");
+  await mobileRemoveButton.click();
+  await page.waitForFunction(()=>window.__smokeRemoveBgCalls===1&&document.getElementById("graphicSourcePreview")?.src.startsWith("blob:"),null,{timeout:10000});
+  const mobileRemoveCheck=await page.evaluate(()=>({device:navigator.userAgent,disabled:document.getElementById("graphicRemoveBgBtn")?.disabled,deviceConfig:window.__smokeRemoveBgConfig?.device,previewVisible:!document.getElementById("graphicSourcePreview")?.hidden,status:document.getElementById("graphicStatus")?.textContent||""}));
+  assert.equal(mobileRemoveCheck.disabled,false,"Mobile background-removal button should be re-enabled after processing.");
+  assert.equal(mobileRemoveCheck.deviceConfig,"cpu","Mobile background-removal must use the CPU processing path.");
+  assert.equal(mobileRemoveCheck.previewVisible,true,"Mobile background-removal must show the processed preview.");
+  console.log("PASS mobile background-removal flow with stubbed AI model:",JSON.stringify(mobileRemoveCheck));
+  await mobileCdp.detach();
   await page.evaluate(()=>{
     document.getElementById("graphicEngineCard")?.remove();
     if(window.__smokeGraphicAdminHost)document.getElementById("adminContent")?.remove();
