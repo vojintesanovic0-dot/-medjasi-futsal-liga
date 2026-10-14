@@ -17,7 +17,7 @@ function htmlResponse(html: string, status = 200): Response {
     status,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "no-store, max-age=0, must-revalidate",
+      "Cache-Control": "public, max-age=60, s-maxage=300",
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "strict-origin-when-cross-origin",
     },
@@ -61,12 +61,11 @@ Deno.serve(async (req: Request) => {
 
   const title = String(news.title || "Vijest");
   const description = String(news.lead || news.body || "Pročitajte najnovije vijesti Međasi Futsal Lige.").replace(/\s+/g, " ").slice(0, 300);
-  let image = news.media_type === "image" && /^https:\/\//i.test(String(news.media_url || ""))
+  const image = news.media_type === "image" && /^https:\/\//i.test(String(news.media_url || ""))
     ? String(news.media_url)
     : FALLBACK_IMAGE;
-  // Keep og:image as the exact public media URL; query parameters on storage images can break some chat preview fetchers.
   const canonical = SITE_URL + "?news=" + encodeURIComponent(id);
-  const shareUrl = url.origin + url.pathname + url.search;
+  const shareUrl = url.origin + url.pathname + "?id=" + encodeURIComponent(id);
   const bot = /facebookexternalhit|facebot|twitterbot|whatsapp|viber|telegrambot|linkedinbot|slackbot|discordbot|googlebot|bingbot|crawler|spider/i.test(req.headers.get("user-agent") || "");
 
   const html = `<!doctype html>
@@ -86,17 +85,14 @@ Deno.serve(async (req: Request) => {
 <meta property="og:image" content="${esc(image)}">
 <meta property="og:image:secure_url" content="${esc(image)}">
 <meta property="og:image:alt" content="${esc(title)}">
-<meta property="og:image:type" content="image/png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(description)}">
 <meta name="twitter:image" content="${esc(image)}">
-<meta name="twitter:image:alt" content="${esc(title)}">
 <style>body{font:16px system-ui,sans-serif;background:#0a120d;color:#f4fff7;padding:2rem;max-width:720px;margin:auto}a{color:#7be495}img{max-width:100%;border-radius:12px}</style>
 </head>
 <body>
 <h1>${esc(title)}</h1>
-<img src="${esc(image)}" alt="${esc(title)}" style="display:block;width:100%;height:auto;max-height:630px;object-fit:cover;margin:1rem 0">
 <p>${esc(description)}</p>
 <a href="${esc(canonical)}">Otvori vijest na Međasi Futsal Ligi</a>
 ${bot ? "" : "<script>setTimeout(function(){window.location.replace(" + JSON.stringify(canonical) + ");},250);</script>"}
