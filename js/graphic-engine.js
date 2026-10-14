@@ -338,30 +338,46 @@
   }
 
   function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines, size, weight="600"){
-    const words=String(text||"").replace(/\s+/g," ").trim().split(" ").filter(Boolean);
+    const words=String(text||"").replace(/\\s+/g," ").trim().split(" ").filter(Boolean);
     const lines=[];
-    let line="";
     ctx.font=weight+" "+size+"px "+FONT_BODY;
+    const pushLongWord = word => {
+      let part="";
+      for(const char of word){
+        if(part && ctx.measureText(part+char).width>maxWidth){
+          lines.push(part);
+          part=char;
+        }else{
+          part+=char;
+        }
+      }
+      return part;
+    };
+    let line="";
     for(const word of words){
       const candidate=line?line+" "+word:word;
-      if(line&&ctx.measureText(candidate).width>maxWidth){
+      if(line && ctx.measureText(candidate).width>maxWidth){
         lines.push(line);
-        line=word;
+        line="";
+      }
+      if(ctx.measureText(word).width>maxWidth){
+        const remainder=pushLongWord(word);
+        line=remainder;
       }else{
-        line=candidate;
+        line=line?line+" "+word:word;
       }
     }
     if(line)lines.push(line);
-    const visible=lines.slice(0,maxLines);
+    const visible=lines.slice(0,Math.max(0,maxLines));
     if(lines.length>maxLines&&visible.length){
-      let last=visible[visible.length-1];
-      while(last&&ctx.measureText(last+"…").width>maxWidth)last=last.slice(0,-1);
-      visible[visible.length-1]=last.trimEnd()+"…";
+      let last=visible[visible.length-1].replace(/…+$/,"");
+      while(last && ctx.measureText(last+"…").width>maxWidth)last=last.slice(0,-1).trimEnd();
+      visible[visible.length-1]=last+"…";
     }
     ctx.fillStyle="#ffffff";
     ctx.textAlign="left";
     ctx.textBaseline="alphabetic";
-    visible.forEach((lineText,index)=>ctx.fillText(lineText,x,y+index*lineHeight));
+    visible.forEach((lineText,index)=>ctx.fillText(lineText,x,y+index*lineHeight,maxWidth));
   }
 
   function teamById(id) {
