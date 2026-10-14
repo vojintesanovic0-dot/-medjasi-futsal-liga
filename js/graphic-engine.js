@@ -503,7 +503,13 @@
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas nije dostupan u ovom pregledniku.");
 
-    drawBackground(ctx, template);
+    if (template === "plain") {
+      // Plain-photo mode deliberately skips every design layer, effect, and text overlay.
+      const img = await blobToImage(cutoutBlob || sourceFile);
+      const rect = fitRect(img, 0, 0, 1080, 1350, false);
+      drawSoftImage(ctx, img, rect, 0);
+    } else {
+      drawBackground(ctx, template);
 
     if (state.blur && sourceFile) {
       const smallSource = await downscaleForProcessing(sourceFile, 1200);
@@ -697,6 +703,8 @@
       noise.height = 0;
     }
 
+    }
+
     generatedBlob = await new Promise((resolve, reject) => {
       canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("PNG nije napravljen.")), "image/png", .94);
     });
@@ -752,7 +760,7 @@
       const team=teamForPlayer(player);
       const name=player?.name || "Međasi";
       const templateLabel={
-        player:"Player Spotlight",mvp:"MVP Lige",scorer:"Top Strijelac",
+        plain:"Bez dizajna — samo fotografija",player:"Player Spotlight",mvp:"MVP Lige",scorer:"Top Strijelac",
         matchday:"Matchday",winner:"Winner",lineup:"Starting Five",
         transfer:"Novi igrač",birthday:"Sretan rođendan",
         spotlight:"U fokusu",fan:"Fan Favorite",captain:"Kapiten",legend:"Legenda lige",
@@ -909,6 +917,7 @@
           <div class="form-group">
             <label>Vrsta grafike</label>
             <select id="graphicTemplate">
+              <option value="plain">Bez dizajna — samo fotografija</option>
               <option value="player"> Player Spotlight</option>
               <option value="signing">💚 Pojačanje</option>
               <option value="transfer">🆕 Novi igrač</option>
