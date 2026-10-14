@@ -975,10 +975,28 @@
     $("graphicMatch")?.addEventListener("focus", renderMatchOptions);
     $("graphicTeam")?.addEventListener("change", syncState);
     $("graphicMatch")?.addEventListener("change", syncState);
-    $("graphicBlur")?.addEventListener("change", syncState);
-    $("graphicBlurPlayer")?.addEventListener("change", syncState);
-    $("graphicDuotone")?.addEventListener("change", syncState);
-    $("graphicGrain")?.addEventListener("change", syncState);
+    // Efekti se pamte odmah, a ako grafika već postoji, odmah se ponovo
+    // iscrtava da korisnik vidi promjenu bez dodatnog klika na „Generiši grafiku“.
+    const refreshEffectPreview = async () => {
+      syncState();
+      if (!generatedBlob) return;
+      const publishBtn = $("graphicPublishBtn");
+      if (publishBtn) publishBtn.disabled = true;
+      const status = $("graphicStatus");
+      if (status) status.textContent = "Primjenjujem efekat…";
+      try {
+        await generate();
+      } catch (error) {
+        console.error("Graphic Engine effect:", error);
+        if (status) status.textContent = "Efekat nije primijenjen. Pokušaj ponovo generisati grafiku.";
+        if (publishBtn) publishBtn.disabled = !generatedBlob;
+        toast(error?.message || "Greška pri primjeni efekta.", "error");
+      }
+    };
+    $("graphicBlur")?.addEventListener("change", refreshEffectPreview);
+    $("graphicBlurPlayer")?.addEventListener("change", refreshEffectPreview);
+    $("graphicDuotone")?.addEventListener("change", refreshEffectPreview);
+    $("graphicGrain")?.addEventListener("change", refreshEffectPreview);
   }
 
   function init(){
