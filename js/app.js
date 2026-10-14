@@ -9010,7 +9010,6 @@ updateAuthUI=function(...args){
 
   try{ setupCommentImageUI(); }catch(error){}
   try{ setupChatImageUI(); }catch(error){}
-  try{ window.initGraphicEngine?.(); }catch(error){ console.warn("Graphic Engine auth refresh:",error); }
 };
 
 const _baseShowSection=showSection;
