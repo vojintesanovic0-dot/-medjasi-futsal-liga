@@ -1,13 +1,19 @@
 -- Fix editor uploads of News/Gallery media.
 -- PostgreSQL regex patterns use [.] for a literal dot; this avoids the
 -- double-backslash pattern that rejected otherwise valid UUID filenames.
--- Keep the existing editor role, bucket, MIME, and file-size restrictions.
+-- Storage can evaluate INSERT RLS before metadata.size is reliably present,
+-- so do not reject valid uploads based on that field at INSERT time.
+-- Keep editor-role, exact path/UUID, MIME/extension, bucket and bucket-level
+-- 50 MiB maximum restrictions. The app additionally limits images to 15 MiB.
 begin;
 
 do $preflight$
 begin
-  if not exists (select 1 from storage.buckets where id = 'liga-images') then
-    raise exception 'Storage bucket liga-images is missing; refusing to change editor upload policy.';
+  if not exists (
+    select 1 from storage.buckets
+    where id = 'liga-images' and file_size_limit <= 52428800
+  ) then
+    raise exception 'Storage bucket liga-images is missing or its maximum upload limit exceeds 50 MiB; refusing to change editor upload policy.';
   end if;
   if to_regprocedure('public.is_content_editor()') is null then
     raise exception 'public.is_content_editor() is missing; apply the content editor role migration first.';
@@ -35,17 +41,6 @@ with check (
     or (lower(coalesce(metadata->>'mimetype','')) = 'video/webm' and name ~ '[.]webm$')
     or (lower(coalesce(metadata->>'mimetype','')) = 'video/ogg' and name ~ '[.]ogv$')
   )
-  and case
-    when coalesce(metadata->>'size','') ~ '^[0-9]+$' then
-      case
-        when lower(coalesce(metadata->>'mimetype','')) like 'image/%'
-          then (metadata->>'size')::bigint <= 15728640
-        when lower(coalesce(metadata->>'mimetype','')) like 'video/%'
-          then (metadata->>'size')::bigint <= 52428800
-        else false
-      end
-    else false
-  end
 );
 
 commit;
