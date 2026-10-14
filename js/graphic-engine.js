@@ -10,6 +10,8 @@
   "use strict";
 
   const $ = id => document.getElementById(id);
+  const FONT_DISPLAY = "'Anton', 'Bebas Neue', Impact, 'Arial Narrow', sans-serif";
+  const FONT_BODY = "'Barlow Condensed', 'Arial Narrow', Arial, sans-serif";
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[c]));
@@ -301,10 +303,34 @@
       ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+1350,1350);ctx.stroke();
     }
     ctx.globalAlpha=1;
+
+    // Sjaj iza igrača
+    const glow = ctx.createRadialGradient(540, 520, 80, 540, 520, 760);
+    glow.addColorStop(0, "rgba(183,255,85,.20)");
+    glow.addColorStop(1, "rgba(183,255,85,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, 1080, 1350);
+
+    // Velika providna riječ kao pozadinski element
+    ctx.save();
+    ctx.font = "400 380px " + FONT_DISPLAY;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.strokeStyle = "rgba(183,255,85,.13)";
+    ctx.lineWidth = 3;
+    ctx.strokeText("MEĐASI", 540, 800);
+    ctx.restore();
+
+    // Vinjeta (tamne ivice)
+    const vignette = ctx.createRadialGradient(540, 675, 420, 540, 675, 1020);
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(1, "rgba(0,0,0,.65)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, 1080, 1350);
   }
 
   function drawText(ctx, text, x, y, size, weight="700", align="left"){
-    ctx.font = weight + " " + size + "px Arial, sans-serif";
+    ctx.font = weight + " " + size + "px " + FONT_BODY;
     ctx.textAlign = align;
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#ffffff";
@@ -315,7 +341,7 @@
     const words=String(text||"").replace(/\s+/g," ").trim().split(" ").filter(Boolean);
     const lines=[];
     let line="";
-    ctx.font=weight+" "+size+"px Arial, sans-serif";
+    ctx.font=weight+" "+size+"px "+FONT_BODY;
     for(const word of words){
       const candidate=line?line+" "+word:word;
       if(line&&ctx.measureText(candidate).width>maxWidth){
@@ -355,10 +381,10 @@
 
   function fitText(ctx, text, x, y, maxSize, minSize, maxWidth, weight="800", align="center") {
     let size = maxSize;
-    ctx.font = weight + " " + size + "px Arial, sans-serif";
+    ctx.font = weight + " " + size + "px " + FONT_DISPLAY;
     while (size > minSize && ctx.measureText(String(text || "")).width > maxWidth) {
       size -= 2;
-      ctx.font = weight + " " + size + "px Arial, sans-serif";
+      ctx.font = weight + " " + size + "px " + FONT_DISPLAY;
     }
     ctx.textAlign = align;
     ctx.textBaseline = "alphabetic";
@@ -397,6 +423,10 @@
 
   async function generate() {
     syncState();
+    await Promise.all([
+      document.fonts.load("400 40px 'Anton'"),
+      document.fonts.load("800 40px 'Barlow Condensed'")
+    ]).catch(() => {});
 
     const template = state.template;
     const isMatchTpl = ["result","preview","live","scorers"].includes(template);
@@ -456,7 +486,15 @@
       } else {
         rect = fitRect(img, 0, 50, 1080, 980, false);
       }
+      if (cutoutBlob) {
+        ctx.shadowColor = "rgba(0,0,0,.55)";
+        ctx.shadowBlur = 45;
+        ctx.shadowOffsetY = 18;
+      }
       drawSoftImage(ctx, img, rect, blurPx);
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
       if (!cutoutBlob && !state.blur) {
         ctx.fillStyle = "rgba(0,0,0,.20)";
         ctx.fillRect(0, 50, 1080, 980);
@@ -572,12 +610,16 @@
       preset.tag=match.status==="live"?"UŽIVO":match.status==="finished"?"FINAL":"NAJAVA";
     }
 
-    ctx.fillStyle = "rgba(0,0,0,.60)";
-    ctx.fillRect(0, 1020, 1080, 330);
+    const panel = ctx.createLinearGradient(0, 940, 0, 1350);
+    panel.addColorStop(0, "rgba(0,0,0,0)");
+    panel.addColorStop(0.35, "rgba(0,0,0,.78)");
+    panel.addColorStop(1, "rgba(0,0,0,.92)");
+    ctx.fillStyle = panel;
+    ctx.fillRect(0, 940, 1080, 410);
     ctx.fillStyle = "#b7ff55";
     ctx.fillRect(60, 1045, 210, 8);
     ctx.fillStyle = "#b7ff55";
-    ctx.font = "700 28px Arial";
+    ctx.font = "700 28px " + FONT_BODY;
     ctx.fillText(preset.kicker, 60, 1100);
 
     fitText(ctx, headline, 60, 1180, 58, 30, 960, "800", "left");
@@ -592,14 +634,26 @@
     drawText(ctx, "MEĐASI FUTSAL LIGA", 60, 1295, 22, "700");
 
     if (state.grain) {
-      ctx.save();
-      ctx.globalAlpha = .06;
-      for (let i = 0; i < 9000; i++) {
-        const v = Math.random() > .5 ? 255 : 0;
-        ctx.fillStyle = "rgb(" + v + "," + v + "," + v + ")";
-        ctx.fillRect(Math.random() * 1080, Math.random() * 1350, 2, 2);
+      const noise = document.createElement("canvas");
+      noise.width = 128;
+      noise.height = 128;
+      const nctx = noise.getContext("2d");
+      const nd = nctx.createImageData(128, 128);
+      for (let i = 0; i < nd.data.length; i += 4) {
+        const v = Math.random() * 255;
+        nd.data[i] = v;
+        nd.data[i + 1] = v;
+        nd.data[i + 2] = v;
+        nd.data[i + 3] = 255;
       }
+      nctx.putImageData(nd, 0, 0);
+      ctx.save();
+      ctx.globalAlpha = .07;
+      ctx.fillStyle = ctx.createPattern(noise, "repeat");
+      ctx.fillRect(0, 0, 1080, 1350);
       ctx.restore();
+      noise.width = 0;
+      noise.height = 0;
     }
 
     generatedBlob = await new Promise((resolve, reject) => {
@@ -933,6 +987,17 @@
     renderPlayers();
     renderTeamOptions();
     renderMatchOptions();
+
+    // Na telefonu AI uklanjanje pozadine ne pokrećemo zbog rizika od pada.
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      const removeBtn = $("graphicRemoveBgBtn");
+      if (removeBtn) {
+        removeBtn.disabled = true;
+        removeBtn.textContent = "Ukloni pozadinu (samo na računaru)";
+        removeBtn.title = "Na telefonu uklanjanje pozadine nije dostupno. Ubaci PNG sliku bez pozadine.";
+        removeBtn.setAttribute("aria-label", "Ukloni pozadinu nije dostupno na telefonu");
+      }
+    }
   }
 
   window.initGraphicEngine=init;
