@@ -126,6 +126,34 @@ try{
     delete window.__smokeOriginalIsAdmin;
     delete window.__smokeGraphicAdminHost;
   });
+  // Confirm a content editor gets Graphic Engine in News, not the full admin panel.
+  await page.evaluate(()=>{
+    window.__smokeEditorOriginalIsAdmin=window.isAdmin;
+    window.__smokeEditorOriginalIsContentEditor=window.isContentEditor;
+    window.isAdmin=()=>false;
+    window.isContentEditor=()=>true;
+    document.getElementById("graphicEngineCard")?.remove();
+    window.initGraphicEngine?.();
+  });
+  await page.locator("#graphicEngineCard").waitFor({state:"attached",timeout:10000});
+  const editorGraphicAccess=await page.evaluate(()=>({
+    parentId:document.getElementById("graphicEngineCard")?.parentElement?.id||"",
+    fullAdminCard:!!document.querySelector("#adminContent #graphicEngineCard"),
+    label:document.getElementById("graphicEngineCard")?.querySelector(".admin-pill")?.textContent||""
+  }));
+  assert.equal(editorGraphicAccess.parentId,"news","Content editor Graphic Engine must live in News section.");
+  assert.equal(editorGraphicAccess.fullAdminCard,false,"Content editor must not be granted the full admin panel.");
+  assert.match(editorGraphicAccess.label,/ADMIN \+ UREDNICA/,"Editor should see the appropriate access label.");
+  console.log("PASS Graphic Engine content-editor access:",JSON.stringify(editorGraphicAccess));
+  await page.evaluate(()=>{
+    document.getElementById("graphicEngineCard")?.remove();
+    if(window.__smokeEditorOriginalIsAdmin===undefined)delete window.isAdmin;
+    else window.isAdmin=window.__smokeEditorOriginalIsAdmin;
+    if(window.__smokeEditorOriginalIsContentEditor===undefined)delete window.isContentEditor;
+    else window.isContentEditor=window.__smokeEditorOriginalIsContentEditor;
+    delete window.__smokeEditorOriginalIsAdmin;
+    delete window.__smokeEditorOriginalIsContentEditor;
+  });
   const loadedCounts=await page.evaluate(()=>({teams:Number(document.getElementById("statTeams")?.textContent?.trim()||0),players:Number(document.getElementById("statPlayers")?.textContent?.trim()||0),matches:Number(document.getElementById("statMatches")?.textContent?.trim()||0),dataWarning:!!document.getElementById("mflDataStatus")&&!document.getElementById("mflDataStatus").hidden}));
   console.log("Live league data loaded:",JSON.stringify(loadedCounts));
   const desktopLayout=await page.evaluate(()=>{
