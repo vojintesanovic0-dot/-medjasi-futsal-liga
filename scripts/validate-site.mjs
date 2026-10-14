@@ -23,6 +23,33 @@ const iconsV1Css = read("css/medjasi-icons-v1.css");
 const iconsV2Css = read("css/medjasi-icons-v2.css");
 const mobileAppCss = read("css/medjasi-app-mobile-v3.css");
 
+const graphicEngine = read("js/graphic-engine.js");
+const graphicTemplateValues = new Set(
+  [...graphicEngine.matchAll(/<option value="([^"]+)">/g)].map((m) => m[1])
+);
+const requiredGraphicTemplates = [
+  "player", "signing", "transfer", "playerOfMatch", "breaking", "notice",
+  "mvp", "scorer", "matchday", "winner", "lineup", "birthday", "spotlight",
+  "fan", "captain", "legend", "coach", "result", "preview", "live", "scorers"
+];
+const missingGraphicTemplates = requiredGraphicTemplates.filter((value) => !graphicTemplateValues.has(value));
+if (missingGraphicTemplates.length) {
+  fail("Graphic Engine must preserve existing templates and expose the new graphic types: " + missingGraphicTemplates.join(", "));
+} else pass("Graphic Engine retains existing templates and exposes Pojačanje, Novi igrač, Igrač utakmice, Breaking news and Važno obavještenje");
+
+if (
+  !graphicEngine.includes('const isTextTpl = ["breaking","notice"].includes(template);') ||
+  !graphicEngine.includes('!sourceFile && !isMatchTpl && !isCoachTpl && !isTextTpl') ||
+  !graphicEngine.includes('state.title = $("graphicNewsTitle")?.value || "";') ||
+  !graphicEngine.includes('state.body = $("graphicNewsBody")?.value || "";') ||
+  !graphicEngine.includes('function drawWrappedText(') ||
+  !graphicEngine.includes('drawWrappedText(ctx,sub,60,1228,900,28,2,24,"600")') ||
+  !graphicEngine.includes('const updateTextFieldsVisibility=()=>')
+) {
+  fail("Breaking news and notice graphics must generate without a photo, use editable title/body fields, and wrap body text within the canvas");
+} else pass("Breaking news and notice generation supports photo-free output, editable copy, and bounded multiline text");
+
+
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((m) => m[1]);
 const duplicates = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
 if (duplicates.length) fail(`Duplicate HTML IDs: ${duplicates.join(", ")}`);
