@@ -646,7 +646,8 @@
     ctx.fillStyle = "#b7ff55";
     fitText(ctx, preset.kicker, 60, 1100, 28, 18, 760, "700", "left");
 
-    const headlineWidth = (number || position) ? 760 : 960;
+    // Ostavlja se razmak za broj dresa/poziciju kako se ne bi sudarili s dugim imenima.
+    const headlineWidth = (number || position) ? 650 : 960;
     fitText(ctx, headline, 60, 1180, 58, 28, headlineWidth, "800", "left");
     if(isTextTpl){
       drawWrappedText(ctx,sub,60,1228,900,28,2,24,"600");
