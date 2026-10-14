@@ -136,16 +136,20 @@ try{
   console.log("PASS mobile background-removal flow with stubbed AI model:",JSON.stringify(mobileRemoveCheck));
 
   // Regression: reject a non-empty but corrupt image before it can break the next preview.
-  await page.evaluate(()=>{window.__smokeMalformedBg=true;});
+  await page.evaluate(()=>{
+    window.__smokeMalformedBg=true;
+    window.__smokeOriginalToast=window.toast;
+    window.toast=(message,type)=>{window.__smokeLastToast={message,type};};
+  });
   await page.locator("#graphicFile").setInputFiles({
     name:"mobile-background-corrupt-test.png",
     mimeType:"image/png",
     buffer:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jWQAAAABJRU5ErkJggg==","base64")
   });
   await mobileRemoveButton.click();
-  await page.waitForFunction(()=>/Uklanjanje pozadine nije uspjelo/.test(document.getElementById("graphicStatus")?.textContent||""),null,{timeout:10000});
+  await page.waitForFunction(()=>window.__smokeRemoveBgCalls===2&&!document.getElementById("graphicRemoveBgBtn")?.disabled&&/Uklanjanje pozadine nije uspjelo/.test(window.__smokeLastToast?.message||""),null,{timeout:10000});
   const corruptCutoutCheck=await page.evaluate(()=>({
-    status:document.getElementById("graphicStatus")?.textContent||"",
+    status:window.__smokeLastToast?.message||"",
     sourcePreviewVisible:!document.getElementById("graphicSourcePreview")?.hidden,
     removeButtonEnabled:!document.getElementById("graphicRemoveBgBtn")?.disabled
   }));
@@ -157,7 +161,12 @@ try{
   // Retry with valid output and verify the full generation/preview chain recovers.
   await page.evaluate(()=>{window.__smokeMalformedBg=false;});
   await mobileRemoveButton.click();
-  await page.waitForFunction(()=>window.__smokeRemoveBgCalls===3&&/Pozadina je uklonjena/.test(document.getElementById("graphicStatus")?.textContent||""),null,{timeout:10000});
+  await page.waitForFunction(()=>window.__smokeRemoveBgCalls===3&&/Pozadina je uklonjena/.test(window.__smokeLastToast?.message||""),null,{timeout:10000});
+  await page.evaluate(()=>{
+    if(window.__smokeOriginalToast===undefined)delete window.toast;
+    else window.toast=window.__smokeOriginalToast;
+    delete window.__smokeOriginalToast;
+  });
 
   // Regression: a successful cutout must also be usable to generate and view the final graphic.
   const pageErrorsBeforeCutoutPreview=pageErrors.length;
