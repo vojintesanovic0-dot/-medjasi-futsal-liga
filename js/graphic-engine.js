@@ -144,9 +144,22 @@
       try{
         cutoutBlob = await removeBgFn(input, {...config, device:preferredDevice});
       }catch(procError){
-        if(preferredDevice === "cpu") throw procError;
-        console.warn("Graphic Engine: GPU nije uspio, pokušavam CPU.", procError);
-        cutoutBlob = await removeBgFn(input, {...config, device:"cpu"});
+        const message = String(procError?.message || procError || "");
+        const workerProblem = /worker|importscripts|import scripts|workerize/i.test(message);
+        if(config.proxyToWorker && workerProblem){
+          console.warn("Graphic Engine: Worker nije dostupan, pokušavam stabilniji način obrade.", procError);
+          try{
+            cutoutBlob = await removeBgFn(input, {...config, device:preferredDevice, proxyToWorker:false});
+          }catch(fallbackError){
+            if(preferredDevice === "cpu") throw fallbackError;
+            console.warn("Graphic Engine: GPU/Worker nije uspio, pokušavam CPU bez Workera.", fallbackError);
+            cutoutBlob = await removeBgFn(input, {...config, device:"cpu", proxyToWorker:false});
+          }
+        }else{
+          if(preferredDevice === "cpu") throw procError;
+          console.warn("Graphic Engine: GPU nije uspio, pokušavam CPU.", procError);
+          cutoutBlob = await removeBgFn(input, {...config, device:"cpu"});
+        }
       }
 
       const previewUrl = URL.createObjectURL(cutoutBlob);
