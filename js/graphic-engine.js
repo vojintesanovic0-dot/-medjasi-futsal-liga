@@ -380,7 +380,7 @@
   }
 
   function fitText(ctx, text, x, y, maxSize, minSize, maxWidth, weight="800", align="center") {
-    let value = String(text ?? "").replace(/\\s+/g, " ").trim();
+    let value = String(text ?? "").replace(/\s+/g, " ").trim();
     if (!value) return;
     let size = maxSize;
     const setFont = () => { ctx.font = weight + " " + size + "px " + FONT_DISPLAY; };
