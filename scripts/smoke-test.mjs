@@ -114,6 +114,95 @@ try{
     assert.ok(generated.src.startsWith("blob:"),template+" must render a generated PNG preview.");
     console.log("PASS Graphic Engine "+template+" photo-free generation:",JSON.stringify({width:generated.width,height:generated.height}));
   }
+  // Exercise mobile background-removal flow with a stubbed model module (no external AI download).
+  const mobileCdp=await page.context().newCDPSession(page);
+  await mobileCdp.send("Emulation.setUserAgentOverride",{userAgent:"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"});
+  await page.route("https://esm.sh/@imgly/background-removal@1.7.0",async route=>{
+    await route.fulfill({status:200,contentType:"application/javascript",body:`export async function removeBackground(input, config){window.__smokeRemoveBgConfig=config;window.__smokeRemoveBgCalls=(window.__smokeRemoveBgCalls||0)+1;if(window.__smokeMalformedBg)return new Blob(["not a real PNG"],{type:"image/png"});return new Blob([await input.arrayBuffer()],{type:"image/png"});}`});
+  });
+  await page.locator("#graphicFile").setInputFiles({
+    name:"mobile-background-test.png",
+    mimeType:"image/png",
+    buffer:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jWQAAAABJRU5ErkJggg==","base64")
+  });
+  const mobileRemoveButton=page.locator("#graphicRemoveBgBtn");
+  assert.equal(await mobileRemoveButton.isDisabled(),false,"Background removal must remain enabled on mobile.");
+  await mobileRemoveButton.click();
+  await page.waitForFunction(()=>window.__smokeRemoveBgCalls===1&&document.getElementById("graphicSourcePreview")?.src.startsWith("blob:"),null,{timeout:10000});
+  const mobileRemoveCheck=await page.evaluate(()=>({device:navigator.userAgent,disabled:document.getElementById("graphicRemoveBgBtn")?.disabled,deviceConfig:window.__smokeRemoveBgConfig?.device,previewVisible:!document.getElementById("graphicSourcePreview")?.hidden,status:document.getElementById("graphicStatus")?.textContent||""}));
+  assert.equal(mobileRemoveCheck.disabled,false,"Mobile background-removal button should be re-enabled after processing.");
+  assert.equal(mobileRemoveCheck.deviceConfig,"cpu","Mobile background-removal must use the CPU processing path.");
+  assert.equal(mobileRemoveCheck.previewVisible,true,"Mobile background-removal must show the processed preview.");
+  console.log("PASS mobile background-removal flow with stubbed AI model:",JSON.stringify(mobileRemoveCheck));
+
+  // Regression: reject a non-empty but corrupt image before it can break the next preview.
+  await page.evaluate(()=>{
+    window.__smokeMalformedBg=true;
+    window.__smokeOriginalToast=window.toast;
+    window.toast=(message,type)=>{window.__smokeLastToast={message,type};};
+  });
+  await page.locator("#graphicFile").setInputFiles({
+    name:"mobile-background-corrupt-test.png",
+    mimeType:"image/png",
+    buffer:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jWQAAAABJRU5ErkJggg==","base64")
+  });
+  await mobileRemoveButton.click();
+  await page.waitForFunction(()=>window.__smokeRemoveBgCalls===2&&!document.getElementById("graphicRemoveBgBtn")?.disabled&&/Uklanjanje pozadine nije uspjelo/.test(window.__smokeLastToast?.message||""),null,{timeout:10000});
+  const corruptCutoutCheck=await page.evaluate(()=>({
+    status:window.__smokeLastToast?.message||"",
+    sourcePreviewVisible:!document.getElementById("graphicSourcePreview")?.hidden,
+    removeButtonEnabled:!document.getElementById("graphicRemoveBgBtn")?.disabled
+  }));
+  assert.match(corruptCutoutCheck.status,/nije uspjelo/,"A corrupt AI image must be rejected with a visible error.");
+  assert.equal(corruptCutoutCheck.sourcePreviewVisible,true,"Original photo preview must remain available after a corrupt AI result.");
+  assert.equal(corruptCutoutCheck.removeButtonEnabled,true,"Background-removal control must recover after invalid output.");
+  console.log("PASS corrupt background-removal output is rejected safely:",JSON.stringify(corruptCutoutCheck));
+
+  // Retry with valid output and verify the full generation/preview chain recovers.
+  await page.evaluate(()=>{window.__smokeMalformedBg=false;});
+  await mobileRemoveButton.click();
+  await page.waitForFunction(()=>window.__smokeRemoveBgCalls===3&&/Pozadina je uklonjena/.test(window.__smokeLastToast?.message||""),null,{timeout:10000});
+  await page.evaluate(()=>{
+    if(window.__smokeOriginalToast===undefined)delete window.toast;
+    else window.toast=window.__smokeOriginalToast;
+    delete window.__smokeOriginalToast;
+  });
+
+  // Regression: a successful cutout must also be usable to generate and view the final graphic.
+  const pageErrorsBeforeCutoutPreview=pageErrors.length;
+  await page.locator("#graphicTemplate").selectOption("player");
+  await page.locator("#graphicGenerateBtn").click();
+  await page.waitForFunction(()=>{const image=document.getElementById("graphicResultPreview");return !!image&&!image.hidden&&image.complete&&image.naturalWidth===1080&&image.naturalHeight===1350;},null,{timeout:10000});
+  assert.equal(pageErrors.length,pageErrorsBeforeCutoutPreview,"Generating a graphic from a successful background removal must not crash the page.");
+  console.log("PASS final graphic preview after background removal.");
+
+  // Verify both blur switches regenerate an existing graphic and refresh the preview.
+  await page.locator("#graphicTemplate").selectOption("player");
+  await page.locator("#graphicGenerateBtn").click();
+  await page.waitForFunction(()=>{const image=document.getElementById("graphicResultPreview");return !!image&&!image.hidden&&image.naturalWidth===1080;},null,{timeout:10000});
+  const blurPlayerToggle=page.locator("#graphicBlurPlayer");
+  const blurBackgroundToggle=page.locator("#graphicBlur");
+  let previousPreview=await page.locator("#graphicResultPreview").getAttribute("src");
+  await blurPlayerToggle.check();
+  await page.waitForFunction(previous=>{const image=document.getElementById("graphicResultPreview");const status=document.getElementById("graphicStatus");return !!image&&image.getAttribute("src")!==previous&&image.complete&&image.naturalWidth===1080&&status?.textContent==="Grafika je spremna za objavu.";},previousPreview,{timeout:10000});
+  const playerBlurPreview=await page.locator("#graphicResultPreview").getAttribute("src");
+  assert.notEqual(playerBlurPreview,previousPreview,"Player blur should regenerate the existing graphic preview.");
+  previousPreview=playerBlurPreview;
+  await blurBackgroundToggle.check();
+  await page.waitForFunction(previous=>{const image=document.getElementById("graphicResultPreview");const status=document.getElementById("graphicStatus");return !!image&&image.getAttribute("src")!==previous&&image.complete&&image.naturalWidth===1080&&status?.textContent==="Grafika je spremna za objavu.";},previousPreview,{timeout:10000});
+  const blurEffectCheck=await page.evaluate(()=>({
+    playerBlur:document.getElementById("graphicBlurPlayer")?.checked,
+    backgroundBlur:document.getElementById("graphicBlur")?.checked,
+    previewVisible:!document.getElementById("graphicResultPreview")?.hidden,
+    previewWidth:document.getElementById("graphicResultPreview")?.naturalWidth,
+    status:document.getElementById("graphicStatus")?.textContent||""
+  }));
+  assert.equal(blurEffectCheck.playerBlur,true,"Player blur checkbox should remain enabled.");
+  assert.equal(blurEffectCheck.backgroundBlur,true,"Background blur checkbox should remain enabled.");
+  assert.equal(blurEffectCheck.previewVisible,true,"Blurred graphic preview should remain visible.");
+  assert.equal(blurEffectCheck.previewWidth,1080,"Blurred graphic should have expected output dimensions.");
+  console.log("PASS Graphic Engine player/background blur preview refresh:",JSON.stringify(blurEffectCheck));
+  await mobileCdp.detach();
   await page.evaluate(()=>{
     document.getElementById("graphicEngineCard")?.remove();
     if(window.__smokeGraphicAdminHost)document.getElementById("adminContent")?.remove();

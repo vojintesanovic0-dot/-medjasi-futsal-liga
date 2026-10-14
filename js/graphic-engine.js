@@ -10,6 +10,8 @@
   "use strict";
 
   const $ = id => document.getElementById(id);
+  const FONT_DISPLAY = "'Anton', 'Bebas Neue', Impact, 'Arial Narrow', sans-serif";
+  const FONT_BODY = "'Barlow Condensed', 'Arial Narrow', Arial, sans-serif";
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[c]));
@@ -21,6 +23,7 @@
   let generatedPreviewUrl = null;
 
   const state = {
+    mode: "graphic",
     template: "player",
     playerId: "",
     teamId: "",
@@ -131,24 +134,35 @@
         throw new Error("AI alat za uklanjanje pozadine nije dostupan.");
       }
 
-      // Smanji fotografiju prije AI obrade da se smanji potrošnja memorije.
-      const input = await downscaleForProcessing(sourceFile, 1600);
+      // Telefoni imaju manje memorije; manja slika smanjuje rizik od pada tokom inference-a.
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const input = await downscaleForProcessing(sourceFile, isMobile ? 1024 : 1600);
       const preferredDevice = isMobile ? "cpu" : "gpu";
       const config = {
         model: "isnet_quint8",
-        proxyToWorker: true,
+        // ONNX Runtime WASM/CPU proxy worker nije pouzdan; koristi ga samo za GPU.
+        proxyToWorker: preferredDevice === "gpu",
         output: {format:"image/png"}
       };
 
+      let processedBlob;
       try{
-        cutoutBlob = await removeBgFn(input, {...config, device:preferredDevice});
+        processedBlob = await removeBgFn(input, {...config, device:preferredDevice});
       }catch(procError){
         if(preferredDevice === "cpu") throw procError;
         console.warn("Graphic Engine: GPU nije uspio, pokušavam CPU.", procError);
-        cutoutBlob = await removeBgFn(input, {...config, device:"cpu"});
+        // CPU fallback mora isključiti proxyToWorker, jer WASM/CPU proxy nije podržan.
+        processedBlob = await removeBgFn(input, {...config, device:"cpu", proxyToWorker:false});
       }
 
+      if(!(processedBlob instanceof Blob) || processedBlob.size === 0){
+        throw new Error("AI obrada nije vratila ispravnu PNG sliku.");
+      }
+
+      // Validiraj dekodiranje prije nego proglasimo obradu uspješnom.
+      // Neispravan Blob bi inače pukao tek kasnije pri generisanju pregleda.
+      await blobToImage(processedBlob);
+      cutoutBlob = processedBlob;
       const previewUrl = URL.createObjectURL(cutoutBlob);
       const img = $("graphicSourcePreview");
       revoke(sourceObjectUrl);
@@ -165,8 +179,11 @@
 
       toast("Pozadina je uklonjena. Originalna fotografija ostaje sačuvana.");
     }catch(error){
+      // Nikad ne ostavljaj neispravan rezultat koji bi srušio naredni pregled grafike.
+      cutoutBlob = null;
       console.error("Graphic Engine remove background:", error);
-      toast("Uklanjanje pozadine nije uspjelo. Fotografija ostaje netaknuta.","error");
+      const detail = error?.message ? " (" + error.message.slice(0,160) + ")" : "";
+      toast("Uklanjanje pozadine nije uspjelo" + detail + ". Fotografija ostaje netaknuta.","error");
     }finally{
       if(btn){
         btn.disabled = false;
@@ -301,10 +318,34 @@
       ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+1350,1350);ctx.stroke();
     }
     ctx.globalAlpha=1;
+
+    // Sjaj iza igrača
+    const glow = ctx.createRadialGradient(540, 520, 80, 540, 520, 760);
+    glow.addColorStop(0, "rgba(183,255,85,.20)");
+    glow.addColorStop(1, "rgba(183,255,85,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, 1080, 1350);
+
+    // Velika providna riječ kao pozadinski element
+    ctx.save();
+    ctx.font = "400 380px " + FONT_DISPLAY;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.strokeStyle = "rgba(183,255,85,.13)";
+    ctx.lineWidth = 3;
+    ctx.strokeText("MEĐASI", 540, 800);
+    ctx.restore();
+
+    // Vinjeta (tamne ivice)
+    const vignette = ctx.createRadialGradient(540, 675, 420, 540, 675, 1020);
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(1, "rgba(0,0,0,.65)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, 1080, 1350);
   }
 
   function drawText(ctx, text, x, y, size, weight="700", align="left"){
-    ctx.font = weight + " " + size + "px Arial, sans-serif";
+    ctx.font = weight + " " + size + "px " + FONT_BODY;
     ctx.textAlign = align;
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#ffffff";
@@ -314,28 +355,44 @@
   function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines, size, weight="600"){
     const words=String(text||"").replace(/\s+/g," ").trim().split(" ").filter(Boolean);
     const lines=[];
+    ctx.font=weight+" "+size+"px "+FONT_BODY;
+    const pushLongWord = word => {
+      let part="";
+      for(const char of word){
+        if(part && ctx.measureText(part+char).width>maxWidth){
+          lines.push(part);
+          part=char;
+        }else{
+          part+=char;
+        }
+      }
+      return part;
+    };
     let line="";
-    ctx.font=weight+" "+size+"px Arial, sans-serif";
     for(const word of words){
       const candidate=line?line+" "+word:word;
-      if(line&&ctx.measureText(candidate).width>maxWidth){
+      if(line && ctx.measureText(candidate).width>maxWidth){
         lines.push(line);
-        line=word;
+        line="";
+      }
+      if(ctx.measureText(word).width>maxWidth){
+        const remainder=pushLongWord(word);
+        line=remainder;
       }else{
-        line=candidate;
+        line=line?line+" "+word:word;
       }
     }
     if(line)lines.push(line);
-    const visible=lines.slice(0,maxLines);
+    const visible=lines.slice(0,Math.max(0,maxLines));
     if(lines.length>maxLines&&visible.length){
-      let last=visible[visible.length-1];
-      while(last&&ctx.measureText(last+"…").width>maxWidth)last=last.slice(0,-1);
-      visible[visible.length-1]=last.trimEnd()+"…";
+      let last=visible[visible.length-1].replace(/…+$/,"");
+      while(last && ctx.measureText(last+"…").width>maxWidth)last=last.slice(0,-1).trimEnd();
+      visible[visible.length-1]=last+"…";
     }
     ctx.fillStyle="#ffffff";
     ctx.textAlign="left";
     ctx.textBaseline="alphabetic";
-    visible.forEach((lineText,index)=>ctx.fillText(lineText,x,y+index*lineHeight));
+    visible.forEach((lineText,index)=>ctx.fillText(lineText,x,y+index*lineHeight,maxWidth));
   }
 
   function teamById(id) {
@@ -354,16 +411,25 @@
   }
 
   function fitText(ctx, text, x, y, maxSize, minSize, maxWidth, weight="800", align="center") {
+    let value = String(text ?? "").replace(/\s+/g, " ").trim();
+    if (!value) return;
     let size = maxSize;
-    ctx.font = weight + " " + size + "px Arial, sans-serif";
-    while (size > minSize && ctx.measureText(String(text || "")).width > maxWidth) {
-      size -= 2;
-      ctx.font = weight + " " + size + "px Arial, sans-serif";
+    const setFont = () => { ctx.font = weight + " " + size + "px " + FONT_DISPLAY; };
+    setFont();
+    while (size > minSize && ctx.measureText(value).width > maxWidth) {
+      size = Math.max(minSize, size - 2);
+      setFont();
+    }
+    if (ctx.measureText(value).width > maxWidth) {
+      while (value.length > 1 && ctx.measureText(value + "…").width > maxWidth) {
+        value = value.slice(0, -1).trimEnd();
+      }
+      if (value.length < String(text ?? "").trim().length) value += "…";
     }
     ctx.textAlign = align;
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#ffffff";
-    ctx.fillText(String(text || ""), x, y);
+    ctx.fillText(value, x, y, maxWidth);
   }
 
   function renderTeamOptions() {
@@ -397,6 +463,10 @@
 
   async function generate() {
     syncState();
+    await Promise.all([
+      document.fonts.load("400 40px 'Anton'"),
+      document.fonts.load("800 40px 'Barlow Condensed'")
+    ]).catch(() => {});
 
     const template = state.template;
     const isMatchTpl = ["result","preview","live","scorers"].includes(template);
@@ -439,7 +509,7 @@
       const smallSource = await downscaleForProcessing(sourceFile, 1200);
       const bgSource = await blobToImage(smallSource);
       const bgRect = fitRect(bgSource, -60, -60, 1200, 1470, false);
-      drawSoftImage(ctx, bgSource, bgRect, 36);
+      drawSoftImage(ctx, bgSource, bgRect, 76);
       ctx.fillStyle = "rgba(2,6,4,.45)";
       ctx.fillRect(0, 0, 1080, 1350);
     }
@@ -456,7 +526,15 @@
       } else {
         rect = fitRect(img, 0, 50, 1080, 980, false);
       }
+      if (cutoutBlob) {
+        ctx.shadowColor = "rgba(0,0,0,.55)";
+        ctx.shadowBlur = 45;
+        ctx.shadowOffsetY = 18;
+      }
       drawSoftImage(ctx, img, rect, blurPx);
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
       if (!cutoutBlob && !state.blur) {
         ctx.fillStyle = "rgba(0,0,0,.20)";
         ctx.fillRect(0, 50, 1080, 980);
@@ -511,8 +589,8 @@
         const awayRows=rows.filter(row=>String(row.team)!==String(match.home_team_id));
         drawText(ctx,"STRIJELCI",540,230,30,"800","center");
         if(!rows.length)drawText(ctx,"Bez golova",540,300,34,"600","center");
-        homeRows.slice(0,6).forEach((row,i)=>drawText(ctx,row.name,500,290+i*46,32,"700","right"));
-        awayRows.slice(0,6).forEach((row,i)=>drawText(ctx,row.name,580,290+i*46,32,"700","left"));
+        homeRows.slice(0,6).forEach((row,i)=>fitText(ctx,row.name,500,290+i*46,32,18,430,"700","right"));
+        awayRows.slice(0,6).forEach((row,i)=>fitText(ctx,row.name,580,290+i*46,32,18,430,"700","left"));
       }
       headline = homeName + " – " + awayName;
       sub = formatMatchDate(match.match_date) || "Međasi Futsal Liga";
@@ -572,34 +650,51 @@
       preset.tag=match.status==="live"?"UŽIVO":match.status==="finished"?"FINAL":"NAJAVA";
     }
 
-    ctx.fillStyle = "rgba(0,0,0,.60)";
-    ctx.fillRect(0, 1020, 1080, 330);
+    const panel = ctx.createLinearGradient(0, 940, 0, 1350);
+    panel.addColorStop(0, "rgba(0,0,0,0)");
+    panel.addColorStop(0.35, "rgba(0,0,0,.78)");
+    panel.addColorStop(1, "rgba(0,0,0,.92)");
+    ctx.fillStyle = panel;
+    ctx.fillRect(0, 940, 1080, 410);
     ctx.fillStyle = "#b7ff55";
     ctx.fillRect(60, 1045, 210, 8);
     ctx.fillStyle = "#b7ff55";
-    ctx.font = "700 28px Arial";
-    ctx.fillText(preset.kicker, 60, 1100);
+    fitText(ctx, preset.kicker, 60, 1100, 28, 18, 760, "700", "left");
 
-    fitText(ctx, headline, 60, 1180, 58, 30, 960, "800", "left");
+    // Ostavlja se razmak za broj dresa/poziciju kako se ne bi sudarili s dugim imenima.
+    const headlineWidth = (number || position) ? 650 : 960;
+    fitText(ctx, headline, 60, 1180, 58, 28, headlineWidth, "800", "left");
     if(isTextTpl){
       drawWrappedText(ctx,sub,60,1228,900,28,2,24,"600");
     }else{
-      drawText(ctx, sub, 60, 1230, 30, "600");
+      fitText(ctx, sub, 60, 1230, 30, 18, 940, "600", "left");
     }
-    if (position) drawText(ctx, position.toUpperCase(), 1020, 1100, 24, "700", "right");
-    if (number) drawText(ctx, number, 1020, 1175, 38, "800", "right");
+    if (position) fitText(ctx, position.toUpperCase(), 1020, 1100, 24, 16, 260, "700", "right");
+    if (number) fitText(ctx, number, 1020, 1175, 38, 24, 250, "800", "right");
     drawText(ctx, String(preset.tag||"").trim(), 1020, 1295, 22, "700", "right");
     drawText(ctx, "MEĐASI FUTSAL LIGA", 60, 1295, 22, "700");
 
     if (state.grain) {
-      ctx.save();
-      ctx.globalAlpha = .06;
-      for (let i = 0; i < 9000; i++) {
-        const v = Math.random() > .5 ? 255 : 0;
-        ctx.fillStyle = "rgb(" + v + "," + v + "," + v + ")";
-        ctx.fillRect(Math.random() * 1080, Math.random() * 1350, 2, 2);
+      const noise = document.createElement("canvas");
+      noise.width = 128;
+      noise.height = 128;
+      const nctx = noise.getContext("2d");
+      const nd = nctx.createImageData(128, 128);
+      for (let i = 0; i < nd.data.length; i += 4) {
+        const v = Math.random() * 255;
+        nd.data[i] = v;
+        nd.data[i + 1] = v;
+        nd.data[i + 2] = v;
+        nd.data[i + 3] = 255;
       }
+      nctx.putImageData(nd, 0, 0);
+      ctx.save();
+      ctx.globalAlpha = .07;
+      ctx.fillStyle = ctx.createPattern(noise, "repeat");
+      ctx.fillRect(0, 0, 1080, 1350);
       ctx.restore();
+      noise.width = 0;
+      noise.height = 0;
     }
 
     generatedBlob = await new Promise((resolve, reject) => {
@@ -615,7 +710,18 @@
   }
 
   async function publish(){
-    if(!generatedBlob){
+    syncState();
+    const textOnly = state.mode === "text";
+    const hasText = !!(state.caption.trim() || state.title.trim() || state.body.trim());
+    if(textOnly && state.destination === "community"){
+      toast("Community trenutno zahtijeva fotografiju. Za objavu bez grafike izaberi Chat ili Vijesti.","error");
+      return;
+    }
+    if(textOnly && !hasText){
+      toast("Unesi tekst objave prije objavljivanja.","error");
+      return;
+    }
+    if(!textOnly && !generatedBlob){
       toast("Prvo generiši grafiku.","error");
       return;
     }
@@ -628,16 +734,19 @@
     if(btn){btn.disabled=true;btn.textContent="⏳ Objavljujem...";}
 
     try{
-      /* Storage RLS allows admin/editor media uploads under news/ with UUIDv4 PNG names. */
-      const filename="news/"+crypto.randomUUID()+".png";
-      const {error:uploadError}=await window.supabaseClient
-        .storage.from("liga-images")
-        .upload(filename,generatedBlob,{contentType:"image/png",upsert:false});
-      if(uploadError) throw uploadError;
+      let image_url = null;
+      if(!textOnly){
+        /* Storage RLS allows admin/editor media uploads under news/ with UUIDv4 PNG names. */
+        const filename="news/"+crypto.randomUUID()+".png";
+        const {error:uploadError}=await window.supabaseClient
+          .storage.from("liga-images")
+          .upload(filename,generatedBlob,{contentType:"image/png",upsert:false});
+        if(uploadError) throw uploadError;
 
-      const {data:urlData}=window.supabaseClient
-        .storage.from("liga-images").getPublicUrl(filename);
-      const image_url=urlData.publicUrl;
+        const {data:urlData}=window.supabaseClient
+          .storage.from("liga-images").getPublicUrl(filename);
+        image_url=urlData.publicUrl;
+      }
 
       const player=currentPlayer();
       const team=teamForPlayer(player);
@@ -651,7 +760,9 @@
         signing:"Pojačanje",playerOfMatch:"Igrač utakmice",breaking:"Breaking news",notice:"Važno obavještenje"
       }[state.template] || "Grafika lige";
 
-      const caption=state.caption.trim() || (" "+templateLabel+" · "+name+" · "+(team?.name||"Međasi Futsal Liga"));
+      const caption=state.caption.trim() || (textOnly
+        ? [state.title.trim(),state.body.trim()].filter(Boolean).join("\n\n")
+        : (" "+templateLabel+" · "+name+" · "+(team?.name||"Međasi Futsal Liga")));
 
       if(state.destination==="community"){
         const {error}=await window.sbClient().from("community_posts").insert({
@@ -686,7 +797,7 @@
           author_id:window.currentUser.id,
           author_name:window.currentProfile?.username ||  "Admin",
           media_url:image_url,
-          media_type:"image",
+          media_type:textOnly ? null : "image",
           published:true
         });
         if(error) throw error;
@@ -695,7 +806,7 @@
         window.loadNews?.();
       }
 
-      toast("Grafika je objavljena u "+({
+      toast((textOnly ? "Objava bez grafike je objavljena u " : "Grafika je objavljena u ")+({
         community:"Community",chat:"Chatu",news:"Vijestima"
       }[state.destination] || "sistemu")+".");
 
@@ -706,11 +817,12 @@
       console.error("Graphic Engine publish:",error);
       toast(error?.message || "Greška pri objavi grafike.","error");
     }finally{
-      if(btn){btn.disabled=false;btn.textContent=" Objavi grafiku";}
+      if(btn){btn.disabled=false;btn.textContent=state.mode==="text"?"Objavi bez grafike":" Objavi grafiku";}
     }
   }
 
   function syncState() {
+    state.mode = $("graphicMode")?.value || "graphic";
     state.playerId = $("graphicPlayer")?.value || "";
     state.teamId = $("graphicTeam")?.value || "";
     state.matchId = $("graphicMatch")?.value || "";
@@ -765,8 +877,18 @@
         <span class="admin-pill">${editorOnly ? "ADMIN + UREDNICA" : "SAMO ADMIN"}</span>
       </div>
 
+      <div class="form-group graphic-mode-choice">
+        <label for="graphicMode">Način objave</label>
+        <select id="graphicMode">
+          <option value="graphic">S grafikom</option>
+          <option value="text">Bez grafike — samo tekst</option>
+        </select>
+        <p class="muted">Izaberi „Bez grafike“ ako želiš objaviti samo tekst. Postojeće grafike i predlošci ostaju dostupni.</p>
+      </div>
+
       <div class="graphic-engine-grid">
         <div class="graphic-engine-controls">
+          <div id="graphicVisualControls">
           <div class="form-group">
             <label>Igrač</label>
             <select id="graphicPlayer"></select>
@@ -827,6 +949,7 @@
             <label><input type="checkbox" id="graphicDuotone"> Ton lige (zelena)</label>
             <label><input type="checkbox" id="graphicGrain"> Grain (zrnasta tekstura)</label>
           </div>
+          </div>
 
           <div class="form-group">
             <label>Objavi u</label>
@@ -855,7 +978,7 @@
 
           <div class="graphic-engine-actions">
             <button id="graphicGenerateBtn" type="button" class="btn btn-green" disabled> Generiši grafiku</button>
-            <button id="graphicPublishBtn" type="button" class="btn btn-blue" disabled> Objavi grafiku</button>
+            <button id="graphicPublishBtn" type="button" class="btn btn-blue" disabled> Objavi</button>
           </div>
 
           <div id="graphicStatus" class="muted" aria-live="polite"></div>
@@ -898,13 +1021,29 @@
     $("graphicGenerateBtn")?.addEventListener("click",async()=>{syncState();try{await generate()}catch(e){console.error(e);toast(e.message||"Greška pri generisanju.","error")}});
     $("graphicPublishBtn")?.addEventListener("click",async()=>{syncState();await publish()});
     const updateTextFieldsVisibility=()=>{
+      const textOnly = ($("graphicMode")?.value || "graphic") === "text";
+      const visualControls = $("graphicVisualControls");
+      if(visualControls){visualControls.hidden = textOnly;visualControls.style.display = textOnly ? "none" : "";}
+      const preview = document.querySelector("#graphicEngineCard .graphic-engine-preview");
+      if(preview){preview.hidden = textOnly;preview.style.display = textOnly ? "none" : "" ;}
+      const publishBtn = $("graphicPublishBtn");
+      if(publishBtn){
+        publishBtn.textContent = textOnly ? "Objavi bez grafike" : "Objavi grafiku";
+        publishBtn.disabled = textOnly ? false : !generatedBlob;
+      }
+      const generateBtn = $("graphicGenerateBtn");
+      if(generateBtn) generateBtn.hidden = textOnly;
       const template=$("graphicTemplate")?.value||"player";
       const textTemplate=["breaking","notice"].includes(template);
       const photoOptional=["breaking","notice","result","preview","live","scorers","coach"].includes(template);
       $("graphicNewsFields").hidden=$("graphicDestination")?.value!=="news"&&!textTemplate;
-      const generateBtn=$("graphicGenerateBtn");
-      if(generateBtn)generateBtn.disabled=!sourceFile&&!photoOptional;
+      const generateButton=$("graphicGenerateBtn");
+      if(generateButton)generateButton.disabled=!sourceFile&&!photoOptional;
     };
+    $("graphicMode")?.addEventListener("change",()=>{
+      syncState();
+      updateTextFieldsVisibility();
+    });
     $("graphicTemplate")?.addEventListener("change",()=>{
       syncState();
       updateTextFieldsVisibility();
@@ -921,10 +1060,28 @@
     $("graphicMatch")?.addEventListener("focus", renderMatchOptions);
     $("graphicTeam")?.addEventListener("change", syncState);
     $("graphicMatch")?.addEventListener("change", syncState);
-    $("graphicBlur")?.addEventListener("change", syncState);
-    $("graphicBlurPlayer")?.addEventListener("change", syncState);
-    $("graphicDuotone")?.addEventListener("change", syncState);
-    $("graphicGrain")?.addEventListener("change", syncState);
+    // Efekti se pamte odmah, a ako grafika već postoji, odmah se ponovo
+    // iscrtava da korisnik vidi promjenu bez dodatnog klika na „Generiši grafiku“.
+    const refreshEffectPreview = async () => {
+      syncState();
+      if (!generatedBlob) return;
+      const publishBtn = $("graphicPublishBtn");
+      if (publishBtn) publishBtn.disabled = true;
+      const status = $("graphicStatus");
+      if (status) status.textContent = "Primjenjujem efekat…";
+      try {
+        await generate();
+      } catch (error) {
+        console.error("Graphic Engine effect:", error);
+        if (status) status.textContent = "Efekat nije primijenjen. Pokušaj ponovo generisati grafiku.";
+        if (publishBtn) publishBtn.disabled = !generatedBlob;
+        toast(error?.message || "Greška pri primjeni efekta.", "error");
+      }
+    };
+    $("graphicBlur")?.addEventListener("change", refreshEffectPreview);
+    $("graphicBlurPlayer")?.addEventListener("change", refreshEffectPreview);
+    $("graphicDuotone")?.addEventListener("change", refreshEffectPreview);
+    $("graphicGrain")?.addEventListener("change", refreshEffectPreview);
   }
 
   function init(){
@@ -933,6 +1090,7 @@
     renderPlayers();
     renderTeamOptions();
     renderMatchOptions();
+
   }
 
   window.initGraphicEngine=init;
