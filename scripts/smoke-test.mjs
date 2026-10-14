@@ -97,6 +97,8 @@ try{
     window.initGraphicEngine?.();
   });
   await page.locator("#graphicEngineCard").waitFor({state:"attached",timeout:10000});
+  assert.ok(await page.locator('#graphicTemplate option[value="plain"]').count(), "Graphic Engine must offer a plain photo-only template.");
+  console.log("PASS Graphic Engine plain photo-only template is available.");
   for(const [template,title,body] of [
     ["breaking","TEST: Vanredna vijest","Provjera generisanja bez fotografije u Chromiumu."],
     ["notice","TEST: Važno obavještenje","Drugi red teksta provjerava prelamanje sadržaja."]
