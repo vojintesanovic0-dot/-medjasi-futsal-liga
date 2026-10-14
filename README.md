@@ -47,6 +47,7 @@ Kad promijeniš `js/app.js` ili `css/*.css`, povećaj broj verzije (`?v=...`) u 
 28. `sql/27_handle_profile_username_collisions.sql` – pri registraciji pokušava siguran rezervni naziv ako je željeno korisničko ime zauzeto; mijenja samo trigger funkciju i ne dira postojeće profile.
 29. `sql/28_harden_push_config.sql` – uključuje RLS na `push_config` i uklanja privilegije browser uloga, kako VAPID privatni ključ ne bi bio dostupan klijentu; pristup ostaje pouzdanim server-side `service_role` operacijama.
 30. `sql/29_fix_public_news_read_policy.sql` – razdvaja javno čitanje objavljenih vijesti od administratorskog čitanja skica, bez davanja anonimnoj ulozi EXECUTE prava nad `is_admin()`.
+31. `sql/35_restore_news_editor_table_grants.sql` – vraća tabelarne SELECT/INSERT/UPDATE/DELETE grantove ulozi `authenticated` za `public.news`, dok postojeći RLS i dalje ograničava upis i izmjene na ovlaštene urednike/admina.
 - `scripts/check-live-supabase.mjs` i `.github/workflows/live-supabase-health.yml`: zasebna provjera produkcijskog snapshot API-ja; ne miješa dostupnost Supabase-a s UI regresijskim testovima.
 - Status poruka za nedostupni Data API ima razmake između naslova, objašnjenja i dugmeta, pa je čitljiva i u pristupačnom tekstualnom prikazu.
 - Registracija normalizuje korisnička imena i provjerava zauzetost bez blokiranja prijave kada je Data API privremeno nedostupan; server-side trigger ostaje konačna zaštita od duplikata.
