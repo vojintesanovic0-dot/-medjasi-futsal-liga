@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="bs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Email potvrđen · Međasi Futsal Liga</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{--bg:#020607;--card:#0b1412;--line:rgba(57,245,139,.22);--green:#39f58b;--muted:#9bb3aa;--text:#eafff4}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{background:radial-gradient(900px 500px at 50% -10%,rgba(57,245,139,.18),transparent 60%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;padding:max(20px,env(safe-area-inset-top)) 20px max(20px,env(safe-area-inset-bottom))}
+  .card{width:100%;max-width:440px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:40px 28px 32px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 1px rgba(57,245,139,.05) inset;animation:rise .6s cubic-bezier(.2,.8,.2,1) both}
+  .badge{width:104px;height:104px;margin:0 auto 22px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(57,245,139,.25),rgba(57,245,139,.04) 70%);position:relative}
+  .badge::before,.badge::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--green);opacity:0;animation:ring 2.4s ease-out infinite}
+  .badge::after{animation-delay:1.2s}
+  .check{width:58px;height:58px}
+  .check path{fill:none;stroke:var(--green);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60;animation:draw .6s .25s ease-out forwards}
+  .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--green);font-weight:700;margin:0 0 8px}
+  h1{font-size:clamp(24px,6vw,28px);line-height:1.2;margin:0 0 12px}
+  p{color:var(--muted);font-size:16px;line-height:1.55;margin:0 0 26px}
+  .btn{display:inline-block;width:100%;padding:15px 18px;border-radius:14px;background:var(--green);color:#03150c;font-weight:800;font-size:16px;text-decoration:none;transition:transform .15s ease,filter .15s ease}
+  .btn:hover{filter:brightness(1.06)}.btn:active{transform:scale(.98)}.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+  .foot{margin:18px 0 0;font-size:13px;color:#789389}
+  @keyframes draw{to{stroke-dashoffset:0}}@keyframes ring{0%{transform:scale(.85);opacity:.7}100%{transform:scale(1.35);opacity:0}}@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.check path{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+  <main class="card" role="status" aria-live="polite">
+    <div class="badge" aria-hidden="true"><svg class="check" viewBox="0 0 64 64"><path d="M14 33 L26 45 L50 20"/></svg></div>
+    <p class="kicker">Nalog potvrđen</p>
+    <h1>Email je uspješno potvrđen</h1>
+    <p>Hvala ti što si se pridružio/la Međasi Futsal Ligi. Tvoj nalog je spreman, vrati se na sajt i uživaj u utakmicama, tabeli i ekipama.</p>
+    <a class="btn" id="backBtn" href="./index.html">Nazad na sajt</a>
+    <p class="foot">Ako si tab zatvorio/la, samo otvori sajt i prijavi se.</p>
+  </main>
+  <script>
+    (function(){
+      var btn=document.getElementById("backBtn");
+      // Keep Supabase's hash/query callback parameters for the app's auth client.
+      btn.href="./index.html"+window.location.search+window.location.hash;
+    })();
+  </script>
+</body>
+</html>
