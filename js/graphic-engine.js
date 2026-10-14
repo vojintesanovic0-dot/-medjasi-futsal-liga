@@ -19,6 +19,7 @@
   let cutoutBlob = null;
   let generatedBlob = null;
   let generatedPreviewUrl = null;
+  const BG_ATTEMPT_KEY = "graphicBgAttempt";
 
   const state = {
     template: "player",
@@ -120,45 +121,46 @@
       btn.textContent = "⏳ Uklanjam pozadinu...";
     }
 
+    // Ako tab padne tokom obrade, sljedeće učitavanje će upozoriti korisnika.
+    sessionStorage.setItem(BG_ATTEMPT_KEY, "1");
+
     try{
-      /*
-       * Model se učitava samo kada admin prvi put traži uklanjanje pozadine.
-       * Ne ulazi u početni bundle aplikacije.
-       */
       const mod = await import("https://esm.sh/@imgly/background-removal@1.7.0");
       const removeBgFn = mod.removeBackground;
       if(typeof removeBgFn !== "function"){
         throw new Error("AI alat za uklanjanje pozadine nije dostupan.");
       }
 
-      // Smanji fotografiju prije AI obrade da se smanji potrošnja memorije.
-      const input = await downscaleForProcessing(sourceFile, 1600);
+      // AI model ne treba više od ~1024 px. Manja slika = manje memorije.
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const preferredDevice = isMobile ? "cpu" : "gpu";
+      const lowMemory = typeof navigator.deviceMemory === "number" && navigator.deviceMemory <= 4;
+      const maxSide = (isMobile || lowMemory) ? 800 : 1024;
+      const input = await downscaleForProcessing(sourceFile, maxSide);
+
       const config = {
         model: "isnet_quint8",
         proxyToWorker: true,
-        output: {format:"image/png"}
+        output: {format: "image/png"}
       };
 
+      // Na telefonu uvijek CPU. GPU na telefonu zna srušiti tab.
+      const device = isMobile ? "cpu" : "gpu";
       try{
-        cutoutBlob = await removeBgFn(input, {...config, device:preferredDevice});
+        cutoutBlob = await removeBgFn(input, {...config, device});
       }catch(procError){
-        if(preferredDevice === "cpu") throw procError;
+        if(device === "cpu") throw procError;
         console.warn("Graphic Engine: GPU nije uspio, pokušavam CPU.", procError);
-        cutoutBlob = await removeBgFn(input, {...config, device:"cpu"});
+        cutoutBlob = await removeBgFn(input, {...config, device: "cpu"});
       }
 
       const previewUrl = URL.createObjectURL(cutoutBlob);
       const img = $("graphicSourcePreview");
       revoke(sourceObjectUrl);
       sourceObjectUrl = previewUrl;
-
       if(img){
         img.src = previewUrl;
         img.hidden = false;
       }
-
       if($("graphicSourceName")){
         $("graphicSourceName").textContent = "Fotografija bez pozadine";
       }
@@ -166,12 +168,20 @@
       toast("Pozadina je uklonjena. Originalna fotografija ostaje sačuvana.");
     }catch(error){
       console.error("Graphic Engine remove background:", error);
-      toast("Uklanjanje pozadine nije uspjelo. Fotografija ostaje netaknuta.","error");
+      toast("Uklanjanje pozadine nije uspjelo. Fotografija ostaje netaknuta.", "error");
     }finally{
+      sessionStorage.removeItem(BG_ATTEMPT_KEY);
       if(btn){
         btn.disabled = false;
         btn.textContent = "Ukloni pozadinu";
       }
+    }
+  }
+
+  function warnIfPreviousBgAttemptCrashed(){
+    if(sessionStorage.getItem(BG_ATTEMPT_KEY)){
+      sessionStorage.removeItem(BG_ATTEMPT_KEY);
+      toast("Prethodno uklanjanje pozadine nije završeno, vjerovatno zbog memorije. Probaj manju fotografiju ili ubaci već izrezanu PNG sliku.", "error");
     }
   }
 
@@ -928,6 +938,7 @@
   }
 
   function init(){
+    warnIfPreviousBgAttemptCrashed();
     if(!canUseGraphicEngine()) return;
     inject();
     renderPlayers();
