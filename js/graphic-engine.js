@@ -144,9 +144,30 @@
       try{
         cutoutBlob = await removeBgFn(input, {...config, device:preferredDevice});
       }catch(procError){
-        if(preferredDevice === "cpu") throw procError;
-        console.warn("Graphic Engine: GPU nije uspio, pokušavam CPU.", procError);
-        cutoutBlob = await removeBgFn(input, {...config, device:"cpu"});
+        const message = String(procError?.message || procError || "");
+        const workerFailure = /worker|importScripts|import scripts|workerize/i.test(message);
+        if(workerFailure){
+          console.warn("Graphic Engine: Worker nije dostupan; pokušavam bez workera.", procError);
+          try{
+            cutoutBlob = await removeBgFn(input, {...config, device:preferredDevice, proxyToWorker:false});
+          }catch(noWorkerError){
+            if(preferredDevice !== "gpu") throw noWorkerError;
+            console.warn("Graphic Engine: obrada bez workera na GPU nije uspjela; pokušavam CPU.", noWorkerError);
+            cutoutBlob = await removeBgFn(input, {...config, device:"cpu", proxyToWorker:false});
+          }
+        }else if(preferredDevice === "gpu"){
+          console.warn("Graphic Engine: GPU nije uspio, pokušavam CPU.", procError);
+          try{
+            cutoutBlob = await removeBgFn(input, {...config, device:"cpu"});
+          }catch(cpuError){
+            const cpuMessage = String(cpuError?.message || cpuError || "");
+            if(!/worker|importScripts|import scripts|workerize/i.test(cpuMessage)) throw cpuError;
+            console.warn("Graphic Engine: CPU Worker nije dostupan; pokušavam CPU bez workera.", cpuError);
+            cutoutBlob = await removeBgFn(input, {...config, device:"cpu", proxyToWorker:false});
+          }
+        }else{
+          throw procError;
+        }
       }
 
       const previewUrl = URL.createObjectURL(cutoutBlob);
