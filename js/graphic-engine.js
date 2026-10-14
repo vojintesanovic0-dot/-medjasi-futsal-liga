@@ -574,8 +574,8 @@
         const awayRows=rows.filter(row=>String(row.team)!==String(match.home_team_id));
         drawText(ctx,"STRIJELCI",540,230,30,"800","center");
         if(!rows.length)drawText(ctx,"Bez golova",540,300,34,"600","center");
-        homeRows.slice(0,6).forEach((row,i)=>drawText(ctx,row.name,500,290+i*46,32,"700","right"));
-        awayRows.slice(0,6).forEach((row,i)=>drawText(ctx,row.name,580,290+i*46,32,"700","left"));
+        homeRows.slice(0,6).forEach((row,i)=>fitText(ctx,row.name,500,290+i*46,32,18,430,"700","right"));
+        awayRows.slice(0,6).forEach((row,i)=>fitText(ctx,row.name,580,290+i*46,32,18,430,"700","left"));
       }
       headline = homeName + " – " + awayName;
       sub = formatMatchDate(match.match_date) || "Međasi Futsal Liga";
@@ -644,8 +644,7 @@
     ctx.fillStyle = "#b7ff55";
     ctx.fillRect(60, 1045, 210, 8);
     ctx.fillStyle = "#b7ff55";
-    ctx.font = "700 28px " + FONT_BODY;
-    ctx.fillText(preset.kicker, 60, 1100);
+    fitText(ctx, preset.kicker, 60, 1100, 28, 18, 760, "700", "left");
 
     const headlineWidth = (number || position) ? 760 : 960;
     fitText(ctx, headline, 60, 1180, 58, 28, headlineWidth, "800", "left");
