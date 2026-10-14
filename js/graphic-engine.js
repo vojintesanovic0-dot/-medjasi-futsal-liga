@@ -133,13 +133,14 @@
         throw new Error("AI alat za uklanjanje pozadine nije dostupan.");
       }
 
-      // Smanji fotografiju prije AI obrade da se smanji potrošnja memorije.
-      const input = await downscaleForProcessing(sourceFile, 1600);
+      // Telefoni imaju manje memorije; manja slika smanjuje rizik od pada tokom inference-a.
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const input = await downscaleForProcessing(sourceFile, isMobile ? 1024 : 1600);
       const preferredDevice = isMobile ? "cpu" : "gpu";
       const config = {
         model: "isnet_quint8",
-        proxyToWorker: true,
+        // ONNX Runtime WASM/CPU proxy worker nije pouzdan; koristi ga samo za GPU.
+        proxyToWorker: preferredDevice === "gpu",
         output: {format:"image/png"}
       };
 
@@ -148,7 +149,12 @@
       }catch(procError){
         if(preferredDevice === "cpu") throw procError;
         console.warn("Graphic Engine: GPU nije uspio, pokušavam CPU.", procError);
-        cutoutBlob = await removeBgFn(input, {...config, device:"cpu"});
+        // CPU fallback mora isključiti proxyToWorker, jer WASM/CPU proxy nije podržan.
+        cutoutBlob = await removeBgFn(input, {...config, device:"cpu", proxyToWorker:false});
+      }
+
+      if(!(cutoutBlob instanceof Blob) || cutoutBlob.size === 0){
+        throw new Error("AI obrada nije vratila ispravnu PNG sliku.");
       }
 
       const previewUrl = URL.createObjectURL(cutoutBlob);
@@ -168,7 +174,8 @@
       toast("Pozadina je uklonjena. Originalna fotografija ostaje sačuvana.");
     }catch(error){
       console.error("Graphic Engine remove background:", error);
-      toast("Uklanjanje pozadine nije uspjelo. Fotografija ostaje netaknuta.","error");
+      const detail = error?.message ? " (" + error.message.slice(0,160) + ")" : "";
+      toast("Uklanjanje pozadine nije uspjelo" + detail + ". Fotografija ostaje netaknuta.","error");
     }finally{
       if(btn){
         btn.disabled = false;
