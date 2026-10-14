@@ -126,17 +126,28 @@
        * Ne ulazi u početni bundle aplikacije.
        */
       const mod = await import("https://esm.sh/@imgly/background-removal@1.7.0");
-      const removeBackground = mod.removeBackground;
-      if(typeof removeBackground !== "function"){
+      const removeBgFn = mod.removeBackground;
+      if(typeof removeBgFn !== "function"){
         throw new Error("AI alat za uklanjanje pozadine nije dostupan.");
       }
 
-      cutoutBlob = await removeBackground(sourceFile, {
+      // Smanji fotografiju prije AI obrade da se smanji potrošnja memorije.
+      const input = await downscaleForProcessing(sourceFile, 1600);
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const preferredDevice = isMobile ? "cpu" : "gpu";
+      const config = {
         model: "isnet_quint8",
-        device: "gpu",
-        proxyToWorker: false,
+        proxyToWorker: true,
         output: {format:"image/png"}
-      });
+      };
+
+      try{
+        cutoutBlob = await removeBgFn(input, {...config, device:preferredDevice});
+      }catch(procError){
+        if(preferredDevice === "cpu") throw procError;
+        console.warn("Graphic Engine: GPU nije uspio, pokušavam CPU.", procError);
+        cutoutBlob = await removeBgFn(input, {...config, device:"cpu"});
+      }
 
       const previewUrl = URL.createObjectURL(cutoutBlob);
       const img = $("graphicSourcePreview");
@@ -149,7 +160,7 @@
       }
 
       if($("graphicSourceName")){
-        $("graphicSourceName").textContent = " Fotografija bez pozadine";
+        $("graphicSourceName").textContent = "Fotografija bez pozadine";
       }
 
       toast("Pozadina je uklonjena. Originalna fotografija ostaje sačuvana.");
@@ -159,7 +170,7 @@
     }finally{
       if(btn){
         btn.disabled = false;
-        btn.textContent = " Ukloni pozadinu";
+        btn.textContent = "Ukloni pozadinu";
       }
     }
   }
@@ -185,6 +196,83 @@
     }finally{
       setTimeout(()=>URL.revokeObjectURL(url),0);
     }
+  }
+
+  /* Pomoćne funkcije za obradu i blur */
+
+  // Smanji fotografiju prije AI obrade da se zaštiti memorija uređaja.
+  async function downscaleForProcessing(file, maxSide = 1600){
+    const img = await blobToImage(file);
+    const srcW = img.naturalWidth || img.width;
+    const srcH = img.naturalHeight || img.height;
+    const scale = Math.min(1, maxSide / Math.max(srcW, srcH));
+    if (scale === 1) return file;
+
+    const w = Math.max(1, Math.round(srcW * scale));
+    const h = Math.max(1, Math.round(srcH * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const cx = canvas.getContext("2d");
+    if (!cx) return file;
+    cx.imageSmoothingQuality = "high";
+    cx.drawImage(img, 0, 0, w, h);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    canvas.width = 0;
+    canvas.height = 0;
+    return blob ? new File([blob], "work.png", {type:"image/png"}) : file;
+  }
+
+  const canBlurNatively = (() => {
+    try{
+      const c = document.createElement("canvas").getContext("2d");
+      if (!c) return false;
+      c.filter = "blur(2px)";
+      return c.filter === "blur(2px)";
+    }catch{
+      return false;
+    }
+  })();
+
+  function fitRect(img, x, y, w, h, contain = true){
+    const ratio = contain
+      ? Math.min(w / img.width, h / img.height)
+      : Math.max(w / img.width, h / img.height);
+    const dw = img.width * ratio;
+    const dh = img.height * ratio;
+    return {x:x+(w-dw)/2, y:y+(h-dh)/2, w:dw, h:dh};
+  }
+
+  function drawSoftImage(ctx, img, r, blurPx){
+    if (!blurPx){
+      ctx.drawImage(img, r.x, r.y, r.w, r.h);
+      return;
+    }
+    if (canBlurNatively){
+      ctx.save();
+      ctx.filter = "blur(" + blurPx + "px)";
+      ctx.drawImage(img, r.x, r.y, r.w, r.h);
+      ctx.restore();
+      return;
+    }
+    // Fallback bez canvas filtera: downscale/upscale daje mekši, zamućen izgled.
+    const factor = Math.max(4, Math.round(blurPx / 2));
+    const sw = Math.max(1, Math.round(r.w / factor));
+    const sh = Math.max(1, Math.round(r.h / factor));
+    const small = document.createElement("canvas");
+    small.width = sw;
+    small.height = sh;
+    const sctx = small.getContext("2d");
+    if (!sctx) return;
+    sctx.imageSmoothingQuality = "high";
+    sctx.drawImage(img, 0, 0, sw, sh);
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(small, r.x, r.y, r.w, r.h);
+    ctx.restore();
+    small.width = 0;
+    small.height = 0;
   }
 
   function drawBackground(ctx, template){
@@ -348,28 +436,27 @@
     drawBackground(ctx, template);
 
     if (state.blur && sourceFile) {
-      const bgSource = await blobToImage(sourceFile);
-      ctx.save();
-      if ("filter" in ctx) ctx.filter = "blur(36px)";
-      fitImage(ctx, bgSource, -60, -60, 1200, 1470, false);
-      ctx.restore();
+      const smallSource = await downscaleForProcessing(sourceFile, 1200);
+      const bgSource = await blobToImage(smallSource);
+      const bgRect = fitRect(bgSource, -60, -60, 1200, 1470, false);
+      drawSoftImage(ctx, bgSource, bgRect, 36);
       ctx.fillStyle = "rgba(2,6,4,.45)";
       ctx.fillRect(0, 0, 1080, 1350);
     }
 
     if (sourceFile) {
       const img = await blobToImage(cutoutBlob || sourceFile);
-      ctx.save();
-      if (state.blurPlayer && "filter" in ctx) ctx.filter = "blur(18px)";
+      const blurPx = state.blurPlayer ? 18 : 0;
+      let rect;
       if (cutoutBlob) {
         const big = ["mvp","scorer","winner","captain","legend","coach"].includes(template);
-        fitImage(ctx, img, big ? 20 : 80, big ? 35 : 120, big ? 1040 : 920, big ? 990 : 900, true);
+        rect = fitRect(img, big ? 20 : 80, big ? 35 : 120, big ? 1040 : 920, big ? 990 : 900, true);
       } else if (state.blur) {
-        fitImage(ctx, img, 80, 120, 920, 900, true);
+        rect = fitRect(img, 80, 120, 920, 900, true);
       } else {
-        fitImage(ctx, img, 0, 50, 1080, 980, false);
+        rect = fitRect(img, 0, 50, 1080, 980, false);
       }
-      ctx.restore();
+      drawSoftImage(ctx, img, rect, blurPx);
       if (!cutoutBlob && !state.blur) {
         ctx.fillStyle = "rgba(0,0,0,.20)";
         ctx.fillRect(0, 50, 1080, 980);

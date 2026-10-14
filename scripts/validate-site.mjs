@@ -989,7 +989,8 @@ if (
   !app.includes("V7.notifyPush=notifyPush") ||
   !app.includes("window.medjasiV7?.notifyPush") ||
   !pushEdgeSource.includes("admin.auth.getUser(token)") ||
-  !pushEdgeSource.includes('if (role !== "admin" && role !== "moderator")') ||
+  (!pushEdgeSource.includes('if (role !== "admin" && role !== "moderator" && !editorMayBroadcast)') ||
+  !pushEdgeSource.includes('const editorMayBroadcast = role === "editor" && eventType === "news"')) ||
   !pushEdgeSource.includes('"Access-Control-Allow-Origin": "https://vojintesanovic0-dot.github.io"') ||
   pushEdgeSource.includes('"Access-Control-Allow-Origin": "*"')
 ) {

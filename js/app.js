@@ -8888,6 +8888,7 @@ async function loadModeratorUsers(){
           <option value="user" ${u.role==="user"?"selected":""}>Korisnik</option>
           <option value="moderator" ${u.role==="moderator"?"selected":""}>Moderator</option>
           <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
+          <option value="editor" ${u.role==="editor"?"selected":""}>Urednik sadržaja</option>
         </select>
       </div>
     `).join("") || `<div class="empty">Nema drugih korisnika.</div>`;
@@ -8899,7 +8900,7 @@ async function changeUserRole(userId,role){
     return;
   }
 
-  if(!["user","moderator","admin"].includes(role)) return;
+  if(!["user","moderator","admin","editor"].includes(role)) return;
 
   const {error}=await supabaseClient
     .rpc("admin_set_user_role",{
