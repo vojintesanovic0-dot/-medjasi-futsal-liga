@@ -541,7 +541,8 @@
     if(btn){btn.disabled=true;btn.textContent="⏳ Objavljujem...";}
 
     try{
-      const filename="graphic-engine/"+window.currentUser.id+"/"+crypto.randomUUID()+".png";
+      /* Storage RLS allows admin/editor media uploads under news/ with UUIDv4 PNG names. */
+      const filename="news/"+crypto.randomUUID()+".png";
       const {error:uploadError}=await window.supabaseClient
         .storage.from("liga-images")
         .upload(filename,generatedBlob,{contentType:"image/png",upsert:false});
