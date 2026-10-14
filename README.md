@@ -72,3 +72,8 @@ Ove skripte su ručni koraci za pregled i unapređenje pravila korisničkih imen
 - `sql/32_username_rules.sql` — kompatibilno postavljanje osnovnih pravila i ograničenja korisničkog imena.
 - `sql/33_enforce_username_rules.sql` — strožija validacija formata i rezervisanih imena; pokrenuti nakon pregleda postojećih zapisa.
 - `sql/34_live_match_clock_pause.sql` — dodaje format utakmice (60 minuta ili 2 × 20 minuta) i podršku za pauzu/nastavak sata uživo.
+
+## Graphic Engine
+- Podržani su predlošci za pojačanje, novog igrača, igrača utakmice, breaking vijest i važno obavještenje.
+- Urednički nalog može koristiti Graphic Engine iz sekcije Vijesti bez pristupa cijelom administratorskom panelu.
+- `scripts/smoke-test.mjs` provjerava generisanje grafika bez fotografije i ograničeni pristup urednika.
