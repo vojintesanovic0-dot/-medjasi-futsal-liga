@@ -747,15 +747,22 @@
     $("graphicRemoveBgBtn")?.addEventListener("click",removeBackground);
     $("graphicGenerateBtn")?.addEventListener("click",async()=>{syncState();try{await generate()}catch(e){console.error(e);toast(e.message||"Greška pri generisanju.","error")}});
     $("graphicPublishBtn")?.addEventListener("click",async()=>{syncState();await publish()});
-    $("graphicTemplate")?.addEventListener("change",syncState);
+    const updateTextFieldsVisibility=()=>{
+      const textTemplate=["breaking","notice"].includes($("graphicTemplate")?.value);
+      $("graphicNewsFields").hidden=$("graphicDestination")?.value!=="news"&&!textTemplate;
+    };
+    $("graphicTemplate")?.addEventListener("change",()=>{
+      syncState();
+      updateTextFieldsVisibility();
+    });
     $("graphicDestination")?.addEventListener("change",()=>{
       syncState();
-      $("graphicNewsFields").hidden=$("graphicDestination").value!=="news";
+      updateTextFieldsVisibility();
     });
     $("graphicCaption")?.addEventListener("input",syncState);
     $("graphicNewsTitle")?.addEventListener("input",syncState);
     $("graphicNewsBody")?.addEventListener("input",syncState);
-    $("graphicNewsFields").hidden=true;
+    updateTextFieldsVisibility();
     $("graphicTeam")?.addEventListener("focus", renderTeamOptions);
     $("graphicMatch")?.addEventListener("focus", renderMatchOptions);
     $("graphicTeam")?.addEventListener("change", syncState);
