@@ -135,6 +135,14 @@ try{
   assert.equal(mobileRemoveCheck.previewVisible,true,"Mobile background-removal must show the processed preview.");
   console.log("PASS mobile background-removal flow with stubbed AI model:",JSON.stringify(mobileRemoveCheck));
 
+  // Regression: a successful cutout must also be usable to generate and view the final graphic.
+  const pageErrorsBeforeCutoutPreview=pageErrors.length;
+  await page.locator("#graphicTemplate").selectOption("player");
+  await page.locator("#graphicGenerateBtn").click();
+  await page.waitForFunction(()=>{const image=document.getElementById("graphicResultPreview");return !!image&&!image.hidden&&image.complete&&image.naturalWidth===1080&&image.naturalHeight===1350;},null,{timeout:10000});
+  assert.equal(pageErrors.length,pageErrorsBeforeCutoutPreview,"Generating a graphic from a successful background removal must not crash the page.");
+  console.log("PASS final graphic preview after background removal.");
+
   // Verify both blur switches regenerate an existing graphic and refresh the preview.
   await page.locator("#graphicTemplate").selectOption("player");
   await page.locator("#graphicGenerateBtn").click();
