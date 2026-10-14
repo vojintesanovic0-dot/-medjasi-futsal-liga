@@ -801,8 +801,12 @@
     $("graphicGenerateBtn")?.addEventListener("click",async()=>{syncState();try{await generate()}catch(e){console.error(e);toast(e.message||"Greška pri generisanju.","error")}});
     $("graphicPublishBtn")?.addEventListener("click",async()=>{syncState();await publish()});
     const updateTextFieldsVisibility=()=>{
-      const textTemplate=["breaking","notice"].includes($("graphicTemplate")?.value);
+      const template=$("graphicTemplate")?.value||"player";
+      const textTemplate=["breaking","notice"].includes(template);
+      const photoOptional=["breaking","notice","result","preview","live","scorers","coach"].includes(template);
       $("graphicNewsFields").hidden=$("graphicDestination")?.value!=="news"&&!textTemplate;
+      const generateBtn=$("graphicGenerateBtn");
+      if(generateBtn)generateBtn.disabled=!sourceFile&&!photoOptional;
     };
     $("graphicTemplate")?.addEventListener("change",()=>{
       syncState();
