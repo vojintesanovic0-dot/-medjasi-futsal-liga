@@ -134,6 +134,33 @@ try{
   assert.equal(mobileRemoveCheck.deviceConfig,"cpu","Mobile background-removal must use the CPU processing path.");
   assert.equal(mobileRemoveCheck.previewVisible,true,"Mobile background-removal must show the processed preview.");
   console.log("PASS mobile background-removal flow with stubbed AI model:",JSON.stringify(mobileRemoveCheck));
+
+  // Verify both blur switches regenerate an existing graphic and refresh the preview.
+  await page.locator("#graphicTemplate").selectOption("player");
+  await page.locator("#graphicGenerateBtn").click();
+  await page.waitForFunction(()=>{const image=document.getElementById("graphicResultPreview");return !!image&&!image.hidden&&image.naturalWidth===1080;},null,{timeout:10000});
+  const blurPlayerToggle=page.locator("#graphicBlurPlayer");
+  const blurBackgroundToggle=page.locator("#graphicBlur");
+  let previousPreview=await page.locator("#graphicResultPreview").getAttribute("src");
+  await blurPlayerToggle.check();
+  await page.waitForFunction(previous=>{const image=document.getElementById("graphicResultPreview");return !!image&&image.src!==previous&&image.naturalWidth===1080;},previousPreview,{timeout:10000});
+  const playerBlurPreview=await page.locator("#graphicResultPreview").getAttribute("src");
+  assert.notEqual(playerBlurPreview,previousPreview,"Player blur should regenerate the existing graphic preview.");
+  previousPreview=playerBlurPreview;
+  await blurBackgroundToggle.check();
+  await page.waitForFunction(previous=>{const image=document.getElementById("graphicResultPreview");return !!image&&image.src!==previous&&image.naturalWidth===1080;},previousPreview,{timeout:10000});
+  const blurEffectCheck=await page.evaluate(()=>({
+    playerBlur:document.getElementById("graphicBlurPlayer")?.checked,
+    backgroundBlur:document.getElementById("graphicBlur")?.checked,
+    previewVisible:!document.getElementById("graphicResultPreview")?.hidden,
+    previewWidth:document.getElementById("graphicResultPreview")?.naturalWidth,
+    status:document.getElementById("graphicStatus")?.textContent||""
+  }));
+  assert.equal(blurEffectCheck.playerBlur,true,"Player blur checkbox should remain enabled.");
+  assert.equal(blurEffectCheck.backgroundBlur,true,"Background blur checkbox should remain enabled.");
+  assert.equal(blurEffectCheck.previewVisible,true,"Blurred graphic preview should remain visible.");
+  assert.equal(blurEffectCheck.previewWidth,1080,"Blurred graphic should have expected output dimensions.");
+  console.log("PASS Graphic Engine player/background blur preview refresh:",JSON.stringify(blurEffectCheck));
   await mobileCdp.detach();
   await page.evaluate(()=>{
     document.getElementById("graphicEngineCard")?.remove();
