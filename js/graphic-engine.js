@@ -23,8 +23,9 @@
   let generatedPreviewUrl = null;
 
   const state = {
+    mode: "graphic",
     template: "player",
-    playerId: "",
+    playerId: ""
     teamId: "",
     matchId: "",
     destination: "community",
@@ -702,7 +703,14 @@
   }
 
   async function publish(){
-    if(!generatedBlob){
+    syncState();
+    const textOnly = state.mode === "text";
+    const hasText = !!(state.caption.trim() || state.title.trim() || state.body.trim());
+    if(textOnly && !hasText){
+      toast("Unesi tekst objave prije objavljivanja.","error");
+      return;
+    }
+    if(!textOnly && !generatedBlob){
       toast("Prvo generiši grafiku.","error");
       return;
     }
@@ -715,16 +723,19 @@
     if(btn){btn.disabled=true;btn.textContent="⏳ Objavljujem...";}
 
     try{
-      /* Storage RLS allows admin/editor media uploads under news/ with UUIDv4 PNG names. */
-      const filename="news/"+crypto.randomUUID()+".png";
-      const {error:uploadError}=await window.supabaseClient
-        .storage.from("liga-images")
-        .upload(filename,generatedBlob,{contentType:"image/png",upsert:false});
-      if(uploadError) throw uploadError;
+      let image_url = null;
+      if(!textOnly){
+        /* Storage RLS allows admin/editor media uploads under news/ with UUIDv4 PNG names. */
+        const filename="news/"+crypto.randomUUID()+".png";
+        const {error:uploadError}=await window.supabaseClient
+          .storage.from("liga-images")
+          .upload(filename,generatedBlob,{contentType:"image/png",upsert:false});
+        if(uploadError) throw uploadError;
 
-      const {data:urlData}=window.supabaseClient
-        .storage.from("liga-images").getPublicUrl(filename);
-      const image_url=urlData.publicUrl;
+        const {data:urlData}=window.supabaseClient
+          .storage.from("liga-images").getPublicUrl(filename);
+        image_url=urlData.publicUrl;
+      }
 
       const player=currentPlayer();
       const team=teamForPlayer(player);
@@ -738,7 +749,7 @@
         signing:"Pojačanje",playerOfMatch:"Igrač utakmice",breaking:"Breaking news",notice:"Važno obavještenje"
       }[state.template] || "Grafika lige";
 
-      const caption=state.caption.trim() || (" "+templateLabel+" · "+name+" · "+(team?.name||"Međasi Futsal Liga"));
+      const caption=state.caption.trim() || (textOnly ? "" : (" "+templateLabel+" · "+name+" · "+(team?.name||"Međasi Futsal Liga")));
 
       if(state.destination==="community"){
         const {error}=await window.sbClient().from("community_posts").insert({
@@ -773,7 +784,7 @@
           author_id:window.currentUser.id,
           author_name:window.currentProfile?.username ||  "Admin",
           media_url:image_url,
-          media_type:"image",
+          media_type:textOnly ? "text" : "image",
           published:true
         });
         if(error) throw error;
@@ -782,7 +793,7 @@
         window.loadNews?.();
       }
 
-      toast("Grafika je objavljena u "+({
+      toast((textOnly ? "Objava bez grafike je objavljena u " : "Grafika je objavljena u ")+({
         community:"Community",chat:"Chatu",news:"Vijestima"
       }[state.destination] || "sistemu")+".");
 
@@ -798,6 +809,7 @@
   }
 
   function syncState() {
+    state.mode = $("graphicMode")?.value || "graphic";
     state.playerId = $("graphicPlayer")?.value || "";
     state.teamId = $("graphicTeam")?.value || "";
     state.matchId = $("graphicMatch")?.value || "";
@@ -852,8 +864,18 @@
         <span class="admin-pill">${editorOnly ? "ADMIN + UREDNICA" : "SAMO ADMIN"}</span>
       </div>
 
+      <div class="form-group graphic-mode-choice">
+        <label for="graphicMode">Način objave</label>
+        <select id="graphicMode">
+          <option value="graphic">S grafikom</option>
+          <option value="text">Bez grafike — samo tekst</option>
+        </select>
+        <p class="muted">Izaberi „Bez grafike“ ako želiš objaviti samo tekst. Postojeće grafike i predlošci ostaju dostupni.</p>
+      </div>
+
       <div class="graphic-engine-grid">
         <div class="graphic-engine-controls">
+          <div id="graphicVisualControls">
           <div class="form-group">
             <label>Igrač</label>
             <select id="graphicPlayer"></select>
@@ -940,9 +962,10 @@
             </div>
           </div>
 
+          </div>
           <div class="graphic-engine-actions">
             <button id="graphicGenerateBtn" type="button" class="btn btn-green" disabled> Generiši grafiku</button>
-            <button id="graphicPublishBtn" type="button" class="btn btn-blue" disabled> Objavi grafiku</button>
+            <button id="graphicPublishBtn" type="button" class="btn btn-blue" disabled> Objavi</button>
           </div>
 
           <div id="graphicStatus" class="muted" aria-live="polite"></div>
@@ -985,6 +1008,18 @@
     $("graphicGenerateBtn")?.addEventListener("click",async()=>{syncState();try{await generate()}catch(e){console.error(e);toast(e.message||"Greška pri generisanju.","error")}});
     $("graphicPublishBtn")?.addEventListener("click",async()=>{syncState();await publish()});
     const updateTextFieldsVisibility=()=>{
+      const textOnly = ($("graphicMode")?.value || "graphic") === "text";
+      const visualControls = $("graphicVisualControls");
+      if(visualControls) visualControls.hidden = textOnly;
+      const preview = document.querySelector("#graphicEngineCard .graphic-engine-preview");
+      if(preview) preview.hidden = textOnly;
+      const publishBtn = $("graphicPublishBtn");
+      if(publishBtn){
+        publishBtn.textContent = textOnly ? "Objavi bez grafike" : "Objavi grafiku";
+        publishBtn.disabled = textOnly ? false : !generatedBlob;
+      }
+      const generateBtn = $("graphicGenerateBtn");
+      if(generateBtn) generateBtn.hidden = textOnly;
       const template=$("graphicTemplate")?.value||"player";
       const textTemplate=["breaking","notice"].includes(template);
       const photoOptional=["breaking","notice","result","preview","live","scorers","coach"].includes(template);
@@ -992,6 +1027,10 @@
       const generateBtn=$("graphicGenerateBtn");
       if(generateBtn)generateBtn.disabled=!sourceFile&&!photoOptional;
     };
+    $("graphicMode")?.addEventListener("change",()=>{
+      syncState();
+      updateTextFieldsVisibility();
+    });
     $("graphicTemplate")?.addEventListener("change",()=>{
       syncState();
       updateTextFieldsVisibility();
