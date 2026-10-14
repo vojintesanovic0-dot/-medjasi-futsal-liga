@@ -24,6 +24,16 @@ const iconsV2Css = read("css/medjasi-icons-v2.css");
 const mobileAppCss = read("css/medjasi-app-mobile-v3.css");
 
 const graphicEngine = read("js/graphic-engine.js");
+if (
+  !graphicEngine.includes('function canUseGraphicEngine(){') ||
+  !graphicEngine.includes('typeof window.isContentEditor === "function" && window.isContentEditor()') ||
+  !graphicEngine.includes('const editorOnly=!isAdmin() && typeof window.isContentEditor==="function" && window.isContentEditor();') ||
+  !graphicEngine.includes('admin=document.getElementById("news");') ||
+  !graphicEngine.includes('if(!canUseGraphicEngine()) return;')
+) fail("Graphic Engine must be available to content editors without granting access to the full admin panel");
+else pass("Graphic Engine supports content editors in the News section without granting full admin access");
+
+
 const graphicTemplateValues = new Set(
   [...graphicEngine.matchAll(/<option value="([^"]+)">/g)].map((m) => m[1])
 );
