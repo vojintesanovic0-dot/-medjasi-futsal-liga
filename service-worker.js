@@ -8,7 +8,7 @@ const APP_SHELL = [
   "./manifest.json",
   "./css/app.css?v=20261013fix2",
   "./js/medjasi-avatars.js?v=1",
-  "./js/app.js?v=20261067",
+  "./js/app.js?v=20261068",
   "./js/password-recovery.js?v=1",
   "./js/effects.js?v=1",
   "./css/production.css?v=20261007v23",
