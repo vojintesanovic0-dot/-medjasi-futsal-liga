@@ -39,6 +39,10 @@
     return typeof window.isAdmin === "function" && window.isAdmin();
   }
 
+  function canUseGraphicEngine(){
+    return isAdmin() || (typeof window.isContentEditor === "function" && window.isContentEditor());
+  }
+
   function toast(message, type="info"){
     if(typeof window.toast === "function") return window.toast(message, type);
     alert(message);
@@ -653,7 +657,12 @@
   }
 
   function inject(){
-    const admin=document.getElementById("adminContent");
+    const editorOnly=!isAdmin() && typeof window.isContentEditor==="function" && window.isContentEditor();
+    let admin=document.getElementById("adminContent");
+    if(editorOnly){
+      try{ window.medjasiV7?.ensureNewsUI?.(); }catch(error){ console.warn("Graphic Engine: nije moguće pripremiti uredničku sekciju.",error); }
+      admin=document.getElementById("news");
+    }
     if(!admin || document.getElementById("graphicEngineCard")) return;
     const card=document.createElement("div");
     card.id="graphicEngineCard";
@@ -665,7 +674,7 @@
           <h3> Napravi grafiku iz jedne fotografije</h3>
           <p class="muted">Original ostaje netaknut. Napravi PNG bez pozadine i objavi ga direktno u Community, Chat ili Vijesti.</p>
         </div>
-        <span class="admin-pill">SAMO ADMIN</span>
+        <span class="admin-pill">${editorOnly ? "ADMIN + UREDNICA" : "SAMO ADMIN"}</span>
       </div>
 
       <div class="graphic-engine-grid">
@@ -831,7 +840,7 @@
   }
 
   function init(){
-    if(!isAdmin()) return;
+    if(!canUseGraphicEngine()) return;
     inject();
     renderPlayers();
     renderTeamOptions();
