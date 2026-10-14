@@ -83,13 +83,17 @@ try{
   await page.evaluate(()=>{
     window.__smokeOriginalIsAdmin=window.isAdmin;
     window.isAdmin=()=>true;
-    if(!document.getElementById("adminContent")){
-      const host=document.createElement("div");
-      host.id="adminContent";
-      host.hidden=true;
-      document.body.appendChild(host);
-      window.__smokeGraphicAdminHost=true;
+    document.getElementById("graphicEngineCard")?.remove();
+    const existingHost=document.getElementById("adminContent");
+    if(existingHost){
+      window.__smokeOriginalAdminContent=existingHost;
+      existingHost.id="adminContentOriginal";
     }
+    const host=document.createElement("div");
+    host.id="adminContent";
+    Object.assign(host.style,{position:"fixed",left:"0",top:"0",width:"420px",maxHeight:"90vh",overflow:"auto",zIndex:"99999",background:"#111",padding:"12px"});
+    document.body.appendChild(host);
+    window.__smokeGraphicAdminHost=true;
     window.initGraphicEngine?.();
   });
   await page.locator("#graphicEngineCard").waitFor({state:"attached",timeout:10000});
@@ -113,6 +117,10 @@ try{
   await page.evaluate(()=>{
     document.getElementById("graphicEngineCard")?.remove();
     if(window.__smokeGraphicAdminHost)document.getElementById("adminContent")?.remove();
+    if(window.__smokeOriginalAdminContent){
+      window.__smokeOriginalAdminContent.id="adminContent";
+      delete window.__smokeOriginalAdminContent;
+    }
     if(window.__smokeOriginalIsAdmin===undefined)delete window.isAdmin;
     else window.isAdmin=window.__smokeOriginalIsAdmin;
     delete window.__smokeOriginalIsAdmin;
