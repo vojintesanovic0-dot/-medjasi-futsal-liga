@@ -63,7 +63,7 @@ if (
   !graphicEngine.includes('drawWrappedText(ctx,sub,60,1228,900,28,2,24,"600")') ||
   !graphicEngine.includes('const updateTextFieldsVisibility=()=>') ||
   !graphicEngine.includes('const photoOptional=["breaking","notice","result","preview","live","scorers","coach"].includes(template);') ||
-  !graphicEngine.includes('generateBtn.disabled=!sourceFile&&!photoOptional;')
+  !(graphicEngine.includes('generateBtn.disabled=!sourceFile&&!photoOptional;') || graphicEngine.includes('generateButton.disabled=!sourceFile&&!photoOptional;'))
 ) {
   fail("Breaking news and notice graphics must generate without a photo, use editable title/body fields, and wrap body text within the canvas");
 } else pass("Breaking news and notice generation supports photo-free output, editable copy, and bounded multiline text");
