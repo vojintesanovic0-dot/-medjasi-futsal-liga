@@ -5,6 +5,7 @@ const APP_SHELL = [
   "./",
   "./index.html",
   "./privatnost.html",
+  "./potvrda.html",
   "./manifest.json",
   "./css/app.css?v=20261013fix2",
   "./js/medjasi-avatars.js?v=1",
