@@ -17,7 +17,7 @@ function htmlResponse(html: string, status = 200): Response {
     status,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, max-age=60, s-maxage=300",
+      "Cache-Control": "no-store, max-age=0, must-revalidate",
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "strict-origin-when-cross-origin",
     },
@@ -61,11 +61,20 @@ Deno.serve(async (req: Request) => {
 
   const title = String(news.title || "Vijest");
   const description = String(news.lead || news.body || "Pročitajte najnovije vijesti Međasi Futsal Lige.").replace(/\s+/g, " ").slice(0, 300);
-  const image = news.media_type === "image" && /^https:\/\//i.test(String(news.media_url || ""))
+  let image = news.media_type === "image" && /^https:\/\//i.test(String(news.media_url || ""))
     ? String(news.media_url)
     : FALLBACK_IMAGE;
+  // The share URL receives a unique version parameter to avoid stale previews in chat apps.
+  const version = url.searchParams.get("v");
+  if (version) {
+    try {
+      const imageUrl = new URL(image);
+      imageUrl.searchParams.set("share_v", version);
+      image = imageUrl.href;
+    } catch { /* Keep the validated fallback/image URL. */ }
+  }
   const canonical = SITE_URL + "?news=" + encodeURIComponent(id);
-  const shareUrl = url.origin + url.pathname + "?id=" + encodeURIComponent(id);
+  const shareUrl = url.origin + url.pathname + url.search;
   const bot = /facebookexternalhit|facebot|twitterbot|whatsapp|viber|telegrambot|linkedinbot|slackbot|discordbot|googlebot|bingbot|crawler|spider/i.test(req.headers.get("user-agent") || "");
 
   const html = `<!doctype html>
@@ -84,7 +93,7 @@ Deno.serve(async (req: Request) => {
 <meta property="og:url" content="${esc(shareUrl)}">
 <meta property="og:image" content="${esc(image)}">
 <meta property="og:image:secure_url" content="${esc(image)}">
-<meta property="og:image:alt" content="${esc(title)}">
+<meta property="og:image:alt" content="${esc(title)}">\n<meta property="og:image:width" content="1200">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(description)}">
