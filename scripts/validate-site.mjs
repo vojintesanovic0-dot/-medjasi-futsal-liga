@@ -23,6 +23,14 @@ const iconsV1Css = read("css/medjasi-icons-v1.css");
 const iconsV2Css = read("css/medjasi-icons-v2.css");
 const mobileAppCss = read("css/medjasi-app-mobile-v3.css");
 
+const appSource = read("js/app.js");
+if (
+  !appSource.includes('className="nav-graphics-btn"') ||
+  !appSource.includes('window.initGraphicEngine?.();') ||
+  !appSource.includes('if(!isAdmin() && isContentEditor())')
+) fail("Content editors must get a Graphics navigation entry and Graphic Engine must refresh after auth UI updates");
+else pass("Content editor Graphics navigation and post-login Graphic Engine initialization are present");
+
 const graphicEngine = read("js/graphic-engine.js");
 if (
   !graphicEngine.includes('function canUseGraphicEngine(){') ||
