@@ -330,6 +330,10 @@ function isModerator(){
   return currentProfile?.role === "moderator";
 }
 
+function isContentEditor(){
+  return currentProfile?.role === "editor" || isAdmin();
+}
+
 function canManageMatch(){
   return isAdmin() || isModerator();
 }
@@ -478,6 +482,11 @@ function showSection(id){
    * before clearing the current page so a premature/invalid navigation click
    * can never leave the application with no active section.
    */
+  if(id === "gallery" && !isAdmin() && isContentEditor()){
+    ensureEditorGalleryUI();
+    renderAdminGallery();
+  }
+
   if(id === "news" && !document.getElementById("news")){
     try{ window.medjasiV7?.ensureNewsUI?.(); }
     catch(error){ console.warn("News sekcija još nije spremna:",error); }
@@ -4265,6 +4274,7 @@ async function deleteChat(id){
 ========================================================= */
 
 function renderGallery(){
+  if(!isAdmin() && isContentEditor()) ensureEditorGalleryUI();
   const grid=document.getElementById("galleryGrid");
   const count=document.getElementById("galleryCount");
   if(count) count.textContent=`${gallery.length} fotografija`;
@@ -4289,29 +4299,53 @@ function renderGallery(){
     </article>`).join("");
 }
 
-function renderAdminGallery(){
-  const box=document.getElementById("adminGalleryList");
-  if(!box) return;
-  if(!isAdmin()){ box.innerHTML=""; return; }
+function ensureEditorGalleryUI(){
+  if(isAdmin() || !isContentEditor()) return;
+  const section=document.getElementById("gallery");
+  if(!section || document.getElementById("editorGalleryUpload")) return;
+  const card=document.createElement("div");
+  card.id="editorGalleryUpload";
+  card.className="card";
+  card.style.margin="18px 0";
+  card.innerHTML=`
+    <div class="admin-card-head"><div><span class="hero-kicker">UREĐIVANJE SADRŽAJA</span><h3>Dodaj fotografiju u galeriju</h3><p class="muted">Dodaj fotografiju, naslov i kratak opis.</p></div><span class="admin-pill">UREDNICA</span></div>
+    <div class="gallery-upload-grid">
+      <div class="form-group"><label for="galleryImageFileE">Fotografija</label><input accept="image/png,image/jpeg,image/webp,image/gif,image/avif" id="galleryImageFileE" type="file"/></div>
+      <div class="form-group"><label for="galleryTitleE">Naslov</label><input id="galleryTitleE" maxlength="100" placeholder="npr. Finale lige"/></div>
+      <div class="form-group gallery-upload-wide"><label for="galleryDescriptionE">Opis</label><input id="galleryDescriptionE" maxlength="250" placeholder="Kratak opis fotografije (opcionalno)"/></div>
+    </div>
+    <button class="btn btn-green" type="button" onclick="adminAddGalleryImage('E')">Objavi u galeriju</button>
+    <div class="admin-gallery-list" id="editorGalleryList"></div>`;
+  const grid=document.getElementById("galleryGrid");
+  section.insertBefore(card,grid||null);
+}
 
-  box.innerHTML=`
+function renderAdminGallery(){
+  const boxes=[
+    document.getElementById("adminGalleryList"),
+    document.getElementById("editorGalleryList")
+  ].filter(Boolean);
+  if(!boxes.length) return;
+  if(!isContentEditor()){boxes.forEach(box=>box.innerHTML="");return;}
+  const content=`
     <div class="admin-gallery-title">Objavljene fotografije (${gallery.length})</div>
     ${gallery.length ? `<div class="admin-gallery-items">
       ${gallery.map(item=>`
         <div class="admin-gallery-item">
           <img src="${esc(safeUrl(item.image_url))}" alt="">
           <div><strong>${esc(item.title || "Bez naslova")}</strong><small class="muted">${formatDate(item.created_at)}</small></div>
-          <button class="btn btn-red btn-small" onclick="adminDeleteGalleryImage('${item.id}')">🗑️</button>
+          <button class="btn btn-red btn-small" onclick="adminDeleteGalleryImage('${item.id}')">Obriši</button>
         </div>`).join("")}
     </div>` : `<div class="muted">Još nema fotografija.</div>`}`;
+  boxes.forEach(box=>box.innerHTML=content);
 }
 
-async function adminAddGalleryImage(){
-  if(!isAdmin()){ toast("Nemaš admin ovlaštenje.","error"); return; }
+async function adminAddGalleryImage(suffix=""){
+  if(!isContentEditor()){ toast("Nemaš urednička ovlaštenja.","error"); return; }
 
-  const file=document.getElementById("galleryImageFile")?.files?.[0];
-  const title=document.getElementById("galleryTitle")?.value.trim() || "";
-  const description=document.getElementById("galleryDescription")?.value.trim() || "";
+  const file=document.getElementById("galleryImageFile"+suffix)?.files?.[0];
+  const title=document.getElementById("galleryTitle"+suffix)?.value.trim() || "";
+  const description=document.getElementById("galleryDescription"+suffix)?.value.trim() || "";
 
   if(!file){ alert("Izaberi fotografiju."); return; }
   if(!isAllowedRasterImage(file) || file.size>8*1024*1024){ alert("Dozvoljene su slike do 8 MB."); return; }
@@ -4326,9 +4360,9 @@ async function adminAddGalleryImage(){
     }).select("id").single();
     if(error) throw error;
 
-    document.getElementById("galleryImageFile").value="";
-    document.getElementById("galleryTitle").value="";
-    document.getElementById("galleryDescription").value="";
+    document.getElementById("galleryImageFile"+suffix).value="";
+    document.getElementById("galleryTitle"+suffix).value="";
+    document.getElementById("galleryDescription"+suffix).value="";
     toast("Fotografija je objavljena u galeriji.","success");
     await loadAll();
     return inserted?.id || null;
@@ -4366,7 +4400,7 @@ async function removeLeagueMediaObject(publicUrl,expectedFolder){
 }
 
 async function adminDeleteGalleryImage(id){
-  if(!isAdmin())return;
+  if(!isContentEditor())return;
   const item=gallery.find(g=>String(g.id)===String(id));
   if(!item)return;
   if(!confirm(`Obrisati "${item.title||"ovu fotografiju"}" iz galerije?`))return;
@@ -11158,7 +11192,7 @@ function ensureNewsUI(){
 function renderAdminNews(){
   const box=$('v7NewsAdminList');
   if(!box)return;
-  if(!isAdm()){box.innerHTML='';return;}
+  if(!isContentEditor()){box.innerHTML='';return;}
   const rows=Array.isArray(V7.news)?V7.news:[];
   box.innerHTML=rows.map(n=>{
     const id=escV(n.id);
@@ -11177,15 +11211,16 @@ function renderAdminNews(){
   });
 }
 function ensureAdminNews(){
-  const admin=$('adminContent');if(!admin||!isAdm()||$('v7NewsAdmin'))return;
+  const parent=isAdmin() ? $('adminContent') : (isContentEditor() ? $('news') : null);
+  if(!parent || !isContentEditor() || $('v7NewsAdmin'))return;
   const card=document.createElement('div');card.id='v7NewsAdmin';card.className='card';card.style.marginTop='20px';
-  card.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SADRŽAJ LIGE</span><h3>📰 Upravljanje vijestima</h3><p class="muted">Objavi novost, dodaj sliku ili video i podijeli je direktno u chat.</p></div><span class="admin-pill">SAMO ADMIN</span></div><div class="v7-admin-news-form"><div class="form-group"><label>Naslov</label><input id="v7NewsTitle" maxlength="150" placeholder="Naslov vijesti"></div><div class="form-group"><label>Autor / oznaka</label><input id="v7NewsKicker" maxlength="50" placeholder="npr. LIGA, NAJAVA, REZULTAT"></div><div class="form-group wide"><label>Kratki uvod</label><textarea id="v7NewsLead" maxlength="400" style="min-height:80px" placeholder="Kratak uvod koji se vidi na kartici"></textarea></div><div class="form-group wide"><label>Sadržaj vijesti</label><textarea id="v7NewsBody" maxlength="10000" placeholder="Tekst vijesti..."></textarea></div><div class="form-group"><label>Slika ili video</label><input id="v7NewsFile" type="file" accept="image/*,video/mp4,video/webm,video/ogg"></div><div class="form-group"><label>Objavi</label><select id="v7NewsPublished"><option value="true">Odmah javno</option><option value="false">Sačuvaj kao skicu</option></select></div></div><div class="actions" style="margin-top:12px"><button class="btn btn-green" onclick="medjasiV7.publishNews()">📰 Objavi vijest</button></div><div id="v7NewsAdminList" class="v7-admin-news-list"></div>`;
-  admin.appendChild(card);renderAdminNews();
+  card.innerHTML=`<div class="admin-card-head"><div><span class="hero-kicker">SADRŽAJ LIGE</span><h3>📰 Upravljanje vijestima</h3><p class="muted">Objavi novost, dodaj sliku ili video i podijeli je direktno u chat.</p></div><span class="admin-pill">${isAdmin()?'SAMO ADMIN':'UREDNICA'}</span></div><div class="v7-admin-news-form"><div class="form-group"><label>Naslov</label><input id="v7NewsTitle" maxlength="150" placeholder="Naslov vijesti"></div><div class="form-group"><label>Autor / oznaka</label><input id="v7NewsKicker" maxlength="50" placeholder="npr. LIGA, NAJAVA, REZULTAT"></div><div class="form-group wide"><label>Kratki uvod</label><textarea id="v7NewsLead" maxlength="400" style="min-height:80px" placeholder="Kratak uvod koji se vidi na kartici"></textarea></div><div class="form-group wide"><label>Sadržaj vijesti</label><textarea id="v7NewsBody" maxlength="10000" placeholder="Tekst vijesti..."></textarea></div><div class="form-group"><label>Slika ili video</label><input id="v7NewsFile" type="file" accept="image/*,video/mp4,video/webm,video/ogg"></div><div class="form-group"><label>Objavi</label><select id="v7NewsPublished"><option value="true">Odmah javno</option><option value="false">Sačuvaj kao skicu</option></select></div></div><div class="actions" style="margin-top:12px"><button class="btn btn-green" onclick="medjasiV7.publishNews()">📰 Objavi vijest</button></div><div id="v7NewsAdminList" class="v7-admin-news-list"></div>`;
+  parent.appendChild(card);renderAdminNews();
 }
 async function loadNews(){
   ensureNewsUI();
   const query=sbClient().from('news').select('*').order('created_at',{ascending:false}).limit(100);
-  const {data,error}=isAdm()?await query:await query.eq('published',true);
+  const {data,error}=isContentEditor()?await query:await query.eq('published',true);
   if(error){console.warn('News:',error);return false}
   V7.news=data||[];
   renderNews();
@@ -11217,7 +11252,7 @@ function supportedLeagueMedia(file){
 }
 
 function openQuickNews(){
-  if(!isAdm())return toastV("Nemaš admin ovlaštenje.","error");
+  if(!isContentEditor())return toastV("Nemaš urednička ovlaštenja.","error");
   showModal(`<div class="modal-title"><span class="hero-kicker">SADRŽAJ LIGE</span><h2>📰 Nova vijest</h2></div>
     <div class="v7-admin-news-form">
       <div class="form-group"><label>Naslov</label><input id="v7NewsTitleQ" maxlength="150" placeholder="Naslov vijesti"></div>
@@ -11233,7 +11268,7 @@ function ensureNewsQuickAdd(){
   const hero=document.querySelector('#news .gallery-hero');
   if(!hero)return;
   const existing=$('newsQuickAdd');
-  if(!isAdm()){existing?.remove();return;}
+  if(!isContentEditor()){existing?.remove();return;}
   if(existing)return;
   const b=document.createElement('button');
   b.id='newsQuickAdd';b.type='button';b.className='btn btn-green btn-small';
@@ -11245,7 +11280,7 @@ function ensureNewsQuickAdd(){
 }
 
 async function publishNews(sfx=""){
-  if(!isAdm())return toastV("Nemaš admin ovlaštenje.","error");
+  if(!isContentEditor())return toastV("Nemaš urednička ovlaštenja.","error");
   const q=k=>$("v7News"+k+sfx);
   const title=q("Title")?.value.trim()||"";
   const lead=q("Lead")?.value.trim()||"";
@@ -11302,7 +11337,7 @@ async function publishNews(sfx=""){
   }
 }
 async function deleteNews(id){
-  if(!isAdm())return;
+  if(!isContentEditor())return;
   if(!confirm("Obrisati ovu vijest?"))return;
 
   try{
@@ -11345,7 +11380,7 @@ async function deleteNews(id){
   }
 }
 async function setNewsPublished(id,published){
-  if(!isAdm())return toastV('Nemaš admin ovlaštenje.','error');
+  if(!isContentEditor())return toastV('Nemaš urednička ovlaštenja.','error');
   const before=V7.news.find(n=>String(n.id)===String(id));
   const {error}=await sbClient().from('news').update({published,updated_at:new Date().toISOString()}).eq('id',id);
   if(error)return toastV(error.message,'error');
@@ -12295,6 +12330,7 @@ window.showSection=showSection;
 window.updateAuthUI=updateAuthUI;
 window.isAdmin=isAdmin;
 window.isModerator=isModerator;
+window.isContentEditor=isContentEditor;
 /* SPA browser-history bridge */
 (()=>{
   const originalShowSection=window.showSection;
