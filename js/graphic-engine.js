@@ -1012,9 +1012,9 @@
     const updateTextFieldsVisibility=()=>{
       const textOnly = ($("graphicMode")?.value || "graphic") === "text";
       const visualControls = $("graphicVisualControls");
-      if(visualControls) visualControls.hidden = textOnly;
+      if(visualControls){visualControls.hidden = textOnly;visualControls.style.display = textOnly ? "none" : "";}
       const preview = document.querySelector("#graphicEngineCard .graphic-engine-preview");
-      if(preview) preview.hidden = textOnly;
+      if(preview){preview.hidden = textOnly;preview.style.display = textOnly ? "none" : "" ;}
       const publishBtn = $("graphicPublishBtn");
       if(publishBtn){
         publishBtn.textContent = textOnly ? "Objavi bez grafike" : "Objavi grafiku";
