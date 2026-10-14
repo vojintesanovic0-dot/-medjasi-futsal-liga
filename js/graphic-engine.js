@@ -25,7 +25,7 @@
   const state = {
     mode: "graphic",
     template: "player",
-    playerId: ""
+    playerId: "",
     teamId: "",
     matchId: "",
     destination: "community",
@@ -1030,8 +1030,8 @@
       const textTemplate=["breaking","notice"].includes(template);
       const photoOptional=["breaking","notice","result","preview","live","scorers","coach"].includes(template);
       $("graphicNewsFields").hidden=$("graphicDestination")?.value!=="news"&&!textTemplate;
-      const generateBtn=$("graphicGenerateBtn");
-      if(generateBtn)generateBtn.disabled=!sourceFile&&!photoOptional;
+      const generateButton=$("graphicGenerateBtn");
+      if(generateButton)generateButton.disabled=!sourceFile&&!photoOptional;
     };
     $("graphicMode")?.addEventListener("change",()=>{
       syncState();
