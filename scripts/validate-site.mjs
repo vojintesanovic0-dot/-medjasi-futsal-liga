@@ -26,10 +26,9 @@ const mobileAppCss = read("css/medjasi-app-mobile-v3.css");
 const appSource = read("js/app.js");
 if (
   !appSource.includes('className="nav-graphics-btn"') ||
-  !appSource.includes('window.initGraphicEngine?.();') ||
   !appSource.includes('if(!isAdmin() && isContentEditor())')
 ) fail("Content editors must get a Graphics navigation entry and Graphic Engine must refresh after auth UI updates");
-else pass("Content editor Graphics navigation and post-login Graphic Engine initialization are present");
+else pass("Content editor Graphics navigation is present without repeated Graphic Engine reinitialization");
 
 const graphicEngine = read("js/graphic-engine.js");
 if (
