@@ -511,6 +511,16 @@
           </button>
 </div>
 </div>
+<!-- COACH MANAGEMENT -->
+<div class="card">
+<h3>Dodaj / uredi trenera</h3>
+<p class="muted" style="margin:5px 0 15px">Dodijeli ili promijeni trenera postojeće ekipe.</p>
+<div class="form">
+<div class="form-group"><label>Ekipa</label><select id="coachTeam"><option value="">Izaberi ekipu</option></select></div>
+<div class="form-group"><label>Ime i prezime trenera</label><input id="coachName" maxlength="80" placeholder="Ime i prezime trenera"/></div>
+<button class="btn btn-green" type="button" onclick="saveTeamCoach()">Sačuvaj trenera</button>
+</div>
+</div>
 <!-- PLAYER -->
 <div class="card">
 <h3> Dodaj igrača</h3>
@@ -544,6 +554,10 @@
 <label style="display:flex;gap:8px;align-items:center">
 <input id="playerCaptain" style="width:auto" type="checkbox"/>
             Kapiten
+          </label>
+<label style="display:flex;gap:8px;align-items:center;margin-top:8px">
+<input id="playerViceCaptain" style="width:auto" type="checkbox"/>
+            Zamjenik kapitena
           </label>
 <div class="form-group">
 <label>Fotografija</label>
