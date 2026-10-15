@@ -11223,7 +11223,7 @@ const playerV=id=>window.getPlayer?.(id)||window.players?.find(x=>String(x.id)==
 const isAdm=()=>!!window.isAdmin?.();
 const toastV=(m,t)=>window.toast?window.toast(m,t):alert(m);
 function formatV(d){try{return window.formatDate?window.formatDate(d):new Date(d).toLocaleString('bs-BA')}catch{return new Date(d).toLocaleString('bs-BA')}}
-function mediaHtml(url,type,title=""){const safe=safeUrl(url);if(!safe)return "";return type==='video'?`<video controls playsinline preload="metadata" src="${escV(safe)}"></video>`:`<img loading="lazy" src="${escV(safe)}" alt="${escV(title)}">`}
+function mediaHtml(url,type,title=""){const safe=safeUrl(url);if(!safe)return "";return type==='video'?`<video controls playsinline preload="metadata" src="${escV(safe)}"></video>`:`<img loading="eager" decoding="async" src="${escV(safe)}" alt="${escV(title)}" onerror="if(!this.dataset.mflFallback){this.dataset.mflFallback='1';this.onerror=null;try{const u=new URL(this.src);if(u.hostname.endsWith('.supabase.co')&&u.pathname.includes('/storage/v1/object/public/')){u.pathname=u.pathname.replace('/storage/v1/object/public/','/storage/v1/render/image/public/');u.searchParams.set('width','1200');u.searchParams.set('quality','80');this.src=u.href;}}catch(e){}}">`}
 
 function ensureNewsUI(){
   if(!$('news')){
