@@ -473,8 +473,13 @@ function setupTabReturnPersistence(){
 function showSection(id){
 
   if(id === "admin" && !isAdmin()){
-    if(typeof toast === "function") toast("Admin panel je dostupan samo administratoru.","error");
-    id = "home";
+    if(isContentEditor()){
+      if(typeof toast === "function") toast("Otvoren je urednički prostor. Za objavu koristi Vijesti, Galeriju i Grafike.","success");
+      id = "news";
+    }else{
+      if(typeof toast === "function") toast("Admin panel je dostupan samo administratoru.","error");
+      id = "home";
+    }
   }
 
   /*
@@ -9008,6 +9013,7 @@ updateAuthUI=function(...args){
         '<button class="account-btn account-profile-btn" type="button" onclick="window.openV9Profile(\''+currentUser.id+'\')">👤 '+username+'</button>'+
         '<button class="account-btn account-edit-btn" type="button" onclick="window.openV9EditProfile()">✏️ Uredi profil</button>'+
         (admin?'<button class="account-btn account-admin-btn" type="button" onclick="window.showSection(\'admin\')">⚙️ Admin</button>':'')+
+        (!admin && isContentEditor()?'<button class="account-btn account-editor-btn" type="button" onclick="window.showSection(\'news\')">📰 Uredništvo</button>':'')+
         '<button class="account-btn account-logout-btn" type="button" onclick="window.logout()">↪ Odjava</button>';
     }else{
       account.innerHTML='<button class="account-btn account-login-btn" type="button" onclick="window.showSection(\'login\')">🔐 Prijava / Registracija</button>';
@@ -9028,6 +9034,20 @@ updateAuthUI=function(...args){
       }
     }else{
       adminBtn?.remove();
+    }
+
+    let editorBtn=nav.querySelector(".nav-editorial-btn");
+    if(!isAdmin() && isContentEditor()){
+      if(!editorBtn){
+        editorBtn=document.createElement("button");
+        editorBtn.type="button";
+        editorBtn.className="nav-editorial-btn";
+        editorBtn.innerHTML="<span>📰</span><span>Uredništvo</span>";
+        editorBtn.addEventListener("click",()=>window.showSection("news"));
+        nav.appendChild(editorBtn);
+      }
+    }else{
+      editorBtn?.remove();
     }
 
     let graphicsBtn=nav.querySelector(".nav-graphics-btn");
