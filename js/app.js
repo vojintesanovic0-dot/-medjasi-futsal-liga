@@ -3263,6 +3263,8 @@ function renderTeams(){
                   p.is_captain
               );
 
+            const viceCaptain = players.find(p=>p.team_id===t.id && p.is_vice_captain);
+
 
             const count =
               players.filter(
@@ -3298,6 +3300,11 @@ function renderTeams(){
                       ${
                         t.coach
                           ? ` • Trener: ${esc(t.coach)}`
+                          : ""
+                      }
+                      ${
+                        viceCaptain
+                          ? ` • Zamjenik kapitena: ${esc(viceCaptain.name)}`
                           : ""
                       }
                     </div>
@@ -7756,6 +7763,11 @@ function openTeam(
                               ©️ Kapiten
                             </div>
                           `
+                          : ""
+                      }
+                      ${
+                        p.is_vice_captain
+                          ? `<div class="vice-captain" style="margin-top:4px">Zamjenik kapitena</div>`
                           : ""
                       }
 
