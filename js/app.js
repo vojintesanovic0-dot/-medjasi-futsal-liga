@@ -8143,7 +8143,7 @@ document.addEventListener("change",event=>{
   const team=teams.find(t=>String(t.id)===String(event.target.value));
   const input=document.getElementById("coachName");
   if(input) input.value=team?.coach||"";
-}
+});
 
 
 /* =========================================================
