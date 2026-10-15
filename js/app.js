@@ -4645,6 +4645,12 @@ async function addPlayer(){
         .getElementById("playerCaptain")
         .checked;
 
+    const isViceCaptain = document.getElementById("playerViceCaptain")?.checked || false;
+    if(isCaptain && isViceCaptain){
+      alert("Igrač ne može istovremeno biti kapiten i zamjenik kapitena.");
+      return;
+    }
+
 
     const file =
       document
@@ -4680,20 +4686,15 @@ async function addPlayer(){
     */
 
     if(isCaptain){
+      const {error:captainError}=await supabaseClient.from("players")
+        .update({is_captain:false,is_vice_captain:false}).eq("team_id",teamId);
+      if(captainError) throw captainError;
+    }
 
-      const {
-        error:captainError
-      } =
-        await supabaseClient
-          .from("players")
-          .update({
-            is_captain:false
-          })
-          .eq("team_id",teamId);
-
-
-      if(captainError)
-        throw captainError;
+    if(isViceCaptain){
+      const {error:viceError}=await supabaseClient.from("players")
+        .update({is_vice_captain:false}).eq("team_id",teamId);
+      if(viceError) throw viceError;
     }
 
 
@@ -4709,7 +4710,8 @@ async function addPlayer(){
             number || null,
           position,
           photo_url,
-          is_captain:isCaptain
+          is_captain:isCaptain,
+          is_vice_captain:isViceCaptain
         });
 
 
@@ -4734,6 +4736,8 @@ async function addPlayer(){
     document.getElementById(
       "playerCaptain"
     ).checked = false;
+    const viceInput=document.getElementById("playerViceCaptain");
+    if(viceInput) viceInput.checked=false;
 
 
     toast(
@@ -8035,7 +8039,8 @@ function fillTeamSelects(){
   const selects = [
     "playerTeam",
     "matchHome",
-    "matchAway"
+    "matchAway",
+    "coachTeam"
   ];
 
 
@@ -8091,6 +8096,41 @@ function fillTeamSelects(){
     }
 
   });
+
+  const coachSelect=document.getElementById("coachTeam");
+  const coachInput=document.getElementById("coachName");
+  if(coachSelect && coachInput){
+    const selected=teams.find(t=>String(t.id)===String(coachSelect.value));
+    coachInput.value=selected?.coach||"";
+  }
+}
+
+async function saveTeamCoach(){
+  if(!isAdmin()) return alert("Nemaš admin ovlaštenje.");
+  const teamId=document.getElementById("coachTeam")?.value||"";
+  const coach=(document.getElementById("coachName")?.value||"").trim();
+  if(!teamId) return alert("Izaberi ekipu.");
+  if(coach.length>80) return alert("Ime trenera može imati najviše 80 znakova.");
+  try{
+    const {error}=await supabaseClient.from("teams").update({coach:coach||null}).eq("id",teamId);
+    if(error) throw error;
+    toast(coach?"Trener je sačuvan.":"Trener je uklonjen iz ekipe.");
+    await loadAll();
+    const select=document.getElementById("coachTeam");
+    if(select) select.value=teamId;
+    const input=document.getElementById("coachName");
+    if(input) input.value=coach;
+  }catch(error){
+    console.error("Čuvanje trenera nije uspjelo:",error);
+    alert("Trener nije sačuvan: "+(error?.message||"nepoznata greška"));
+  }
+}
+
+document.addEventListener("change",event=>{
+  if(event.target?.id!=="coachTeam") return;
+  const team=teams.find(t=>String(t.id)===String(event.target.value));
+  const input=document.getElementById("coachName");
+  if(input) input.value=team?.coach||"";
 }
 
 
